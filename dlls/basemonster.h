@@ -373,6 +373,17 @@ public:
 	WayPoint_t			m_Route[ROUTE_SIZE];	// Positions of movement
 	int				m_movementGoal;			// Goal that defines route
 	int				m_iRouteIndex;			// index into m_Route[]
+	//MODDD - and why wasn't the number of nodes in the current route ever recorded to a var?
+	// Idea is, there might not be a guarantee that the current route has a marked 'goal' node (although it should),
+	// and there may be garbage memory left over from earlier routes larger than the current one (parts of m_Route not
+	// zero'd out that are leftover from earlier runs).  Running into those would fool us into thinking this route has
+	// a goal node, when it's really from an unrelated earlier route.
+	// Record the length of the current route instead (given at the time the route is built/determined or ever given/loses
+	// nodes), which is likely to be under ROUTE_SIZE. 
+	// If, while looking for the goal node, the m_iRouteLength is exceeded, we'll assume the last note in the route we
+	// were actually given (m_iRouteLength-1) is the 'goal' node.
+	int m_iRouteLength;
+
 	float			m_moveWaitTime;			// How long I should wait for something to move
 
 	Vector				m_vecMoveGoal; // kept around for node graph moves, so we know our ultimate goal
@@ -847,7 +858,36 @@ public:
 	inline void TaskBegin( void ) { m_iTaskStatus = TASKSTATUS_RUNNING; }
 	int TaskIsRunning( void );
 	inline int TaskIsComplete( void ) { return (m_iTaskStatus == TASKSTATUS_COMPLETE); }
-	inline int MovementIsComplete( void ) { return (m_movementGoal == MOVEGOAL_NONE); }
+
+
+	//MODDD - no longer inline, safety, for now at least..
+	// Want to know if checking for 'node.iType == 0' like 'FRouteClear' checks for would lead to any
+	// different behavior.
+	int MovementIsComplete( void ) {
+		//return (m_movementGoal == MOVEGOAL_NONE);
+		//return FRouteClear();
+
+		/*
+		if ( m_Route[ m_iRouteIndex ].iType == 0 || m_movementGoal == MOVEGOAL_NONE ){
+			if(m_Route[ m_iRouteIndex ].iType == 0 && m_movementGoal != MOVEGOAL_NONE){
+				// let me know!
+				easyForcePrintLine("!!! %s:%d NOTICE!  current node type is 0, yet the movegoal is not NONE (is %d)", getClassname(), monsterID, m_movementGoal);
+			}
+			return TRUE;
+		}
+		*/
+
+		
+		if ( m_iRouteIndex >= m_iRouteLength || m_movementGoal == MOVEGOAL_NONE ){
+			if(m_iRouteIndex >= m_iRouteLength && m_movementGoal != MOVEGOAL_NONE){
+				// let me know!
+				easyForcePrintLine("!!! %s:%d NOTICE!  Place in route exceeded RouteLength, yet the movegoal is not NONE (is %d)", getClassname(), monsterID, m_movementGoal);
+			}
+			return TRUE;
+		}
+		
+		return FALSE;
+	}
 
 	int IScheduleFlags ( void );
 	//MODDD - made virtual.
@@ -858,8 +898,9 @@ public:
 	void RouteSimplify( CBaseEntity *pTargetEnt );
 
 	//MODDD - easier to access.
-	static void DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, int r, int g, int b );
-
+	static void DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteLength, int m_iRouteIndex, int r, int g, int b );
+	// And now a non-static version that uses member variables whenever possible.  Imagine that.
+	void DrawMyRoute(int r, int g, int b );
 
 	void AdvanceRoute ( float distance, float flInterval );
 	virtual BOOL FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex );
@@ -881,6 +922,7 @@ public:
 
 
 	int RouteClassify( int iMoveFlag );
+	int MovementGoalToMoveFlag(int iMoveGoal);
 	void InsertWaypoint ( Vector vecLocation, int afMoveFlags );
 	
 	BOOL FindLateralCover ( const Vector &vecThreat, const Vector &vecViewOffset );

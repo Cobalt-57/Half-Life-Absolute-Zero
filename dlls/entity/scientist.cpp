@@ -818,7 +818,10 @@ void CScientist::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
 			if (this->m_IdealActivity == ACT_IDLE && m_MonsterState != MONSTERSTATE_SCRIPT) {
 				// only interrupt the idle activity to do this, and not in SCRIPT.  Just in case.
 				this->SetSequenceByIndex(g_scientist_checktie_sequenceID, 1.0, FALSE);
-				usingCustomSequence = FALSE;  // don't block returning to idle anim
+
+				//usingCustomSequence = FALSE;  // don't block returning to idle anim
+				// WAIT, should not happen anymore.  Being set to a sequence that doesn't loop will fall back to idle-anim-picking after it is done now
+
 				doNotResetSequence = TRUE; // don't reset myself.
 			}
 

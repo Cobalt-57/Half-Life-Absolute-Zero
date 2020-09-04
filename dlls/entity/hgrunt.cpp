@@ -269,6 +269,7 @@ enum
 	SCHED_GRUNT_WAIT_FACE_ENEMY,
 	SCHED_GRUNT_TAKECOVER_FAILED,// special schedule type that forces analysis of conditions and picks the best possible schedule to recover from this type of failure.
 	SCHED_GRUNT_ELOF_FAIL,
+	SCHED_GRUNT_VICTORY_DANCE_STAND,
 };
 
 //=========================================================
@@ -3733,9 +3734,6 @@ void CHGrunt::RunTask ( Task_t *pTask )
 		}
 	}
 
-
-
-
 }
 
 
@@ -3946,12 +3944,18 @@ Schedule_t	slGruntCombatFail[] =
 //=========================================================
 Task_t	tlGruntVictoryDance[] =
 {
+	//MODDD - if this fails to get a path, do the victory dance in place instead.
+	{ TASK_SET_FAIL_SCHEDULE,				(float)SCHED_GRUNT_VICTORY_DANCE_STAND },
 	{ TASK_STOP_MOVING,						(float)0					},
+	//MODDD - new.  Stops hgrunts from being stuck in the firing animation for a little, maybe?
+	{ TASK_SET_ACTIVITY,					(float)ACT_IDLE				},
 	{ TASK_FACE_ENEMY,						(float)0					},
-	{ TASK_WAIT,							(float)1.5					},
+	//MODDD - little more random, was 1.5 without
+	{ TASK_WAIT_RANDOM,						(float)6					},
 	{ TASK_GET_PATH_TO_ENEMY_CORPSE,		(float)0					},
 	{ TASK_WALK_PATH,						(float)0					},
-	{ TASK_WAIT_FOR_MOVEMENT,				(float)0					},
+	//MODDD - can stop a little ways away from the corpse.
+	{ TASK_WAIT_FOR_MOVEMENT_RANGE,			(float)55					},
 	{ TASK_FACE_ENEMY,						(float)0					},
 	{ TASK_PLAY_SEQUENCE,					(float)ACT_VICTORY_DANCE	},
 };
@@ -3968,6 +3972,71 @@ Schedule_t	slGruntVictoryDance[] =
 		"GruntVictoryDance"
 	},
 };
+
+
+//MODDD - NEW VARIANT.  On failing to get a path to the dead enemy or refusing to for whatever reason,
+// do the animation in place anyway.
+Task_t	tlGruntVictoryDanceStand[] =
+{
+	//MODDD - if this fails to get a path, do the victory dance in place instead.
+	{ TASK_STOP_MOVING,						(float)0					},
+	{ TASK_FACE_ENEMY,						(float)0					},
+	// TASK_WAIT_RANDOM waits between 0.1 seconds and the arg given as a max.
+	{ TASK_WAIT_RANDOM,						(float)3					},
+	{ TASK_PLAY_SEQUENCE,					(float)ACT_VICTORY_DANCE	},
+};
+
+Schedule_t	slGruntVictoryDanceStand[] =
+{
+	{
+		tlGruntVictoryDanceStand,
+		ARRAYSIZE ( tlGruntVictoryDanceStand ),
+		bits_COND_NEW_ENEMY		|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"GruntVictoryDanceStand"
+	},
+};
+
+
+
+//MODDD - yes, another one.  This time, the hgrunt stops if it sees the point where the corpse is.
+// Good for coming out of cover, looking and then going 'aw yeh'.
+Task_t	tlGruntVictoryDanceSeekLOS[] =
+{
+	//MODDD - if this fails to get a path, do the victory dance in place instead.
+	{ TASK_SET_FAIL_SCHEDULE,				(float)SCHED_GRUNT_VICTORY_DANCE_STAND },
+	{ TASK_STOP_MOVING,						(float)0					},
+	{ TASK_SET_ACTIVITY,					(float)ACT_IDLE				},
+	{ TASK_FACE_ENEMY,						(float)0					},
+	//MODDD - little more random, was 1.5 without
+	{ TASK_WAIT_RANDOM,						(float)6					},
+	{ TASK_GET_PATH_TO_ENEMY_CORPSE,		(float)0					},
+	{ TASK_WALK_PATH,						(float)0					},
+	//MODDD - if I see it, stop.  And within this distance.
+	{ TASK_WAIT_FOR_MOVEMENT_GOAL_IN_SIGHT,	(float)175					},
+	{ TASK_FACE_ENEMY,						(float)0					},
+	{ TASK_PLAY_SEQUENCE,					(float)ACT_VICTORY_DANCE	},
+};
+
+Schedule_t	slGruntVictoryDanceSeekLOS[] =
+{
+	{
+		tlGruntVictoryDanceSeekLOS,
+		ARRAYSIZE ( tlGruntVictoryDanceSeekLOS ),
+		bits_COND_NEW_ENEMY		|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"GruntVictoryDanceSeekLOS"
+	},
+};
+
+
+
+
+
 
 //=========================================================
 // Establish line of fire - move to a position that allows
@@ -4560,6 +4629,8 @@ DEFINE_CUSTOM_SCHEDULES( CHGrunt )
 	slGruntFail,
 	slGruntCombatFail,
 	slGruntVictoryDance,
+	slGruntVictoryDanceStand,
+	slGruntVictoryDanceSeekLOS,
 	slGruntEstablishLineOfFire,
 	slGruntFoundEnemy,
 	slGruntCombatFace,
@@ -4578,7 +4649,6 @@ DEFINE_CUSTOM_SCHEDULES( CHGrunt )
 	slGruntRepel,
 	slGruntRepelAttack,
 	slGruntRepelLand,
-	//MODDD
 	slhgruntStrafeToLocation,
 };
 
@@ -4757,6 +4827,7 @@ void CHGrunt::SetActivity ( Activity NewActivity )
 Schedule_t *CHGrunt::GetSchedule( void )
 {
 	
+	/*
 	if(monsterID == 9){
 		if(HasConditions(bits_COND_ENEMY_DEAD)){
 			easyForcePrintLine("$$$ THEY DEAD M8");
@@ -4764,6 +4835,7 @@ Schedule_t *CHGrunt::GetSchedule( void )
 			easyForcePrintLine("$$$ I SEE NO DEAD COND M8");
 		}
 	}
+	*/
 
 	//return CBaseMonster::GetSchedule();
 
@@ -4848,21 +4920,31 @@ Schedule_t *CHGrunt::GetSchedule( void )
 	{
 	case MONSTERSTATE_COMBAT:
 		{
-
-		//TEST!  Very eager to throw grenades
-		/*
-		if ( HasConditions( bits_COND_CAN_RANGE_ATTACK2 ) && OccupySlot( bits_SLOTS_HGRUNT_GRENADE ) )
-		{
-			//!!!KELLY - this grunt is about to throw or fire a grenade at the player. Great place for "fire in the hole"  "frag out" etc
-			if (FOkToSpeak())
+			
+			//TEST!  Very eager to throw grenades
+			/*
+			if ( HasConditions( bits_COND_CAN_RANGE_ATTACK2 ) && OccupySlot( bits_SLOTS_HGRUNT_GRENADE ) )
 			{
-				SayGrenadeThrow();
-				JustSpoke();
+				//!!!KELLY - this grunt is about to throw or fire a grenade at the player. Great place for "fire in the hole"  "frag out" etc
+				if (FOkToSpeak())
+				{
+					SayGrenadeThrow();
+					JustSpoke();
+				}
+				return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
 			}
-			return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
-		}
-		*/
-
+			*/
+			
+			/*
+			if(monsterID == 9){
+				if(HasConditions(bits_COND_ENEMY_DEAD)){
+					easyForcePrintLine("$$$FLAG2: THEY DEAD M8");
+				}else{
+					easyForcePrintLine("$$$FLAG2: I SEE NO DEAD COND M8");
+				}
+			}
+			*/
+			
 // dead enemy
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
@@ -5241,16 +5323,36 @@ Schedule_t* CHGrunt::GetScheduleOfType ( int Type )
 		}
 	case SCHED_VICTORY_DANCE:
 		{
+			// NOTICE: when in a squad, non-leaders don't 'victory dance'.  I guess it would look a little weird for all of them to huddle up on the
+			// enemy corpse.
+			// CHANGE.  Maybe it isn't so weird.
+			// If this gets reverted, at least change to "slGruntVictoryDanceStand".  That will do the same animation in place instead.
+			// How about a random chance?
 			if ( InSquad() )
 			{
 				if ( !IsLeader() )
 				{
-					return &slGruntFail[ 0 ];
+					//if(RANDOM_FLOAT(0, 1) < 0.4){
+					//	// go up anyway
+					//	return &slGruntVictoryDance[ 0 ];
+					//}else
+					{
+						if(monsterID == 9){
+							int x = 45;
+						}
+						// Don't approach, just do the dance in place.
+						// Or, try to look out enough until you get a line-of-sight to the enemy.
+						//return &slGruntFail[ 0 ];
+						return &slGruntVictoryDanceSeekLOS[0];
+					}
 				}
 			}
 
 			return &slGruntVictoryDance[ 0 ];
 		}
+	case SCHED_GRUNT_VICTORY_DANCE_STAND:
+		return &slGruntVictoryDanceStand[0];
+	break;
 	case SCHED_GRUNT_SUPPRESS:
 		{
 			if ( m_hEnemy->IsPlayer() && m_fFirstEncounter )

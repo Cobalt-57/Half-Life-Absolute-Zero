@@ -175,6 +175,7 @@ enum
 	SCHED_HASSAULT_FORCEFIRE,
 	SCHED_HASSAULT_WAIT_FACE_ENEMY,
 	SCHED_HASSAULT_MELEE1,
+	SCHED_HASSAULT_VICTORY_DANCE_STAND,
 
 };
 
@@ -194,13 +195,14 @@ enum
 	TASK_HASSAULT_FORCEFIRE,
 	TASK_HASSAULT_START_SPIN,
 	TASK_HASSAULT_WAIT_FOR_SPIN_FINISH,
-	TASK_HASSAULT_FACE_TOSS_DIR
+	TASK_HASSAULT_FACE_TOSS_DIR,
+	TASK_STOP_MOVING_DONT_BLOCK_FIRING,
 };
 
 
 Task_t	tlHAssaultFireOver[] =
 {
-	{ TASK_STOP_MOVING,			0				},
+	{ TASK_STOP_MOVING_DONT_BLOCK_FIRING,			0				},
 	{ TASK_SET_SCHEDULE,		(float)SCHED_HASSAULT_RESIDUAL_FIRE	},
 	/*
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
@@ -431,7 +433,7 @@ Task_t	tlHAssault_fire[] =
 	//{ TASK_HASSAULT_SPIN,					(float)1.5f},
 
 
-	{ TASK_STOP_MOVING, (float)0},
+	{ TASK_STOP_MOVING_DONT_BLOCK_FIRING, (float)0},
 	{ TASK_SET_FAIL_SCHEDULE,		(float)SCHED_HASSAULT_FIRE_OVER},
 	
 	//these are redundant now.
@@ -498,7 +500,7 @@ Task_t	tlHAssault_residualFire[] =
 	//{ TASK_HASSAULT_SPIN,					(float)1.5f},
 
 	
-	{ TASK_STOP_MOVING, (float)0},
+	{ TASK_STOP_MOVING_DONT_BLOCK_FIRING, (float)0},
 	{ TASK_SET_FAIL_SCHEDULE,		(float)SCHED_HASSAULT_FIRE_OVER},
 	{ TASK_HASSAULT_CHECK_FIRE, (float)0	},
 
@@ -721,6 +723,103 @@ Schedule_t	slHAssault_melee1[] =
 
 
 
+
+//MODDD - hgrunt victory dance clones, for now.
+Task_t	tlHAssaultVictoryDance[] =
+{
+	//MODDD - if this fails to get a path, do the victory dance in place instead.
+	{ TASK_SET_FAIL_SCHEDULE,				(float)SCHED_HASSAULT_VICTORY_DANCE_STAND },
+	{ TASK_STOP_MOVING,						(float)0					},
+	//MODDD - new
+	{ TASK_SET_ACTIVITY,					(float)ACT_IDLE				},
+	{ TASK_FACE_ENEMY,						(float)0					},
+	//MODDD - little more random, was 1.5 without
+	{ TASK_WAIT_RANDOM,						(float)6					},
+	{ TASK_GET_PATH_TO_ENEMY_CORPSE,		(float)0					},
+	{ TASK_WALK_PATH,						(float)0					},
+	//MODDD - can stop a little ways away from the corpse.
+	{ TASK_WAIT_FOR_MOVEMENT_RANGE,			(float)55					},
+	{ TASK_FACE_ENEMY,						(float)0					},
+	{ TASK_PLAY_SEQUENCE,					(float)ACT_VICTORY_DANCE	},
+};
+
+Schedule_t	slHAssaultVictoryDance[] =
+{
+	{
+		tlHAssaultVictoryDance,
+		ARRAYSIZE ( tlHAssaultVictoryDance ),
+		bits_COND_NEW_ENEMY		|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"HAssaultVictoryDance"
+	},
+};
+
+
+//MODDD - NEW VARIANT.  On failing to get a path to the dead enemy or refusing to for whatever reason,
+// do the animation in place anyway.
+Task_t	tlHAssaultVictoryDanceStand[] =
+{
+	//MODDD - if this fails to get a path, do the victory dance in place instead.
+	{ TASK_STOP_MOVING,						(float)0					},
+	{ TASK_FACE_ENEMY,						(float)0					},
+	// TASK_WAIT_RANDOM waits between 0.1 seconds and the arg given as a max.
+	{ TASK_WAIT_RANDOM,						(float)3					},
+	{ TASK_PLAY_SEQUENCE,					(float)ACT_VICTORY_DANCE	},
+};
+
+Schedule_t	slHAssaultVictoryDanceStand[] =
+{
+	{
+		tlHAssaultVictoryDanceStand,
+		ARRAYSIZE ( tlHAssaultVictoryDanceStand ),
+		bits_COND_NEW_ENEMY		|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"HAssaultVictoryDanceStand"
+	},
+};
+
+
+
+//MODDD - yes, another one.  This time, the hHAssault stops if it sees the point where the corpse is.
+// Good for coming out of cover, looking and then going 'aw yeh'.
+Task_t	tlHAssaultVictoryDanceSeekLOS[] =
+{
+	//MODDD - if this fails to get a path, do the victory dance in place instead.
+	{ TASK_SET_FAIL_SCHEDULE,				(float)SCHED_HASSAULT_VICTORY_DANCE_STAND },
+	{ TASK_STOP_MOVING,						(float)0					},
+	{ TASK_SET_ACTIVITY,					(float)ACT_IDLE				},
+	{ TASK_FACE_ENEMY,						(float)0					},
+	//MODDD - little more random, was 1.5 without
+	{ TASK_WAIT_RANDOM,						(float)6					},
+	{ TASK_GET_PATH_TO_ENEMY_CORPSE,		(float)0					},
+	{ TASK_WALK_PATH,						(float)0					},
+	//MODDD - if I see it, stop.  And within this distance.
+	{ TASK_WAIT_FOR_MOVEMENT_GOAL_IN_SIGHT,	(float)175					},
+	{ TASK_FACE_ENEMY,						(float)0					},
+	{ TASK_PLAY_SEQUENCE,					(float)ACT_VICTORY_DANCE	},
+};
+
+Schedule_t	slHAssaultVictoryDanceSeekLOS[] =
+{
+	{
+		tlHAssaultVictoryDanceSeekLOS,
+		ARRAYSIZE ( tlHAssaultVictoryDanceSeekLOS ),
+		bits_COND_NEW_ENEMY		|
+		bits_COND_LIGHT_DAMAGE	|
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"HAssaultVictoryDanceSeekLOS"
+	},
+};
+
+
+
+
+
 DEFINE_CUSTOM_SCHEDULES( CHAssault )
 {
 	slHAssault_spin,
@@ -734,7 +833,10 @@ DEFINE_CUSTOM_SCHEDULES( CHAssault )
 	slHAssault_forceFireAtTarget,
 	slHAssault_melee1,
 	slHAssaultRangeAttack2,
-	slHAssaultWaitInCover
+	slHAssaultWaitInCover,
+	slHAssaultVictoryDance,
+	slHAssaultVictoryDanceStand,
+	slHAssaultVictoryDanceSeekLOS
 
 };
 
@@ -2187,12 +2289,13 @@ void CHAssault::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, floa
 
 void CHAssault::ReportAIState( void )
 {
+	CSquadMonster::ReportAIState();
+
 	easyForcePrintLine("resfire: %.2f, %.2f",
 		gpGlobals->time,
 		residualFireTime
 	);
 
-	CSquadMonster::ReportAIState();
 }
 
 
@@ -2210,6 +2313,24 @@ void CHAssault::StartTask ( Task_t *pTask ){
 	
 	switch ( pTask->iTask )
 	{
+
+	// Plain clone of TASK_STOP_MOVING then.
+	case TASK_STOP_MOVING_DONT_BLOCK_FIRING:
+	{
+		CSquadMonster::StartTask(pTask);
+		break;
+	}
+	case TASK_STOP_MOVING:{
+		// In addition to the usual actions, stop firing if I am.
+		// Wait.  Do we really need to do that just for the victory dance?  Nowhere else needed this.
+		CSquadMonster::StartTask(pTask);
+		//if(pev->sequence == SEQ_HASSAULT_ATTACK){
+		//	SetActivity(ACT_IDLE);
+		//}
+		break;
+	}
+
+
 	case TASK_MELEE_ATTACK1:
 		//MODDD SEE
 		meleeAttackTimeMax = gpGlobals->time + ((76.0f - 23.0f)/30.0f);
@@ -3347,7 +3468,29 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 		case SCHED_HASSAULT_WAIT_FACE_ENEMY:
 		{
 			return &slHAssaultWaitInCover[ 0 ];
+		}break;
+
+		case SCHED_VICTORY_DANCE:
+		{
+			//MODDD - clone of the way the HGrunt does it
+			if ( InSquad() )
+			{
+				if ( !IsLeader() )
+				{
+					{
+						return &slHAssaultVictoryDanceSeekLOS[0];
+					}
+				}
+			}
+			return &slHAssaultVictoryDance[ 0 ];
 		}
+		case SCHED_HASSAULT_VICTORY_DANCE_STAND:
+			return slHAssaultVictoryDanceStand;
+		break;
+
+
+
+
 	}
 	return CSquadMonster::GetScheduleOfType(Type);
 }
@@ -3554,8 +3697,11 @@ void CHAssault::MonsterThink ( void )
 				// IMPORTANT.  Make the 'freeze while idle' for any other reason unfreeze.
 				// (no idle spinning anim yet)
 				if(m_IdealActivity == ACT_IDLE && pev->framerate == 0){
-					this->signalActivityUpdate = TRUE;
-					SetActivity(ACT_IDLE);
+
+					SetSequenceByName("spindown", 1.2f, FALSE);
+
+					//this->signalActivityUpdate = TRUE;
+					//SetActivity(ACT_IDLE);
 				}
 
 		}else{
@@ -3712,6 +3858,12 @@ int CHAssault::LookupActivityHard(int activity){
 
 	// let's do m_IdealActivity??
 	switch(iSelectedActivity){
+		case ACT_VICTORY_DANCE:
+			// where else would this get used?
+			pev->framerate = 0.75;
+			m_flFramerateSuggestion = 0.75;
+			return LookupSequence("retreat_signal");
+		break;
 		case ACT_RANGE_ATTACK2:
 			// when to chuck the grenade
 			this->animEventQueuePush(28.0f / 30.0f, 4);
@@ -3858,7 +4010,10 @@ int CHAssault::LookupActivityHard(int activity){
 int CHAssault::tryActivitySubstitute(int activity){
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
-		
+		case ACT_VICTORY_DANCE:
+			// where else would this get used?
+			return LookupSequence("retreat_signal");
+		break;
 		case ACT_RANGE_ATTACK1:
 			return CBaseAnimating::LookupActivity(activity);
 		break;

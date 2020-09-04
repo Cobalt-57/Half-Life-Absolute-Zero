@@ -842,11 +842,14 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 		}
 	case TASK_FACE_ENEMY:
 		{
+			// ??? Why did I do this?  It's still fine to face the LKP regardless, often the intent
+			/*
 			if (m_hEnemy == NULL) {
 				//oops.
 				TaskComplete();
 				return;
 			}
+			*/
 
 			//if(monsterID == 1)easyForcePrintLine("HOO MANN sched:%s ang:%.2f ideal:%.2f", m_pSchedule->pName, UTIL_AngleMod( pev->angles.y ), pev->ideal_yaw );
 			MakeIdealYaw( m_vecEnemyLKP );
@@ -1284,26 +1287,24 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 
 			break;
 		}
-	case TASK_WAIT_FOR_MOVEMENT:
-		{
-			if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout) == 1){
-				easyPrintLine("%s:%d: IS MOVEMENT COMPLETE?: %d", getClassname(), monsterID, MovementIsComplete());
-				easyPrintLine("MOVEGOAL: %d", this->m_movementGoal);
+	case TASK_WAIT_FOR_MOVEMENT:{
+		if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout) == 1){
+			easyPrintLine("%s:%d: IS MOVEMENT COMPLETE?: %d", getClassname(), monsterID, MovementIsComplete());
+			easyPrintLine("MOVEGOAL: %d", this->m_movementGoal);
 
-				if(this->m_movementGoal == MOVEGOAL_LOCATION){
-					UTIL_printLineVector("GOAL LOC:", this->m_vecMoveGoal);
-				}
+			if(this->m_movementGoal == MOVEGOAL_LOCATION){
+				UTIL_printLineVector("GOAL LOC:", this->m_vecMoveGoal);
+			}
 
-			}
-			if (MovementIsComplete())
-			{
-				TaskComplete();
-				RouteClear();		// Stop moving
-			}
-			break;
 		}
-	case TASK_WAIT_FOR_MOVEMENT_TIMED:
-		//Same as above, but will be interrupted if too much time passes.
+		if (MovementIsComplete())
+		{
+			TaskComplete();
+			RouteClear();		// Stop moving
+		}
+	break;}
+	case TASK_WAIT_FOR_MOVEMENT_TIMED:{
+		// Same as above, but will be interrupted if too much time passes.
 		if(gpGlobals->time >= waitForMovementTimed_Start){
 			TaskFail();
 			break;
@@ -1314,43 +1315,68 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 			RouteClear();		// Stop moving
 		}
 
-	break;
-	case TASK_WAIT_FOR_MOVEMENT_RANGE:
+	break;}
+	case TASK_WAIT_FOR_MOVEMENT_RANGE:{
+		if (MovementIsComplete())
 		{
+			TaskComplete();
+			RouteClear();		// Stop moving
+		}else{
+			//another chance...
+			//easyForcePrintLine("WHAT %d", m_iRouteIndex);
 
-			if (MovementIsComplete())
-			{
-				TaskComplete();
-				RouteClear();		// Stop moving
-			}else{
-				//another chance...
-				//easyForcePrintLine("WHAT %d", m_iRouteIndex);
-
-				//if m_iRouteIndex is 0, we are on our way to the GOAL node, as opposed to going past any corners.  Check the distance to see if we are close enough.
+			//if m_iRouteIndex is 0, we are on our way to the GOAL node, as opposed to going past any corners.  Check the distance to see if we are close enough.
 				
-				/*
-				if(m_iRouteIndex > -1){
-					easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE mg:%d ri:%d :::F:%d g:%d e:%d d:%d", m_movementGoal, m_iRouteIndex, m_Route[m_iRouteIndex].iType, m_Route[m_iRouteIndex].iType&bits_MF_IS_GOAL, m_Route[m_iRouteIndex].iType&bits_MF_TO_ENEMY, m_Route[m_iRouteIndex].iType&bits_MF_TO_DETOUR);
-				}else{
-					easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE mg:%d ri:-1", m_movementGoal);
-				}
-				*/
+			/*
+			if(m_iRouteIndex > -1){
+				easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE mg:%d ri:%d :::F:%d g:%d e:%d d:%d", m_movementGoal, m_iRouteIndex, m_Route[m_iRouteIndex].iType, m_Route[m_iRouteIndex].iType&bits_MF_IS_GOAL, m_Route[m_iRouteIndex].iType&bits_MF_TO_ENEMY, m_Route[m_iRouteIndex].iType&bits_MF_TO_DETOUR);
+			}else{
+				easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE mg:%d ri:-1", m_movementGoal);
+			}
+			*/
 
-				//NOTICE - the "m_iRouteIndex == 0" is bad. 0 does not always have to be the final goal of a path!
-				//this->m_movementGoal
-				if(m_Route[m_iRouteIndex].iType & bits_MF_IS_GOAL){
-					float distToGoal = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
-					//easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE: distToGoal:%.2f req:%.2f", distToGoal, pTask->flData);
-					if(distToGoal < pTask->flData){
-						//done!
+			//NOTICE - the "m_iRouteIndex == 0" is bad. 0 does not always have to be the final goal of a path!
+			//this->m_movementGoal
+			if(m_Route[m_iRouteIndex].iType & bits_MF_IS_GOAL){
+				float distToGoal = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
+				//easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE: distToGoal:%.2f req:%.2f", distToGoal, pTask->flData);
+				if(distToGoal <= pTask->flData){
+					//done!
+					TaskComplete();
+					RouteClear();		// Stop moving
+				}
+			}
+
+		}
+	break;}
+	// NEW.  Stop when the end of my route is in the viewcone, and within the given custom distance (if non-zero).
+	case TASK_WAIT_FOR_MOVEMENT_GOAL_IN_SIGHT:{
+		if (MovementIsComplete())
+		{
+			TaskComplete();
+			RouteClear();		// Stop moving
+		}else{
+			// No, get the goal node instead.  Kinda dumb to get really close to the goal just because more than one
+			// node separates this monster from it
+			//if(m_Route[m_iRouteIndex].iType & bits_MF_IS_GOAL){
+			WayPoint_t* theGoalNode = GetGoalNode();
+			if(theGoalNode == NULL){
+				// oops?
+				TaskFail();
+			}else{
+				// Can I see the goal node?
+				BOOL inDaViewcone = FInViewCone(&theGoalNode->vecLocation);
+				if(inDaViewcone){
+					// One more check: no further than flData (if non-zero)?
+					float distToGoal = Distance(pev->origin, theGoalNode->vecLocation);
+					if(pTask->flData==0 || distToGoal <= pTask->flData){
 						TaskComplete();
 						RouteClear();		// Stop moving
 					}
 				}
-
 			}
-			break;
 		}
+	break;}
 	case TASK_DIE:
 	{
 		//Is the end 255 or 256?!
@@ -2147,11 +2173,14 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		break;
 	case TASK_FACE_ENEMY:
 		{
+			// ??? Why did I do this?  It's still fine to face the LKP regardless, often the intent
+			/*
 			if (m_hEnemy == NULL) {
 				//oops.
 				TaskComplete();
 				return;
 			}
+			*/
 
 			MakeIdealYaw ( m_vecEnemyLKP );
 
@@ -2954,7 +2983,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			break;
 		}
 	case TASK_WAIT_FOR_MOVEMENT_TIMED:{
-		//uses the data for how long the monster may spend on this task.
+		// uses the data for how long the monster may spend on this task.
 		waitForMovementTimed_Start = gpGlobals->time + pTask->flData;
 		if (FRouteClear())
 		{
@@ -2962,17 +2991,51 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		}
 	break;}
 
-
-	//MODDD - going to let the "run" method handle this one better...
-	case TASK_WAIT_FOR_MOVEMENT_RANGE:
-		{
-			//easyPrintLine("IMA vividly do something rather foul %d", FRouteClear());
-			if (FRouteClear())
-			{
-				TaskComplete();
+	//MODDD - going to let the "runTask" method handle this one better
+	// No, do it the right way here too so that skipping to a different schedule in the same-frame is do-able
+	// if it would've finished the instant 'runTask' would
+	// have looked at it.
+	case TASK_WAIT_FOR_MOVEMENT_RANGE:{
+		//easyPrintLine("IMA vividly do something rather foul %d", FRouteClear());
+		if (MovementIsComplete()){
+			TaskComplete();
+			RouteClear();		// Stop moving
+		}else{
+			if(m_Route[m_iRouteIndex].iType & bits_MF_IS_GOAL){
+				float distToGoal = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
+				//easyForcePrintLine("TASK_WAIT_FOR_MOVEMENT_RANGE: distToGoal:%.2f req:%.2f", distToGoal, pTask->flData);
+				if(distToGoal <= pTask->flData){
+					//done!
+					TaskComplete();
+					RouteClear();		// Stop moving
+				}
 			}
-			break;
 		}
+	break;}
+	// NEW.  Stop when the end of my route is in the viewcone.
+	case TASK_WAIT_FOR_MOVEMENT_GOAL_IN_SIGHT:{
+		if (MovementIsComplete())
+		{
+			TaskComplete();
+			RouteClear();		// Stop moving
+		}else{
+			WayPoint_t* theGoalNode = GetGoalNode();
+			if(theGoalNode == NULL){
+				// oops?
+				TaskFail();
+			}else{
+				// Can I see the goal node?
+				BOOL inDaViewcone = FInViewCone(&theGoalNode->vecLocation);
+				if(inDaViewcone){
+					float distToGoal = Distance(pev->origin, theGoalNode->vecLocation);
+					if(pTask->flData==0 || distToGoal <= pTask->flData){
+						TaskComplete();
+						RouteClear();		// Stop moving
+					}
+				}
+			}
+		}
+	break;}
 	case TASK_EAT:
 		{
 			Eat( pTask->flData );
@@ -3564,6 +3627,11 @@ Schedule_t *CBaseMonster::GetSchedule ( void )
 		{
 			if ( HasConditions( bits_COND_ENEMY_DEAD ) )
 			{
+
+				if(monsterID == 9){
+					int x = 45;
+				}
+
 				// clear the current (dead) enemy and try to find another.
 				m_hEnemy = NULL;
 

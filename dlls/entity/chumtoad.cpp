@@ -2288,23 +2288,22 @@ BOOL CChumToad::IsAlive_FromAI( CBaseMonster* whoWantsToKnow ){
 
 	if(whoWantsToKnow == NULL){
 		//don't know "whoWantsToKnow"? Nothing to try here.
-		return CBaseMonster::IsAlive_FromAI(whoWantsToKnow);
+		return CBaseMonster::IsAlive_FromAI(NULL);
 	}
 
 	if(whoWantsToKnow->pev == this->pev || this->IRelationship(whoWantsToKnow) == R_AL ){
-		//A chumtoad checking itself or other chumtoads? No trickery here.
+		// A chumtoad checking itself or other chumtoads? No trickery here.
 		return CBaseMonster::IsAlive_FromAI(whoWantsToKnow);
 	}
 
-	//Anyone else can be tricked.
+	// Anyone else can be tricked.
 
-	//typical.
 	if(this->playDeadFooling(whoWantsToKnow)){
-		//playing dead? act like it.
-		EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("Enemy is chumtoad. It\'s a chumtoad playing dead!"));
+		// playing dead? act like it.
+		EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("Enemy is chumtoad. It\'s a chumtoad playing dead, but I am fooled!"));
 		return FALSE;
 	}else{
-		//not playing dead? No filter.
+		// not playing dead? No filter.
 		EASY_CVAR_PRINTIF_PRE(chumtoadPrintout, easyPrintLine("Enemey is chumtoad. Not playing dead."));
 		return CBaseMonster::IsAlive_FromAI(whoWantsToKnow);
 	}

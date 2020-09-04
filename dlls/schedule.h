@@ -220,6 +220,7 @@ typedef enum
 		//MODDD - new tasks.
 		TASK_SET_SEQUENCE_BY_NAME,     //NOT IN THERE.  Eh, store something containing the anim name as a string yourself and call that when needed per monster.  Nothing standardized here.
 		TASK_WAIT_FOR_MOVEMENT_RANGE,
+		TASK_WAIT_FOR_MOVEMENT_GOAL_IN_SIGHT,
 
 		TASK_SET_SEQUENCE_BY_NUMBER,   //set the sequence by its index in the monster's model (#0, #1, #2, ... #64, etc.)
 		TASK_WAIT_FOR_SEQUENCEFINISH,

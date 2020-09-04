@@ -388,8 +388,8 @@ BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime ) { return
 BOOL CBaseMonster::MoveToNode( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
 int ShouldSimplify( int routeType ) { return TRUE; }
 void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt ) { }
-//MODDD - new
-void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, int r, int g, int b ){}
+void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteLength, int m_iRouteIndex, int r, int g, int b ){}
+void CBaseMonster::DrawMyRoute(int r, int g, int b){}
 BOOL CBaseMonster::FBecomeProne ( void ) { return TRUE; }
 BOOL CBaseMonster::CheckRangeAttack1 ( float flDot, float flDist ) { return FALSE; }
 BOOL CBaseMonster::CheckRangeAttack2 ( float flDot, float flDist ) { return FALSE; }
@@ -501,8 +501,6 @@ void CBaseMonster::SetSequenceByNameForceLoops(char* szSequence, float flFramera
 
 
 
-
-
 //MODDD - new 
 int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist ) { return 0; }
 int CBaseMonster::CheckLocalMoveHull ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist ) { return 0; }
@@ -511,6 +509,7 @@ int CBaseMonster::CheckLocalMoveHull ( const Vector &vecStart, const Vector &vec
 float CBaseMonster::OpenDoorAndWait( entvars_t *pevDoor ) { return 0.0; }
 void CBaseMonster::AdvanceRoute ( float distance, float flInterval ) { }
 int CBaseMonster::RouteClassify( int iMoveFlag ) { return 0; }
+int CBaseMonster::MovementGoalToMoveFlag(int iMoveGoal){return 0;}
 BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget ) { return FALSE; }
 
 

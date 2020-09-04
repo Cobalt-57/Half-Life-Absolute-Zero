@@ -176,7 +176,7 @@ void CKingpinBall::pathfind_move(const float& arg_distToEnemy){
 
 	    CBaseMonster::Move();
 		//???
-		//DrawRoute( pev, m_Route, m_iRouteIndex, 0, 0, 176 );
+		//DrawMyRoute( 0, 0, 176 );
 	//}
 	
 	velocityCheck(420);
@@ -428,17 +428,17 @@ int CKingpinBall::CheckLocalMove( const Vector& vecStart, const Vector& vecEnd, 
 			case LOCALMOVE_INVALID:
 				//ORANGE
 				//DrawRoute( pev, m_Route, m_iRouteIndex, 239, 165, 16 );
-				DrawRoute( pev, m_Route, m_iRouteIndex, 48, 33, 4 );
+				DrawMyRoute( 48, 33, 4 );
 			break;
 			case LOCALMOVE_INVALID_DONT_TRIANGULATE:
 				//RED
 				//DrawRoute( pev, m_Route, m_iRouteIndex, 234, 23, 23 );
-				DrawRoute( pev, m_Route, m_iRouteIndex, 47, 5, 5 );
+				DrawMyRoute( 47, 5, 5 );
 			break;
 			case LOCALMOVE_VALID:
 				//GREEN
 				//DrawRoute( pev, m_Route, m_iRouteIndex, 97, 239, 97 );
-				DrawRoute( pev, m_Route, m_iRouteIndex, 20, 48, 20 );
+				DrawMyRoute( 20, 48, 20 );
 			break;
 		}
 	}

@@ -444,7 +444,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBullsquid)
 
 	// if the squid is running, has an enemy, was hurt by the enemy, hasn't been hurt in the last 3 seconds, and isn't too close to the enemy,
 	// it will swerve. (whew).
-	//MODDD - changed that takedamage time to 2 seconds, little more react-ive.
+	//MODDD - changed that takedamage time to 2 seconds, little more reactive.
 	if ( m_hEnemy != NULL && IsMoving() && pevAttacker == m_hEnemy->pev && gpGlobals->time - m_flLastHurtTime > 2 )
 	{
 		flDist = ( pev->origin - m_hEnemy->pev->origin ).Length2D();

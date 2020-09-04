@@ -23,6 +23,8 @@
 
 // Should 'usingCustomSequence' and 'doNotResetSequence' be saved?  I have no idea.
 
+//MODDD - TODO! See the comment by the start of 'm_SaveData'.  Saving schedules and routes may
+// be feasible now thanks to EHANDLEs, even if the devs never did.  Will try that out sometime maybe.
 
 
 #include "extdll.h"
@@ -96,7 +98,8 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 //MODDD - changed from 200 to 300, check out a little further.
 #define DIST_TO_CHECK	300
 
-
+// Turned into a constant
+#define MAX_TRIANGULATION_ATTEMPTS 8
 
 
 //extern DLL_GLOBAL	BOOL	g_fDrawLines;
@@ -134,7 +137,12 @@ float CBaseMonster::bleedingDamage = 0;
 // UNDONE: Save schedule data?  Can this be done?  We may
 // lose our enemy pointer or other data (goal ent, target, etc)
 // that make the current schedule invalid, perhaps it's best
-// to just pick a new one when we start up again.
+// to just pick a new one when we start up again
+//MODDD - That is an as-is comment and not a bad idea.  Perpaps that idea was made before
+// EHANDLES were created?  Now the m_hEnemy, m_hTargetEnt, etc. are saved reliably just fine,
+// so it may be fine to restore schedule-saving.
+// See monstersavestate.h for a lot of specifics related to schedules.
+// Same for routes, seems those got cut from being saved too.
 TYPEDESCRIPTION	CBaseMonster::m_SaveData[] = 
 {
 	DEFINE_FIELD( CBaseMonster, m_hEnemy, FIELD_EHANDLE ),
@@ -2160,12 +2168,16 @@ void CBaseMonster::MonsterThink ( void )
 	// If looping and using a custom sequence (set by some "setSequenceBy..." method or similar, as opposed to selected by a new activity),
 	// do NOT force a new animation! We mean to keep the current animation.
 	// ALSO IMPORTANT: This will <interfere> with tasks based on waiting for for the sequence to be complete, which would be seen the next frame. <disregard> that <inconsequential substance>.
+	// !!! WAIT.  Wouldn't an easy check in place of the '!usingCustomSequence' be, if using a custom sequence but it doesn't loop, go ahead and pick a new one?
+	// Yea, let's try that.    Idea behind it is, if using a custom sequence with a definite end (monster stuck looking frozen),
+	// ignore the usingCustomSequence and pick a new sequence anyway to fit the IDLE intent, better than looking frozen unintentionally.
 	if (
 		//!(m_pSchedule != NULL && getTaskNumber() ==  
 		
 		//!(m_fSequenceLoops && usingCustomSequence) && 
-		!IsMoving() && !usingCustomSequence &&
-		!getMonsterBlockIdleAutoUpdate() && m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_DEAD && ( (m_Activity == ACT_IDLE && m_fSequenceFinished) ) ) 
+		!IsMoving() && pev->framerate != 0 && m_fSequenceFinished && (!usingCustomSequence || !m_fSequenceLoops) &&
+		!getMonsterBlockIdleAutoUpdate() && m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_DEAD &&
+		( (m_Activity == ACT_IDLE ) ) ) 
 	{
 		int iSequence;
 		
@@ -2261,7 +2273,9 @@ void CBaseMonster::MonsterThink ( void )
 
 		if(m_hEnemy != NULL){
 			//all is forgiven.
-			m_hEnemy = NULL;
+			//m_hEnemy = NULL;
+			ForgetEnemy();
+
 			if(this->m_MonsterState == MONSTERSTATE_COMBAT || this->m_IdealMonsterState == MONSTERSTATE_COMBAT){
 				this->m_MonsterState = MONSTERSTATE_IDLE;
 				this->m_IdealMonsterState = MONSTERSTATE_IDLE;
@@ -2496,8 +2510,9 @@ void CBaseMonster::RouteClear ( void )
 //=========================================================
 void CBaseMonster::RouteNew ( void )
 {
-	m_Route[ 0 ].iType		= 0;
-	m_iRouteIndex			= 0;
+	m_Route[ 0 ].iType = 0;
+	m_iRouteIndex = 0;
+	m_iRouteLength = 0;  //NEW - ...somehow?  No nodes worth counting.
 }
 
 //=========================================================
@@ -2506,11 +2521,21 @@ void CBaseMonster::RouteNew ( void )
 //=========================================================
 BOOL CBaseMonster::FRouteClear ( void )
 {
-	//Note that this is not clearing the route and returning success of clearing the route. This is a check to see if the route is clear right now
-	//without affecting it at all.
+	//MODDD - NOTE
+	// Note that this is not clearing the route and returning success of clearing the route. This is a check to see if the route is clear right now
+	// without affecting it at all.
+	// Was any difference between FRouteClear and MovementIsComplete?  Both are used by pathfinding-related tasks
+	// to determine whether the monster is done with the current route, some in StartTask, some in RunTask more consistently.
+	// Really don't know.
+	// Although judging from other areas, it looks like the 'route[routeIndex].type == 0' is to check whether this has
+	// reached an invalid part of the route (past the most recently assigned route), or for starting with an iType of 0
+	// at route[0] (routeIndex still at 0).  The new m_iRouteLength is a better check for that.
+	
 	//disableEnemyAutoNode = FALSE;
 
-	if ( m_Route[ m_iRouteIndex ].iType == 0 || m_movementGoal == MOVEGOAL_NONE )
+	
+	//if ( m_Route[ m_iRouteIndex ].iType == 0 || m_movementGoal == MOVEGOAL_NONE )
+	if ( m_iRouteIndex >= m_iRouteLength || m_movementGoal == MOVEGOAL_NONE )
 		return TRUE;
 
 	return FALSE;
@@ -2714,6 +2739,11 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 					
 					i++;
 				}
+				//MODDD - looks safe to treat 'i' as the route length then.
+				// If there is no GoalEnt (first pPathCorner choice), there is no route (0 length).
+				// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
+				// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
+				m_iRouteLength = i;
 			}
 			returnCode = TRUE;
 			break;
@@ -2967,17 +2997,17 @@ BOOL CBaseMonster::MoveToNode( Activity movementAct, float waitTime, const Vecto
 	return theResult;
 }
 
-
-
-void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, int r, int g, int b )
+void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteLength, int m_iRouteIndex, int r, int g, int b )
 {
 	int i;
 
-	if ( m_Route[m_iRouteIndex].iType == 0 )
-	{
-		ALERT( at_aiconsole, "Can't draw route!\n" );
+	//MODDD - how about this check instead?
+	//if ( m_Route[m_iRouteIndex].iType == 0 ){
+	if ( m_iRouteLength == 0 ){
+		ALERT( at_aiconsole, "No route!\n" );
 		return;
 	}
+
 
 //	UTIL_ParticleEffect ( m_Route[ m_iRouteIndex ].vecLocation, g_vecZero, 255, 25 );
 
@@ -3003,10 +3033,17 @@ void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteI
 		WRITE_BYTE( 10 );		// speed
 	MESSAGE_END();
 
-	for ( i = m_iRouteIndex ; i < ROUTE_SIZE - 1; i++ )
+	//MODDD - using m_iRouteLength instead of ROUTE_SIZE
+	for ( i = m_iRouteIndex ; i < m_iRouteLength - 1; i++ )
 	{
-		if ( (m_Route[ i ].iType & bits_MF_IS_GOAL) || (m_Route[ i+1 ].iType == 0) )
+		// BEWARE - routes are not 0'd before making a new route so the route after some
+		// unmarked goal (last in intended route) could very well be garbage left over from 
+		// a prior call.
+		// Just use the new 'm_iRouteLength' instead.  Or, no need for that anymore.
+		//if ( (m_Route[ i ].iType & bits_MF_IS_GOAL) || (m_Route[ i+1 ].iType == 0) )
+		if ( (m_Route[ i ].iType & bits_MF_IS_GOAL) ){  // || i+1 >= m_iRouteLength
 			break;
+		}
 
 		
 		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
@@ -3033,6 +3070,11 @@ void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteI
 //		UTIL_ParticleEffect ( m_Route[ i ].vecLocation, g_vecZero, 255, 25 );
 	}
 }//END OF DrawRoute(...)
+
+void CBaseMonster::DrawMyRoute(int r, int g, int b){
+	// redirect to that
+	DrawRoute(pev, m_Route, m_iRouteLength, m_iRouteIndex, r, g, b);
+}
 
 
 
@@ -3063,6 +3105,10 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 
 	count = 0;
 
+	//MODDD - only count up to m_iRouteLength now, no need for the entire node array (ROUTE_SIZE)
+	// ...wait.  The whole point of this is to get the length of the current route.
+	// Just use m_iRouteLength.
+	/*
 	for ( i = m_iRouteIndex; i < ROUTE_SIZE; i++ )
 	{
 		if ( !m_Route[i].iType )
@@ -3072,6 +3118,11 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 		if ( m_Route[i].iType & bits_MF_IS_GOAL )
 			break;
 	}
+	*/
+
+	count = m_iRouteLength;
+
+
 	// Can't simplify a direct route!
 	if ( count < 2 )
 	{
@@ -3079,9 +3130,16 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 		return;
 	}
 
+	if(monsterID == 9){
+		int x = 45;
+	}
+
 	outCount = 0;
 	vecStart = pev->origin;
-	for ( i = 0; i < count-1; i++ )
+
+	//MODDD - shouldn't this avoid ever allowing i to go beyond 'count - 1' ?  At m_iRouteIndex above 0 that can happen
+	//for ( i = 0; i < count-1; i++ )
+	for ( i = 0; i < count-1 - m_iRouteIndex; i++ )
 	{
 		// Don't eliminate path_corners
 		if ( !ShouldSimplify( m_Route[m_iRouteIndex+i].iType ) )
@@ -3135,12 +3193,20 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 	outRoute[outCount].iType = 0;
 	ASSERT( outCount < (ROUTE_SIZE*2) );
 
+	//MODDD - just make this decision once.
+	// If outCount is under ROUTE_SIZE, that is all we need.
+	// If outCount is over ROUTE_SIZE, went over our node limit, stick to ROUTE_SIZE.
+	int outCountFiltered = min(ROUTE_SIZE, outCount);
+
 // Copy the simplified route, disable for testing
 	m_iRouteIndex = 0;
-	for ( i = 0; i < ROUTE_SIZE && i < outCount; i++ )
+	for ( i = 0; i < outCountFiltered; i++ )
 	{
 		m_Route[i] = outRoute[i];
 	}
+
+	//MODDD - apply that.
+	m_iRouteLength = outCountFiltered;
 
 	// Terminate route
 	if ( i < ROUTE_SIZE )
@@ -3385,10 +3451,28 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 		int x = 666;
 	}
 
+
+
+	/*
+	if(monsterID == 9){
+		BOOL tempp1 = pEnemy->IsAlive_FromAI(this);
+		BOOL tempp2 = pEnemy->IsAlive();
+
+		int daDeadflag = pEnemy->pev->deadflag;
+
+		easyForcePrintLine("$$$FLAG3: is my enemy dead? fromAI:%d real:%d deadflag:%d", tempp1, tempp2, daDeadflag);
+	}
+	*/
+
 	//Why does this wait to count an enemy as dead, but
 	//bits_COND_SEE_ENEMY sure happens instantly the moment of death?
 	if ( !pEnemy->IsAlive_FromAI(this) )
 	{
+
+		if(monsterID == 9){
+			int x = 45;
+		}
+
 		//MODDD - new event, called when the checked enemy is dead
 		// (as bits_COND_ENEMY_DEAD is set)
 		onEnemyDead(pEnemy);
@@ -3441,8 +3525,9 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 			{
 				SetConditions ( bits_COND_ENEMY_FACING_ME );
 			}
-			else
+			else{
 				ClearConditions( bits_COND_ENEMY_FACING_ME );
+			}
 		}
 
 		if (pEnemy->pev->velocity != Vector( 0, 0, 0))
@@ -3510,14 +3595,15 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 		ClearConditionsMod(bits_COND_COULD_RANGE_ATTACK1 | bits_COND_COULD_RANGE_ATTACK2 | bits_COND_COULD_MELEE_ATTACK1 | bits_COND_COULD_MELEE_ATTACK2);
 	}
 
-	//the smart pathfinding method does not use this, this is not very smart.
+	// the smart pathfinding method does not use this
 	if ( !disableEnemyAutoNode && m_movementGoal == MOVEGOAL_ENEMY )
 	{
-		for ( int i = m_iRouteIndex; i < ROUTE_SIZE; i++ )
+		//MODDD - use m_iRouteLength instead of ROUTE_SIZE
+		for ( int i = m_iRouteIndex; i < m_iRouteLength; i++ )
 		{
 			//MODDD
 			//if ( m_Route[ i ].iType == (bits_MF_IS_GOAL|bits_MF_TO_ENEMY) )
-			//This means, the two bits MUST be within iType. Not just one or the other.
+			// This means, the two bits MUST be within iType. Not only one or the other.
 			if ( (m_Route[ i ].iType & (bits_MF_IS_GOAL|bits_MF_TO_ENEMY)) == (bits_MF_IS_GOAL|bits_MF_TO_ENEMY) )
 			{
 				// UNDONE: Should we allow monsters to override this distance (80?)
@@ -4370,17 +4456,17 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 			case LOCALMOVE_INVALID:
 				//ORANGE
 				//DrawRoute( pev, m_Route, m_iRouteIndex, 239, 165, 16 );
-				DrawRoute( pev, m_Route, m_iRouteIndex, 48, 33, 4 );
+				DrawMyRoute( 48, 33, 4 );
 			break;
 			case LOCALMOVE_INVALID_DONT_TRIANGULATE:
 				//RED
 				//DrawRoute( pev, m_Route, m_iRouteIndex, 234, 23, 23 );
-				DrawRoute( pev, m_Route, m_iRouteIndex, 47, 5, 5 );
+				DrawMyRoute( 47, 5, 5 );
 			break;
 			case LOCALMOVE_VALID:
 				//GREEN
 				//DrawRoute( pev, m_Route, m_iRouteIndex, 97, 239, 97 );
-				DrawRoute( pev, m_Route, m_iRouteIndex, 20, 48, 20 );
+				DrawMyRoute( 20, 48, 20 );
 			break;
 		}
 	}
@@ -4448,18 +4534,29 @@ float CBaseMonster::OpenDoorAndWait( entvars_t *pevDoor )
 //=========================================================
 void CBaseMonster::AdvanceRoute ( float distance, float flInterval )
 {
-
+	//MODDD - use m_iRouteLength instead of ROUTE_SIZE here.
+	// WAIT!  Bad assumption, even in the as-is state.
+	// What if the last route of the path is indeed the intended goal?  Assuming an incomplete
+	// route to whatever goal from being at the last place in the array is a bad assumption.
 	if ( m_iRouteIndex == ROUTE_SIZE - 1 )
 	{
-		// time to refresh the route.
-		if ( !FRefreshRoute() )
-		{
-			ALERT ( at_aiconsole, "Can't Refresh Route!!\n" );
+		//MODDD - new check on top of this:  If the node I'm at is the GOAL, just call for MovementComplete
+		if(m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL){
+			// That's the end.
+			MovementComplete();
+		}else{
+			// Normal behavior:  try to re-route to the actual goal from here instead.
+			// time to refresh the route.
+			if ( !FRefreshRoute() )
+			{
+				ALERT ( at_aiconsole, "Can't Refresh Route!!\n" );
+			}
 		}
 	}
 	else
 	{
-		if ( ! (m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL) )
+		//MODDD - also, if m_iRouteIndex reaches m_iRouteLength-1 on an 'AdvanceRoute' call, the route is over.
+		if ( !(m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL) && !(m_iRouteIndex >= m_iRouteLength-1) )
 		{
 			// If we've just passed a path_corner, advance m_pGoalEnt
 			
@@ -4481,7 +4578,7 @@ void CBaseMonster::AdvanceRoute ( float distance, float flInterval )
 				int iLink;
 				WorldGraph.HashSearch(iSrcNode, iDestNode, iLink);
 
-
+				// UHHHhhhh.  does this even work?
 				if ( iLink >= 0 && WorldGraph.m_pLinkPool[iLink].m_pLinkEnt != NULL )
 				{
 					//ALERT(at_aiconsole, "A link. ");
@@ -4559,11 +4656,32 @@ int CBaseMonster::RouteClassify( int iMoveFlag )
 	return movementGoal;
 }
 
+//MODDD - NEW.  Inverse of 'RouteClassify' above.
+// This takes a MoveGoal and returns the corresponding MoveFlag instead.
+// Although they seem to use the same bits anyways?  Same for RouteClassify.
+int CBaseMonster::MovementGoalToMoveFlag(int iMoveGoal){
+	int iMoveFlag;
+	iMoveFlag = 0;  // unsurprisingly, there is no bits_MF_TO_NONE choice.
+
+	if(iMoveGoal == MOVEGOAL_TARGETENT){
+		iMoveFlag = bits_MF_TO_TARGETENT;
+	}else if(iMoveGoal == MOVEGOAL_ENEMY){
+		iMoveFlag = bits_MF_TO_ENEMY;
+	}else if(iMoveGoal == MOVEGOAL_PATHCORNER){
+		iMoveFlag = bits_MF_TO_PATHCORNER;
+	}else if(iMoveGoal == MOVEGOAL_NODE){
+		iMoveFlag = bits_MF_TO_NODE;
+	}else if(iMoveGoal == MOVEGOAL_LOCATION){
+		iMoveFlag = bits_MF_TO_LOCATION;
+	}
+
+	return iMoveFlag;
+}
+
+
 //=========================================================
 // BuildRoute
 //=========================================================
-
-
 BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
 {
 	float flDist;
@@ -4579,6 +4697,7 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 	m_Route[ 0 ].vecLocation = vecGoal;
 	m_Route[ 0 ].iType = iMoveFlag | bits_MF_IS_GOAL;
 
+	m_iRouteLength = 1;  //so far?
 
 
 
@@ -4606,6 +4725,8 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 
 		m_Route[ 1 ].vecLocation = vecGoal;
 		m_Route[ 1 ].iType = iMoveFlag | bits_MF_IS_GOAL;
+
+		m_iRouteLength = 2;
 
 			
 			//WRITE_BYTE(MSG_BROADCAST, SVC_TEMPENTITY);
@@ -4894,6 +5015,8 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 							m_Route[ currentNodeIndex ].iType = iMoveFlag | bits_MF_RAMPFIX | bits_MF_IS_GOAL;
 							currentNodeIndex++;
 
+							m_iRouteLength = currentNodeIndex;
+
 							m_vecMoveGoal = vecGoal;
 							//RouteSimplify( pTarget );
 
@@ -4939,20 +5062,48 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 //=========================================================
 void CBaseMonster::InsertWaypoint ( Vector vecLocation, int afMoveFlags )
 {
-	int		i, type;
+	int i;
+	int type;
 
-	
 	// we have to save some Index and Type information from the real
 	// path_corner or node waypoint that the monster was trying to reach. This makes sure that data necessary 
 	// to refresh the original path exists even in the new waypoints that don't correspond directy to a path_corner
 	// or node. 
 	type = afMoveFlags | (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK);
 
+	//MODDD - involves m_iRouteLength now
+	/*
 	for ( i = ROUTE_SIZE-1; i > 0; i-- )
 		m_Route[i] = m_Route[i-1];
 
 	m_Route[ m_iRouteIndex ].vecLocation = vecLocation;
 	m_Route[ m_iRouteIndex ].iType = type;
+	*/
+
+	// To begin at one beyond the last node in the route (or at the last node in the route if the route
+	// already uses all places in m_Route)
+	int copyStart;
+	
+
+	if(m_iRouteLength < ROUTE_SIZE){
+		// Safe to start at m_iRouteLength exactly (increases route size by 1)
+		copyStart = m_iRouteLength;
+
+		m_iRouteLength++;
+	}else{
+		// Will be cutoff, no change in route length
+		copyStart = ROUTE_SIZE - 1;
+	}
+
+	//MODDD - also, why stop at 0?  Why not at m_iRouteIndex, since earlier points won't be seen again?
+	//for ( i = copyStart; i > 0; i-- )
+	for ( i = copyStart; i > m_iRouteIndex; i-- )
+		m_Route[i] = m_Route[i-1];
+
+	m_Route[ m_iRouteIndex ].vecLocation = vecLocation;
+	m_Route[ m_iRouteIndex ].iType = type;
+
+
 }
 
 
@@ -5014,7 +5165,7 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 	if (isMovetypeFlying() )
 		vecDirUp = vecDirUp * sizeZ * 2;
 
-	for ( i = 0 ; i < 8; i++ )
+	for ( i = 0 ; i < MAX_TRIANGULATION_ATTEMPTS; i++ )
 	{
 // Debug, Draw the triangulation
 #if 0
@@ -5165,7 +5316,7 @@ BOOL CBaseMonster::usesSegmentedMove(void) {
 int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt ) {
 
 	if (drawPathConstant) {
-		DrawRoute(pev, m_Route, m_iRouteIndex, 0, 0, 176);
+		DrawMyRoute(0, 0, 176);
 	}
 
 
@@ -6396,7 +6547,7 @@ void CBaseMonster::TaskFail(void)
 		int x = 45;
 	}
 	
-	if(monsterID == 14){
+	if(monsterID == 9){
 		int x = 4;
 	}
 
@@ -7638,10 +7789,19 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	if ( iNumToCopy < ROUTE_SIZE )
 	{
 		m_Route[ iNumToCopy ].vecLocation = vecDest;
-		//why not both?
+		// why not both?
+		// WAIT - the final node leading to the goal should look at what type of thing
+		// we're moving towards, right?  Use MoveGoal to determine that (toEnemey, etc.)
 		//m_Route[ iNumToCopy ].iType |= bits_MF_IS_GOAL;
-		m_Route[ iNumToCopy ].iType |= (bits_MF_TO_NODE | bits_MF_IS_GOAL);
+		//m_Route[ iNumToCopy ].iType |= (bits_MF_TO_NODE | bits_MF_IS_GOAL);
+		int moveBit = MovementGoalToMoveFlag(m_movementGoal);
+		m_Route[ iNumToCopy ].iType |= ( moveBit | bits_MF_IS_GOAL);
 
+		// Made an extra end-node lead directly to the goal, so that counts (+1).
+		m_iRouteLength = iNumToCopy + 1;
+	}else{
+		// No extra node.
+		m_iRouteLength = iNumToCopy;
 	}
 
 	return TRUE;
@@ -8988,7 +9148,8 @@ void CBaseMonster::StartReanimation(void){
 	//before spawn or init script may interfere.
 	int oldSeq = pev->sequence;
 	//no recollection of that.
-	m_hEnemy = NULL;
+	//m_hEnemy = NULL;
+	ForgetEnemy();
 
 	//And clear the list of old enemies.
 	//or m_intOldEnemyNextIndex - 1 ?
@@ -9060,13 +9221,30 @@ int CBaseMonster::CanUseGermanModel(){
 
 // Try to find the earliest node that is marked GOAL. Sometimes this gets shifted around from 0
 WayPoint_t* CBaseMonster::GetGoalNode(){
-	for(int i = 0; i <= m_iRouteIndex; i++){
+
+	/*
+	for(int i = 0; i < m_iRouteLength; i++){
 		if(m_Route[i].iType & bits_MF_IS_GOAL){
-			//it is this.
+			// it is this.
 			return &m_Route[i];
 		}
 	}
+	*/
+
+	// Just do this now,
+	if(m_iRouteLength == 0){
+		// no route?  No goal node
+		return NULL;
+	}
+	if(m_Route[m_iRouteLength-1].iType & bits_MF_IS_GOAL){
+		// that's it
+		return &m_Route[m_iRouteLength-1];
+	}
+
 	// didn't find a node with bits_MF_IS_GOAL set from 0 to m_iRouteIndex?
+	// Unsure if treating the node at m_Route[m_iRouteLength-1] would be fine anyway.
+	// Can't think of when a route would lack a GOAL-marked node unless it ran out at 
+	// the max number of nodes a route can hold (ROUTE_SIZE).
 	return NULL;
 }//END OF getGoalNode
 

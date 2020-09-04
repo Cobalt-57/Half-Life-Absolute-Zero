@@ -571,12 +571,19 @@ int CSquadMonster::CheckEnemy ( CBaseEntity *pEnemy )
 {
 	int iUpdatedLKP;
 
-	if (MySquadLeader()->m_hEnemy == NULL) {
-		return 0;  //don't proceed
-	}
+
 
 	//MODDD - m_hEnemy -> pEnemy replacement.
+	// ALSO, moved above the "SquadLeader->enemy == NULL" check below, so that 'return 0' doesn't skip this.
 	iUpdatedLKP = CBaseMonster::CheckEnemy ( pEnemy );
+
+
+	if (MySquadLeader()->m_hEnemy == NULL) {
+		//MODDD - WAIT!  Don't only 'return 0'.  Still check the enemy through CBaseMonster in case its deadflag changed
+		// between runs.
+		// Actually doing this by moving the BaseMonster CheckEnemy call above this section.
+		return 0;  //don't proceed
+	}
 
 
 	// communicate with squad members about the enemy IF this individual has the same enemy as the squad leader.

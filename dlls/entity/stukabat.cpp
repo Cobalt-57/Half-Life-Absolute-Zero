@@ -2499,9 +2499,9 @@ void CStukaBat::RunTask ( Task_t *pTask )
 	case TASK_WAIT_PVS:{		
 
 
-		//Going to a secent? Be a little more lenient on completing this WAIT_FOR_MOVEMENT task.
+		// Going to a secent? Be a little more lenient on completing this WAIT_FOR_MOVEMENT task.
 		if(m_pSchedule == slStukaBatFindEat || m_pSchedule == slStukaBatCrawlToFood){
-			//if we're close enough to the goal just stop.
+			// if we're close enough to the goal just stop.
 			if(m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL){
 				float distToGoal = (m_Route[ m_iRouteIndex ].vecLocation - pev->origin).Length();
 				if(distToGoal < 32){
@@ -2516,7 +2516,7 @@ void CStukaBat::RunTask ( Task_t *pTask )
 		if(m_pSchedule == slStukaBatAttemptLand){
 			float distToGoal2D = (scentLocationMem - pev->origin).Length2D();
 			if( distToGoal2D <= 28 && blockSetActivity == -1){
-				//good enough, just stop to land already.
+				// good enough, just stop to land already.
 				TaskComplete();
 				return;
 			}
@@ -3827,8 +3827,6 @@ void CStukaBat::RunAI( void )
 		return;
 }
 
-//extern void DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, int r, int g, int b );
-
 
 void CStukaBat::SetTurnActivity(){
 	//this is for ground only.
@@ -4118,17 +4116,17 @@ int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 	//	case LOCALMOVE_INVALID:
 	//		//ORANGE
 	//		//DrawRoute( pev, m_Route, m_iRouteIndex, 239, 165, 16 );
-	//		DrawRoute( pev, m_Route, m_iRouteIndex, 48, 33, 4 );
+	//		DrawMyRoute( 48, 33, 4 );
 	//	break;
 	//	case LOCALMOVE_INVALID_DONT_TRIANGULATE:
 	//		//RED
 	//		//DrawRoute( pev, m_Route, m_iRouteIndex, 234, 23, 23 );
-	//		DrawRoute( pev, m_Route, m_iRouteIndex, 47, 5, 5 );
+	//		DrawMyRoute( 47, 5, 5 );
 	//	break;
 	//	case LOCALMOVE_VALID:
 	//		//GREEN
 	//		//DrawRoute( pev, m_Route, m_iRouteIndex, 97, 239, 97 );
-	//		DrawRoute( pev, m_Route, m_iRouteIndex, 20, 48, 20 );
+	//		DrawMyRoute( 20, 48, 20 );
 	//	break;
 	//}
 	

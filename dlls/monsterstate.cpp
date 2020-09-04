@@ -100,6 +100,9 @@ void CBaseMonster::SetState ( MONSTERSTATE State )
 //=========================================================
 void CBaseMonster::RunAI ( void )
 {
+	//MODDD - NOTE.  Confused as to how the enemy gets dropped on finding it to be dead?
+	// See schedule.cpp, on bits_COND_ENEMY_DEAD, the current m_hEnemy gets NULL'd.
+
 
 
 	//these conditions are reset each frame for safety now that schedules rememeber conditions after being set.
@@ -167,6 +170,9 @@ void CBaseMonster::RunAI ( void )
 			easyForcePrintLine("%s: Can I look and listen?! (%d || %d) %.2f", this->getClassname(), !FNullEnt( FIND_CLIENT_IN_PVS( edict() ) ),  ( m_MonsterState == MONSTERSTATE_COMBAT ), m_flDistLook );
 		}
 
+		if(monsterID == 9){
+			int x = 45;
+		}
 		//MODDD - some monsters may need to check for enemies and ignore the PVS check.
 		//        The archer is unable to detect a client and look for enemies if the player is past the waterlevel, strangely.
 		//        This is not good for monsters meant to rise to the top and do attacks from water to land. The player should not
@@ -182,6 +188,9 @@ void CBaseMonster::RunAI ( void )
 			// ???  probably not.
 			//ClearConditionsMod(IgnoreConditionsMod());
 
+			if(monsterID == 9){
+				int x = 45;
+			}
 			GetEnemy();
 		}
 
@@ -214,6 +223,9 @@ void CBaseMonster::RunAI ( void )
 		// do these calculations if monster has an enemy.
 		if ( m_hEnemy != NULL )
 		{
+			if(monsterID == 9){
+				int x = 45;
+			}
 			CheckEnemy( m_hEnemy );
 		}
 

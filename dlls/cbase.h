@@ -52,8 +52,6 @@ CBaseEntity
 
 
 
-#define MAX_PATH_SIZE 10 // max number of nodes available for a path.
-
 // These are caps bits to indicate what an object's capabilities (currently used for save/restore and level transitions)
 #define FCAP_CUSTOMSAVE				0x00000001
 #define FCAP_ACROSS_TRANSITION		0x00000002		// should transfer between transitions
@@ -218,15 +216,21 @@ CBaseEntity
 
 
 
-//MODDD - interesting. Several of these capabilities are never referred to anywhere else, hinting that they may have been intended for
-//        use in telling whether a monster could say, "Duck" or "Jump" for use in dodging or pathfinding
-
 // people gib if their health is <= this at the time of death
 #define GIB_HEALTH_VALUE	-30
 
 
 
-#define ROUTE_SIZE			8 // how many waypoints a monster can store at one time
+//MODDD - was 8, how about 16?
+#define ROUTE_SIZE			16 // how many waypoints a monster can store at one time
+
+//MODDD - was 10.  And why was MAX_PATH_SIZE over ROUTE_SIZE's as-is value then? 
+// Just... be the same as the max # of nodes a monster can take for a route.
+#define MAX_PATH_SIZE ROUTE_SIZE // max number of nodes available for a path.
+
+
+
+
 #define MAX_OLD_ENEMIES		4 // how many old enemies to remember
 
 #define bits_CAP_DUCK			( 1 << 0 )// crouch

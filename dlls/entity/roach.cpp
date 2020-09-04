@@ -351,7 +351,9 @@ void CRoach::PickNewDest ( int iCondition )
 			m_Route[ 0 ].vecLocation.y = pSound->m_vecOrigin.y + ( 3 - RANDOM_LONG(0,5) );
 			m_Route[ 0 ].vecLocation.z = pSound->m_vecOrigin.z;
 			m_Route[ 0 ].iType = bits_MF_TO_LOCATION;
-			m_movementGoal = RouteClassify( m_Route[ 0 ].iType );
+			m_movementGoal = RouteClassify( bits_MF_TO_LOCATION );
+			//MODDD - m_iRouteLength is new, set alongside changes to or replacements of the route
+			m_iRouteLength = 1;
 			return;
 		}
 	}
@@ -372,8 +374,9 @@ void CRoach::PickNewDest ( int iCondition )
 	m_Route[ 0 ].vecLocation.y = vecDest.y;
 	m_Route[ 0 ].vecLocation.z = pev->origin.z;
 	m_Route[ 0 ].iType = bits_MF_TO_LOCATION;
-	m_movementGoal = RouteClassify( m_Route[ 0 ].iType );
-
+	m_movementGoal = RouteClassify( bits_MF_TO_LOCATION );
+	m_iRouteLength = 1;
+	
 	if ( RANDOM_LONG(0,9) == 1 )
 	{
 		// every once in a while, a roach will play a skitter sound when they decide to run

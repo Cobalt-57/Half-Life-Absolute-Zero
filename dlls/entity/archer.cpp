@@ -736,28 +736,25 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 	
 
 
-
 	if( EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding) == 1){
 		switch(iReturn){
 			case LOCALMOVE_INVALID:
 				//ORANGE
 				//DrawRoute( pev, m_Route, m_iRouteIndex, 239, 165, 16 );
-				DrawRoute( pev, m_Route, m_iRouteIndex, 48, 33, 4 );
+				DrawMyRoute( 48, 33, 4 );
 			break;
 			case LOCALMOVE_INVALID_DONT_TRIANGULATE:
 				//RED
 				//DrawRoute( pev, m_Route, m_iRouteIndex, 234, 23, 23 );
-				DrawRoute( pev, m_Route, m_iRouteIndex, 47, 5, 5 );
+				DrawMyRoute( 47, 5, 5 );
 			break;
 			case LOCALMOVE_VALID:
 				//GREEN
 				//DrawRoute( pev, m_Route, m_iRouteIndex, 97, 239, 97 );
-				DrawRoute( pev, m_Route, m_iRouteIndex, 20, 48, 20 );
+				DrawMyRoute( 20, 48, 20 );
 			break;
 		}
 	}
-
-
 
 	return iReturn;
 }
@@ -1531,7 +1528,7 @@ void CArcher::StartTask( Task_t *pTask ){
 				
 				m_Route[ 0 ].vecLocation = m_vecMoveGoal;
 				m_Route[ 0 ].iType = iMoveFlag | bits_MF_IS_GOAL;
-
+				m_iRouteLength = 1;
 
 
 				//okay!	

@@ -553,4 +553,15 @@ HAssault no longer stuck in freeze-during-idle (caused spinning without firing) 
 
 'STUKA STARTTASK' and other stukabat printouts stops showing without 'stukaPrintout' turned on.
 
+Obscure glitch on monsters fixed (possibly present since retail):  The player dying at an odd time (like while an hgrunt in a squad is seeking cover and/or reloading) no longer causes the grunt to endlessly seek the exact location of the dead enemy (or player).
+
+VICTORY DANCE FOR HGRUNTS - 'Victory Dance' behavior for hgrunts changed, hassaults given it.
+- Members of a squad will come out from cover, look in the general direction of the dead enemy (player) and do the victory dance anim instead of seeking the corpse.
+- The squad leader will do the normal victory dance as usual.
+- HAssault can also do the same 'victory dance' routine (get within a short distance of the dead enemy/player's location).  Does the 'retreat_signal' sequence on stopping.
+- Any hgrunt/hassault victory dance animations that approach the player corpse do so at a shorter distance as well.
+
+An hassault standing that decides to stop spinning the chaingun plays the 'spindown' sequence as well as the sound.  Rare to see as they're usually moving at the time.
+
+General pathfinding bug fixed: 'SimplifyRoute' could potentially involve waypoints outside the monster's route length, leading to routes with 0'd or unintentional waypoints and/or without goal nodes, if simplifying a route that the monster has partially traversed (at least 1 waypoint already covered).
 

@@ -12,6 +12,9 @@
 // !!! Not to be confused with saving/restoring games!  This is for saving/restoring several stats
 // about a monster between different points of time, but primarily for CBarney so far (see description
 // below)
+// ALSO not to be confused with the 'monsterstate.h' file, which is for methods strongly related to
+// m_MonsterState and the ideal one, still methods of CBaseMonster.  SimpleMonsterSaveState is an
+// independent class.
 
 // Simple data class for remembering important stats about the Barney before he goes into cap-busting mode
 // pre-disaster from getting spammed with 'use' 's.

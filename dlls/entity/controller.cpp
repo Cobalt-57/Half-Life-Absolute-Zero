@@ -1062,7 +1062,6 @@ void CController::RunAI( void )
 }
 
 
-extern void DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteIndex, int r, int g, int b );
 
 void CController::Stop( void ) 
 { 
@@ -1208,7 +1207,7 @@ void CController::Move ( float flInterval )
 	}
 #else
 // Debug, draw the route
-//	DrawRoute( pev, m_Route, m_iRouteIndex, 0, 0, 255 );
+//	DrawMyRoute( 0, 0, 255 );
 #endif
 
 	// if the monster is moving directly towards an entity (enemy for instance), we'll set this pointer
