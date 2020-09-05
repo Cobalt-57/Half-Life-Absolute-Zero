@@ -2335,7 +2335,10 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 				if(UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.3)){
 					//if they face me anytime, face them.
 
-					stareTime += gpGlobals->frametime;
+					// NO. No gpGlobals->frametime, not good.
+					// Interval between thinks is 0.1 (unless you have reason to think otherwise)
+					//stareTime += gpGlobals->frametime;
+					stareTime += 0.1;
 
 
 					//they are.

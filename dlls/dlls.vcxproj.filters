@@ -685,5 +685,8 @@
     <ClInclude Include="..\pm_shared\pm_debug.h">
       <Filter>Header Files\pm_shared</Filter>
     </ClInclude>
+    <ClInclude Include="entity\gargantua.h">
+      <Filter>Header Files\entity</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

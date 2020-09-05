@@ -830,6 +830,8 @@ CBaseEntity* CBaseMonster::Respawn(void) { return NULL; }
 void CBaseMonster::AttemptToMaterialize(void) {}
 void CBaseMonster::Materialize(void) {}
 
+float CBaseMonster::ScriptEventSoundAttn(void) {return 0;}
+float CBaseMonster::ScriptEventSoundVoiceAttn(void) { return 0; }
 
 
 //removed.

@@ -14,26 +14,33 @@
 ****/
 
 
-#pragma once
+//MODDD - TODO, low priority.
+// Idea: The 'throwbody' sequence is a choice for MELEE_ATTACK1 if there is enough space above the garg.
+// A 'grab' event goes at time 5/16 into the animation.  If successful, turn off gravity for the thing grabbed
+// and force its position to my hand every frame, faster think times during that time (not for the usual AI).
+// Toss the grabbed entity at time 16/16 into the animation (stop forcing to attachment, restore gravity, apply
+// toss velocity to it).  And restore normal think time.
+// Friendly shows how to do the different think-time thing at least
+// LOT OF THAT DONE, but disabled from builds until finished... maybe.
+// Player needs a physics flag to disable gravity if they're the grabbed ent, AND need to implement the faster thing
+// times while having a grabbed ent.
+
+
 
 //=========================================================
 // Gargantua
 //=========================================================
-#include "extdll.h"
-#include "util.h"
-#include "cbase.h"
-#include "nodes.h"
-#include "basemonster.h"
-#include "schedule.h"
+#include "gargantua.h"
 #include "customentity.h"
 #include "weapons.h"
-#include "effects.h"
 #include "soundent.h"
 #include "decals.h"
 #include "explode.h"
 #include "func_break.h"
 #include "scripted.h"
 #include "gib.h"
+#include "util_debugdraw.h"
+#include "defaultai.h"
 
 
 //MODDD - extern
@@ -51,9 +58,10 @@ EASY_CVAR_EXTERN_DEBUGONLY(gargantuaKilledBoundsAssist)
 
 
 
-//=========================================================
-// Gargantua Monster
-//=========================================================
+
+// no need for this now
+//#define bits_COND_GARG_FLAMETHROWER_PREATTACK_EXPIRED	( bits_COND_SPECIAL1 )
+
 
 // Garg animation events
 #define GARG_AE_SLASH_LEFT			1
@@ -71,29 +79,282 @@ EASY_CVAR_EXTERN_DEBUGONLY(gargantuaKilledBoundsAssist)
 #define GARG_BEAM_SPRITE2			"sprites/xbeam3.spr"
 #define GARG_STOMP_SPRITE_NAME		"sprites/gargeye1.spr"
 #define GARG_STOMP_BUZZ_SOUND		"weapons/mine_charge.wav"
-#define GARG_FLAME_LENGTH			330
 #define GARG_GIB_MODEL				"models/metalplategibs.mdl"
 
-#define ATTN_GARG					(ATTN_NORM)
+//MODDD - was just ATTN_NORM?   Really?    Let my sounds carry further.
+//#define ATTN_GARG					(ATTN_NORM)
+#define ATTN_GARG					(0.64)
 
 #define STOMP_SPRITE_COUNT			10
 
 
-#define SPIRAL_INTERVAL 0.1 //025
-#define STOMP_INTERVAL		0.025
+#define SPIRAL_INTERVAL		0.1  //025
 
-//MODDD - changed a little, was 80
-const float GARG_MELEEATTACKDIST = 90.0;
+//MODDD - twice as much, too many sprite effects can crash.
+//#define STOMP_INTERVAL	0.025
+#define STOMP_INTERVAL		0.050
+
+//MODDD - changed, was 80
+const float GARG_MELEEATTACKDIST = 115.0;
+
+//MODDD - constant split into three constants: how long it is visually, to what extent it deals damage,
+// and how close the enemy must be to start the attack (added delays can make starting exactly at max range
+// easy to abuse)
+// ORIGINAL WAS 330 FOR ALL THESE
+#define GARG_FLAME_LENGTH_EFFECT	400
+#define GARG_FLAME_LENGTH_LOGIC		370
+#define GARG_FLAME_LENGTH_AI		275
+
+// Was 400.  If the monster is this far away while using the flamethrower, count the duration of the flamethrower
+// down faster to try another attack or chase sooner.
+#define GARG_FLAME_CANCEL_DIST 350
+
+// Was 64.  If the thing hit by the flamethrower is under this distance from the center of the flame effect (?),
+// it will take maximum damage.  Takes reduced the further out it is.
+#define GARG_FLAME_MAX_DAMAGE_DIST 90
+
 
 // If you wanna get technical these should be static vars of CGargantua buuuuuuuut it doesn't make a difference,
 // so long as these names aren't collided with elsewhere.
 int gStompSprite = 0;
 int gGargGibModel = 0;
 
-class CSmoker;
+int g_gargantua_shootflames1_sequenceID = -1;
+int g_gargantua_walk_sequenceID = -1;
+int g_gargantua_run_sequenceID = -1;
+int g_gargantua_throwbody_sequenceID = -1;
+
+
+float g_gargantua_rawDamageCumula = 0;
+
+
+//=========================================================
+// AI Schedules Specific to this monster
+//=========================================================
+
+enum
+{
+	SCHED_GARG_FLAMETHROWER_FAIL = LAST_COMMON_SCHEDULE + 1,
+};
+
+
+enum
+{
+	TASK_SOUND_ATTACK = LAST_COMMON_TASK + 1,
+	TASK_FLAME_SWEEP,
+	TASK_WAIT_FOR_FLAMETHROWER_PREDELAY,
+	TASK_PLAY_PRE_FLAMETHROWER_SEQUENCE,
+};
 
 
 
+Task_t	tlGargFlame[] =
+{
+	{ TASK_STOP_MOVING,			(float)0		},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	// { TASK_PLAY_SEQUENCE,		(float)ACT_SIGNAL1	},
+	// IF the player goes out of range while playing the pre-flamethrower sequence,
+	// force back to IDLE.  Pick a new sequence unconditionally.
+	{ TASK_SET_FAIL_SCHEDULE,   (float)SCHED_GARG_FLAMETHROWER_FAIL},
+	//MODDD - NEW.  Again, not to be confused for the 'preAttackDelay'.
+	// This attack schedule gets called after the preAttackDelay finishes
+	{ TASK_PLAY_PRE_FLAMETHROWER_SEQUENCE, (float)0	},
+	{ TASK_SOUND_ATTACK,		(float)0		},
+	{ TASK_SET_ACTIVITY,		(float)ACT_MELEE_ATTACK2 },
+	//MODDD - changed, was 4.5.  Flamethrower max time active reduced.
+	{ TASK_FLAME_SWEEP,			(float)3.7		},
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
+};
+
+Schedule_t	slGargFlame[] =
+{
+	{ 
+		tlGargFlame,
+		ARRAYSIZE ( tlGargFlame ),
+		//MODDD - interruptable by heavy damage
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"GargFlame"
+	},
+};
+
+
+
+
+//MODDD - NEW.  For standing during the flamethrower pre-attack delay.
+// Not interruptable by MELEE_ATTACK2 or else it would keep infinitely picked over and over
+// while waiting for the pre-delay to expire.
+// NOTICE - does not involve the 'shootflames1' animation, the stand-to-arms-in-position one.
+// That comes automatically on detecting that the previous animation wasn't flame-related.
+Task_t	tlGargFlamePreAttack[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
+	//{ TASK_WAIT_INDEFINITE,		(float)0		},
+	{ TASK_WAIT_FOR_FLAMETHROWER_PREDELAY, (float)0 }
+};
+
+//MODDD - hassault relies on this, clone if the old way was better.
+// (lacked things below the 'why' line).
+Schedule_t	slGargFlamePreAttack[] =
+{
+	{
+		tlGargFlamePreAttack,
+		ARRAYSIZE ( tlGargFlamePreAttack ), 
+		bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+		//bits_COND_CAN_ATTACK |
+		bits_COND_CAN_MELEE_ATTACK1,
+		0,
+		"GargFlamePreAttack"
+	},
+};
+
+
+// Same as slFail from defaultai.cpp, but forces the act-change to pick a new sequence.
+// Failing while getting the flamethrower out can be tricked into thinking there is no need for a 
+// new sequence ( the pre-flamethrower anim that puts the arms in place still leaves the current act at IDLE).
+// Also wait for less time (was 2), skip the PVS wait.
+Task_t	tlGargFlamethrowerFail[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY_FORCE,	(float)ACT_IDLE },
+	{ TASK_WAIT,				(float)0.6		},
+	//{ TASK_WAIT_PVS,			(float)0		},
+};
+
+Schedule_t	slGargFlamethrowerFail[] =
+{
+	{
+		tlGargFlamethrowerFail,
+		ARRAYSIZE ( tlGargFlamethrowerFail ),
+		bits_COND_CAN_ATTACK |
+		//MODDD - new?  Retrying methods to get to an enemy when pathfinding fails despite a better enemy being closer isn't great.
+		bits_COND_NEW_ENEMY
+		,
+		0,
+		"GargFlamethrowerFail"
+	},
+};
+
+
+
+// primary melee attack
+Task_t	tlGargSwipe[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	{ TASK_MELEE_ATTACK1,		(float)0		},
+};
+
+Schedule_t	slGargSwipe[] =
+{
+	{ 
+		tlGargSwipe,
+		ARRAYSIZE ( tlGargSwipe ), 
+		
+		//MODDD - wait, why was this ever interruptable by MELEE_ATTACK2 (flamethrower)?
+		// If this attack started it may as well finish, higher framerates now anyway.
+		//bits_COND_CAN_MELEE_ATTACK2 ||
+		//MODDD - interruptable by heavy damage
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"GargSwipe"
+	},
+};
+
+
+
+
+//MODDD - NEW.  Turned the stomp attack into a custom schedule for more control.
+// Was re-using the standard slRangeAttack1 schedule (defaultai.cpp).
+// Also interruptable by less things like most other garg schedules.
+Task_t	tlGargStompAttack[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	{ TASK_RANGE_ATTACK1,		(float)0		},
+};
+
+
+Schedule_t	slGargStompAttack[] =
+{
+	{ 
+		tlGargStompAttack,
+		ARRAYSIZE ( tlGargStompAttack ), 
+		//bits_COND_NEW_ENEMY		|
+		//bits_COND_ENEMY_DEAD		|
+		bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE,
+		
+		0,
+		"GargStompAttack"
+	},
+};
+
+
+
+
+
+//MODDD - new.  Clone of ChaseEnemySmart (defaultai.cpp).
+// Oh.  Nothing different about this.  Well.  Oops.
+Task_t tlGargChaseEnemySmart[] = 
+{
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE},   //MODDD is this okay?
+
+	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CHASE_ENEMY_FAILED	},
+	//{ TASK_GET_PATH_TO_ENEMY,	(float)0		},
+	//{ TASK_RUN_PATH,			(float)0		},
+	{ TASK_MOVE_TO_ENEMY_RANGE,	(float)0		},
+	{ TASK_CHECK_STUMPED,		(float)0		},
+};
+
+Schedule_t slGargChaseEnemySmart[] =
+{
+	{
+		tlGargChaseEnemySmart,
+		ARRAYSIZE ( tlGargChaseEnemySmart ),
+		bits_COND_NEW_ENEMY			|
+		//MODDD - added, the bullsquid counts this.  Why doesn't everything?
+		bits_COND_ENEMY_DEAD |
+		
+		bits_COND_CAN_RANGE_ATTACK1	|
+		bits_COND_CAN_MELEE_ATTACK1	|
+		bits_COND_CAN_RANGE_ATTACK2	|
+		bits_COND_CAN_MELEE_ATTACK2	|
+		bits_COND_TASK_FAILED		|
+		bits_COND_HEAR_SOUND |
+		//bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE,
+		
+		bits_SOUND_DANGER,
+		"GargChaseEnemySmart"
+	},
+};
+
+
+
+
+
+DEFINE_CUSTOM_SCHEDULES( CGargantua )
+{
+	slGargFlame,
+	slGargFlamePreAttack,
+	slGargFlamethrowerFail,
+	slGargSwipe,
+	slGargStompAttack,
+	slGargChaseEnemySmart,
+};
+
+IMPLEMENT_CUSTOM_SCHEDULES( CGargantua, CBaseMonster );
+
+
+
+
+
+
+//----------------------------------------------------------------------------------
+// Effects/attack-related classes
 
 // Spiral Effect
 class CSpiral : public CBaseEntity
@@ -110,11 +371,20 @@ LINK_ENTITY_TO_CLASS( streak_spiral, CSpiral );
 class CStomp : public CBaseEntity
 {
 public:
-	CStomp();
+	// now you need save/restore?
+	float maxSpeed;
+
+	
+	virtual int	Save( CSave &save );
+	virtual int	Restore( CRestore &restore );
+	static TYPEDESCRIPTION m_SaveData[];
+
+
+	CStomp(void);
 	BOOL usesSoundSentenceSave(void);
 	void Spawn( void );
 	void Think( void );
-	static CStomp *StompCreate( const Vector &origin, const Vector &end, float speed );
+	static CStomp *StompCreate( const Vector &origin, const Vector &dir, float theDist, float speed, float maxSpeed, edict_t* theCreator  );
 
 private:
 // UNDONE: re-use this sprite list instead of creating new ones all the time
@@ -122,21 +392,149 @@ private:
 };
 
 LINK_ENTITY_TO_CLASS( garg_stomp, CStomp );
-CStomp *CStomp::StompCreate( const Vector &origin, const Vector &end, float speed )
+
+
+
+
+
+
+
+class CSmoker : public CBaseEntity
+{
+public:
+	void Spawn( void );
+	void Think( void );
+};
+
+LINK_ENTITY_TO_CLASS( env_smoker, CSmoker );
+
+
+
+
+
+// local method (to this file)
+void StreakSplash( const Vector &origin, const Vector &direction, int color, int count, int speed, int velocityRange )
+{
+	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, origin );
+	WRITE_BYTE( TE_STREAK_SPLASH );
+	WRITE_COORD( origin.x );		// origin
+	WRITE_COORD( origin.y );
+	WRITE_COORD( origin.z );
+	WRITE_COORD( direction.x );	// direction
+	WRITE_COORD( direction.y );
+	WRITE_COORD( direction.z );
+	WRITE_BYTE( color );	// Streak color 6
+	WRITE_SHORT( count );	// count
+	WRITE_SHORT( speed );
+	WRITE_SHORT( velocityRange );	// Random velocity modifier
+	MESSAGE_END();
+}
+
+
+
+
+
+
+
+
+
+void CSpiral::Spawn( void )
+{
+	pev->movetype = MOVETYPE_NONE;
+	pev->nextthink = gpGlobals->time;
+	pev->solid = SOLID_NOT;
+	UTIL_SetSize(pev, g_vecZero, g_vecZero );
+	pev->effects |= EF_NODRAW;
+	pev->angles = g_vecZero;
+}
+
+
+CSpiral* CSpiral::Create(const Vector& origin, float height, float radius, float duration)
+{
+	if (duration <= 0)
+		return NULL;
+
+	CSpiral* pSpiral = GetClassPtr((CSpiral*)NULL);
+	pSpiral->Spawn();
+	pSpiral->pev->dmgtime = pSpiral->pev->nextthink;
+	pSpiral->pev->origin = origin;
+	pSpiral->pev->scale = radius;
+	pSpiral->pev->dmg = height;
+	pSpiral->pev->speed = duration;
+	pSpiral->pev->health = 0;
+	pSpiral->pev->angles = g_vecZero;
+
+	return pSpiral;
+}
+
+
+void CSpiral::Think(void)
+{
+	float time = gpGlobals->time - pev->dmgtime;
+
+	while (time > SPIRAL_INTERVAL)
+	{
+		Vector position = pev->origin;
+		Vector direction = Vector(0, 0, 1);
+
+		float fraction = 1.0 / pev->speed;
+
+		float radius = (pev->scale * pev->health) * fraction;
+
+		position.z += (pev->health * pev->dmg) * fraction;
+		pev->angles.y = (pev->health * 360 * 8) * fraction;
+		UTIL_MakeVectors(pev->angles);
+		position = position + gpGlobals->v_forward * radius;
+		direction = (direction + gpGlobals->v_forward).Normalize();
+
+		StreakSplash(position, Vector(0, 0, 1), RANDOM_LONG(8, 11), 20, RANDOM_LONG(50, 150), 400);
+
+		// Jeez, how many counters should this take ? :)
+		pev->dmgtime += SPIRAL_INTERVAL;
+		pev->health += SPIRAL_INTERVAL;
+		time -= SPIRAL_INTERVAL;
+	}
+
+	pev->nextthink = gpGlobals->time;
+
+	if (pev->health >= pev->speed)
+		UTIL_Remove(this);
+}
+
+
+
+
+//MODDD - requires the ent (gargantua) that created this.
+// Also takes the 'dir' (expected normalized) and length instead of the end vector to generate the dir from.  And takes a maxSpeed as well.
+CStomp *CStomp::StompCreate( const Vector &origin, const Vector &dir, float theDist, float speed, float maxSpeed, edict_t* theCreator )
 {
 	CStomp *pStomp = GetClassPtr( (CStomp *)NULL );
 	
 	pStomp->pev->origin = origin;
-	Vector dir = (end - origin);
-	pStomp->pev->scale = dir.Length();
-	pStomp->pev->movedir = dir.Normalize();
+	//MODDD - scale is the 'life' of the stomp.  May as well go somewhat further.
+	pStomp->pev->scale = theDist * 1.8;
+	pStomp->pev->movedir = dir;
 	pStomp->pev->speed = speed;
+	pStomp->maxSpeed = maxSpeed;
+
+	//MODDD - and why did as-is never set the owner to know not to damage the garg that made this stomp?  (rare but still)
+	pStomp->pev->owner = theCreator;
+
 	pStomp->Spawn();
 	
 	return pStomp;
 }
 
-CStomp::CStomp(){
+
+TYPEDESCRIPTION	CStomp::m_SaveData[] = 
+{
+	DEFINE_FIELD( CStomp, maxSpeed, FIELD_FLOAT ),
+};
+IMPLEMENT_SAVERESTORE( CStomp, CBaseEntity );
+
+
+
+CStomp::CStomp(void){
 	
 }
 BOOL CStomp::usesSoundSentenceSave(void){
@@ -154,12 +552,40 @@ void CStomp::Spawn( void )
 	pev->model = MAKE_STRING(GARG_STOMP_SPRITE_NAME);
 	pev->rendermode = kRenderTransTexture;
 	pev->renderamt = 0;
-	UTIL_PlaySound( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND, 1, ATTN_NORM, 0, PITCH_NORM * 0.55, FALSE);
+
+
+	//MODDD - uhhh.  why not?
+	pev->movetype = MOVETYPE_STEP;
+	pev->solid = SOLID_NOT;
+	UTIL_SetSize(pev, g_vecZero, g_vecZero );
+
+
+	float attn;
+	float vol;
+	if(g_iSkillLevel == SKILL_HARD){
+		// carries less far, since there's six of these things
+		attn = ATTN_NORM - 0.08;
+		vol = 0.94;
+	}else{
+		// normal sound stats
+		attn = ATTN_NORM - 0.20;
+		vol = 1;
+	}
+
+	UTIL_PlaySound( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND, vol, attn, 0, PITCH_NORM * 0.55, FALSE);
 }
 
 
 void CStomp::Think( void )
 {
+	//MODDD - NOTE.  BEWARE.  gpGlobals->frametime is not a reliable measure of the time since the previous think-frame.
+	// In fact it's a terrible one.  It's better for seeing the difference between render frames.  Which... kinda doesn't
+	// have a use in much of serverside in dealing with most think-related things.
+	// Assume a difference of 0.1 since that's standard for think times anyway, definitely here too.
+	// (for retail, replace 0.1 with gpGlobals->frametime anyway)
+	float betweenThinkTime = 0.1;
+
+
 	TraceResult tr;
 
 	pev->nextthink = gpGlobals->time + 0.1;
@@ -167,7 +593,7 @@ void CStomp::Think( void )
 	// Do damage for this frame
 	Vector vecStart = pev->origin;
 	vecStart.z += 30;
-	Vector vecEnd = vecStart + (pev->movedir * pev->speed * gpGlobals->frametime);
+	Vector vecEnd = vecStart + (pev->movedir * pev->speed * betweenThinkTime);
 
 	UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, ENT(pev), &tr );
 	
@@ -175,27 +601,78 @@ void CStomp::Think( void )
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
 		entvars_t *pevOwner = pev;
-		if ( pev->owner )
+		if ( pev->owner ){
 			pevOwner = VARS(pev->owner);
+		}
 
-		if ( pEntity )
-			pEntity->TakeDamage( pev, pevOwner, gSkillData.gargantuaDmgStomp, DMG_SONIC );
+		if ( pEntity ){
+			pEntity->TakeDamage( pev, pevOwner, gSkillData.gargantuaDmgStomp, DMG_SONIC, 0 );
+		}
 	}
 	
 	// Accelerate the effect
-	pev->speed = pev->speed + (gpGlobals->frametime) * pev->framerate;
-	pev->framerate = pev->framerate + (gpGlobals->frametime) * 1500;
+	pev->speed = pev->speed + (betweenThinkTime) * pev->framerate;
+
+	// maxSpeed
+	if(pev->speed > maxSpeed){
+		// cap it
+		pev->speed = maxSpeed;
+	}
+
+
+	pev->framerate = pev->framerate + (betweenThinkTime) * 1500;
 	
+
+	// This... isn't working out so great, nevermind.
+	/*
+	//float myYaw = UTIL_VecToYaw ( pev->movedir );
+	float myYaw = UTIL_VecToYawRadians(pev->movedir);
+
+	// record the origin before/after this move.  Effects will be planted between these points.
+	Vector prevOrigin = pev->origin;
+	BOOL walkSuccess = WALK_MOVE(ENT(pev), myYaw * (180.0f/M_PI), pev->speed * betweenThinkTime, WALKMOVE_NORMAL);
+
+	
+	//if(!walkSuccess){
+	//	// oh dear?
+	//	UTIL_Remove(this);
+	//	UTIL_StopSound( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND, FALSE );
+	//	return;
+	//}
+
+	Vector newOrigin = pev->origin;
+
+	Vector originDelta = newOrigin - prevOrigin;
+	Vector moveDir = originDelta.Normalize();
+	float originDist = originDelta.Length();
+
+	// and how many times does STOMP_INTERVAL fit into the dmgtime difference from gpGlobals->time?
+	float timez = (gpGlobals->time - pev->dmgtime) / STOMP_INTERVAL;
+	float eachTimeOriginShift = originDist / timez;
+	
+	// shift this instead?  Starts at the origin before move, gets moved into the newOrigin place.
+	Vector imaginaryOrigin = prevOrigin;
+	*/
+
 	// Move and spawn trails
 	while ( gpGlobals->time - pev->dmgtime > STOMP_INTERVAL )
 	{
+		//MODDD - replaced, maybe?
+		// (if using imaginaryOrigin instead, replace any mentions of this->pev->origin with that)
 		pev->origin = pev->origin + pev->movedir * pev->speed * STOMP_INTERVAL;
-		for ( int i = 0; i < 2; i++ )
+
+		// inch closer to the current origin.
+		//imaginaryOrigin = imaginaryOrigin + pev->movedir * eachTimeOriginShift;
+
+
+		//MODDD - make fewer of these, it gets crashy.  One is plenty this iteration.
+		//for ( int i = 0; i < 2; i++ )
+		for ( int i = 0; i < 1; i++ )
 		{
-			CSprite *pSprite = CSprite::SpriteCreate( GARG_STOMP_SPRITE_NAME, pev->origin, TRUE );
+			CSprite *pSprite = CSprite::SpriteCreate( GARG_STOMP_SPRITE_NAME, this->pev->origin, TRUE );
 			if ( pSprite )
 			{
-				UTIL_TraceLine( pev->origin, pev->origin - Vector(0,0,500), ignore_monsters, edict(), &tr );
+				UTIL_TraceLine( this->pev->origin, this->pev->origin - Vector(0,0,500), ignore_monsters, edict(), &tr );
 				pSprite->pev->origin = tr.vecEndPos;
 				pSprite->pev->velocity = Vector(RANDOM_FLOAT(-200,200),RANDOM_FLOAT(-200,200),175);
 				// pSprite->AnimateAndDie( RANDOM_FLOAT( 8.0, 12.0 ) );
@@ -212,167 +689,48 @@ void CStomp::Think( void )
 			// Life has run out
 			UTIL_Remove(this);
 			UTIL_StopSound( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND, FALSE );
+			//MODDDD - about to be removed?  Why bother with the rest of this loop then?
+			break;
 		}
+	}//while loop through stomp interval
 
-	}
+
+}//Think
+
+
+
+
+void CSmoker::Spawn( void )
+{
+	pev->movetype = MOVETYPE_NONE;
+	pev->nextthink = gpGlobals->time;
+	pev->solid = SOLID_NOT;
+	UTIL_SetSize(pev, g_vecZero, g_vecZero );
+	pev->effects |= EF_NODRAW;
+	pev->angles = g_vecZero;
+}
+
+void CSmoker::Think( void )
+{
+	// lots of smoke
+	UTIL_Smoke(MSG_PVS, pev->origin, NULL, pev->origin, RANDOM_FLOAT( -pev->dmg, pev->dmg ), RANDOM_FLOAT( -pev->dmg, pev->dmg ), 0, g_sModelIndexSmoke, RANDOM_LONG(pev->scale, pev->scale * 1.1), RANDOM_LONG(8,14));
+
+	pev->health--;
+	if ( pev->health > 0 )
+		pev->nextthink = gpGlobals->time + RANDOM_FLOAT(0.1, 0.2);
+	else
+		UTIL_Remove( this );
 }
 
 
-void StreakSplash( const Vector &origin, const Vector &direction, int color, int count, int speed, int velocityRange )
-{
-	MESSAGE_BEGIN( MSG_PVS, SVC_TEMPENTITY, origin );
-		WRITE_BYTE( TE_STREAK_SPLASH );
-		WRITE_COORD( origin.x );		// origin
-		WRITE_COORD( origin.y );
-		WRITE_COORD( origin.z );
-		WRITE_COORD( direction.x );	// direction
-		WRITE_COORD( direction.y );
-		WRITE_COORD( direction.z );
-		WRITE_BYTE( color );	// Streak color 6
-		WRITE_SHORT( count );	// count
-		WRITE_SHORT( speed );
-		WRITE_SHORT( velocityRange );	// Random velocity modifier
-	MESSAGE_END();
-}
-
-
-class CGargantua : public CBaseMonster
-{
-private:
-	static const char* pAttackHitSounds[];
-	static const char* pBeamAttackSounds[];
-	static const char* pAttackMissSounds[];
-	//static const char *pRicSounds[];
-	static const char* pFootSounds[];
-	static const char* pIdleSounds[];
-	static const char* pAlertSounds[];
-	static const char* pPainSounds[];
-	static const char* pAttackSounds[];
-	static const char* pStompSounds[];
-	static const char* pBreatheSounds[];
-
-	//MODDD - new
-	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType, int iDmgTypeMod);
-	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType);
-
-	BOOL needsMovementBoundFix(void);
-
-
-	CSprite* m_pEyeGlow;		// Glow around the eyes
-	CBeam* m_pFlame[4];		// Flame beams
-
-	int		m_eyeBrightness;	// Brightness target
-	float	m_seeTime;			// Time to attack (when I see the enemy, I set this)
-	float	m_flameTime;		// Time of next flame attack
-	float	m_painSoundTime;	// Time of next pain sound
-	float	m_streakTime;		// streak timer (don't send too many)
-	float	m_flameX;			// Flame thrower aim
-	float	m_flameY;
-
-public:
-	BOOL gargDeadBoundChangeYet;
-	float fallShakeTime;
-
-
-public:
-	CGargantua();
-
-	void Spawn( void );
-	void Precache( void );
-	void SetYawSpeed( void );
-	int  Classify ( void );
-	
-	BOOL isSizeGiant(void);
-
-	void MonsterThink(void);
-	int  IRelationship( CBaseEntity *pTarget );
-	
-	GENERATE_TRACEATTACK_PROTOTYPE
-	GENERATE_TAKEDAMAGE_PROTOTYPE
-
-
-	void HandleAnimEvent( MonsterEvent_t *pEvent );
-
-	BOOL CheckMeleeAttack1( float flDot, float flDist );		// Swipe
-	BOOL CheckMeleeAttack2( float flDot, float flDist );		// Flames
-	BOOL CheckRangeAttack1( float flDot, float flDist );		// Stomp attack
-	
-
-	//MODDD - made the bounds bigger, so that no matter where the death anim falls, it will be included for registering weapons hits.
-	//(at the moment, the corpse is not collidable with movable entities though due to being difficult to determine with the current cheap hitbox.)
-	//being able to have an offset to "pev->origin" for drawing (or the hitbox at least) would be very nice.
-	/*
-	void SetObjectCollisionBox( void )
-	{
-		pev->absmin = pev->origin + Vector( -80, -80, 0 );
-		pev->absmax = pev->origin + Vector( 80, 80, 214 );
-	}
-	*/
-	//MODDD - new.
-	void SetObjectCollisionBox( void )
-	{
-		//EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "garg deadflag? %d", pev->deadflag));
-		//could it be re-adjusted for "DEAD_DEAD" too?
-		if(pev->deadflag != DEAD_NO){
-			//if we are dead?
-			pev->absmin = pev->origin + Vector( -280, -280, 0 );
-			pev->absmax = pev->origin + Vector( 280, 280, 214 );
-		}else{
-			pev->absmin = pev->origin + Vector( -80, -80, 0 );
-			pev->absmax = pev->origin + Vector( 80, 80, 214 );
-			//CBaseMonster::SetObjectCollisionBox();
-		}
-	}
-
-
-	Schedule_t *GetScheduleOfType( int Type );
-	void StartTask( Task_t *pTask );
-	void RunTask( Task_t *pTask );
-
-	void PrescheduleThink( void );
-
-	GENERATE_KILLED_PROTOTYPE
-	void onDelete(void);
 
 
 
-	void DeathEffect( void );
+//----------------------------------------------------------------------------------
+// GARGANTUA IMPLEMENTATIONS
+//----------------------------------------------------------------------------------
 
-	//MODDD - Why unused?
-	void DeathSound(void);
-
-	void EyeOff( void );
-	void EyeOn( int level );
-	void EyeUpdate( void );
-	void Leap( void );
-	void StompAttack( void );
-	void FlameCreate( void );
-	void FlameUpdate( void );
-	void FlameControls( float angleX, float angleY );
-	void FlameDestroy(BOOL playOffSound );
-	inline BOOL FlameIsOn( void ) { return m_pFlame[0] != NULL; }
-
-	void FlameDamage( Vector vecStart, Vector vecEnd, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType );
-
-	//MODDD - new. What causes heavy damage? It takes a lot to do that to me.
-	void OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int bitsDamageType, int bitsDamageTypeMod);
-
-	//MODDD - advanced anim.  Just to change flinch speeds per difficulty.
-	BOOL usesAdvancedAnimSystem(void);
-	int LookupActivityHard(int activity);
-	int tryActivitySubstitute(int activity);
-
-	int getHullIndexForNodes(void);
-
-
-	virtual int	Save( CSave &save );
-	virtual int	Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
-
-	CUSTOM_SCHEDULES;
-		
-};
-
+// class CGargantua moved to gargantua.h
 
 #if REMOVE_ORIGINAL_NAMES != 1
 	LINK_ENTITY_TO_CLASS( monster_gargantua, CGargantua );
@@ -400,6 +758,7 @@ TYPEDESCRIPTION	CGargantua::m_SaveData[] =
 	DEFINE_ARRAY( CGargantua, m_pFlame, FIELD_CLASSPTR, 4 ),
 	DEFINE_FIELD( CGargantua, m_flameX, FIELD_FLOAT ),
 	DEFINE_FIELD( CGargantua, m_flameY, FIELD_FLOAT ),
+	DEFINE_FIELD( CGargantua, pissedRunTime, FIELD_TIME ),
 };
 
 IMPLEMENT_SAVERESTORE( CGargantua, CBaseMonster );
@@ -494,75 +853,49 @@ const char *CGargantua::pBreatheSounds[] =
 	"garg/gar_breathe2.wav",
 	"garg/gar_breathe3.wav",
 };
-//=========================================================
-// AI Schedules Specific to this monster
-//=========================================================
-#if 0
-enum
-{
-	SCHED_ = LAST_COMMON_SCHEDULE + 1,
-};
-#endif
-
-enum
-{
-	TASK_SOUND_ATTACK = LAST_COMMON_TASK + 1,
-	TASK_FLAME_SWEEP,
-};
-
-Task_t	tlGargFlame[] =
-{
-	{ TASK_STOP_MOVING,			(float)0		},
-	{ TASK_FACE_ENEMY,			(float)0		},
-	{ TASK_SOUND_ATTACK,		(float)0		},
-	// { TASK_PLAY_SEQUENCE,		(float)ACT_SIGNAL1	},
-	{ TASK_SET_ACTIVITY,		(float)ACT_MELEE_ATTACK2 },
-	{ TASK_FLAME_SWEEP,			(float)4.5		},
-	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
-};
-
-Schedule_t	slGargFlame[] =
-{
-	{ 
-		tlGargFlame,
-		ARRAYSIZE ( tlGargFlame ),
-		//MODDD - interruptable by heavy damage
-		bits_COND_HEAVY_DAMAGE,
-		0,
-		"GargFlame"
-	},
-};
 
 
-// primary melee attack
-Task_t	tlGargSwipe[] =
-{
-	{ TASK_STOP_MOVING,			0				},
-	{ TASK_FACE_ENEMY,			(float)0		},
-	{ TASK_MELEE_ATTACK1,		(float)0		},
-};
-
-Schedule_t	slGargSwipe[] =
-{
-	{ 
-		tlGargSwipe,
-		ARRAYSIZE ( tlGargSwipe ), 
-		bits_COND_CAN_MELEE_ATTACK2 ||
-		//MODDD - interruptable by heavy damage
-		bits_COND_HEAVY_DAMAGE,
-		0,
-		"GargSwipe"
-	},
-};
 
 
-DEFINE_CUSTOM_SCHEDULES( CGargantua )
-{
-	slGargFlame,
-	slGargSwipe,
-};
 
-IMPLEMENT_CUSTOM_SCHEDULES( CGargantua, CBaseMonster );
+CGargantua::CGargantua(void){
+
+	gargDeadBoundChangeYet = FALSE;
+	fallShakeTime = -1;
+
+	flameThrowerPreAttackDelay = -1;
+	resetFlameThrowerPreAttackDelay = -1;
+	flameThrowerPreAttackInterrupted = FALSE;
+	pissedRunTime = -1;
+
+	consecutiveStomps = 0;
+	grabbedEnt = NULL;
+
+}
+
+
+
+void CGargantua::setModel(void){
+	CGargantua::setModel(NULL);
+}
+void CGargantua::setModel(const char* m){
+	CBaseMonster::setModel(m);
+
+	if (g_gargantua_shootflames1_sequenceID == -1) {
+		g_gargantua_shootflames1_sequenceID = LookupSequence("shootflames1");
+		g_gargantua_walk_sequenceID = LookupSequence("walk");
+		g_gargantua_run_sequenceID = LookupSequence("run");
+		g_gargantua_throwbody_sequenceID = LookupSequence("throwbody");
+	}
+}
+
+BOOL CGargantua::getMonsterBlockIdleAutoUpdate(void){
+	if(m_pSchedule == slGargFlame){
+		// don't allow idle-reset.
+		return TRUE;
+	}
+	return FALSE;
+}
 
 
 
@@ -570,10 +903,10 @@ void CGargantua::DeathSound(void){
 
 	switch(RANDOM_LONG(0, 1)){
 		case 0:
-			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "garg/gar_die1.wav", 1.0, ATTN_NORM, 0, PITCH_NORM + RANDOM_LONG(-10,10) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "garg/gar_die1.wav", 1.0, ATTN_NORM - 0.18, 0, PITCH_NORM + RANDOM_LONG(-10,10) );
 		break;
 		case 1:
-			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "garg/gar_die2.wav", 1.0, ATTN_NORM, 0, PITCH_NORM + RANDOM_LONG(-10,10) );
+			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "garg/gar_die2.wav", 1.0, ATTN_NORM - 0.18, 0, PITCH_NORM + RANDOM_LONG(-10,10) );
 		break;
 	}
 
@@ -596,11 +929,49 @@ int CGargantua::IRelationship( CBaseEntity *pTarget )
 
 void CGargantua::MonsterThink(void){
 
-	
+
+	//g_gargantua_throwbody_sequenceID
+	/*
+	Vector posGun, angleGun;
+	//int attach = i%2;
+	int attach = 0;
+	// attachment is 0 based in GetAttachment
+	GetAttachment( attach+1, posGun, angleGun );
+
+	if(m_hEnemy != NULL){
+		m_hEnemy->pev->origin = posGun;
+	}
+	*/
+
+
+
+	if(pev->sequence == g_gargantua_throwbody_sequenceID){
+
+		if(!grabbedEnt){
+			// nevermind, check is handled by a queue event now.  Interrupts the melee schedule if there is no grabbed ent.
+			//if(pev->frame >= (10.0f/27.0f) * 255.0f){
+			//	// no grabbedEnt, yet this far into the animation?  Give up.
+			//	TaskFail();
+			//}
+		}else{
+			// force it to the arm
+			Vector posGun, angleGun;
+			//int attach = i%2;
+			int attach = 0;
+			// attachment is 0 based in GetAttachment
+			GetAttachment( attach+1, posGun, angleGun );
+
+			grabbedEnt->pev->origin = posGun;
+		}
+
+	}
+
+
+
+	// nextNormalThink, blablabla
+
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
-
 		switch(RANDOM_LONG(0, 45)){
-
 			case 0:
 				this->SetSequenceByName("bust");
 			break;
@@ -784,17 +1155,101 @@ void CGargantua::StompAttack( void )
 
 	UTIL_MakeVectors( pev->angles );
 	Vector vecStart = pev->origin + Vector(0,0,60) + 35 * gpGlobals->v_forward;
+
+	// vecAim is fine for a direction, at least floor-wise, but why use it to see how far to place
+	// the stomp-effect?  If some strong incline separates the garg from the enemy, a trace from
+	// the garg to the enemy will run into the ramp and give a lot shorter distance than there actually
+	// is to the enemy.  And clearly to fire in this direction he sees them anyway.
+	// Don't need the trace, for this at least.
 	Vector vecAim = ShootAtEnemy( vecStart );
-	Vector vecEnd = (vecAim * 1024) + vecStart;
+	//Vector vecEnd = (vecAim * 1024) + vecStart;
 
-	UTIL_TraceLine( vecStart, vecEnd, ignore_monsters, edict(), &trace );
-	CStomp::StompCreate( vecStart, trace.vecEndPos, 0 );
-	UTIL_ScreenShake( pev->origin, 12.0, 100.0, 2.0, 1000 );
-	UTIL_PlaySound( edict(), CHAN_WEAPON, pStompSounds[ RANDOM_LONG(0,ARRAYSIZE(pStompSounds)-1) ], 1.0, ATTN_GARG, 0, PITCH_NORM + RANDOM_LONG(-10,10) );
+	//UTIL_TraceLine( vecStart, vecEnd, ignore_monsters, edict(), &trace );
 
-	UTIL_TraceLine( pev->origin, pev->origin - Vector(0,0,20), ignore_monsters, edict(), &trace );
-	if ( trace.flFraction < 1.0 )
+	//Vector pointDelta = (trace.vecEndPos - vecStart);
+	Vector pointDelta = (m_vecEnemyLKP - vecStart);
+	// floor-wise only, no Z difference.
+	pointDelta.z = 0;
+
+	Vector theDir = pointDelta.Normalize();
+	float theDist = pointDelta.Length();
+
+	// retail was a flat 0
+	int stompStartSpeed;
+	// NEW
+	int stompMaxSpeed;
+
+	if(g_iSkillLevel == SKILL_HARD){
+		stompStartSpeed = 40;
+		stompMaxSpeed = 300;
+	}else if(g_iSkillLevel == SKILL_MEDIUM){
+		stompStartSpeed = 30;
+		stompMaxSpeed = 200;
+	}else{
+		stompStartSpeed = 20;
+		stompMaxSpeed = 100;
+	}
+
+
+	// also, stompStartSpeed will be creater if the enemy is further away.
+	if(theDist <= 200){
+		// no change
+	}else if(theDist <= 1300){
+		// more distance, more start speed and max speed (but not as much)
+		stompStartSpeed *= 1 + (theDist - 200) / (1300 - 200) * (3 - 1);
+		stompMaxSpeed *= 1 + (theDist - 200) / (1300 - 200) * (1.8 - 1);
+	}else{
+		stompStartSpeed *= 3;
+		stompMaxSpeed *= 1.8;
+	}
+
+
+	CStomp::StompCreate( vecStart, theDir, theDist, stompStartSpeed, stompMaxSpeed, this->edict() );
+
+	if(g_iSkillLevel == SKILL_HARD){
+		// spawn two more X degrees apart left/right!  ...  uh-oh, MATH
+		Vector currentForward;  // one choice at a time
+		Vector theAngles = UTIL_VecToAngles(theDir);
+
+		// The angle left/right floor-wise will be determined by the distance to the target.
+		// Closer is a wider angle, further is more narrow.
+		float angleShift;
+		if(theDist <= 200){
+			angleShift = 40;
+		}else if(theDist <= 1300){
+			// shrink the angle the more the distance
+			angleShift = 40 - (theDist - 200) / (1300 - 200) * (40 - 1.5);
+		}else{
+			angleShift = 1.5;
+		}
+
+		
+		Vector theAngLeft(theAngles.x, fmod(theAngles.y - angleShift, 360), theAngles.z);
+		Vector theAngRight(theAngles.x, fmod(theAngles.y + angleShift, 360), theAngles.z);
+
+		UTIL_MakeVectorsPrivate( theAngLeft, currentForward, NULL, NULL );
+		CStomp::StompCreate( vecStart, currentForward, theDist, stompStartSpeed, stompMaxSpeed, this->edict() );
+
+		UTIL_MakeVectorsPrivate( theAngRight, currentForward, NULL, NULL );
+		CStomp::StompCreate( vecStart, currentForward, theDist, stompStartSpeed, stompMaxSpeed, this->edict() );
+
+	}//g_iSkillLevel check
+
+	//MODDD - greater radius, was 1000
+	UTIL_ScreenShake( pev->origin, 12.0, 100.0, 2.0, 1500 );
+
+	//MODDD - same for you, lower attenuation.  Was 'ATTN_GARG'
+	UTIL_PlaySound( edict(), CHAN_WEAPON, pStompSounds[ RANDOM_LONG(0,ARRAYSIZE(pStompSounds)-1) ], 1.0, ATTN_NORM - 0.23, 0, PITCH_NORM + RANDOM_LONG(-10,10) );
+
+
+	//MODDD - you can do better
+	//UTIL_TraceLine( pev->origin, pev->origin - Vector(0,0,20), ignore_monsters, edict(), &trace );
+
+	Vector decalTraceStart = pev->origin + gpGlobals->v_forward * 78 + -gpGlobals->v_right * 28 + Vector(0, 0, 20);
+	UTIL_TraceLine( decalTraceStart, decalTraceStart - Vector(0,0,25), ignore_monsters, edict(), &trace );
+	if ( trace.flFraction < 1.0 ){
 		UTIL_DecalTrace( &trace, DECAL_GARGSTOMP1 );
+	}
 }
 
 
@@ -818,7 +1273,7 @@ void CGargantua::FlameCreate( void )
 			// attachment is 0 based in GetAttachment
 			GetAttachment( attach+1, posGun, angleGun );
 
-			Vector vecEnd = (gpGlobals->v_forward * GARG_FLAME_LENGTH) + posGun;
+			Vector vecEnd = (gpGlobals->v_forward * GARG_FLAME_LENGTH_EFFECT) + posGun;
 			UTIL_TraceLine( posGun, vecEnd, dont_ignore_monsters, edict(), &trace );
 
 			m_pFlame[i]->PointEntInit( trace.vecEndPos, entindex() );
@@ -834,8 +1289,8 @@ void CGargantua::FlameCreate( void )
 			CSoundEnt::InsertSound( bits_SOUND_COMBAT, posGun, 384, 0.3 );
 		}
 	}
-	UTIL_PlaySound( edict(), CHAN_BODY, pBeamAttackSounds[ 1 ], 1.0, ATTN_NORM, 0, PITCH_NORM );
-	UTIL_PlaySound( edict(), CHAN_WEAPON, pBeamAttackSounds[ 2 ], 1.0, ATTN_NORM, 0, PITCH_NORM );
+	UTIL_PlaySound( edict(), CHAN_BODY, pBeamAttackSounds[ 1 ], 1.0, ATTN_NORM - 0.1, 0, PITCH_NORM );
+	UTIL_PlaySound( edict(), CHAN_WEAPON, pBeamAttackSounds[ 2 ], 1.0, ATTN_NORM - 0.1, 0, PITCH_NORM );
 }
 
 
@@ -877,7 +1332,7 @@ void CGargantua::FlameUpdate( void )
 			UTIL_MakeVectors( vecAim );
 
 			GetAttachment( i+1, vecStart, angleGun );
-			Vector vecEnd = vecStart + (gpGlobals->v_forward * GARG_FLAME_LENGTH); //  - offset[i] * gpGlobals->v_right;
+			Vector vecEnd = vecStart + (gpGlobals->v_forward * GARG_FLAME_LENGTH_LOGIC); //  - offset[i] * gpGlobals->v_right;
 
 			UTIL_TraceLine( vecStart, vecEnd, dont_ignore_monsters, edict(), &trace );
 
@@ -891,7 +1346,7 @@ void CGargantua::FlameUpdate( void )
 				UTIL_DecalTrace( &trace, DECAL_SMALLSCORCH1 + RANDOM_LONG(0,2) );
 			}
 			// RadiusDamageAutoRadius( trace.vecEndPos, pev, pev, gSkillData.gargantuaDmgFire, CLASS_ALIEN_MONSTER, DMG_BURN );
-			FlameDamage( vecStart, trace.vecEndPos, pev, pev, gSkillData.gargantuaDmgFire, CLASS_ALIEN_MONSTER, DMG_BURN );
+			FlameDamage( vecStart, trace.vecEndPos, pev, pev, gSkillData.gargantuaDmgFire * 0.7, CLASS_ALIEN_MONSTER, DMG_BURN );
 
 			MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 				WRITE_BYTE( TE_ELIGHT );
@@ -950,14 +1405,20 @@ void CGargantua::FlameDamage( Vector vecStart, Vector vecEnd, entvars_t *pevInfl
 
 			UTIL_TraceLine ( vecSrc, vecSpot, dont_ignore_monsters, ENT(pev), &tr );
 
+			if(tr.fStartSolid || tr.fAllSolid){
+				int x = 45; // ???
+			}
+
 			if ( tr.flFraction == 1.0 || tr.pHit == pEntity->edict() )
 			{// the explosion can 'see' this entity, so hurt them!
 				// decrease damage for an ent that's farther from the flame.
 				dist = ( vecSrc - tr.vecEndPos ).Length();
 
-				if (dist > 64)
+				//DebugLine_Setup(0, vecSrc, tr.vecEndPos, tr.flFraction);
+
+				if (dist > GARG_FLAME_MAX_DAMAGE_DIST)
 				{
-					flAdjustedDamage = flDamage - (dist - 64) * 0.4;
+					flAdjustedDamage = flDamage - (dist - GARG_FLAME_MAX_DAMAGE_DIST) * 0.4;
 					if (flAdjustedDamage <= 0)
 						continue;
 				}
@@ -990,7 +1451,7 @@ void CGargantua::FlameDestroy(BOOL playOffSound)
 	int i;
 
 	if (playOffSound) {
-		UTIL_PlaySound(edict(), CHAN_WEAPON, pBeamAttackSounds[0], 1.0, ATTN_NORM, 0, PITCH_NORM);
+		UTIL_PlaySound(edict(), CHAN_WEAPON, pBeamAttackSounds[0], 1.0, ATTN_NORM - 0.05, 0, PITCH_NORM);
 	}
 	else {
 		// still need to stop the sounds here.
@@ -1017,8 +1478,9 @@ void CGargantua::PrescheduleThink( void )
 		m_seeTime = gpGlobals->time + 5;
 		EyeOff();
 	}
-	else
+	else{
 		EyeOn( 200 );
+	}
 	
 	EyeUpdate();
 }
@@ -1037,6 +1499,7 @@ int CGargantua::Classify ( void )
 // SetYawSpeed - allows each sequence to have a different
 // turn rate associated with it.
 //=========================================================
+// MODDD - turn speeds overall slightly reduced, especially during flamethrower, faster during stomp
 void CGargantua::SetYawSpeed ( void )
 {
 	int ys;
@@ -1055,20 +1518,43 @@ void CGargantua::SetYawSpeed ( void )
 		ys = 60;
 		break;
 
+	case ACT_MELEE_ATTACK1:
+		// melee
+
+		if(pev->sequence == g_gargantua_throwbody_sequenceID){
+			// no turnin
+			ys = 0;
+		}else{
+			ys = 80;
+		}
+	break;
+	case ACT_MELEE_ATTACK2:
+		// flamethrower
+		ys = 45;
+	break;
+	case ACT_RANGE_ATTACK1:
+		// stomp
+		ys = 70;
+	break;
+
 	default:
 		ys = 60;
 		break;
+	}
+
+	if(g_iSkillLevel == SKILL_HARD){
+		ys *= 0.95;
+	}else if(g_iSkillLevel == SKILL_MEDIUM){
+		ys *= 0.88;
+	}else{
+		ys *= 0.81;
 	}
 
 	pev->yaw_speed = ys;
 }
 
 
-CGargantua::CGargantua(){
 
-	gargDeadBoundChangeYet = FALSE;
-	fallShakeTime = -1;
-}
 
 //=========================================================
 // Spawn
@@ -1077,8 +1563,11 @@ void CGargantua::Spawn()
 {
 	Precache( );
 
-	SET_MODEL(ENT(pev), "models/garg.mdl");
-	UTIL_SetSize( pev, Vector( -32, -32, 0 ), Vector( 32, 32, 64 ) );
+	setModel("models/garg.mdl");
+
+	// bounds reduced slightly floor-wise for more flexibility.
+	//UTIL_SetSize( pev, Vector( -32, -32, 0 ), Vector( 32, 32, 64 ) );
+	UTIL_SetSize( pev, Vector( -30, -30, 0 ), Vector( 30, 30, 66 ) );
 
 
 	pev->classname = MAKE_STRING("monster_gargantua");
@@ -1090,7 +1579,9 @@ void CGargantua::Spawn()
 
 	pev->health			= gSkillData.gargantuaHealth;
 	//pev->view_ofs		= Vector ( 0, 0, 96 );// taken from mdl file
-	m_flFieldOfView		= -0.2;// width of forward view cone ( as a dotproduct result )
+
+	//MODDD - more FieldOfView (was -0.2)
+	m_flFieldOfView		= -0.33;// width of forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
 
 	MonsterInit();
@@ -1153,6 +1644,25 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 	//MODDD - if hit by the gauss, and it is charged enough, do damage.
 	BOOL gaussPass = ((bitsDamageTypeMod & (DMG_GAUSS)) && flDamage > 80);
 
+
+	// HOLD UP.  Before any reduction, save to our own g_gargantua_rawDamageCumula.
+	// Can't trust the usual one because it takes damage after it's been reduced by here.
+	g_gargantua_rawDamageCumula += flDamage;
+
+
+	if(g_gargantua_rawDamageCumula > 28){
+		// That's enough to sting, I hate ya.
+		// (using non-reduced damage lets shotgun blasts piss me off, no way to deal damage but still loud and hard to ignore)
+		pissedRunTime = gpGlobals->time + 14;
+		if(pev->sequence == g_gargantua_walk_sequenceID){
+			// change it
+			//pev->sequence = g_gargantua_run_sequenceID;
+			SetActivity(ACT_RUN);
+		}
+	}
+
+
+
 	// But cut it a bit.  Thick armor after all.
 	if (gaussPass) {
 		flDamage *= 0.70;
@@ -1212,11 +1722,11 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 
 			//MODDD - options for hit effect.
 			if(gargantuaBleedsVar == 0){
-				//no sound or effect.
+				// no sound or effect.
 				if(useBulletHitSound)*useBulletHitSound=FALSE;
 			}else if(gargantuaBleedsVar == 1){
 				//UTIL_playFleshHitSound(pev);
-				//just don't block.
+				// just don't block.
 				Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
 				SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.
 
@@ -1231,17 +1741,16 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 				UTIL_Ricochet( ptr->vecEndPos, RANDOM_FLOAT(0.5,1.5) );
 			}
 			
-			//MODDD - this does require being alive, though.
-			if(isAliveVar){
-				pev->dmgtime = gpGlobals->time;
-			}
+			pev->dmgtime = gpGlobals->time;
 
 //			if ( RANDOM_LONG(0,100) < 25 )
 //				UTIL_PlaySound( ENT(pev), CHAN_BODY, pRicSounds[ RANDOM_LONG(0,ARRAYSIZE(pRicSounds)-1) ], 1.0, ATTN_NORM, 0, PITCH_NORM );
 		}
 
 		if(isAliveVar){
-			flDamage = 0;
+			// Jeez!  That's a little harsh.  Even times 0.05 is insignificant.
+			//flDamage = 0;
+			flDamage = flDamage * 0.05;
 		}
 
 		//send "FALSE" for "useBloodEffect", as the hit effect to use was handled above already.
@@ -1254,6 +1763,60 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CGargantua){
 }
 
 
+//MODDD - cloned the TraceAttack logic above,  works without a trace or effect-related info passed along.
+void CGargantua::TraceAttack_Traceless(entvars_t* pevAttacker, float flDamage, Vector vecDir, int bitsDamageType, int bitsDamageTypeMod) {
+
+	BOOL isAliveVar = IsAlive();
+	//MODDD - if hit by the gauss, and it is charged enough, do damage.
+	BOOL gaussPass = ((bitsDamageTypeMod & (DMG_GAUSS)) && flDamage > 80);
+
+	// But cut it a bit.  Thick armor after all.
+	if (gaussPass) {
+		flDamage *= 0.70;
+	}
+
+	BOOL painSoundPass = FALSE;
+	if(pev->deadflag == DEAD_NO){
+		painSoundPass = TRUE;
+	}else if(pev->deadflag == DEAD_DYING){
+
+		if( (EASY_CVAR_GET_DEBUGONLY(gargantuaCorpseDeath) == 2 || EASY_CVAR_GET_DEBUGONLY(gargantuaCorpseDeath) == 5)){
+			painSoundPass = TRUE;
+		}
+
+	}else{
+		//leave false.
+	}
+
+	if ( painSoundPass && ( (bitsDamageType & GARG_DAMAGE) || gaussPass )    )
+	{
+		if ( m_painSoundTime < gpGlobals->time )
+		{
+			UTIL_PlaySound( ENT(pev), CHAN_VOICE, pPainSounds[ RANDOM_LONG(0,ARRAYSIZE(pPainSounds)-1) ], 1.0, ATTN_GARG, 0, PITCH_NORM );
+			m_painSoundTime = gpGlobals->time + RANDOM_FLOAT( 2.5, 4 );
+		}
+	}
+
+	if(pev->deadflag != DEAD_DEAD){
+		bitsDamageType &= GARG_DAMAGE;
+	}else{
+		// if dead, let "DMG_CLUB" pass...
+		bitsDamageType &= (GARG_DAMAGE|DMG_CLUB);
+	}
+
+	if ( bitsDamageType == 0 && !gaussPass)
+	{
+		if(isAliveVar){
+			flDamage = flDamage * 0.05;
+		}
+	}//END OF no normal damage check
+
+
+	CBaseMonster::TraceAttack_Traceless(pevAttacker, flDamage, vecDir, bitsDamageType, bitsDamageTypeMod);
+}//TraceAttack_Traceless
+
+
+
 //definitely.
 BOOL CGargantua::isSizeGiant(void){
 	return TRUE;
@@ -1264,6 +1827,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 	if (m_MonsterState == MONSTERSTATE_SCRIPT && (m_pCine && !m_pCine->CanInterrupt())) {
 		// in script, just let the parent method run only
 		int ret = GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
+		g_gargantua_rawDamageCumula = 0;
 		return ret;
 	}
 
@@ -1275,10 +1839,14 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 	//easyForcePrintLine("????????????? %d %d", IsAlive(), pev->deadflag);
 	if ( IsAlive() )
 	{
-		//usual checks.
+		// usual checks.
+		// Wait, what's the point of this?  TraceAttack already does the damage reduction
+		/*
 		if (!(bitsDamageType & GARG_DAMAGE) && !gaussPass) {
-			flDamage *= 0.01;
-		}
+			//MODDD - penalty of 0.01 is a little much, 0.05 is plenty.
+			flDamage *= 0.05;
+		}*/
+
 
 		if ((bitsDamageType & DMG_BLAST) || gaussPass) {
 			SetConditions(bits_COND_LIGHT_DAMAGE);
@@ -1290,7 +1858,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 		//
 		//pevAttacker!=NULL&&FBitSet ( pevAttacker->flags, FL_CLIENT )&&
 		//easyForcePrintLine("YOU CRAZY LITTLE ffeee %d", bitsDamageType);
-		if (   pev->deadflag == DEAD_DEAD ){
+		if ( pev->deadflag == DEAD_DEAD ){
 
 			if(bitsDamageType & DMG_CLUB){
 				flDamage = 70;
@@ -1307,9 +1875,11 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CGargantua)
 	if( (valueOf == 1 || valueOf == 4) && pev->deadflag == DEAD_DYING){
 		EASY_CVAR_PRINTIF_PRE(gargantuaPrintout, easyPrintLine( "DAMAGE BLOCKED!"));
 		//when in the dying anim and "gargantuaCorpseDeath" is 1 or 4, do not take damage yet.
+		g_gargantua_rawDamageCumula = 0;
 		return 1;
 	}
 
+	g_gargantua_rawDamageCumula = 0;
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }
 
@@ -1354,6 +1924,10 @@ void CGargantua::DeathEffect( void )
 
 GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 {
+	//MODDD - not resetting these??  WHY
+	SetBoneController( 0, 0 );
+	SetBoneController( 1, 0 );
+
 	EyeOff();
 	if (m_pEyeGlow) {
 		UTIL_Remove(m_pEyeGlow);
@@ -1392,7 +1966,9 @@ GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 
 	}
 
+	// NOTE - there is also HasMemory(bits_MEMORY_KILLED)
 	BOOL justDied = (pev->deadflag == DEAD_NO);
+	
 
 
 	//MODDD 
@@ -1460,11 +2036,17 @@ BOOL CGargantua::CheckMeleeAttack1( float flDot, float flDist )
 {
 //	ALERT(at_aiconsole, "CheckMelee(%f, %f)\n", flDot, flDist);
 
-	if (flDot >= 0.7)
-	{
-		if (flDist <= GARG_MELEEATTACKDIST)
+	
+	if (flDist <= GARG_MELEEATTACKDIST){
+		if (flDot >= 0.7)
+		{
 			return TRUE;
+		}else{
+			// face them then
+			SetConditions(bits_COND_COULD_MELEE_ATTACK1);
+		}
 	}
+	
 	return FALSE;
 }
 
@@ -1473,6 +2055,7 @@ BOOL CGargantua::CheckMeleeAttack1( float flDot, float flDist )
 BOOL CGargantua::CheckMeleeAttack2( float flDot, float flDist )
 {
 //	ALERT(at_aiconsole, "CheckMelee(%f, %f)\n", flDot, flDist);
+
 
 	if ( gpGlobals->time > m_flameTime )
 	{
@@ -1488,10 +2071,18 @@ BOOL CGargantua::CheckMeleeAttack2( float flDot, float flDist )
 
 		if (flDist > GARG_MELEEATTACKDIST)
 		{
-			if ( flDist <= GARG_FLAME_LENGTH ){
+			// Am I close enough to want to start the attack?  I don't want my target to get away from moving just an inch.
+			if ( flDist <= GARG_FLAME_LENGTH_AI ){
 
 				if(flDot >= 0.8){
-					// okay!
+					// okay!  Also, if waiting for the pre-delay, let an activity update happen now.
+					/*
+					if(flameThrowerPreAttackDelay != -1 && gpGlobals->time >= flameThrowerPreAttackDelay){
+						flameThrowerPreAttackDelay = -1;
+						signalActivityUpdate = TRUE;
+						TaskFail();  // re-pick the schedule now
+					}
+					*/
 					return TRUE;
 				}else{
 					// going to fail.  At least let us know we could have turned to face the right way
@@ -1500,6 +2091,7 @@ BOOL CGargantua::CheckMeleeAttack2( float flDot, float flDist )
 
 			}
 		}
+
 
 	}
 	return FALSE;
@@ -1519,9 +2111,13 @@ BOOL CGargantua::CheckRangeAttack1( float flDot, float flDist )
 {
 	if ( gpGlobals->time > m_seeTime )
 	{
-		if (flDot >= 0.7 && flDist > GARG_MELEEATTACKDIST)
-		{
-			return TRUE;
+		if(flDist > GARG_MELEEATTACKDIST){
+			if (flDot >= 0.7){
+				return TRUE;
+			}else{
+				// going to fail.  At least let us know we could have turned to face the right way
+				SetConditionsMod(bits_COND_COULD_RANGE_ATTACK1);
+			}
 		}
 	}
 	return FALSE;
@@ -1537,11 +2133,9 @@ BOOL CGargantua::CheckRangeAttack1( float flDot, float flDist )
 void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 {
 
-
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1){
 		return;
 	}
-
 
 	switch( pEvent->event )
 	{
@@ -1549,7 +2143,7 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 		{
 			// HACKHACK!!!
 			//MODDD - inflicts bleeding.
-			CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_MELEEATTACKDIST + 10.0, gSkillData.gargantuaDmgSlash, DMG_SLASH, DMG_BLEEDING );
+			CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_MELEEATTACKDIST + 15.0, gSkillData.gargantuaDmgSlash, DMG_SLASH, DMG_BLEEDING );
 			if (pHurt)
 			{
 				if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
@@ -1560,13 +2154,15 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 					//UTIL_MakeVectors(pev->angles);	// called by CheckTraceHullAttack
 					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
 				}
-				UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 50 + RANDOM_LONG(0,15) );
+				UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
 			}
-			else // Play a random attack miss sound
-				UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 50 + RANDOM_LONG(0,15) );
+			else{ // Play a random attack miss sound
+				UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+			}
 
-			Vector forward;
-			UTIL_MakeVectorsPrivate( pev->angles, forward, NULL, NULL );
+			// ??????? for what purpose, as-is?
+			//Vector forward;
+			//UTIL_MakeVectorsPrivate( pev->angles, forward, NULL, NULL );
 		}
 		break;
 
@@ -1578,7 +2174,14 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 
 	case GARG_AE_STOMP:
 		StompAttack();
-		m_seeTime = gpGlobals->time + 12;
+		// retail was 11
+		if(g_iSkillLevel == SKILL_HARD){
+			m_seeTime = gpGlobals->time + 11.5;
+		}else if(g_iSkillLevel == SKILL_MEDIUM){
+			m_seeTime = gpGlobals->time + 13;
+		}else{
+			m_seeTime = gpGlobals->time + 14.5;
+		}
 		break;
 
 	case GARG_AE_BREATHE:
@@ -1652,16 +2255,105 @@ BOOL CGargantua::needsMovementBoundFix(void) {
 Schedule_t *CGargantua::GetScheduleOfType( int Type )
 {
 	// HACKHACK - turn off the flames if they are on and garg goes scripted / dead
-	if ( FlameIsOn() )
+	if ( FlameIsOn() ){
 		FlameDestroy(TRUE);
+	}
+
+
+	if(Type == SCHED_MELEE_ATTACK1){
+		int x = 4;
+	}
+
+	// The point of 'resetFlameThrowerPreAttackDelay' is to force the flameThrowerPreAttackDelay to
+	// start over if too much time passes since stopping to wait for the preDelay to finish without
+	// using the flamethrower.
+	// This is better than resetting flameThrowerPreAttackDelay anytime the garg has to move to catch
+	// up with the player (the player could take advantage of the pre-attack delay by resetting it by
+	// moving an inch just before it finishes, making the gargantua follow for a long time without
+	// attacking if done right).  Now, only completely evading the gargantua for 3 seconds requires
+	// the delay to start again
+	if(resetFlameThrowerPreAttackDelay != -1 && gpGlobals->time >= resetFlameThrowerPreAttackDelay){
+		// start over the flameThrowerPreAttackDelay next time.
+		flameThrowerPreAttackDelay = -1;
+		resetFlameThrowerPreAttackDelay = -1;
+		flameThrowerPreAttackInterrupted = FALSE;
+	}
+
+	/*
+	// no, no need for this
+	//if(activity != ACT_MELEE_ATTACK2 && activity != ACT_MELEE_ATTACK1){
+	if(
+		Type != SCHED_MELEE_ATTACK1 &&
+		Type != SCHED_MELEE_ATTACK2 &&
+		Type != SCHED_SMALL_FLINCH &&
+		Type != SCHED_BIG_FLINCH &&
+		Type != SCHED_RANGE_ATTACK1
+	){
+		// Reset the delay that resets flameThrowerPreAttackDelay.
+		// (yes, really)
+		resetFlameThrowerPreAttackDelay = gpGlobals->time + 3;
+	}
+	*/
 
 	switch( Type )
 	{
+		case SCHED_CHASE_ENEMY:
+			// Not much different, but in case of failure to build a route, make a stomp more likely to occur.
+			// (that will happen in SCHED_CHAST_ENEMY_FAILED instead)
+			return slGargChaseEnemySmart;
+		break;
+		case SCHED_CHASE_ENEMY_FAILED:{
+			// NOTICE - copy of what defaultai.cpp does, but also decrease m_seeTime.
+			// Failing to pathfind while looking at a montser decreases the time until the next stomp (All we can do besides
+			// stare at em' like a dumbass)
+
+			// Only decrease the time if there's over 6 seconds left though.
+			if(m_seeTime - gpGlobals->time > 6){
+				m_seeTime -= 3;
+			}
+
+			if(m_hEnemy != NULL){
+				setEnemyLKP(m_hEnemy->pev->origin);
+			}
+
+			return &slFail[ 0 ];
+		}
+		break;
+		case SCHED_RANGE_ATTACK1:
+			// stomp attack, use the custom schedule now
+			return slGargStompAttack;
+		break;
 		case SCHED_MELEE_ATTACK2:
-			return slGargFlame;
+			// INTERVENTION.  If the delay hasn't been started yet, do that.
+			if(flameThrowerPreAttackDelay == -1){
+				if(g_iSkillLevel == SKILL_HARD){
+					flameThrowerPreAttackDelay = gpGlobals->time + 0.15;
+				}else if(g_iSkillLevel == SKILL_MEDIUM){
+					flameThrowerPreAttackDelay = gpGlobals->time + 0.48;
+				}else{
+					flameThrowerPreAttackDelay = gpGlobals->time + 0.85;
+				}
+				// In X seconds, reset the flameThrowerPreAttackDelay if no 
+				resetFlameThrowerPreAttackDelay = gpGlobals->time + 3;
+			}
+
+			if(gpGlobals->time >= flameThrowerPreAttackDelay){
+				// -1 or expired delay?  Do it
+				return slGargFlame;
+			}else{
+				// standin' around
+				return slGargFlamePreAttack;
+			}
 		case SCHED_MELEE_ATTACK1:
 			return slGargSwipe;
 		break;
+		case SCHED_GARG_FLAMETHROWER_FAIL:{
+			return slGargFlamethrowerFail;
+		}
+		//case SCHED_FAIL:{
+		//	return slFail;
+		//}
+
 	}
 
 	return CBaseMonster::GetScheduleOfType( Type );
@@ -1676,21 +2368,54 @@ void CGargantua::StartTask( Task_t *pTask )
 
 	switch ( pTask->iTask )
 	{
+	case TASK_PLAY_PRE_FLAMETHROWER_SEQUENCE:
+
+		// If the current activity is not yet melee, do the pre-attack sequence first.
+		if(g_iSkillLevel == SKILL_HARD){
+			m_flFramerateSuggestion = 1.7;
+		}else if(g_iSkillLevel == SKILL_MEDIUM){
+			m_flFramerateSuggestion = 1.35;
+		}else{
+			m_flFramerateSuggestion = 1.15;
+		}
+
+		if(flameThrowerPreAttackInterrupted){
+			// If flameThrowerPreAttackDelay has been interrupted before, do this faster.
+			// Don't let the player kite me so easily.
+			m_flFramerateSuggestion = m_flFramerateSuggestion * 1.45;
+		}
+
+		SetSequenceByIndex(g_gargantua_shootflames1_sequenceID, m_flFramerateSuggestion, FALSE);
+		
+	break;
 	case TASK_FLAME_SWEEP:
+
+		//MODDD - reset these delays too.
+		flameThrowerPreAttackDelay = -1;
+		resetFlameThrowerPreAttackDelay = -1;
+		flameThrowerPreAttackInterrupted = FALSE;
+
 		FlameCreate();
 		m_flWaitFinished = gpGlobals->time + pTask->flData;
-		m_flameTime = gpGlobals->time + 6;
+		//MODDD - this gets changed too.  Was 6.
+		m_flameTime = gpGlobals->time + 7.5;
 		m_flameX = 0;
 		m_flameY = 0;
-		break;
+	break;
 
 	case TASK_SOUND_ATTACK:
 		if ( RANDOM_LONG(0,100) < 30 ){
 			UTIL_PlaySound( ENT(pev), CHAN_VOICE, pAttackSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackSounds)-1) ], 1.0, ATTN_GARG, 0, PITCH_NORM );
 		}
 		TaskComplete();
-		break;
-	
+	break;
+	case TASK_RANGE_ATTACK1:
+		// stomp attack.  Nothing special for startup.
+		// oh, except that
+		consecutiveStomps = 0;
+
+		CBaseMonster::StartTask( pTask );
+	break;
 	case TASK_DIE:
 		//MODDD - time changed.
 		
@@ -1740,6 +2465,17 @@ void CGargantua::StartTask( Task_t *pTask )
 
 		// FALL THROUGH... NO THAT IS TERRIBLE.
 		break;
+	case TASK_MELEE_ATTACK1:
+		// SPECIAL:  If I'm unable to attack between the time it took to face my target (got too far away from me),
+		// don't do the swipe.  It looks kinda dumb.
+
+		if(!HasConditions(bits_COND_CAN_MELEE_ATTACK1)){
+			TaskFail();
+		}else{
+			CBaseMonster::StartTask( pTask );
+		}
+	break;
+
 	default: 
 		CBaseMonster::StartTask( pTask );
 		break;
@@ -1756,6 +2492,81 @@ void CGargantua::RunTask( Task_t *pTask )
 
 	switch ( pTask->iTask )
 	{
+	case TASK_PLAY_PRE_FLAMETHROWER_SEQUENCE:{
+		float flInterval = 0.1;  //mock interval, resembles think times.
+		float recentFrameAdvancePrediction = flInterval * m_flFrameRate * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti);
+
+		if(!HasConditions(bits_COND_CAN_MELEE_ATTACK2) && pev->frame < 255*0.4){
+			// Enemy got out of sight while waiting to start the flamethrower?
+			// Interrupt, mark this.
+			// (also don't interrupt after being 40% of the way through the animation, it's fine to be a miss at that point)
+			flameThrowerPreAttackInterrupted = TRUE;
+			TaskFail();
+		}else if(m_fSequenceFinished || pev->frame + pev->framerate * recentFrameAdvancePrediction >= 250){
+			// Finished, or likely will be soon?  OK
+			TaskComplete();
+		}
+	}break;
+	case TASK_WAIT_FOR_FLAMETHROWER_PREDELAY:
+		// while waiting, still look at our enemy.
+
+		//SetConditions(bits_COND_GARG_FLAMETHROWER_PREATTACK_EXPIRED);
+		
+		if(!HasConditions(bits_COND_CAN_MELEE_ATTACK2)){
+			// Enemy got out of sight while waiting to start the flamethrower?
+			// Mark this.
+			flameThrowerPreAttackInterrupted = TRUE;
+			TaskComplete();
+		}else if(gpGlobals->time >= flameThrowerPreAttackDelay ){
+			// Delay expired normally?  ok
+			TaskComplete();
+		}
+
+	break;
+	case TASK_RANGE_ATTACK1:
+		// stomp attack.  On hard difficulty, have a 2nd stomp when the first finishes!
+		// And yes, this is a clone of TASK_RANGE_ATTACK1.
+		
+		lookAtEnemyLKP();
+
+
+		if ( m_fSequenceFinished ){
+			//MODDD NOTE - BEWARE. This is likely to pick the same range attack activity again if the ideal activity remains that way.
+ 			//m_Activity = ACT_RESET;
+
+			if(consecutiveStomps == 0 && g_iSkillLevel == SKILL_HARD){
+				//signalActivityUpdate = TRUE;   no need?
+				SetActivity(ACT_RANGE_ATTACK1);
+				pev->frame = (11.0f/24.0f) * 255.0f;
+
+				consecutiveStomps++;
+			}else{
+				if(canPredictActRepeat()){
+					switch( pTask->iTask ){
+						case TASK_RANGE_ATTACK1:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK1); break;}
+						case TASK_RANGE_ATTACK2:{predictActRepeat(bits_COND_CAN_RANGE_ATTACK2); break;}
+						case TASK_MELEE_ATTACK1:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK1); break;}
+						case TASK_MELEE_ATTACK2:{predictActRepeat(bits_COND_CAN_MELEE_ATTACK2); break;}
+						case TASK_SPECIAL_ATTACK1:{predictActRepeat(bits_COND_SPECIAL1); break;}
+						case TASK_SPECIAL_ATTACK2:{predictActRepeat(bits_COND_SPECIAL2); break;}
+					}//END OF inner switch
+				}
+			
+				/*
+				if(m_Activity != ACT_RESET){
+					//HACKY MC HACKERSAXXX
+					// it doesn't look like this is doing anything.
+					//...Now calling this and then "MaintainSchedule"?  That would be truly dastardly.
+					ChangeSchedule(GetSchedule());
+					return.
+				}
+				*/
+				TaskComplete();
+			}//consecutiveStomps/hard check
+		}//m_fSequenceFinished check
+
+
+	break;
 	case TASK_DIE:
 		//MODDD - This is the transform-effect.  Removed, fall and become a gib-able corpse like the rest.
 		valueOf = EASY_CVAR_GET_DEBUGONLY(gargantuaCorpseDeath);
@@ -1768,9 +2579,9 @@ void CGargantua::RunTask( Task_t *pTask )
 			fallShakeTime = -1;
 
 			if(valueOf2 == 1){
-				UTIL_PlaySound( edict(), CHAN_BODY, "!gargFallSnd", 1, ATTN_NORM, 0, PITCH_NORM, FALSE); //* 0.55);
+				UTIL_PlaySound( edict(), CHAN_BODY, "!gargFallSnd", 1, ATTN_NORM - 0.1, 0, PITCH_NORM, FALSE); //* 0.55);
 			}else if(valueOf2 == 2){
-				UTIL_PlaySound( edict(), CHAN_BODY, "debris/metal6.wav", 1, ATTN_NORM, 0, PITCH_NORM, FALSE);
+				UTIL_PlaySound( edict(), CHAN_BODY, "debris/metal6.wav", 1, ATTN_NORM - 0.1, 0, PITCH_NORM, FALSE);
 			}
 
 		}
@@ -2048,6 +2859,8 @@ void CGargantua::RunTask( Task_t *pTask )
 		else
 		{
 			BOOL cancel = FALSE;
+			//BOOL tooClose = (Distance(pev->origin, m_vecEnemyLKP) < GARG_MELEEATTACKDIST - 20);
+			BOOL tooClose = FALSE;
 
 			Vector angles = g_vecZero;
 
@@ -2055,22 +2868,44 @@ void CGargantua::RunTask( Task_t *pTask )
 			CBaseEntity *pEnemy = m_hEnemy;
 			if ( pEnemy )
 			{
+				float distToEnemy;
 				Vector org = pev->origin;
 				org.z += 64;
 				Vector dir = pEnemy->BodyTarget(org) - org;
+				distToEnemy = dir.Length();
 				angles = UTIL_VecToAngles( dir );
 				angles.x = -angles.x;
 				angles.y -= pev->angles.y;
-				if ( dir.Length() > 400 )
+
+				tooClose = (distToEnemy < GARG_MELEEATTACKDIST - 20);
+
+				//MODDD - Also, breaking sight with the player counts as dropping the attack faster.
+				if ( distToEnemy > GARG_FLAME_CANCEL_DIST || tooClose || !HasConditions(bits_COND_SEE_ENEMY)){
 					cancel = TRUE;
+				}
 			}
 			if ( fabs(angles.y) > 60 )
 				cancel = TRUE;
 			
 			if ( cancel )
 			{
-				m_flWaitFinished -= 0.5;
-				m_flameTime -= 0.5;
+				//MODDD - times changed, was 0.5 for each
+				// ALSO, if I see the enemy, I realize they're out of range faster. More slowly otherwise (evaded behind cover admist the flames).
+				if(HasConditions(bits_COND_SEE_ENEMY)){
+
+					if(tooClose){
+						// well within melee range?  Stop even sooner
+						m_flWaitFinished -= 0.4;
+						m_flameTime -= 0.6;
+					}else{
+						m_flWaitFinished -= 0.24;
+						m_flameTime -= 0.36;
+					}
+				}else{
+					// stop a lot slower.
+					m_flWaitFinished -= 0.04;
+					m_flameTime -= 0.06;
+				}
 			}
 			// FlameControls( angles.x + 2 * sin(gpGlobals->time*8), angles.y + 28 * sin(gpGlobals->time*8.5) );
 			FlameControls( angles.x, angles.y );
@@ -2081,103 +2916,6 @@ void CGargantua::RunTask( Task_t *pTask )
 		CBaseMonster::RunTask( pTask );
 		break;
 	}
-}
-
-
-class CSmoker : public CBaseEntity
-{
-public:
-	void Spawn( void );
-	void Think( void );
-};
-
-LINK_ENTITY_TO_CLASS( env_smoker, CSmoker );
-
-void CSmoker::Spawn( void )
-{
-	pev->movetype = MOVETYPE_NONE;
-	pev->nextthink = gpGlobals->time;
-	pev->solid = SOLID_NOT;
-	UTIL_SetSize(pev, g_vecZero, g_vecZero );
-	pev->effects |= EF_NODRAW;
-	pev->angles = g_vecZero;
-}
-
-
-void CSmoker::Think( void )
-{
-	// lots of smoke
-	UTIL_Smoke(MSG_PVS, pev->origin, NULL, pev->origin, RANDOM_FLOAT( -pev->dmg, pev->dmg ), RANDOM_FLOAT( -pev->dmg, pev->dmg ), 0, g_sModelIndexSmoke, RANDOM_LONG(pev->scale, pev->scale * 1.1), RANDOM_LONG(8,14));
-
-	pev->health--;
-	if ( pev->health > 0 )
-		pev->nextthink = gpGlobals->time + RANDOM_FLOAT(0.1, 0.2);
-	else
-		UTIL_Remove( this );
-}
-
-
-void CSpiral::Spawn( void )
-{
-	pev->movetype = MOVETYPE_NONE;
-	pev->nextthink = gpGlobals->time;
-	pev->solid = SOLID_NOT;
-	UTIL_SetSize(pev, g_vecZero, g_vecZero );
-pev->effects |= EF_NODRAW;
-pev->angles = g_vecZero;
-}
-
-
-CSpiral* CSpiral::Create(const Vector& origin, float height, float radius, float duration)
-{
-	if (duration <= 0)
-		return NULL;
-
-	CSpiral* pSpiral = GetClassPtr((CSpiral*)NULL);
-	pSpiral->Spawn();
-	pSpiral->pev->dmgtime = pSpiral->pev->nextthink;
-	pSpiral->pev->origin = origin;
-	pSpiral->pev->scale = radius;
-	pSpiral->pev->dmg = height;
-	pSpiral->pev->speed = duration;
-	pSpiral->pev->health = 0;
-	pSpiral->pev->angles = g_vecZero;
-
-	return pSpiral;
-}
-
-
-void CSpiral::Think(void)
-{
-	float time = gpGlobals->time - pev->dmgtime;
-
-	while (time > SPIRAL_INTERVAL)
-	{
-		Vector position = pev->origin;
-		Vector direction = Vector(0, 0, 1);
-
-		float fraction = 1.0 / pev->speed;
-
-		float radius = (pev->scale * pev->health) * fraction;
-
-		position.z += (pev->health * pev->dmg) * fraction;
-		pev->angles.y = (pev->health * 360 * 8) * fraction;
-		UTIL_MakeVectors(pev->angles);
-		position = position + gpGlobals->v_forward * radius;
-		direction = (direction + gpGlobals->v_forward).Normalize();
-
-		StreakSplash(position, Vector(0, 0, 1), RANDOM_LONG(8, 11), 20, RANDOM_LONG(50, 150), 400);
-
-		// Jeez, how many counters should this take ? :)
-		pev->dmgtime += SPIRAL_INTERVAL;
-		pev->health += SPIRAL_INTERVAL;
-		time -= SPIRAL_INTERVAL;
-	}
-
-	pev->nextthink = gpGlobals->time;
-
-	if (pev->health >= pev->speed)
-		UTIL_Remove(this);
 }
 
 
@@ -2250,36 +2988,326 @@ int CGargantua::LookupActivityHard(int activity){
 		case ACT_FLINCH_RIGHTARM:
 		case ACT_FLINCH_LEFTLEG:
 		case ACT_FLINCH_RIGHTLEG:
-			if(g_iSkillLevel == SKILL_EASY){
-				m_flFramerateSuggestion = 1.1;
+			if(g_iSkillLevel == SKILL_HARD){
+				m_flFramerateSuggestion = 1.8;
 			}else if(g_iSkillLevel == SKILL_MEDIUM){
 				m_flFramerateSuggestion = 1.5;
-			}else if(g_iSkillLevel == SKILL_HARD){
-				m_flFramerateSuggestion = 1.8;
+			}else {
+				m_flFramerateSuggestion = 1.2;
 			}
 		break;
-	}//END OF switch(...)
+		case ACT_WALK:
+			// oh.  Just do that then?
+		break;
+		case ACT_RUN:
+			// If 'pissedRunTime', run.  Otherwise, walk.
+			// Also being in SCRIPT forces running, that is expected in most cases.  And will ignore difficulty.
+			
+			if(m_IdealMonsterState == MONSTERSTATE_SCRIPT){
+				m_flFramerateSuggestion = 1.0;
+				pev->framerate = 1.0;
+			}else{
+
+				if(gpGlobals->time < pissedRunTime){
+					if(g_iSkillLevel == SKILL_HARD){
+						m_flFramerateSuggestion = 1.15;
+					}else if(g_iSkillLevel == SKILL_MEDIUM){
+						m_flFramerateSuggestion = 1.05;
+					}else{
+						m_flFramerateSuggestion = 0.93;
+					}
+					pev->framerate = m_flFramerateSuggestion;
+				}else{
+					// not pissed?  power-walk it
+					if(g_iSkillLevel == SKILL_HARD){
+						m_flFramerateSuggestion = 1.23;
+					}else if(g_iSkillLevel == SKILL_MEDIUM){
+						m_flFramerateSuggestion = 1.17;
+					}else{
+						m_flFramerateSuggestion = 1.10;
+					}
+					pev->framerate = m_flFramerateSuggestion;
+					return LookupSequence("walk");
+				}
+			}
+			
+		break;
+		case ACT_RANGE_ATTACK1:
+			// stomp attack
+			if(g_iSkillLevel == SKILL_HARD){
+				m_flFramerateSuggestion = 1.5;
+			}else if(g_iSkillLevel == SKILL_MEDIUM){
+				m_flFramerateSuggestion = 1.3;
+			}else{
+				m_flFramerateSuggestion = 1.05;
+			}
+			pev->framerate = m_flFramerateSuggestion;
+		break;
+		case ACT_MELEE_ATTACK1:{
+			// melee attack.  Go figure.
+
+
+			float randoVal = RANDOM_FLOAT(0, 1);
+
+			// TEST, force it
+			//randoVal = 0.04;
+
+			// NEVERMIND THIS.  "tossbody" will be pretty hard to get working right, lots of checks to see that area to the right and upper 
+			// portions of the garg are completely safe.  And need to forbid any rotating while the sequence is playing, oops. (done now?).
+			// Main thing is to also turn off gravity for the player if they're the grabbed ent, a 'pev->gravity = 0' setting isn't enough.
+			// So some player physics flag most likely just for that.   EHHHHhhhhhhh.
+			/*
+			if(randoVal < 0.08){
+				// good amount of space above me?
+				TraceResult tr;
+				Vector vecTop = pev->origin + Vector(0, 0, pev->maxs.z);
+				UTIL_TraceLine(vecTop, vecTop + Vector(0, 0, 60), dont_ignore_monsters, edict(), &tr);
+
+				if(tr.flFraction >= 1){
+					// ok, good.  Another one.
+					UTIL_MakeVectors(pev->angles);
+					
+					Vector vecCenter = Center();
+
+					UTIL_TraceLine(vecCenter, vecCenter + -gpGlobals->v_right * 100, dont_ignore_monsters, edict(), &tr);
+
+					if(tr.flFraction >= 1){
+						// that passed too?  ok.  Can proceed.
+
+						m_flFramerateSuggestion = 0.9;
+						pev->framerate = m_flFramerateSuggestion;
+
+						this->animEventQueuePush(3.8f / 16.0f, 6);
+						this->animEventQueuePush(10.5f / 16.0f, 7);
+						this->animEventQueuePush(15.7f / 16.0f, 8);
+
+						// no turnin
+						pev->yaw_speed = 0;
+
+						return g_gargantua_throwbody_sequenceID;
+					}
+				}
+			}
+			*/
+
+			if(randoVal < 0.5){
+				// standard melee
+				if(g_iSkillLevel == SKILL_HARD){
+					m_flFramerateSuggestion = 1.45;
+				}else if(g_iSkillLevel == SKILL_MEDIUM){
+					m_flFramerateSuggestion = 1.225;
+				}else{
+					m_flFramerateSuggestion = 1.10;
+				}
+				pev->framerate = m_flFramerateSuggestion;
+				
+				// event already in HandleAnimEvent (given by model)
+
+				return LookupSequence("Attack");
+			}else if(randoVal < 0.7){
+				// smash
+				if(g_iSkillLevel == SKILL_HARD){
+					m_flFramerateSuggestion = 0.97;
+				}else if(g_iSkillLevel == SKILL_MEDIUM){
+					m_flFramerateSuggestion = 0.93;
+				}else{
+					m_flFramerateSuggestion = 0.89;
+				}
+				pev->framerate = m_flFramerateSuggestion;
+
+				this->animEventQueuePush(7.4f / 16.0f, 4);
+
+				return LookupSequence("smash");
+			}else if(randoVal < 1.0){
+				// kick
+				if(g_iSkillLevel == SKILL_HARD){
+					m_flFramerateSuggestion = 0.97;
+				}else if(g_iSkillLevel == SKILL_MEDIUM){
+					m_flFramerateSuggestion = 0.93;
+				}else{
+					m_flFramerateSuggestion = 0.89;
+				}
+				pev->framerate = m_flFramerateSuggestion;
+
+				this->animEventQueuePush(7.6f / 22.0f, 5);
+
+				return LookupSequence("kickcar");
+			}
+
+			
+		}break;
+		case ACT_MELEE_ATTACK2:
+			// flamethrower
+
+			// nevermind doing the check here
+			/*
+			if(gpGlobals->time >= flameThrowerPreAttackDelay){
+				// go ahead, pick the flamethrower as the act suggests.
+				return CBaseAnimating::LookupActivity(activity);
+			}else{
+				// stand instead.
+				return CBaseAnimating::LookupActivity(ACT_IDLE);
+			}
+			*/
+			
+		break;
+	}//END OF switch
 	
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
-}//END OF LookupActivityHard(...)
+}//END OF LookupActivityHard
 
 
 int CGargantua::tryActivitySubstitute(int activity){
 	int i = 0;
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
+		case ACT_WALK:
+			// just to say we have something, I forget if the model has ACT_WALK but may as well say we do.
+			return CBaseAnimating::LookupActivity(ACT_RUN);
+		break;
 		case ACT_RUN:
+			
+		break;
+		case ACT_RANGE_ATTACK1:
 
 		break;
-	}//END OF switch(...)
+	}//END OF switch
 
 	//not handled by above? We're not using the script to determine animation then. Rely on the model's anim for this activity if there is one.
 	return CBaseAnimating::LookupActivity(activity);
-}//END OF tryActivitySubstitute(...)
+}//END OF tryActivitySubstitute
+
+
+void CGargantua::HandleEventQueueEvent(int arg_eventID){
+
+	switch(arg_eventID){
+	case 4:{
+		// 'smash'.  quick heavy melee damage, shake.
+		// HACKHACK!!!
+		//MODDD - inflicts bleeding.
+		CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_MELEEATTACKDIST + 7, gSkillData.gargantuaDmgSlash * 1.5, DMG_SLASH, DMG_BLEEDING );
+		if (pHurt)
+		{
+			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
+			{
+				pHurt->pev->punchangle.x = -50; // pitch
+				pHurt->pev->punchangle.y = 0;	// yaw
+				pHurt->pev->punchangle.z = 50;	// roll
+												//UTIL_MakeVectors(pev->angles);	// called by CheckTraceHullAttack
+				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 120 + Vector(0, 0, 180);
+				pHurt->pev->flags &= ~FL_ONGROUND;
+				pHurt->pev->groundentity = NULL;
+				pHurt->pev->origin.z += 1;
+			}
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+		}
+		else{ // Play a random attack miss sound
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+		}
+
+		// Play the stomp-sound, smacked the ground pretty good at least.
+		UTIL_ScreenShake( pev->origin, 12.0, 100.0, 2.0, 1500 );
+		UTIL_PlaySound( edict(), CHAN_WEAPON, pStompSounds[ RANDOM_LONG(0,ARRAYSIZE(pStompSounds)-1) ], 1.0, ATTN_NORM - 0.23, 0, PITCH_NORM + RANDOM_LONG(7,12) );
+
+		TraceResult trace;
+		Vector decalTraceStart = pev->origin + gpGlobals->v_forward * 86 + Vector(0, 0, 20);
+		UTIL_TraceLine( decalTraceStart, decalTraceStart - Vector(0,0,25), ignore_monsters, edict(), &trace );
+		if ( trace.flFraction < 1.0 ){
+			UTIL_DecalTrace( &trace, DECAL_GARGSTOMP1 );
+		}
+
+	}break;
+	case 5:{
+		// kick.  More of a push-away than real damage.
+		// HACKHACK!!!
+		// no bleeding for this one.  Also more blunt than a 'slash' but eh.
+		CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_MELEEATTACKDIST + 13, gSkillData.gargantuaDmgSlash * 0.7, DMG_SLASH, 0 );
+		if (pHurt)
+		{
+			if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
+			{
+				pHurt->pev->punchangle.x = -50; // pitch
+				pHurt->pev->punchangle.y = RANDOM_FLOAT(-20, 20);	// yaw
+				pHurt->pev->punchangle.z = 25;	// roll
+												//UTIL_MakeVectors(pev->angles);	// called by CheckTraceHullAttack
+				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 520 + Vector(0, 0, 320);
+				pHurt->pev->flags &= ~FL_ONGROUND;
+				pHurt->pev->groundentity = NULL;
+				pHurt->pev->origin.z += 1;
+			}
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+		}
+		else{ // Play a random attack miss sound
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+		}
+
+	}break;
+	case 6:{
+		// throwbody: the grab.  Or attempt to.
+		CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_MELEEATTACKDIST + 7, gSkillData.gargantuaDmgSlash * 1.5, DMG_SLASH, DMG_BLEEDING );
+		if (pHurt)
+		{
+			//MODDD - TODO!  If the thing detected is too large, don't do this.
+			
+			// no hit sound
+			grabbedEnt = pHurt;
+			grabbedEnt->pev->gravity = 0;
+			grabbedEnt->pev->flags &= ~FL_ONGROUND;
+			grabbedEnt->pev->groundentity = NULL;
+			grabbedEnt->pev->origin.z += 1;
+			//pev->nextNormalThink = pev->nextThink;
+			//pev->nextThink = gpGlobals->time + 0.01;
+			//
+		}
+		else{ // Play a random attack miss sound
+			// ALSO, give up the task.  Doesn't make sense to finish this one on a miss.
+			// ...at time 10/16 that is (will be noticed without a grabbedEnt).  Now, event #7 will do that check.
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+		}
+	}break;
+	case 7:{
+		// throwbody: the check.  If I'm not holding anything (grab didn't work), stop now, it's silly to throw with nothing in hand.
+		if(grabbedEnt == NULL){
+			TaskFail();
+		}
+	}break;
+	case 8:{
+		// throwbody:  the 'throw'.  Release and, well, chuck em' across.
+		UTIL_MakeVectors( pev->angles );
+
+		grabbedEnt->pev->velocity = gpGlobals->v_forward * 750 + gpGlobals->v_right * 160 + Vector(0, 0, 130);
+
+
+		grabbedEnt->pev->gravity = 1.0f;
+		grabbedEnt = NULL;
+	}break;
+	}//switch
+
+
+}//HandleEventQueueEvent
+
+
 
 int CGargantua::getHullIndexForNodes(void){
     return NODE_LARGE_HULL;  //...ya think?
 }
 
+BOOL CGargantua::predictRangeAttackEnd(void){
+	// yea go ahead, just the stomp
+	// mMMmmmmmm... no, the event happens right at the end, unwise, nevermind
+	return FALSE;
+}
 
+//MODDD - more range for trying a stomp attack
+float CGargantua::getDistTooFar(void){
+	//return 1024.0;
+	return 1500.0f;
+}
+
+float CGargantua::ScriptEventSoundAttn(void){
+	return 0.57;
+}
+float CGargantua::ScriptEventSoundVoiceAttn(void){
+	return 0.58;
+}

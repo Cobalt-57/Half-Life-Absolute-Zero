@@ -186,6 +186,7 @@
     <ClInclude Include="entity\friendly.h" />
     <ClInclude Include="entity\func_break.h" />
     <ClInclude Include="entity\func_door_health.h" />
+    <ClInclude Include="entity\gargantua.h" />
     <ClInclude Include="entity\gib.h" />
     <ClInclude Include="entity\hassault.h" />
     <ClInclude Include="entity\healthkit.h" />

@@ -578,7 +578,8 @@ BOOL CFloater::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 	if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
 		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
 
-	if ( flWaypointDist <= 64 + (m_flGroundSpeed * gpGlobals->frametime) )
+	// !!! Replaced gpGlobals->frametime with flInterval
+	if ( flWaypointDist <= 64 + (m_flGroundSpeed * flInterval) )
 		return TRUE;
 
 	return FALSE;

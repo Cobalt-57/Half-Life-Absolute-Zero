@@ -563,5 +563,33 @@ VICTORY DANCE FOR HGRUNTS - 'Victory Dance' behavior for hgrunts changed, hassau
 
 An hassault standing that decides to stop spinning the chaingun plays the 'spindown' sequence as well as the sound.  Rare to see as they're usually moving at the time.
 
-General pathfinding bug fixed: 'SimplifyRoute' could potentially involve waypoints outside the monster's route length, leading to routes with 0'd or unintentional waypoints and/or without goal nodes, if simplifying a route that the monster has partially traversed (at least 1 waypoint already covered).
+General pathfinding bug fixed: 'SimplifyRoute' could involve parts of the node array that were not properly set for the current route, leading to using garbage memory as waypoints.
+
+GARGANTUA
+- move speed affected by difficulty.
+- flamethrower attack has a delay before it begins, scales with difficulty (almost none on hard like in retail)
+- Uses an animation to put its arms in position before starting the flame-thrower attack (once the mentioned delay expires).
+- Flamethrower range slightly increased to compensate for delays.
+- Gargantua must be closer than its max range to start the flamethrower attack (many attacks already work like this so that moving an inch away doesn't avoid it)
+- Max flamethrower time reduced from 4.5 to 3.7.  Time before using the flamethrower again increased to give a greater window for melee attacks.
+- Extra 'smash' and kick melee attacks granted.  Smash deals double damage, shakes the screen and makes a decal on the ground.  Kick sends the hit enemy/player a great distance.
+- Melee attack speeds scale with difficulty.
+- Flamethrower will continue for longer on breaking sight with the enemy/player.  It will decay faster on going out of range of the flamethrower while the garg still has the enemy in sight, but still more slowly than retail.
+- Flamethrower damage cut by 30% at any skill value.  Far more damaging than any other attack for how frequently it occurs.  Max damage occurs at greater distance from the center of the flame, however (more uniform damage).
+- Stomp attack travelling effect speed also affected by difficulty.  Starts at a speed above 0, higher at medium and hard difficulty.
+- Stomp effect also moves up to three times as high of a starting speed at a further distance on top of the possible difficulty boost.  Now has a top-speed (no endless acceleration).
+- Also in hard, stomps twice at a time and each stomp spawns three stomp effects (total of 6 in three directions).
+- Stomp attacks occur more often if the gargantua cannot pathfind to the player (often across some obstacle/impassible area).
+- Stomp attacks can no longer damage the gargantua that made them (rarely happened).
+- Stomp attack (gargantua animation) less likely to be interrupted like other gargantua routines.
+- Stomp effect no longer gets a shorter-than-expected range on running into an object or map-geometry between the garg and the enemy/player (such as far behind a long ramp that the garg sees over)
+- Stomp decal placement more accurate to where the foot model is.
+- Attempting to melee if the player moves too far away since turning to face them no longer occurs.
+- Turn speed overall reduced, reduction is the least on hard (near-retail).  Also slower during flamethrower attack, faster during the rest.
+- Defaults to the walk animation unless provoked by taking hits from attacks that do enough damage.
+- Gargantuas that die have their model pivot's reset (no more being arched oddly above the ground while dead).
+- All garg sounds carry further (less attenuation).
+
+
+TODO: hassault still aiming too far up/down on something close?  Fix applied to agrunt already
 

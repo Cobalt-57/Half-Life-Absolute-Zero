@@ -252,7 +252,9 @@ BOOL CFlyingMonster::ShouldAdvanceRoute( float flWaypointDist, float flInterval 
 	if ( m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL )
 		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
 
-	if ( flWaypointDist <= 64 + (m_flGroundSpeed * gpGlobals->frametime) )
+	//MODDD - Why gpGlobals->frametime??  Doesn't measure the difference in think-times well
+	// replaced with flInterval
+	if ( flWaypointDist <= 64 + (m_flGroundSpeed * flInterval) )
 		return TRUE;
 
 	return FALSE;
@@ -261,6 +263,7 @@ BOOL CFlyingMonster::ShouldAdvanceRoute( float flWaypointDist, float flInterval 
 
 void CFlyingMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
+	//MODDD - any references to gpGlobals->frametime replaced with flInterval
 
 	if ( isMovetypeFlying() )
 	{
@@ -276,12 +279,12 @@ void CFlyingMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir,
 
 		if ( m_IdealActivity != m_movementActivity )
 		{
-			m_flightSpeed = UTIL_Approach( 100, m_flightSpeed, 75 * gpGlobals->frametime );
+			m_flightSpeed = UTIL_Approach( 100, m_flightSpeed, 75 * flInterval );
 			if ( m_flightSpeed < 100 )
 				m_stopTime = gpGlobals->time;
 		}
 		else
-			m_flightSpeed = UTIL_Approach( 20, m_flightSpeed, 300 * gpGlobals->frametime );
+			m_flightSpeed = UTIL_Approach( 20, m_flightSpeed, 300 * flInterval );
 		
 		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) )
 		{

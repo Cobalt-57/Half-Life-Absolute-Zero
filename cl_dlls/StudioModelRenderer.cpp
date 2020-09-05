@@ -1743,7 +1743,7 @@ CLIENTFR: 160 14.
 	//iAnim
 	//m_pCurrentEntity->curstate.
 
-	if(g_drawType == DRAWTYPE_VIEWMODEL  ){
+	if(g_drawType == DRAWTYPE_VIEWMODEL){
 		//easyPrintLine("CLIENT FRAME: %.2f %.2f %.2f::%d %.2f", f, m_pCurrentEntity->curstate.frame, currentFrame, pseqdesc->numframes, dfdt );
 		//easyPrintLine("CLIENTFR: %d %.2f %d", m_pCurrentEntity->curstate.renderfx, f, pseqdesc->numframes);
 

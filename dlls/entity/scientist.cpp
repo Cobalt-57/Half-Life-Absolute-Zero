@@ -1816,7 +1816,7 @@ void CScientist::setModel(const char* m){
 	//easyPrintLine("NO!!!!!!!!! PLEASE!!!!!!!!!!!!!!!!!!!!!!!!!! %d", (int)EASY_CVAR_GET(scientistModel));
 	//easyPrintLine("Huh?? %.2f", CVAR_GET_FLOAT("scientistModel"));
 
-	//let this handle model management.
+	// let this handle model management.
 	CTalkMonster::setModel(m);
 
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -1889,7 +1889,7 @@ void CScientist::Spawn( void )
 
 	CTalkMonster::Spawn();
 
-	//MODDD - all model calls replaced with a call to "setModelCustom" to let "EASY_CVAR_GET(scientistModel)" act as a selector.
+
 	setModel(); //"models/scientist.mdl"  //argument unused for monsters with German versions. 
 	//!setModelCustom();
 	

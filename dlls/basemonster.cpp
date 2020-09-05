@@ -322,8 +322,8 @@ const char* CBaseMonster::pStandardAttackMissSounds[] =
 
 
 
-
 int CBaseMonster::monsterIDLatest = 0;
+
 
 
 //MODDD - ?
@@ -2374,7 +2374,7 @@ void CBaseMonster::setModel(const char* m){
 	}else{
 
 		if(m != NULL && m[0] != '\0'){
-			// Non-empty string? Not using the GermanModel system? Just go with what we were sent.
+			// Non-empty string? Not using the GermanModel system? Just go with what was sent.
 			CBaseEntity::setModel(m);
 		}
 	}
@@ -3473,6 +3473,8 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 			int x = 45;
 		}
 
+		easyForcePrintLine("DO IT BE THO %d : %.2f", (pEnemy->pev->deadflag, pEnemy->pev->frame) );
+
 		//MODDD - new event, called when the checked enemy is dead
 		// (as bits_COND_ENEMY_DEAD is set)
 		onEnemyDead(pEnemy);
@@ -3906,8 +3908,8 @@ void CBaseMonster::SetActivity ( Activity NewActivity )
 
 	
 	//MODDD TODO - on any loosely linked clones of SetActivity, they should also set "signalActivityUpdate" to false.
-	//This method getting called is supposed to be enough to satisfy the signal, like to force resetting to itself after a possible
-	//raw anim change.
+	// This method getting called is supposed to be enough to satisfy the signal, like to force resetting to itself after a possible
+	// raw anim change.
 	signalActivityUpdate = FALSE;
 
 	
@@ -4429,15 +4431,33 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 	}
 #endif
 
+
+	// what..?
 	if ( iReturn == LOCALMOVE_VALID && 	!(pev->flags & (FL_FLY|FL_SWIM) ) && (!pTarget || (pTarget->pev->flags & FL_ONGROUND)) )
 	{
 		// The monster can move to a spot UNDER the target, but not to it. Don't try to triangulate, go directly to the node graph.
 		// UNDONE: Magic # 64 -- this used to be pev->size.z but that won't work for small creatures like the headcrab
-		if ( fabs(vecEnd.z - pev->origin.z) > 64 )
+		//MODDD - UHHHHhhhhh.    What??
+		// Now anything taller than 64 fails.  UGH.  Fantastic to run into. 
+		// Why not involve pev->size, like pev->size * 1.3?
+		//if ( fabs(vecEnd.z - pev->origin.z) > 64 )
+
+		float maxZ_DistAllowed = pev->size.z * 1.2 + 16; //pev->size.z * 1.25;
+		float zDist = fabs(vecEnd.z - pev->origin.z);
+
+		if ( zDist > maxZ_DistAllowed )
 		{
+			// too spammy in any map with lots of vertical level space (a2a1a).
+			//easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Route failed from reaching a point too far from the goal in Z compared to my height.  Difference in Z is: %.2f.  Most allowed: %.2f.", getClassname(), monsterID, zDist, maxZ_DistAllowed);
+			DebugLine_SetupPoint(0, pev->origin, 255, 0, 0);
+			DebugLine_SetupPoint(1, vecEnd, 255, 0, 0);
+
 			iReturn = LOCALMOVE_INVALID_DONT_TRIANGULATE;
 		}
 	}
+	
+
+
 	/*
 	// uncommenting this block will draw a line representing the nearest legal move.
 	WRITE_BYTE(MSG_BROADCAST, SVC_TEMPENTITY);
@@ -7439,7 +7459,7 @@ void CBaseMonster::HandleAnimEvent( MonsterEvent_t *pEvent )
 		// Otherwise (not scripted), assume soundsentencesave can catch the sound
 		BOOL useSoundSentenceSave = (m_MonsterState != MONSTERSTATE_SCRIPT);
 		// MODDD - scripted sounds now carry further.  Lower attenuation.  Was ATTN_IDLE (2).
-		UTIL_PlaySound(edict(), CHAN_BODY, pEvent->options, 1.0, 0.9, 0, 100, useSoundSentenceSave);
+		UTIL_PlaySound(edict(), CHAN_BODY, pEvent->options, 1.0, ScriptEventSoundAttn(), 0, 100, useSoundSentenceSave);
 	}
 	break;
 
@@ -7447,7 +7467,7 @@ void CBaseMonster::HandleAnimEvent( MonsterEvent_t *pEvent )
 		//MODDD - you too.
 		// And a smaller attenuation change (was also ATTN_IDLE)
 		BOOL useSoundSentenceSave = (m_MonsterState != MONSTERSTATE_SCRIPT);
-		UTIL_PlaySound(edict(), CHAN_VOICE, pEvent->options, 1.0, 1.1, 0, 100, useSoundSentenceSave);
+		UTIL_PlaySound(edict(), CHAN_VOICE, pEvent->options, 1.0, ScriptEventSoundVoiceAttn(), 0, 100, useSoundSentenceSave);
 	}break;
 
 	case SCRIPT_EVENT_SENTENCE_RND1:		// Play a named sentence group 33% of the time
@@ -9241,6 +9261,10 @@ WayPoint_t* CBaseMonster::GetGoalNode(){
 		return &m_Route[m_iRouteLength-1];
 	}
 
+
+	easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Route of node-length %d had no goal! Movegoal: %d", getClassname(), monsterID, m_iRouteLength, m_movementGoal);
+
+
 	// didn't find a node with bits_MF_IS_GOAL set from 0 to m_iRouteIndex?
 	// Unsure if treating the node at m_Route[m_iRouteLength-1] would be fine anyway.
 	// Can't think of when a route would lack a GOAL-marked node unless it ran out at 
@@ -9825,6 +9849,15 @@ void CBaseMonster::Materialize(void)
 
 }
 
+
+// Overridable.  Gargantua, for instance, should have lower attenuations for any sounds played this way.
+// Retail defaults would be ATTN_IDLE (2.0) for both of these for everything.
+float CBaseMonster::ScriptEventSoundAttn(void){
+	return 0.9;
+}
+float CBaseMonster::ScriptEventSoundVoiceAttn(void){
+	return 1.0;
+}
 
 
 

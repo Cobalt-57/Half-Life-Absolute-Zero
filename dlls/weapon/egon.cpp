@@ -317,10 +317,7 @@ void CEgon::Attack( void )
 		}
 		return;
 	}
-
-
-	BOOL poopyDoop = FALSE;
-
+	
 #ifdef CLIENT_DLL
 
 	if(m_fireState != 1 && lockedFireState){

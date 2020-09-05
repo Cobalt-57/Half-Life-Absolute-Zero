@@ -200,6 +200,36 @@ enum
 };
 
 
+
+
+
+// clone of slFail (defaultai.cpp).  Interruptable by taking damage.
+Task_t	tlHAssaultFail[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
+	//MODDD - why not face ideal in case it helps see something
+	{ TASK_WAIT_FACE_IDEAL,		(float)1.5		},
+	//{ TASK_WAIT,				(float)1		},
+	//{ TASK_WAIT_PVS,			(float)0		},
+};
+
+Schedule_t	slHAssaultFail[] =
+{
+	{
+		tlHAssaultFail,
+		ARRAYSIZE ( tlHAssaultFail ),
+		bits_COND_CAN_ATTACK |
+		//MODDD - new?  Retrying methods to get to an enemy when pathfinding fails despite a better enemy being closer isn't great.
+		bits_COND_NEW_ENEMY |
+		bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"HAssaultFail"
+	},
+};
+
+
 Task_t	tlHAssaultFireOver[] =
 {
 	{ TASK_STOP_MOVING_DONT_BLOCK_FIRING,			0				},
@@ -822,6 +852,7 @@ Schedule_t	slHAssaultVictoryDanceSeekLOS[] =
 
 DEFINE_CUSTOM_SCHEDULES( CHAssault )
 {
+	slHAssaultFail,
 	slHAssault_spin,
 	slHAssault_foundEnemy,
 	slHAssault_suppress,
@@ -1241,7 +1272,7 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 
 	switch(arg_eventID){
 	case 0:
-		{		
+		{
 		CBaseEntity *pHurt = HumanKick(77);
 
 		if ( pHurt )
@@ -1451,7 +1482,9 @@ void CHAssault::Spawn()
 
 	
 	//m_flFieldOfView		= VIEW_FIELD_FULL;//0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
-	m_flFieldOfView = 0.24;
+	//m_flFieldOfView = 0.24;
+	m_flFieldOfView = 0.15;
+
 	//m_flFieldOfView		= EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar);
 
 	//MODDD - grunt seems to lack this line in spawn (or anywhere), disabling?
@@ -2317,6 +2350,7 @@ void CHAssault::StartTask ( Task_t *pTask ){
 	// Plain clone of TASK_STOP_MOVING then.
 	case TASK_STOP_MOVING_DONT_BLOCK_FIRING:
 	{
+		pTask->iTask = TASK_STOP_MOVING;
 		CSquadMonster::StartTask(pTask);
 		break;
 	}
@@ -3375,6 +3409,9 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, ( "HASSAULT GET SCHED TYPE: %d ", Type));
 
 	switch(Type){
+		case SCHED_FAIL:{
+			return slHAssaultFail;
+		}
 		case SCHED_RANGE_ATTACK2:
 		{
 			//MODDD - grenade time

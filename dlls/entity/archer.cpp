@@ -818,9 +818,6 @@ BOOL CArcher::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 
 void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
-
-
-
 	const float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z - 512, pev->origin.z + 4096.0);
 	const float waterLevelIdeal = waterLevel + DESIRED_WATERLEVEL_SURFACE_OFFSET;
 

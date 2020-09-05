@@ -730,9 +730,6 @@ Task_t	tlCombatStand1[] =
 	{ TASK_WAIT_INDEFINITE,		(float)0		},
 };
 
-
-
-
 //MODDD - hassault relies on this, clone if the old way was better.
 // (lacked things below the 'why' line).
 Schedule_t	slCombatStand[] =
@@ -1129,16 +1126,9 @@ Schedule_t slChaseEnemy[] =
 };
 
 
-#ifdef CHASE_ENEMY_SMART
-
-#else
-
-#endif
-
-//MODDD - Chase enemy schedule, SMART.
+//MODDD - new
 Task_t tlChaseEnemySmart[] = 
 {
-	
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE},   //MODDD is this okay?
 
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CHASE_ENEMY_FAILED	},
@@ -2127,11 +2117,10 @@ Schedule_t* CBaseMonster::GetScheduleOfType ( int Type )
 	}
 	case SCHED_CHASE_ENEMY_FAILED:
 	{
-		//MODDD NOTE - nothing special? damn.
+		//MODDD NOTE - nothing special?
 		//ACTUALLY YES, force an update on the enemy LKP just to unclog things maybe.
 
 		if(m_hEnemy != NULL){
-			//this->m_vecEnemyLKP = m_hEnemy->pev->origin;
 			setEnemyLKP(m_hEnemy->pev->origin);
 		}
 

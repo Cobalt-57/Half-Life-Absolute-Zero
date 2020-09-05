@@ -641,7 +641,9 @@ void CBaseMonster::MaintainSchedule ( void )
 
 			StartTask( pTask );
 
-			//Do the check.
+			// Is this section relevant anymore?  Test without it
+			/*
+			// Do the check.
 			if( m_fNewScheduleThisFrame ){
 				//If we recently called ChangeSchedule (this same frame) and the task ended up completed by a TaskComplete call or the schedule ended up failed by a TaskFail() in this
 				//same frame, something did not go right.
@@ -661,6 +663,7 @@ void CBaseMonster::MaintainSchedule ( void )
 				//HACK
 				m_iTaskStatus = TASKSTATUS_NEW;
 			}
+			*/
 
 		}//END OF if ( m_iTaskStatus == TASKSTATUS_NEW )
 
@@ -969,6 +972,21 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 			}
 			break;
 		}
+	case TASK_WAIT_FACE_IDEAL:
+		// Wait, but while waiting, face ideal.
+
+		ChangeYaw( pev->yaw_speed );
+
+		//if ( FacingIdeal() )
+		//{
+		//	TaskComplete();
+		//}
+
+		if ( gpGlobals->time >= m_flWaitFinished )
+		{
+			TaskComplete();
+		}
+	break;
 	case TASK_MOVE_TO_TARGET_RANGE:
 		{
 			float distance;
@@ -2396,6 +2414,18 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			m_flWaitFinished = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(pathfindStumpedWaitTime);
 			break;
 		}
+	case TASK_WAIT_FACE_IDEAL:{
+		m_flWaitFinished = gpGlobals->time + pTask->flData;	
+
+		//if (FacingIdeal())
+		//{
+		//	TaskComplete();
+		//	return;
+		//}
+
+		SetTurnActivity();
+
+	}break;
 	case TASK_MOVE_TO_TARGET_RANGE:
 		{
 			if(m_hTargetEnt == NULL){
@@ -2721,7 +2751,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		}
 		
 	case TASK_SET_ACTIVITY_FORCE:{
-		//MODDD - new. Similar to TASK_SET_ACTIVITY above, but enforces picking a new sequence.
+		//MODDD - new. Similar to TASK_SET_ACTIVITY above, but enforces picking a new sequence right now.
 		SetActivity( (Activity)(int)pTask->flData );
 		TaskComplete();
 	break;}

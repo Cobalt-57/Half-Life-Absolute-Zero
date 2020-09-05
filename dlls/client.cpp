@@ -5800,7 +5800,10 @@ void Sys_Error( const char *error_string )
 {
 	// Default case, do nothing.  MOD AUTHORS:  Add code ( e.g., _asm { int 3 }; here to cause a breakpoint for debugging your game .dlls
 
-	//MODDD - well,  here I am.   Is this ok?
+	//MODDD
+	// Oh, lookie there.  An error string.     Definitely not just now noticing this.    Nope.
+	easyForcePrintLine("Sys_Error: %s", error_string);
+	// This is ok?
 	_asm { int 3 };
 
 }

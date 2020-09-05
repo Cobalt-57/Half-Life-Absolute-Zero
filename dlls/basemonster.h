@@ -881,7 +881,7 @@ public:
 		if ( m_iRouteIndex >= m_iRouteLength || m_movementGoal == MOVEGOAL_NONE ){
 			if(m_iRouteIndex >= m_iRouteLength && m_movementGoal != MOVEGOAL_NONE){
 				// let me know!
-				easyForcePrintLine("!!! %s:%d NOTICE!  Place in route exceeded RouteLength, yet the movegoal is not NONE (is %d)", getClassname(), monsterID, m_movementGoal);
+				easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Place in route exceeded RouteLength, yet the movegoal is not NONE (is %d)", getClassname(), monsterID, m_movementGoal);
 			}
 			return TRUE;
 		}
@@ -1279,6 +1279,8 @@ public:
 	void EXPORT AttemptToMaterialize(void);
 	void EXPORT Materialize(void);
 
+	virtual float ScriptEventSoundAttn(void);
+	virtual float ScriptEventSoundVoiceAttn(void);
 
 
 };
