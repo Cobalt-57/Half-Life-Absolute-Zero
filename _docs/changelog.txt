@@ -431,6 +431,9 @@ GAUSS MODE 1:
 - Secondary charges in increments of 5 ammo (single primary shot usage) instead of 1.  Longer delay between ammo-usage cycles for this reason.
   Charged damage is each ammo-usage cycle (5 ammo; primary shot) times primary damage.
   This means, charging is always as efficient as primary fire.
+- Has a greater range of pitch from start to max charge to be stretched across its longer charge time.
+
+
 
 Map spawned dead-barnies no longer have mouths open.
 
@@ -522,6 +525,7 @@ EGON
 Egon functions normally while going through map transitions while firing with either fire-mode.
 Gauss functions normally while going through map transitions while charging.
 
+Egon and Gauss also properly stop firing / release charge when the game is paused while firing/charging.  Yes.  Really.
 
 
 
@@ -565,6 +569,9 @@ An hassault standing that decides to stop spinning the chaingun plays the 'spind
 
 General pathfinding bug fixed: 'SimplifyRoute' could involve parts of the node array that were not properly set for the current route, leading to using garbage memory as waypoints.
 
+'Routes with same start/end node check' restored and made more efficient, no longer does expensive checks over long distances.
+In other words, monsters are less likely to (try to) take odd paths to impossible points that cannot be reached if the player stands in odd places unmarked by nodes.
+
 GARGANTUA
 - move speed affected by difficulty.
 - flamethrower attack has a delay before it begins, scales with difficulty (almost none on hard like in retail)
@@ -590,6 +597,19 @@ GARGANTUA
 - Gargantuas that die have their model pivot's reset (no more being arched oddly above the ground while dead).
 - All garg sounds carry further (less attenuation).
 
+SLIGHT RESTORE BUG: Fixed monsters needing to change from the default blend (such as the torso bending to look straight down) to the one the game was saved with.
 
-TODO: hassault still aiming too far up/down on something close?  Fix applied to agrunt already
+Standing on some able-to-move but stopped objects (like fans in a2a1a) no longer spams pain noises.  Yes, really.
+
+Touching func_rotating (often fans) alone is no longer enough to take damage.  Must block the path of the fan (causing it to get stuck, as though jammed by the entity/player) like most other map-related entities (doors, etc.) require.
+
+trigger_push's (such as the area above the fans in a2a1a) that push upward can also affected grounded entities.  That is, the player can be affected slightly further away and making contact with the fan does not stop the trigger from working (player would spin with the fan blade when this happened).
+
+Slight chance of clientside events called by the EV_ system on the local player should no longer have a chance of getting skipped, especially in multiplayer.
+
+Viewmodel anims in multiplayer further improved (less glitchiness like odd frames of animations between weapon changes).
+
+HAssault aiming the wrong way pitch-wise (very high for lower targets, very low for higher targets) fixed.
+
+IN PROGRESS:  better debug method to help see why what looks like an obvious route can't be selected by wanting to move to any random nearby node.
 

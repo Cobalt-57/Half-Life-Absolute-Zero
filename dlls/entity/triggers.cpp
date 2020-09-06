@@ -2324,16 +2324,61 @@ void CTriggerPush::Touch( CBaseEntity *pOther )
 			UTIL_Remove( this );
 		}
 		else
-		{	// Push field, transfer to base velocity
+		{
+			//MODDD - I don't really get how this works, there aren't many mentions of basevelocity in the codebase,
+			// seems to be something the engine works with to determine pev->velocity for you.
+			// Although it doesn't do anything if the thing that took a basevelocity is on the ground.
+			// That is, as-is, being close to the floor-fans in a2a1a (to the point of almost falling in but not quite)
+			// and then jumping will send the player upward, even though the player was in this TriggerPush taking
+			// the basevelocity change the whole time.  Only applied from breaking contact with the ground, be it
+			// jumping or 'falling' into the fan for a frame by moving into the hole enough to.
+
+			// And this clashes with the 'downward slope' detection, which sees the fan close enough most of the time
+			// and wants to warp to it, so insta-death in what would've sent the player upward in retail. GOOOOOOOOODY.
+
+			// Idea:  Break connection with the ground too on giving any upwards velocity.
+			// Why does only the spawnflag SF_TRIG_PUSH_ONCE allow this as-is?   Nnnnnnnnnnnnoooooooooooo clue.
+
+			// It IS still possible to step on the fan in a2a1a with downward-incline detection, but it is harder to do so.
+			// Requires running fast into it at the right angle while a fan blade is near the player's feet.
+			// Contact can be made with the fan blade before the trigger push has a chance to break the connection to the
+			// ground and push the player up.
+			// But it's no longer an issue now, the connection is broken the very next frame and touching a func_rotating 
+			// without blocking it does not deal damage, so it's harder to notice.  It isn't possible to block the fan this
+			// way as there is next to no time to fall into the fan's hole and stepping on a blade prevents falling into it too.
+
+			// Push field, transfer to base velocity
 			Vector vecPush = (pev->speed * pev->movedir);
-			if ( pevToucher->flags & FL_BASEVELOCITY )
+			if ( pevToucher->flags & FL_BASEVELOCITY ){
 				vecPush = vecPush +  pevToucher->basevelocity;
+			}
 
 			pevToucher->basevelocity = vecPush;
 
 			pevToucher->flags |= FL_BASEVELOCITY;
+
+			//MODDD - break connection to the ground if suggested (basevelocity above 0)
+			//easyForcePrintLine("HOW ARE THEY %.2f %d", pevToucher->basevelocity.z, (pevToucher->flags & FL_ONGROUND));
+			if(pevToucher->basevelocity.z > 0 && (pevToucher->flags & FL_ONGROUND) ){
+				
+				pevToucher->flags & ~FL_ONGROUND;
+				pevToucher->groundentity = NULL;
+				// And yes, this is needed to make sure the player doesn't stay stuck to the surface of something while
+				// it's in effect.  Not 0.8, not 1.8.  2.
+				pevToucher->origin.z += 2;
+				// eh why not.
+				if(pevToucher->velocity.z < 5){
+					pevToucher->velocity.z = 5;
+				}
+			}
+
+
 //			ALERT( at_console, "Vel %f, base %f\n", pevToucher->velocity.z, pevToucher->basevelocity.z );
 		}
+
+		// Sillyness
+		//pevToucher->velocity.z = 666;
+
 	}
 }
 

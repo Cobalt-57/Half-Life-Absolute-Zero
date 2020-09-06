@@ -1200,208 +1200,6 @@ int PM_FlyMoveTest(void) {
 */
 
 
-//MODDD - clone, test
-int PM_FlyMoveTest(void)
-{
-	int		bumpcount, numbumps;
-	vec3_t		dir;
-	float	d;
-	int		numplanes;
-	vec3_t		planes[MAX_CLIP_PLANES];
-	vec3_t		primal_velocity, original_velocity;
-	vec3_t      new_velocity;
-	int		i, j;
-	pmtrace_t	trace;
-	vec3_t		end;
-	float	time_left, allFraction;
-	int		blocked;
-
-	numbumps = 4;           // Bump up to four times
-
-	blocked = 0;           // Assume not blocked
-	numplanes = 0;           //  and not sliding along any planes
-	VectorCopy_f(pmove->velocity, original_velocity);  // Store original velocity
-	VectorCopy_f(pmove->velocity, primal_velocity);
-
-	allFraction = 0;
-	time_left = pmove->frametime;   // Total time for this movement operation.
-
-	for (bumpcount = 0; bumpcount < numbumps; bumpcount++)
-	{
-		if (!pmove->velocity[0] && !pmove->velocity[1] && !pmove->velocity[2])
-			break;
-
-		// Assume we can move all the way from the current origin to the
-		//  end point.
-		for (i = 0; i < 3; i++)
-			end[i] = pmove->origin[i] + time_left * pmove->velocity[i];
-
-		// See if we can make it from origin to end point.
-		trace = pmove->PM_PlayerTrace(pmove->origin, end, PM_NORMAL, -1);
-
-		allFraction += trace.fraction;
-		// If we started in a solid object, or we were in solid space
-		//  the whole way, zero out our velocity and return that we
-		//  are blocked by floor and wall.
-		if (trace.allsolid)
-		{	// entity is trapped in another solid
-			VectorCopy_f(vec3_origin, pmove->velocity);
-			//Con_DPrintf("Trapped 4\n");
-			return 4;
-		}
-
-		// If we moved some portion of the total distance, then
-		//  copy the end position into the pmove->origin and 
-		//  zero the plane counter.
-		if (trace.fraction > 0)
-		{	// actually covered some distance
-			VectorCopy_f(trace.endpos, pmove->origin);
-			VectorCopy_f(pmove->velocity, original_velocity);
-			numplanes = 0;
-		}
-
-		// If we covered the entire distance, we are done
-		//  and can return.
-		if (trace.fraction == 1)
-			break;		// moved the entire distance
-
-	   //if (!trace.ent)
-	   //	Sys_Error ("PM_PlayerTrace: !trace.ent");
-
-	   // Save entity that blocked us (since fraction was < 1.0)
-	   //  for contact
-	   // Add it if it's not already in the list!!!
-		PM_AddToTouched(trace, pmove->velocity);
-
-		// If the plane we hit has a high z component in the normal, then
-		//  it's probably a floor
-		if (trace.plane.normal[2] > 0.7)
-		{
-			blocked |= 1;		// floor
-		}
-		// If the plane has a zero z component in the normal, then it's a 
-		//  step or wall
-		if (!trace.plane.normal[2])
-		{
-			blocked |= 2;		// step / wall
-			//Con_DPrintf("Blocked by %i\n", trace.ent);
-		}
-
-		// Reduce amount of pmove->frametime left by total time left * fraction
-		//  that we covered.
-		time_left -= time_left * trace.fraction;
-
-		// Did we run out of planes to clip against?
-		if (numplanes >= MAX_CLIP_PLANES)
-		{	// this shouldn't happen
-			//  Stop our movement if so.
-			VectorCopy_f(vec3_origin, pmove->velocity);
-			//Con_DPrintf("Too many planes 4\n");
-
-			break;
-		}
-
-		// Set up next clipping plane
-		VectorCopy_f(trace.plane.normal, planes[numplanes]);
-		numplanes++;
-		//
-
-		// modify original_velocity so it parallels all of the clip planes
-		//
-		if (pmove->movetype == MOVETYPE_WALK &&
-			((pmove->onground == -1) || (pmove->friction != 1)))	// relfect player velocity
-		{
-			for (i = 0; i < numplanes; i++)
-			{
-				if (planes[i][2] > 0.7)
-				{// floor or slope
-					PM_ClipVelocity(original_velocity, planes[i], new_velocity, 1);
-					VectorCopy_f(new_velocity, original_velocity);
-				}
-				else
-					PM_ClipVelocity(original_velocity, planes[i], new_velocity, 1.0 + pmove->movevars->bounce * (1 - pmove->friction));
-			}
-
-			VectorCopy_f(new_velocity, pmove->velocity);
-			VectorCopy_f(new_velocity, original_velocity);
-		}
-		else
-		{
-			for (i = 0; i < numplanes; i++)
-			{
-				PM_ClipVelocity(
-					original_velocity,
-					planes[i],
-					pmove->velocity,
-					1);
-				for (j = 0; j < numplanes; j++)
-					if (j != i)
-					{
-						// Are we now moving against this plane?
-						if (DotProduct_f(pmove->velocity, planes[j]) < 0)
-							break;	// not ok
-					}
-				if (j == numplanes)  // Didn't have to clip, so we're ok
-					break;
-			}
-
-			// Did we go all the way through plane set
-			if (i != numplanes)
-			{	// go along this plane
-				// pmove->velocity is set in clipping call, no need to set again.
-				;
-			}
-			else
-			{	// go along the crease
-				if (numplanes != 2)
-				{
-					//Con_Printf ("clip velocity, numplanes == %i\n",numplanes);
-					VectorCopy_f(vec3_origin, pmove->velocity);
-					//Con_DPrintf("Trapped 4\n");
-
-					break;
-				}
-				CrossProduct(planes[0], planes[1], dir);
-				d = DotProduct_f(dir, pmove->velocity);
-				VectorScale(dir, d, pmove->velocity);
-			}
-
-			//
-			// if original velocity is against the original velocity, stop dead
-			// to avoid tiny occilations in sloping corners
-			//
-			if (DotProduct_f(pmove->velocity, primal_velocity) <= 0)
-			{
-				//Con_DPrintf("Back\n");
-				VectorCopy_f(vec3_origin, pmove->velocity);
-				break;
-			}
-		}
-	}
-
-	if (allFraction == 0)
-	{
-		VectorCopy_f(vec3_origin, pmove->velocity);
-		//Con_DPrintf( "Don't stick\n" );
-	}
-
-	return blocked;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /*
@@ -1457,7 +1255,7 @@ void PM_Accelerate (vec3_t wishdir, float wishspeed, float accel)
 void PM_InclineCheck(void) {
 
 	int i;
-	int		clip;
+	int clip;
 
 
 	vec3_t dest, start;
@@ -1483,8 +1281,8 @@ void PM_InclineCheck(void) {
 
 	// Slide move, simple version
 	// ...maybe?
-	clip = PM_FlyMoveTest();
-	//clip = PM_FlyMove();
+	//clip = PM_FlyMoveTest();
+	clip = PM_FlyMove();
 
 
 
@@ -1577,73 +1375,79 @@ void PM_InclineCheck(void) {
 		//  press down the stepheight
 		*/
 
+		//pmove->basevelocity[2] > 0 || (pmove->flags & FL_BASEVELOCITY)
+		// nevermind basevelocity checks, velocity is fine.
+		if(pmove->velocity[2] > 0 ){
+			// If being pushed up, cancel any downward incline/stair checks.
+		}else{
 
-		VectorCopy_f(pmove->origin, dest);
-		dest[2] -= pmove->movevars->stepsize;
+			VectorCopy_f(pmove->origin, dest);
+			dest[2] -= pmove->movevars->stepsize;
 
-		traceInclineDetection_ForwardDown = pmove->PM_PlayerTrace(pmove->origin, dest, PM_NORMAL, -1);
-
-
-		/*
-		VectorCopy_f(traceInclineDetection_Forward.endpos, dest);
-		dest[2] -= pmove->movevars->stepsize;
-		traceInclineDetection_ForwardDown = pmove->PM_PlayerTrace(traceInclineDetection_Forward.endpos, dest, PM_NORMAL, -1);
-		*/
+			traceInclineDetection_ForwardDown = pmove->PM_PlayerTrace(pmove->origin, dest, PM_NORMAL, -1);
 
 
-
-
-		// If we are not on the ground any more then
-		//  use the original movement attempt
-
-		// ????????????????????????????????????????????????????????????????
-		// 'normal[2] < 0.7' tends to mean that's a floor by the way.
-		//if (traceInclineDetection_Forward.plane.normal[2] < 0.7)
-		//	goto usedown;
-
-		//MODDD NOTICE - "goto usedown" above is getting called if the plane we hit can't be walked up, like an incline way to steep
-		// or flat-out a wall in the way.  So skipping to below instead of trying to skip to the top of it (below up to the downdist > updist comparison)
-		// That is for forcing the origin to the top of an incline I look to be trying to go up.
-
-
-
-
-
-		// If the trace ended up in empty space, copy the end
-		//  over to the origin.
-		//MODDD NOTE - this might be what places us exactly at the ramp.
-		// And if the fraction is way too small, that's a sign we're either going along flat-ground or an upward incline/stairs.
-		// Strange it isn't an issue more often than it is, but it can happen in the stairs near the start of retail t0a0.bsp
-		// (Not the stairs up to the suit,  the stairs down.  Try going back up after going down those with a _ForwardDown fraction
-		// of > 0 allowed).  0.01 seems to fix it though, mighteven allow smaller.
-		if (
-			//clip == 0 &&
-			pmove->origin[2] <= original[2] &&
-			traceInclineDetection_ForwardDown.fraction > 0.01 && traceInclineDetection_ForwardDown.fraction < 1.0 &&
-			!traceInclineDetection_ForwardDown.startsolid && !traceInclineDetection_ForwardDown.allsolid
-			//traceInclineDetection_ForwardDown.endpos[2] < pmove->origin[2]
-			)
-		{
-			// Is a downward incline or stairs?  Snap to the ground then!  No further checks needed.
-			// Already even have 'downvel' here for pmove->velocity.  Did not touch the velocity so it stays as it is.
-
-			// TEST!
-			if (1) {
-				pmove->vuser4[0] = traceInclineDetection_ForwardDown.endpos[2] - pmove->origin[2];
-
-				VectorCopy_f(traceInclineDetection_ForwardDown.endpos, pmove->origin);
-				return;
-			}
-		}
-		else {
-			// Reset original values.  (no, done below already)
 			/*
-			VectorCopy_f(original, pmove->origin);
-			VectorCopy_f(originalvel, pmove->velocity);
+			VectorCopy_f(traceInclineDetection_Forward.endpos, dest);
+			dest[2] -= pmove->movevars->stepsize;
+			traceInclineDetection_ForwardDown = pmove->PM_PlayerTrace(traceInclineDetection_Forward.endpos, dest, PM_NORMAL, -1);
 			*/
-			// The rest of the method proceeds with the rest of the upward incline/stairs check, which may
-			// find that or deem it a blocking wall.
-		}
+
+
+
+
+			// If we are not on the ground any more then
+			//  use the original movement attempt
+
+			// ????????????????????????????????????????????????????????????????
+			// 'normal[2] < 0.7' tends to mean that's a floor by the way.
+			//if (traceInclineDetection_Forward.plane.normal[2] < 0.7)
+			//	goto usedown;
+
+			//MODDD NOTICE - "goto usedown" above is getting called if the plane we hit can't be walked up, like an incline way to steep
+			// or flat-out a wall in the way.  So skipping to below instead of trying to skip to the top of it (below up to the downdist > updist comparison)
+			// That is for forcing the origin to the top of an incline I look to be trying to go up.
+
+
+
+			// If the trace ended up in empty space, copy the end
+			//  over to the origin.
+			//MODDD NOTE - this might be what places us exactly at the ramp.
+			// And if the fraction is way too small, that's a sign we're either going along flat-ground or an upward incline/stairs.
+			// Strange it isn't an issue more often than it is, but it can happen in the stairs near the start of retail t0a0.bsp
+			// (Not the stairs up to the suit,  the stairs down.  Try going back up after going down those with a _ForwardDown fraction
+			// of > 0 allowed).  0.01 seems to fix it though, mighteven allow smaller.
+			if (
+				//clip == 0 &&
+				pmove->origin[2] <= original[2] &&
+				traceInclineDetection_ForwardDown.fraction > 0.01 && traceInclineDetection_ForwardDown.fraction < 1.0 &&
+				!traceInclineDetection_ForwardDown.startsolid && !traceInclineDetection_ForwardDown.allsolid
+				//traceInclineDetection_ForwardDown.endpos[2] < pmove->origin[2]
+				)
+			{
+				// Is a downward incline or stairs?  Snap to the ground then!  No further checks needed.
+				// Already even have 'downvel' here for pmove->velocity.  Did not touch the velocity so it stays as it is.
+
+				// TEST!
+				if (1) {
+					//!!! SETS g_interp_z OF view.cpp
+					pmove->vuser4[0] = traceInclineDetection_ForwardDown.endpos[2] - pmove->origin[2];
+
+					VectorCopy_f(traceInclineDetection_ForwardDown.endpos, pmove->origin);
+					return;
+				}
+			}
+			else {
+				// Reset original values.  (no, done below already)
+				/*
+				VectorCopy_f(original, pmove->origin);
+				VectorCopy_f(originalvel, pmove->velocity);
+				*/
+				// The rest of the method proceeds with the rest of the upward incline/stairs check, which may
+				// find that or deem it a blocking wall.
+			}
+
+		}//END OF no upward velocity check
 
 	//}//skipInclineChecks
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1683,10 +1487,13 @@ void PM_InclineCheck(void) {
 
 	traceInclineDetection_Forward = pmove->PM_PlayerTrace(pmove->origin, dest, PM_NORMAL, -1);
 
+	//easyForcePrintLine("congratulations Z:%.2f fr:%.2f ::: ss:%d as:%d io:%d", traceInclineDetection_Forward.endpos[2], traceInclineDetection_Forward.fraction, traceInclineDetection_Forward.startsolid, traceInclineDetection_Forward.allsolid, traceInclineDetection_Forward.inopen);
+
 	// If we are not on the ground any more then
 	//  use the original movement attempt
-	if (traceInclineDetection_Forward.plane.normal[2] < 0.7)
+	if (traceInclineDetection_Forward.plane.normal[2] < 0.7){
 		goto usedown;
+	}
 
 	//MODDD NOTICE - "goto usedown" above is getting called if the plane we hit can't be walked up, like an incline way to steep
 	// or flat-out a wall in the way.  So skipping to below instead of trying to skip to the top of it (below up to the downdist > updist comparison)
@@ -1698,7 +1505,6 @@ void PM_InclineCheck(void) {
 	//MODDD NOTE - this might be what places us exactly at the ramp.
 	if (!traceInclineDetection_Forward.startsolid && !traceInclineDetection_Forward.allsolid)
 	{
-
 		VectorCopy_f(traceInclineDetection_Forward.endpos, pmove->origin);
 	}
 	// Copy this origion to up.
@@ -1722,13 +1528,17 @@ void PM_InclineCheck(void) {
 		VectorCopy_f(downvel, pmove->velocity);
 	}
 	else { // copy z value from slide move
-
 	 //MODDD NOTE - I get picked for moving into ramps to slide up them instead.
 		pmove->velocity[2] = downvel[2];
 	}
 
 	// TEST!
-	pmove->vuser4[0] = traceInclineDetection_Forward.endpos[2] - oldZ;
+	//!!! SETS g_interp_z OF view.cpp
+	// wait.  why not pmove->origin?
+	//pmove->vuser4[0] = traceInclineDetection_Forward.endpos[2] - oldZ;
+	pmove->vuser4[0] = pmove->origin[2] - oldZ;
+
+	//easyForcePrintLine("I AM THE unhappy fellow %.2f - %.2f", traceInclineDetection_Forward.endpos[2], oldZ);
 
 
 	/*
@@ -1779,8 +1589,8 @@ void PM_InclineAirCheck(vec3_t vecOldVel) {
 
 	// Slide move, simple version
 	// ...maybe?
-	clip = PM_FlyMoveTest();
-	//clip = PM_FlyMove();
+	//clip = PM_FlyMoveTest();
+	clip = PM_FlyMove();
 
 
 	if (clip == 0) {

@@ -49,8 +49,7 @@ extern CGraph WorldGraph;
 
 
 
-//MODDD - new. Shortened form of 
-
+//MODDD - new.
 BOOL CBaseMonster::attemptFindCoverFromEnemy(Task_t* pTask){
 	entvars_t *pevCover;
 
@@ -2116,12 +2115,28 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			}
 			else
 			{
-				easyForcePrintLine("TASK_FIND_COVER_FROM_ORIGIN: I FAIL HARD.");
+				easyPrintLine("Pathfind: TASK_FIND_COVER_FROM_ORIGIN: I FAIL HARD.");
 				// no cover!
 				TaskFail();
 			}
 		}
 		break;
+	case TASK_MOVE_FROM_ORIGIN:{
+		//MODDD - NEW.  Modified 'FindCover' method that doesn't care about, well, being in cover.  Any other criteria is fine?
+		if ( FindRandom( pev->origin, pev->view_ofs, 100, CoverRadius() ) )
+		{
+			//easyForcePrintLine("TASK_FIND_COVER_FROM_ORIGIN: I FOUND COVER OKAYYYYYYYYYY");
+			// then try for plain ole cover
+			m_flMoveWaitFinished = gpGlobals->time + pTask->flData;
+			TaskComplete();
+		}
+		else
+		{
+			easyPrintLine("Pathfind: TASK_FIND_COVER_FROM_ORIGIN: I FAIL HARD.");
+			// no cover!
+			TaskFail();
+		}
+	}break;
 	case TASK_FIND_COVER_FROM_BEST_SOUND:
 		{
 			CSound *pBestSound;

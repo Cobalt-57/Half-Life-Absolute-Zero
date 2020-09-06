@@ -810,7 +810,11 @@ SCHEDULE_TYPE CBaseMonster::_getHeardBaitSoundSchedule(CSound* pSound){
 	{
 		//MODDD TODO - shouldn't the INVESTIGATE_SOUND_BAIT schedule better handle that?
 		//if we can directly see the bait and are less than X units away (distance), we'll just look at it instead.
-		if( (pSound->m_vecOrigin - EarPosition()).Length() < 200 && FInViewCone( &pSound->m_vecOrigin ) && this->CheckLocalMove(this->pev->origin + Vector(0, 0, 4), pSound->m_vecOrigin+ Vector(0, 0, 4), NULL, NULL ) ){
+		if( 
+			(pSound->m_vecOrigin - EarPosition()).Length() < 200 &&
+			FInViewCone( &pSound->m_vecOrigin ) &&
+			this->CheckLocalMove(this->pev->origin + Vector(0, 0, 4), pSound->m_vecOrigin+ Vector(0, 0, 4), NULL, NULL ) == LOCALMOVE_VALID
+		){
 			//look at it instead.
 			easyForcePrintLine("%s:ID%d LOOKIN AT THE BAIT!", this->getClassname(), this->monsterID);
 			//return GetScheduleOfType( SCHED_ALERT_FACE);
@@ -825,7 +829,6 @@ SCHEDULE_TYPE CBaseMonster::_getHeardBaitSoundSchedule(CSound* pSound){
 
 
 
-	
 
 SCHEDULE_TYPE CBaseMonster::getHeardBaitSoundSchedule(){
 	
@@ -1468,7 +1471,7 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){
 
 		//TODO: specify walking away from "toWalkAwayFrom" ?
 
-		this->ChangeSchedule(  this->GetScheduleOfType(SCHED_WALK_AWAY_FROM_ORIGIN)  );
+		this->ChangeSchedule(  this->GetScheduleOfType(SCHED_TAKE_COVER_FROM_ORIGIN_WALK)  );
 	//}
 
 
@@ -4449,8 +4452,8 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 		{
 			// too spammy in any map with lots of vertical level space (a2a1a).
 			//easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Route failed from reaching a point too far from the goal in Z compared to my height.  Difference in Z is: %.2f.  Most allowed: %.2f.", getClassname(), monsterID, zDist, maxZ_DistAllowed);
-			DebugLine_SetupPoint(0, pev->origin, 255, 0, 0);
-			DebugLine_SetupPoint(1, vecEnd, 255, 0, 0);
+			//DebugLine_SetupPoint(0, pev->origin, 255, 0, 0);
+			//DebugLine_SetupPoint(1, vecEnd, 255, 0, 0);
 
 			iReturn = LOCALMOVE_INVALID_DONT_TRIANGULATE;
 		}
@@ -6765,6 +6768,157 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 }
 
 
+
+
+//MODDD - clone of FindCover that, well, doesn't really care about the 'cover' aspect.  Just move away somewhat.
+BOOL CBaseMonster::FindRandom ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist )
+{
+	int i;
+	int iMyHullIndex;
+	int iMyNode;
+	int iThreatNode;
+	float flDist;
+	Vector	vecLookersOffset;
+	TraceResult tr;
+
+	if ( !flMaxDist )
+	{
+		// user didn't supply a MaxDist, so work up a crazy one.
+		flMaxDist = 784;
+	}
+
+	if ( flMinDist > 0.5 * flMaxDist)
+	{
+#if _DEBUG
+		ALERT ( at_console, "FindRandom MinDist (%.0f) too close to MaxDist (%.0f)\n", flMinDist, flMaxDist );
+#endif
+		flMinDist = 0.5 * flMaxDist;
+	}
+
+	if ( !WorldGraph.m_fGraphPresent || !WorldGraph.m_fGraphPointersSet )
+	{
+		ALERT ( at_aiconsole, "Graph not ready for FindRandom!\n" );
+		return FALSE;
+	}
+
+	iMyNode = WorldGraph.FindNearestNode( pev->origin, this );
+	iThreatNode = WorldGraph.FindNearestNode ( vecThreat, this );
+	iMyHullIndex = WorldGraph.HullIndex( this );
+
+	if ( iMyNode == NO_NODE )
+	{
+		ALERT ( at_aiconsole, "FindRandom() - %s has no nearest node!\n", STRING(pev->classname));
+		return FALSE;
+	}
+	if ( iThreatNode == NO_NODE )
+	{
+		// ALERT ( at_aiconsole, "FindRandom() - Threat has no nearest node!\n" );
+		iThreatNode = iMyNode;
+		// return FALSE;
+	}
+
+	vecLookersOffset = vecThreat + vecViewOffset;// calculate location of enemy's eyes
+
+	// Instead of picking the first point that is 'good', let the usual cover conditions add to desirability.
+	// I could pick any random point nearby, but further is better (to an extent), and so is lacking a line of sight
+	// to where I started.  More interesting to explre places I can't see from here, after all.
+	// At the end, the node with the highest desirability is what I want to make a path to (call 'MoveToLocation';
+	// that builds the route from here to there).
+	float bestNodeDesirability = 0;
+	CNode* bestNode = NULL;
+	
+
+	// we'll do a rough sample to find nodes that are relatively nearby
+	for ( i = 0 ; i < WorldGraph.m_cNodes ; i++ )
+	{
+		float thisNodeDesirability = 0;
+
+		//MODDD - TODO?   Does relying on the same 'recent' node from Cover even make sense here?
+		// No harm though, probably.  But don't commit this for other monsters that want to look for real cover.
+		int nodeNumber = (i + WorldGraph.m_iLastCoverSearch) % WorldGraph.m_cNodes;
+
+		CNode &node = WorldGraph.Node( nodeNumber );
+		// !!! COMMENTED OUT, related to above node
+		//WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
+
+		// could use an optimization here!!
+		flDist = ( pev->origin - node.m_vecOrigin ).Length();
+
+		// DON'T do the trace check on a node that is farther away than a node that we've already found to 
+		// provide cover! Also make sure the node is within the mins/maxs of the search.
+		if ( flDist >= flMinDist && flDist < flMaxDist )
+		{
+			UTIL_TraceLine ( node.m_vecOrigin + vecViewOffset, vecLookersOffset, ignore_monsters, ignore_glass,  ENT(pev), &tr );
+			//return TRUE; //WARNING - SUPER DUPER HACKY SACKS
+
+			// if this node will block the threat's line of sight to me...
+			if ( tr.flFraction != 1.0 )
+			{
+				// count it
+				thisNodeDesirability += 0.4;
+			}
+
+// ..and is also closer to me than the threat, or the same distance from myself and the threat the node is good.
+			if ( ( iMyNode == iThreatNode ) || WorldGraph.PathLength( iMyNode, nodeNumber, iMyHullIndex, m_afCapability ) <= WorldGraph.PathLength( iThreatNode, nodeNumber, iMyHullIndex, m_afCapability ) )
+			{
+				// Let's call this a good thing
+				thisNodeDesirability += 0.25;
+			}
+			if ( FValidateCover ( node.m_vecOrigin ) )
+			{
+				// Probably?
+				thisNodeDesirability += 0.25;
+			}
+			if(flDist <= 200){
+				// eh.
+				thisNodeDesirability += 0.0;
+			}else if(flDist <= 600){
+				// more the merrier.
+				thisNodeDesirability += (flDist - 200) / (600 - 200) * (0.6 - 0.0) + 0.0;
+			}else{
+				// plenty fine.
+				thisNodeDesirability += 0.6;
+			}
+
+			if(thisNodeDesirability > bestNodeDesirability){
+				// Now wait!  Can we actually pathfind to this o wondrous node?
+				BOOL canPath = MoveToLocation(ACT_RUN, 0, node.m_vecOrigin);
+				if(canPath){
+					// take it!
+					bestNodeDesirability = thisNodeDesirability;
+					bestNode = &WorldGraph.Node( nodeNumber );
+				}
+				RouteClear();  // necessary?  cheap though
+			}
+
+		}// flDist minimum requirements
+	}// for loop through nodes to test
+
+
+	if(bestNodeDesirability > 0.3){
+		// yippee.  Leave off with this path.
+		MoveToLocation(ACT_RUN, 0, bestNode->m_vecOrigin);
+		return TRUE;
+	}else{
+		// cancel any path just in case
+		RouteClear();
+	}
+
+	return FALSE;
+}
+
+// Overridable.  Most monsters like any cover that passed the usual checks
+// (no line of sight to location/threat to hide or get away from, etc.), but some need a little more.
+// Squadmonsters don't want cover too close to other squadies, for instance.  (yes I said that)
+BOOL CBaseMonster::FValidateCover(const Vector& vecCoverLocation){
+	return TRUE;
+}
+
+
+
+
+
+
 //=========================================================
 // BuildNearestRoute - tries to build a route as close to the target
 // as possible, even if there isn't a path to the final point.
@@ -7723,15 +7877,17 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 
 
 
-	/*
 	//MODDD - NEW SECTION.
 	// Disabled, see notes above.   Don't know which of these sections is the greater cause yet.
+	// Added back in.  Just don't allow this if the distance to the ent is too great, too expensive to check.
+	// Biggest culprit of slowdowns seems to be CheckLocalMove calls over huge distances.
+	// No wonder other pathfinding in CBaseMonster only checks for up to X units ahead being clear with CheckLocalMove.
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if( iResult==2 && iPath[0] == iPath[1]){
 		//MODDD TODO - 
-		//That is, if the # of nodes returned is 2 and they are exactly equal, it means we returned our own position.
-		//---Should we set some flag to do something about this...? Ranged AI can just try another nearby node also close to the enemy
-		//to see if that is a point with a clear shot?
+		// That is, if the # of nodes returned is 2 and they are exactly equal, it means we returned our own position.
+		// ---Should we set some flag to do something about this...? Ranged AI can just try another nearby node also close to the enemy
+		// to see if that is a point with a clear shot?
 
 		//go ahead and try the straight-shot.
 		CBaseEntity* goalEnt = NULL;
@@ -7743,24 +7899,45 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 		// NO.  Checking m_vecMoveGoal is a bad idea!  That's where we wanted to go to begin with, which of
 		// course we can't go to, that was the whole point of trying to use a route.
 		// instead, go towards the dest node we picked.
-
-
-		CNode& thatNode = WorldGraph.Node(iDestNode);
+		
+		CNode& thatNode = WorldGraph.Node(iDestNode);  // same as iSrcNode here
 		Vector currentNodeLoc = thatNode.m_vecOrigin + pev->view_ofs;
-		//if(this->CheckLocalMove(pev->origin, m_vecMoveGoal, goalEnt, NULL)){
-		if(this->CheckLocalMove(pev->origin + pev->view_ofs, currentNodeLoc, goalEnt, NULL)){
-			// ok, do it
-			int x = 45;
-		}else{
-			//No!
-			//DebugLine_Setup(0, pev->origin + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
 
+		// !!! But it is worth checking to see that the goal can be reached from this node, however.  If the goal is on
+		// top of some huge cliff, a nearest node 2 feet away won't be very helpful anyway.
+		// Also, just use the supplied 'vecDest' dangit, who knows if m_vecMoveGoal is even the best choice given the different
+		// types of movegoals (entity, target, location, node, etc.?).
+		// And should 'vecDest' have  + pev->view_ofs added?  If the movegoaltype is a location, probably.
+		// Check for that later, maybe?
+		float distFromMeToNode = Distance(pev->origin + pev->view_ofs, currentNodeLoc);
+		float distFromNodeToGoal = Distance(currentNodeLoc, vecDest);
+
+		if(distFromMeToNode > 400 || distFromNodeToGoal > 400){
+			// give up then, unlikely for this to be any good.
+			return FALSE;
+		}
+
+		// still going?  ok, CheckLocalMove checks ahoy.
+
+		//if(this->CheckLocalMove(pev->origin, m_vecMoveGoal, goalEnt, NULL)){
+		if(this->CheckLocalMove(pev->origin + pev->view_ofs, currentNodeLoc, goalEnt, NULL) == LOCALMOVE_VALID){
+			// ok, how about from that node to the dest?
+			
+			if(this->CheckLocalMove(currentNodeLoc, vecDest, goalEnt, NULL) == LOCALMOVE_VALID){
+				// ok, fall through then.
+			}else{
+				// oh
+				return FALSE;
+			}
+		}else{
+			// No!
+			// DebugLine_Setup(0, pev->origin + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
 			return FALSE;
 		}
 
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	*/
+	
 
 
 

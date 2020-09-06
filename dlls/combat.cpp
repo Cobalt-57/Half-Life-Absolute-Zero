@@ -1904,11 +1904,13 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 		//MODDD NOTE - can include PainSound in the same m_MonsterState restrictions above if wanted.
 		// ...not sure what this comment was about.  But yea, painsound now below the m_bitsDamageType setting, check for that in PainSound if wanted.
+		// ALTHOUGH, why play a painsound on things that, ya know, don't deal any damage?
+		// Still happen on attacks that start timed damage though.
 		//if (pev->deadflag == DEAD_NO)
-		//{
+		if(flDamage > 0 || (bitsDamageType & DMG_TIMEBASED) || (bitsDamageTypeMod & DMG_TIMEBASEDMOD)  ){
 			// no pain sound during death animation.
 			PainSound();// "Ouch!"
-		//}
+		}
 
 
 		//MODDD - SAFETY.  Reset the damage bits, no reason to keep them around when applyNewTimedDamage

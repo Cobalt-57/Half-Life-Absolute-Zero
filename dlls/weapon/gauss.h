@@ -38,6 +38,7 @@ public:
 
 	float fuser1_store;
 	float ignoreIdleTime;
+	int inAttackPrev;
 
 
 #ifndef CLIENT_DLL
@@ -59,8 +60,8 @@ public:
 	BOOL Deploy(void);
 	void Holster(int skiplocal = 0);
 
-	void PrimaryAttack(void);
-	void SecondaryAttack(void);
+	void _PrimaryAttack(void);
+	void _SecondaryAttack(void);
 
 
 	void onFreshFrame(void);

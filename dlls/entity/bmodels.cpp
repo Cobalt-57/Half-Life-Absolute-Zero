@@ -548,6 +548,13 @@ void CFuncRotating::Precache( void )
 //
 // Touch - will hurt others based on how fast the brush is spinning
 //
+//MODDD - would much rather be able to determine if the thing touched is being 'pushed' by this FuncRotating
+// or merely standing on top of, moved against sideways or bumped from below.
+// If this is pushing something, especially at high speed, makes sense to damage it.
+// Standing on top or any other cases?  Not really.
+// Next best thing is the 'Blocked' method, but we already have that.
+// Disabling 'HurtTouch' for now.  Fans in a2a1a.bsp are a pinch more likely to hit the player even going down & up
+// in normal usage, don't really care now.  We're good.  Blocked is enough to deal damage if needed.
 void CFuncRotating::HurtTouch ( CBaseEntity *pOther )
 {
 	entvars_t	*pevOther = pOther->pev;
@@ -556,13 +563,17 @@ void CFuncRotating::HurtTouch ( CBaseEntity *pOther )
 	if ( !pevOther->takedamage )
 		return;
 
+	/*
 	// calculate damage based on rotation speed
 	pev->dmg = pev->avelocity.Length() / 10;
 
 	pOther->TakeDamage( pev, pev, pev->dmg, DMG_CRUSH, DMG_MAP_BLOCKED);
 	
 	pevOther->velocity = (pevOther->origin - VecBModelOrigin(pev) ).Normalize() * pev->dmg;
+	*/
 }
+
+
 
 //
 // RampPitchVol - ramp pitch and volume up to final values, based on difference

@@ -258,8 +258,10 @@ Task_t	tlHAssaultGenericFail[] =
 	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
 	{ TASK_WAIT,				(float)0.2		},
 	{ TASK_WAIT_PVS,			(float)0		},
+
 	// is that a good idea?
-	{ TASK_SET_SCHEDULE,			(float)SCHED_TAKE_COVER_FROM_ORIGIN },
+	//{ TASK_SET_SCHEDULE,			(float)SCHED_TAKE_COVER_FROM_ORIGIN },
+	{ TASK_SET_SCHEDULE,			(float)SCHED_MOVE_FROM_ORIGIN },
 };
 
 Schedule_t	slHAssaultGenericFail[] =
@@ -971,17 +973,25 @@ int CHAssault::Save( CSave &save )
 }
 int CHAssault::Restore( CRestore &restore )
 {
+
 	if ( !CSquadMonster::Restore(restore) )
 		return 0;
-	return restore.ReadFields( "CHAssault", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+	
+	int res = restore.ReadFields( "CHAssault", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	//byte b0 = pev->blending[0];
+	//byte b1 = pev->blending[1];
+	
+	return res;
 }
 
 
 float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
 
 	if(pev->sequence == SEQ_HASSAULT_ATTACK){
-		//startup spin? reverse the angle.
-		flValue *= -1;
+		// startup spin? reverse the angle.
+		// Wait wait.  No more, it seems.
+		//flValue *= -1;
 	}
 
 
@@ -993,6 +1003,9 @@ float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
 //Also doesn't aim ridiculously high if the enemy gets close like it usually would.
 void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 	//DebugLine_ClearAll();
+
+	//return;
+	
 	
 	//if there is no enemy or this is residual fire, just fire straight.
 	if(m_hEnemy == NULL || m_pSchedule == slHAssault_residualFire){
@@ -1064,10 +1077,7 @@ void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 		
 		SafeSetBlending( 0, angDirAI.x );
 		//SafeSetBlending( 0, 30 );
-		
-	}
-
-
+	}//'NULL enemy or residual-fire' check
 }//END OF AimAtEnemy
 
 
@@ -2053,20 +2063,25 @@ BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 	//"BodyTargetMod" will not apply the random vertical shift on the player (no idea why its BodyTarget did).
 	//For anything else, no difference, cloned per anything else's own "BodyTarget".
 
+
+	int daEnemyClass = m_hEnemy->Classify();
+
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "CONDS:::%d %.2f %.2f %d %d %d",
 		!HasConditions( bits_COND_ENEMY_OCCLUDED ),
 		flDist,
 		flDot,
-		 m_hEnemy ->Classify() != CLASS_ALIEN_BIOWEAPON,
-		 m_hEnemy ->Classify() != CLASS_PLAYER_BIOWEAPON,
+		daEnemyClass != CLASS_ALIEN_BIOWEAPON,
+		daEnemyClass != CLASS_PLAYER_BIOWEAPON,
 	 (EASY_CVAR_GET_DEBUGONLY(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(vecShootOrigin, m_hEnemy->BodyTargetMod(vecShootOrigin)  ) ) 
 	 ));
 
 
-	//make the range larger in the future, seems like they are still fairly accurate further away than this.
-	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= m_flDistTooFar &&
-	 m_hEnemy->Classify() != CLASS_ALIEN_BIOWEAPON &&
-	 m_hEnemy->Classify() != CLASS_PLAYER_BIOWEAPON && (EASY_CVAR_GET_DEBUGONLY(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(vecShootOrigin, m_hEnemy->BodyTargetMod(vecShootOrigin)  ) ) )
+	// make the range larger in the future, seems like they are still fairly accurate further away than this.
+	if (
+		!HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= m_flDistTooFar &&
+		daEnemyClass != CLASS_ALIEN_BIOWEAPON &&
+		daEnemyClass != CLASS_PLAYER_BIOWEAPON && (EASY_CVAR_GET_DEBUGONLY(hassaultFriendlyFire) != 0 || NoFriendlyFireImp(vecShootOrigin, m_hEnemy->BodyTargetMod(vecShootOrigin)  ) ) 
+	)
 	{
 		TraceResult	tr;
 		Vector vecSrc = vecShootOrigin;
@@ -3409,6 +3424,18 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, ( "HASSAULT GET SCHED TYPE: %d ", Type));
 
 	switch(Type){
+
+		/*
+		// not working, nevermind
+		case SCHED_TAKE_COVER_FROM_ORIGIN:
+			// Like default, but if this fails, try moving anywhere from the origin.
+			m_failSchedule = SCHED_MOVE_FROM_ORIGIN;
+			hardSetFailSchedule = FALSE;
+			//return &slMoveFromOrigin[0];
+			return CSquadMonster::GetScheduleOfType(Type);
+		break; 
+		*/
+
 		case SCHED_FAIL:{
 			return slHAssaultFail;
 		}
@@ -4119,9 +4146,6 @@ BOOL CHAssault::onResetBlend0(void){
 	
 	return TRUE;
 }
-
-
-
 
 
 

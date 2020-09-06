@@ -819,6 +819,7 @@ void command_lastinv(void) {
 		// just... <disregard> trying to get that to look right.  Holy <frick>.
 		// That works or it doesn't.  I'm out.
 		// Oh holy <crap> that's way better!  <severely disregard> this <blasted> <nematode-consuming> engine!!!    <oh dear me>
+		// even these settings may not make a difference though.
 		localPlayer.m_bHolstering = TRUE;
 		localPlayer.m_fCustomHolsterWaitTime = gpGlobals->time + 10;
 	}

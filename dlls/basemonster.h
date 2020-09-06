@@ -927,11 +927,12 @@ public:
 	
 	BOOL FindLateralCover ( const Vector &vecThreat, const Vector &vecViewOffset );
 	virtual BOOL FindCover ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
-	virtual BOOL FValidateCover ( const Vector &vecCoverLocation ) { return TRUE; };
+	virtual BOOL FindRandom ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
+	virtual BOOL FValidateCover(const Vector& vecCoverLocation);
 	virtual float CoverRadius( void ) { return DEFAULT_COVER_SEEK_DISTANCE; } // Default cover radius
 
 	virtual BOOL FCanCheckAttacks ( void );
-	virtual void CheckAmmo( void ) { return; };
+	virtual void CheckAmmo( void ) { return; }
 	virtual int IgnoreConditions ( void );
 	
 
@@ -1088,7 +1089,7 @@ public:
 	virtual int ISoundMask( void );
 	virtual CSound* PBestSound ( void );
 	virtual CSound* PBestScent ( void );
-	virtual float HearingSensitivity( void ) { return 1.0; };
+	virtual float HearingSensitivity( void ) { return 1.0; }
 
 	BOOL FBecomeProne ( void );
 	virtual void BarnacleVictimBitten( entvars_t *pevBarnacle );
@@ -1121,7 +1122,7 @@ public:
 	BOOL BBoxFlat( void );
 
 	// PrescheduleThink 
-	virtual void PrescheduleThink( void ) { return; };
+	virtual void PrescheduleThink( void ) { return; }
 
 	BOOL GetEnemy ( void );
 	//MODDD - new version
@@ -1183,9 +1184,9 @@ public:
 
 	Vector ShootAtEnemy( const Vector &shootOrigin );
 	Vector ShootAtEnemyMod( const Vector &shootOrigin );
-	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ) * 0.75 + EyePosition() * 0.25; };		// position to shoot at
+	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ) * 0.75 + EyePosition() * 0.25; }		// position to shoot at
 	//MODDD
-	virtual Vector BodyTargetMod( const Vector &posSrc ) { return Center( ) * 0.75 + EyePosition() * 0.25; };		// position to shoot at
+	virtual Vector BodyTargetMod( const Vector &posSrc ) { return Center( ) * 0.75 + EyePosition() * 0.25; }		// position to shoot at
 
 	virtual	Vector GetGunPosition( void );
 	virtual Vector GetGunPositionAI(void);
@@ -1223,15 +1224,15 @@ public:
 	void RouteClear( void );
 	void RouteNew( void );
 	
-	virtual void DeathSound ( void ) { return; };
-	virtual void AlertSound ( void ) { return; };
-	virtual void IdleSound ( void ) { return; };
-	virtual void PainSound ( void ) { return; };
+	virtual void DeathSound ( void ) { return; }
+	virtual void AlertSound ( void ) { return; }
+	virtual void IdleSound ( void ) { return; }
+	virtual void PainSound ( void ) { return; }
 	
 	// don't have to be implemented in hl_baseentity.cpp?  ok, interesting.   ...oh.  because they're stubs, { }.   DERP.
 	virtual void StopFollowing( BOOL clearSchedule ) {}
 	//MODDD - new version.
-	virtual void StopFollowing(BOOL clearSchedule, BOOL playUnuseSentence) {};
+	virtual void StopFollowing(BOOL clearSchedule, BOOL playUnuseSentence) {}
 
 	inline void Remember( int iMemory ) { m_afMemory |= iMemory; }
 	inline void Forget( int iMemory ) { m_afMemory &= ~iMemory; }

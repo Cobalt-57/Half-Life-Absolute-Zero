@@ -160,6 +160,7 @@ public:
 	
 	float ScriptEventSoundAttn(void);
 	float ScriptEventSoundVoiceAttn(void);
+	void releaseGrabbedEnt(void);
 
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );

@@ -82,6 +82,7 @@ extern BOOL g_firstFrameSinceRestore;
 #ifdef CLIENT_DLL
 // Here are all the remaining fucks I give
 int fuckfuckfuckfuckfuck = 0;
+BOOL FuckFlag = FALSE;
 #endif
 
 
@@ -351,9 +352,18 @@ void CEgon::Attack( void )
 
 #ifdef CLIENT_DLL
 	if(fuckfuckfuckfuckfuck > 0){
-		//easyForcePrintLine("fuckfuckfuckfuckfuck");
-		PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
+
+		if(FuckFlag == FALSE){
+			//easyForcePrintLine("fuckfuckfuckfuckfuck");
+			PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
+		}else{
+			PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 0, 1 );
+		}
 		fuckfuckfuckfuckfuck--;
+	}else{
+		// expiyah
+		FuckFlag = FALSE;
+
 	}
 #endif
 
@@ -387,12 +397,20 @@ void CEgon::Attack( void )
 			
 			m_flAmmoUseTime = gpGlobals->time;// start using ammo ASAP.
 
+
 			easyPrintLine("PLAYBACK_EVENT_FULL egstar");
-			PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
+			if(gpGlobals->time >= ignoreIdleTime){
+				// ok
+				PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
+			}else{
+				// coming from transition, use the other flag ya hooligan
+				PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 0, 1 );
+			}
 				
 #ifdef CLIENT_DLL
 			// just send the event clientside 5 times, surely one of them will take.           sweet god this engine.
 			fuckfuckfuckfuckfuck = 5;
+			//FuckFlag = FALSE;
 #endif
 
 			m_shakeTime = 0;
@@ -709,9 +727,11 @@ void CEgon::onFreshFrame(void){
 
 #ifdef CLIENT_DLL
 			fuckfuckfuckfuckfuck = 5;
+			FuckFlag = TRUE;
 #endif
 			flags |= FEV_GLOBAL | FEV_RELIABLE;
-			PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
+			// 2nd bool used instead.  That means, create the effect but use the running-sound instead of the startup sound.
+			PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 0, 1 );
 		}
 	}
 
@@ -783,8 +803,6 @@ void CEgon::ItemPreFrame( void ){
 
 
 void CEgon::ItemPostFrame(void){
-
-
 	/*
 	if (!m_pPlayer->m_bHolstering) {
 	// If the player is putting the weapon away, don't do this!
@@ -805,10 +823,6 @@ void CEgon::ItemPostFrameThink(void){
 	}
 
 
-
-
-
-
 	holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
 	holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 	
@@ -817,12 +831,7 @@ void CEgon::ItemPostFrameThink(void){
 	//BOOL fireException = FALSE;
 
 
-
-
-
-
 	//easyForcePrintLine("HOW I BE DOIN p?%d:%d s?%d:%d char:%d", (m_pPlayer->pev->button & IN_ATTACK), (m_flNextPrimaryAttack <= 0.0), (m_pPlayer->pev->button & IN_ATTACK2), (m_flNextSecondaryAttack <= 0.0), getchargeReady() );
-
 
 	BOOL forceIdle = FALSE;
 
@@ -859,8 +868,6 @@ void CEgon::ItemPostFrameThink(void){
 		holdingSecondary = FALSE;
 		forceIdle = TRUE;
 	}
-
-
 
 
 
@@ -1063,10 +1070,7 @@ void CEgon::ItemPostFrameThink(void){
 	}
 
 
-
-
 	fireExceptionPrev = fireException;
-
 
 
 	if(forceIdle){

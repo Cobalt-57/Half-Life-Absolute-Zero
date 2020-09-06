@@ -194,8 +194,6 @@ Task_t	tlGargFlamePreAttack[] =
 	{ TASK_WAIT_FOR_FLAMETHROWER_PREDELAY, (float)0 }
 };
 
-//MODDD - hassault relies on this, clone if the old way was better.
-// (lacked things below the 'why' line).
 Schedule_t	slGargFlamePreAttack[] =
 {
 	{
@@ -1924,6 +1922,15 @@ void CGargantua::DeathEffect( void )
 
 GENERATE_KILLED_IMPLEMENTATION(CGargantua)
 {
+	
+	if(grabbedEnt){
+		// release, toss a short distance in front
+		UTIL_MakeVectors( pev->angles );
+		grabbedEnt->pev->velocity = gpGlobals->v_forward * 300 + Vector(0, 0, 80);
+
+		releaseGrabbedEnt();
+	}
+
 	//MODDD - not resetting these??  WHY
 	SetBoneController( 0, 0 );
 	SetBoneController( 1, 0 );
@@ -2020,6 +2027,11 @@ void CGargantua::onDelete(void) {
 		m_pEyeGlow = NULL;
 	}
 	FlameDestroy(FALSE);
+
+	if(grabbedEnt){
+		// release, simply drop
+		releaseGrabbedEnt();
+	}
 }
 
 
@@ -2975,10 +2987,18 @@ int CGargantua::LookupActivityHard(int activity){
 	int i = 0;
 	m_flFramerateSuggestion = 1;
 	pev->framerate = 1;
-	//any animation events in progress?  Clear it.
+	// any animation events in progress?  Clear it.
 	resetEventQueue();
 
 	switch(activity){
+		case ACT_IDLE:
+			if(m_pSchedule == slGargFlamePreAttack){
+				// In the pre-attack delay, likely won't last idle for very long, only pick the most basic one.
+				return LookupSequence("idle3");
+			}else{
+				return CBaseAnimating::LookupActivity(activity);
+			}
+		break;
 		case ACT_SMALL_FLINCH:
 		case ACT_BIG_FLINCH:			//MODDD NOTE - is this effective?
 		case ACT_FLINCH_HEAD:
@@ -3244,8 +3264,8 @@ void CGargantua::HandleEventQueueEvent(int arg_eventID){
 
 	}break;
 	case 6:{
-		// throwbody: the grab.  Or attempt to.
-		CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_MELEEATTACKDIST + 7, gSkillData.gargantuaDmgSlash * 1.5, DMG_SLASH, DMG_BLEEDING );
+		// throwbody: the grab.  Or attempt to.  (little damage)
+		CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_MELEEATTACKDIST + 7, gSkillData.gargantuaDmgSlash * 0.15, DMG_SLASH, DMG_BLEEDING );
 		if (pHurt)
 		{
 			//MODDD - TODO!  If the thing detected is too large, don't do this.
@@ -3274,13 +3294,13 @@ void CGargantua::HandleEventQueueEvent(int arg_eventID){
 	}break;
 	case 8:{
 		// throwbody:  the 'throw'.  Release and, well, chuck em' across.
-		UTIL_MakeVectors( pev->angles );
 
-		grabbedEnt->pev->velocity = gpGlobals->v_forward * 750 + gpGlobals->v_right * 160 + Vector(0, 0, 130);
+		if(grabbedEnt != NULL){
+			UTIL_MakeVectors( pev->angles );
+			grabbedEnt->pev->velocity = gpGlobals->v_forward * 750 + gpGlobals->v_right * 160 + Vector(0, 0, 130);
 
-
-		grabbedEnt->pev->gravity = 1.0f;
-		grabbedEnt = NULL;
+			releaseGrabbedEnt();
+		}
 	}break;
 	}//switch
 
@@ -3311,3 +3331,11 @@ float CGargantua::ScriptEventSoundAttn(void){
 float CGargantua::ScriptEventSoundVoiceAttn(void){
 	return 0.58;
 }
+
+// TODO - physics flag for the player to restore gravity  (not implemented, yet?)
+void CGargantua::releaseGrabbedEnt(void){
+
+	grabbedEnt->pev->gravity = 1.0f;
+	grabbedEnt = NULL;
+}
+

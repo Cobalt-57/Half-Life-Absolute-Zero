@@ -313,8 +313,13 @@ CNihilanth::CNihilanth(){
 
 
 // MODDD - for now, not expected to be involved by the mod.  If it shows up in the map for some reason fine though.
+// Wait.  Already have the sounds in sentences.txt now, may as well use them.
+// And if really disabling this, clear those sentences (no sense taking up space) AND comment out any
+// 'global_useSentenceSave' references.  Those disable precaches under the assumption that this entity
+// won't need them to be precached (assumes to be played through sentences),
+// even though with usesSoundSentenceSave off, they DO need to be precached (to be played normally).
 BOOL CNihilanth::usesSoundSentenceSave(void){
-	return FALSE;
+	return TRUE;
 }
 
 

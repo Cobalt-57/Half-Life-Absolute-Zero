@@ -41,6 +41,9 @@ extern "C"
 #include "cvar_custom_info.h"
 #include "cvar_custom_list.h"
 
+//#include "StudioModelRenderer.h"
+#include "GameStudioModelRenderer.h"
+
 
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(drawHUD);
 
@@ -75,6 +78,8 @@ extern BOOL g_cl_egonEffectCreatedYet;
 
 extern BOOL g_firstFrameSinceRestore;
 
+extern CGameStudioModelRenderer g_StudioRenderer;
+extern float g_mapStartTime;
 
 
 
@@ -250,6 +255,16 @@ int DLLEXPORT HUD_VidInit( void )
 
 	g_firstFrameSinceRestore = TRUE;
 
+	// is this safe?
+	// No.
+	//g_mapStartTime = g_StudioRenderer.m_clTime;
+	// Wait uh.  What's the difference between g_engfuncs.pfnTime() and gEngfuncs.GetClientTime() ?
+	// Most stuff clientside looks to use the latter.
+	// OOooookay, both of these don't get the updated time since loading a game, fantastic
+	//g_mapStartTime = g_engfuncs.pfnTime();
+	//g_mapStartTime = gEngfuncs.GetClientTime();
+	
+	g_StudioRenderer.m_nCachedFrameCount = -1;
 
 
 

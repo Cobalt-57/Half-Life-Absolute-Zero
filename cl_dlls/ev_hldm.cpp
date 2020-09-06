@@ -2298,10 +2298,21 @@ void EV_EgonFire(event_args_t* args)
 
 	idx = args->entindex;
 	VectorCopy_f(args->origin, origin);
+
+	// what the.. you don't do anything with firestate here.  Assumption that it's on, or this is the first call if it wasn't at the time (set soon after)?
+	// 'iStartup' mirrors that the same really.  Initial call gets it to make a different beam sound effect and spawn the beam effect.
+	// Also, NEW.   If bparam2 is TRUE, that means coming from a transition.  Pretend iparam1 was on (if it wasn't; spawn the beam) and play the continual sound instead.
 	iFireState = args->iparam1;
+
 	iFireMode = args->iparam2;
 
 	int iStartup = args->bparam1;
+
+	if(args->bparam2 == TRUE){
+		// special value
+		iStartup = 2;
+	}
+
 
 	int hasSpiralBeam;
 
@@ -2323,7 +2334,7 @@ void EV_EgonFire(event_args_t* args)
 
 
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
-		if (iStartup)
+		if (iStartup == 1)
 		{
 			if(!g_cl_egonEffectCreatedYet){
 				// It does not make sense to make this sound if the beam has already been created in a 'startup' call
@@ -2335,10 +2346,12 @@ void EV_EgonFire(event_args_t* args)
 		}
 		else
 		{
-			if (iFireMode == FIRE_WIDE)
-				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_STATIC, EGON_SOUND_RUN, 0.98, ATTN_NORM, 0, 125);
-			else
-				gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_STATIC, EGON_SOUND_RUN, 0.9, ATTN_NORM, 0, 100);
+			if( (iStartup == 2 && !g_cl_egonEffectCreatedYet) || (iStartup == 0 && g_cl_egonEffectCreatedYet)){
+				if (iFireMode == FIRE_WIDE)
+					gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_STATIC, EGON_SOUND_RUN, 0.98, ATTN_NORM, 0, 125);
+				else
+					gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_STATIC, EGON_SOUND_RUN, 0.9, ATTN_NORM, 0, 100);
+			}
 		}
 	}
 
@@ -2372,7 +2385,7 @@ void EV_EgonFire(event_args_t* args)
 		//MODDD - SAFETY.  If for whatever reason the effect has not been created yet, ignore iStartup being 0.
 
 		//if ((iStartup == 1 || !g_cl_egonEffectCreatedYet) && EV_IsLocal(idx) && !pBeam && !pBeam2 && cl_lw->value) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
-		if ((iStartup == 1 || !g_cl_egonEffectCreatedYet) && EV_IsLocal(idx) && cl_lw->value) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
+		if ((iStartup != 0 || !g_cl_egonEffectCreatedYet) && EV_IsLocal(idx) && cl_lw->value) //Adrian: Added the cl_lw check for those lital people that hate weapon prediction.
 		{
 
 			if (pBeam)

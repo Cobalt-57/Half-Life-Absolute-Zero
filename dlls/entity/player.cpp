@@ -895,7 +895,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//easyPrintLine("PLAYER TAKEDAMAGE FLAGS: %d, %d", bitsDamageType, bitsDamageTypeMod);
 	
 	if(reviveSafetyTime != -1){
-
 		// revive safety time will not protect against MAP_BLOCKED damage.
 		if (!(bitsDamageTypeMod & DMG_MAP_BLOCKED)) {
 		
@@ -922,7 +921,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	//If dead, don't play.
 	//Also, was this intended ONLY for fall damage?  If so, just make that the requirement.
 	
-	if(IsAlive()){
+	// NOTICE - this is only for whether to make the pain sound or not.  Just stop now if there is nothing to make pain at
+	// (no damage, and no timed damages started)
+	if(IsAlive() &&  (flDamage > 0 || (bitsDamageType & DMG_TIMEBASED) || (bitsDamageTypeMod & DMG_TIMEBASEDMOD) )   ){
 		//must be alive to play ANY paint sound effects at all, regardless of setting.
 		//Note that a fatal fall will play the sound effect on its own, and it will not need to be played here.
 		BOOL pass = FALSE;
@@ -979,7 +980,8 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 		
 	}
 
-	if (bitsDamageTypeMod & DMG_MAP_BLOCKED) {
+	//MODDD - involving the damage requirement now
+	if ( (bitsDamageTypeMod & DMG_MAP_BLOCKED) && flDamage > 1) {
 		// mark it!
 		lastBlockDamageAttemptReceived = gpGlobals->time;
 	}

@@ -78,6 +78,8 @@ CGauss::CGauss(void) {
 
 	ignoreIdleTime = -1;
 
+	inAttackPrev = 0;
+
 }//END OF CGauss constructor
 
 
@@ -168,13 +170,13 @@ float CGauss::GetFullChargeTime(void)
 		return 4;
 	}
 	else {
-		// ALPHA: any differences for multipalyer unknown.  How about 30% less time?
+		// ALPHA: any differences for multiplayer unknown.  How about 30% less time?
 		if (IsMultiplayer())
 		{
-			return 0.8*12*0.7;
+			return (0.8*12 - 1.3)*0.7;
 		}
 
-		return 0.8*12;
+		return 0.8*12 - 1.3;
 	}
 	
 }
@@ -282,7 +284,7 @@ void CGauss::Holster(int skiplocal /* = 0 */)
 }
 
 
-void CGauss::PrimaryAttack()
+void CGauss::_PrimaryAttack()
 {
 	float primaryAmmoUsage;
 	float attackAgainDelay;
@@ -343,17 +345,21 @@ void CGauss::PrimaryAttack()
 	}
 }
 
-void CGauss::SecondaryAttack()
+void CGauss::_SecondaryAttack()
 {
 	float chargeAmmoUsage;
 	float chargeAmmoStoredMax;
 	float chargeAmmoUsageDelay;
 	float chargeInitialDelay;
+	float startPitch;
+	float maxPitch;
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_mode) != 1) {
 		//retail
 		chargeAmmoUsage = 1;
 		chargeAmmoStoredMax = 13;
 		chargeInitialDelay = 0.5;
+		startPitch = 110;
+		maxPitch = 250;
 		if (IsMultiplayer()){
 			chargeAmmoUsageDelay = 0.1;
 		}else{
@@ -363,7 +369,9 @@ void CGauss::SecondaryAttack()
 	else {
 		chargeAmmoUsage = 5;
 		chargeAmmoStoredMax = 12;
-		chargeInitialDelay = 1.1;
+		chargeInitialDelay = 0.9;
+		startPitch = 103;
+		maxPitch = 290;
 		if (IsMultiplayer()){
 			chargeAmmoUsageDelay = 0.8*0.7;
 		}else{
@@ -464,8 +472,8 @@ void CGauss::SecondaryAttack()
 		//m_pPlayer->m_flAmmoStartCharge = UTIL_WeaponTimeBase() + GetFullChargeTime();
 		m_fireState = 0;
 
-		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usGaussSpin, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, 0.0, 0.0, 110, 0, 0, 0);
-
+		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usGaussSpin, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, 0.0, 0.0, (int)startPitch, 0, 0, 0);
+		
 		m_iSoundState = SND_CHANGE_PITCH;
 	}
 	else if (m_fInAttack == 1)
@@ -522,20 +530,25 @@ void CGauss::SecondaryAttack()
 
 		// REPLACO
 		//int pitch = (gpGlobals->time - m_flStartCharge) * (150 / GetFullChargeTime()) + 100;
-		int pitch = (100 - pev->fuser1) * (150 / GetFullChargeTime()) + 100;
-		
 
+		// ALSO.  Better adjusts for different charge-delay times between gauss_mode choices.
+		// Add -chargeInitialDelay in so that time lost waiting for the initial charge does not contribute
+		// to the pitch.
+		int pitch = (int)(( -chargeInitialDelay + 100.0f - (pev->fuser1) ) * ((maxPitch-(startPitch) ) / GetFullChargeTime()) +(startPitch));
+		
 		if(pitch < 50){
 			// WARNING!  Pitch should never go under the starting 100 for 0 charge time!
 			// This is to avoid that annoying glitchy high-pitched caused by a deep negative value in some bug.
 			pitch = 50;
 		}
 
-		if (pitch > 250){
-			pitch = 250;
+		
+		if (pitch > maxPitch){
+			pitch = maxPitch;
 		}
+		//easyForcePrintLine("OH dear PITCH %.2f : %d", pev->fuser1, pitch);
 
-		//easyForcePrintLine("PITCHES GET STITCHES %d", pitch);
+
 
 		// ALERT( at_console, "%d %d %d\n", m_fInAttack, m_iSoundState, pitch );
 
@@ -582,6 +595,8 @@ void CGauss::SecondaryAttack()
 //=========================================================
 void CGauss::StartFire(void)
 {
+	inAttackPrev = m_fInAttack;
+
 	float flDamage;
 
 	UTIL_MakeVectors(m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle);
@@ -1105,11 +1120,19 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 
 void CGauss::onFreshFrame(void){
 
+	// ???????????????????
+	m_fInAttack = 0;
+	inAttackPrev = 0;
+
 	ignoreIdleTime = gpGlobals->time + 0.8;
 
+	if(m_fInAttack == 1){
+		SendWeaponAnim(GAUSS_SPINUP);
+	}else if(m_fInAttack == 2){
+		SendWeaponAnim(GAUSS_SPIN);
+	}
 
-
-}
+}//onFreshFrame
 
 
 void CGauss::ItemPreFrame( void ){
@@ -1146,8 +1169,55 @@ void CGauss::ItemPostFrameThink(void){
 	//easyForcePrintLine("I AM gauss fs:%d ia:%d", m_fireState, m_fInAttack);
 
 
+	BOOL holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
+	BOOL holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 
-	CBasePlayerWeapon::ItemPostFrameThink();
+
+
+	
+	BOOL forceIdle = FALSE;
+
+	if(holdingPrimary && holdingSecondary){
+		//m_chargeReady &= ~32;
+		///WeaponIdle();
+		//return;
+		// try me
+		holdingPrimary = FALSE;
+		holdingSecondary = FALSE;
+		forceIdle = TRUE;
+	}
+
+
+	if(holdingSecondary  ){
+		_SecondaryAttack();
+	}else if(holdingPrimary){
+		_PrimaryAttack();
+	}
+
+
+
+
+
+	if(m_fInAttack == 0 && inAttackPrev != 0){
+		// FUCK SHIT AVENUE
+		StartFire();
+		m_fInAttack = 0;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.0;
+
+		//MODDD - why not?
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.4;
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.6;
+	}
+
+	inAttackPrev = m_fInAttack;
+
+
+	
+	if(forceIdle){
+		WeaponIdle();
+	}else{
+		CBasePlayerWeapon::ItemPostFrameThink();
+	}
 }
 
 

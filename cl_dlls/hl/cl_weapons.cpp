@@ -268,106 +268,138 @@ CBasePlayerWeapon::DefaultDeploy
 //NOTE: "fireDelayTime" defaults to 0.5, but can also be set to -1 to be forced to "deployAnimTime" instead.
 BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, int iAnim, char* szAnimExt, int skiplocal /* = 0 */, int body, float deployAnimTime, float fireDelayTime)
 {
-	//easyPrintLine("MESSAGE5");
 
-	if (!CanDeploy())
-		return FALSE;
-
-	// safety
-	m_fInReload = FALSE;
-
-	m_chargeReady &= ~128;
-
-
-
-	int x = 45;
-
-	// NOTICE - checking 'gEngfuncs.GetViewModel()->curstate.modelindex' to see when the model changed this soon is pointless, it won't.
-	// Seems this CL_LoadModel makes a call that takes a little to pick up the new model.
-	// Until then, be sure no sequences meant for while the new model is up play.  That would be bad.
-
-	//gEngfuncs.CL_LoadModel(szViewModel, &m_pPlayer->pev->viewmodel);
-
-
-	// Why not use this then?
-	LoadVModel(szViewModel, m_pPlayer);
-
-
-	//MODDD - seems to make sense?  undo if this is more problematic.
-	if (pev->body != body) {
-		pev->body = body;
-	}
-
-
-
-	// !!!!!!!!!!!!
-	// don't play the deploy anim until we're certain the model actually updated
-	
-	// WARNING!!! No good!  The current viewmodel is still reported
-	// to be the newer one, even before the LoadVModel call above.
-	// hhhhhhhhoooooooowwwwwww.
-	/*
-	blockUntilModelChange = TRUE;
-	// Not even this can be trusted?!
-	// gEngfuncs.GetViewModel()->curstate.modelindex;
-	oldModel = gEngfuncs.GetViewModel()->curstate.modelindex;
-	queuedBlockedModelAnim = iAnim;
-	*/
-
-
-	//!!!!!!
-	/////////////////
-	
-	// fuku gooby
-	/*
-	forgetBlockUntilModelChangeTime = gpGlobals->time + 0.3;
-	resistTime = gpGlobals->time + 0.50;  //0.01 ?
-	*/
-	
-	
-	
-	
-	
-	
-	
-	
-
-	// TEST.     ...this may not be wise?
-	//           To disable it or keep it?  UUuuuuuuuuuuuuuuuuuggghhh don't know
-	//g_currentanim = iAnim; 
-
-	// IDEA!   Holster anims do the same SendWeaponAnim calls that serverside does maybe??  Something about serverside still sends something
-	// that updates g_curretanim?   the multiplayer   'die with crowbar equipped,  deploy with glock happens twice' issue???
-
-
-
-	//seqPlayDelay = gpGlobals->time + 0.02;
-	//seqPlay = iAnim;
-	//////////////////
-
-	//MODDD - TESTING! Disabled
-	//SendWeaponAnim(iAnim, skiplocal, body);
-
-
-
-
-
-	//MODDD - so uh.     yeah.     you don't want to forget this.                thanks.
-	if (fireDelayTime == -1) {
-		//make match the "deployAnimTime":
-		fireDelayTime = deployAnimTime;
-	}
-
-
-	g_irunninggausspred = FALSE;
-	//m_pPlayer->m_flNextAttackCLIENTHISTORY = 0.5;
-	m_pPlayer->m_flNextAttackCLIENTHISTORY = fireDelayTime;
-
-	//m_flTimeWeaponIdle = 1.0;
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime + randomIdleAnimationDelay(); //used to be "1.0", now depends on optional parameter (defaults to "1.0");
-
+	// DOWN WITH THE SYSTEM
+	// Oh wait.   That makes things in multiplayer look way better.
+	// Or maybe prediction stuff (as anything clientside was intended most likely?) actually shows a benefit with higher ping times?
+	// no clue, can't really test with that.
+	// So er.   Yeah.    Do nothing, return True.   Looks better.    Just, wow.
 	return TRUE;
-}
+	
+	///////////////////////////////////////////////////////////////////////////////////////////
+
+
+	// preference, what looks better with or without holstering.   Maybe?  Really don't know anymore.
+	/*
+	if(EASY_CVAR_GET(cl_holster) == 1){
+		if ( !CanDeploy() )
+			return FALSE;
+
+		gEngfuncs.CL_LoadModel( szViewModel, &m_pPlayer->pev->viewmodel );
+
+		SendWeaponAnim( iAnim, skiplocal, body );
+
+		g_irunninggausspred = FALSE;
+		m_pPlayer->m_flNextAttack = 0.5;
+		m_flTimeWeaponIdle = 1.0;
+
+		return TRUE;
+	}else{
+
+		///////////////////////////////////////////////////////////////////////////////////////////////
+	
+		//easyPrintLine("MESSAGE5");
+
+		if (!CanDeploy())
+			return FALSE;
+
+		// safety
+		m_fInReload = FALSE;
+
+		m_chargeReady &= ~128;
+
+		int x = 45;
+
+		// NOTICE - checking 'gEngfuncs.GetViewModel()->curstate.modelindex' to see when the model changed this soon is pointless, it won't.
+		// Seems this CL_LoadModel makes a call that takes a little to pick up the new model.
+		// Until then, be sure no sequences meant for while the new model is up play.  That would be bad.
+
+		//gEngfuncs.CL_LoadModel(szViewModel, &m_pPlayer->pev->viewmodel);
+
+
+		// Why not use this then?
+		LoadVModel(szViewModel, m_pPlayer);
+
+		SendWeaponAnim( iAnim, skiplocal, body );
+
+		//MODDD - seems to make sense?  undo if this is more problematic.
+		if (pev->body != body) {
+			pev->body = body;
+		}
+
+
+
+		// !!!!!!!!!!!!
+		// don't play the deploy anim until we're certain the model actually updated
+	
+		// WARNING!!! No good!  The current viewmodel is still reported
+		// to be the newer one, even before the LoadVModel call above.
+		// hhhhhhhhoooooooowwwwwww.
+	
+
+
+		//blockUntilModelChange = TRUE;
+		//// Not even this can be trusted?!
+		//// gEngfuncs.GetViewModel()->curstate.modelindex;
+		//oldModel = gEngfuncs.GetViewModel()->curstate.modelindex;
+		//queuedBlockedModelAnim = iAnim;
+	
+
+
+		//!!!!!!
+		/////////////////
+	
+		// nope nope nope.    unless?
+		//forgetBlockUntilModelChangeTime = gpGlobals->time + 0.3;
+		//resistTime = gpGlobals->time + 0.50;  //0.01 ?
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+		// TEST.     ...this may not be wise?
+		//           To disable it or keep it?  UUuuuuuuuuuuuuuuuuuggghhh don't know
+		//g_currentanim = iAnim; 
+
+		// IDEA!   Holster anims do the same SendWeaponAnim calls that serverside does maybe??  Something about serverside still sends something
+		// that updates g_curretanim?   the multiplayer   'die with crowbar equipped,  deploy with glock happens twice' issue???
+
+
+
+		//seqPlayDelay = gpGlobals->time + 0.02;
+		//seqPlay = iAnim;
+		//////////////////
+
+		//MODDD - TESTING! Disabled
+		//SendWeaponAnim(iAnim, skiplocal, body);
+
+
+
+
+
+		//MODDD - so uh.     yeah.     you don't want to forget this.                thanks.
+		if (fireDelayTime == -1) {
+			//make match the "deployAnimTime":
+			fireDelayTime = deployAnimTime;
+		}
+
+
+		g_irunninggausspred = FALSE;
+		//m_pPlayer->m_flNextAttackCLIENTHISTORY = 0.5;
+		m_pPlayer->m_flNextAttackCLIENTHISTORY = fireDelayTime;
+
+		//m_flTimeWeaponIdle = 1.0;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime + randomIdleAnimationDelay(); //used to be "1.0", now depends on optional parameter (defaults to "1.0");
+
+		return TRUE;
+	}//cl_holster check
+	*/
+}//DefaultDeploy
 
 //Not much difference between this and the server's one (weapons.cpp). Is that ok?
 void CBasePlayerWeapon::DefaultHolster(int iAnim, int skiplocal /* = 0 */, int body, float holsterAnimTime)

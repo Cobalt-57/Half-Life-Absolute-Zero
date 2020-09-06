@@ -35,6 +35,8 @@
 // goes the right direction in 1st person now, I'm really done with that.
 // Even by my standards of fooling around with stupid shit.
 
+// NOTE - m_nFrameCount starts counting down at 0 when the current map loaded changes (any way: from loading a game,
+// changing the map by console, or taking a transition).
 
 
 
@@ -143,7 +145,7 @@ BOOL g_blockUpdateRecentInterpArray = FALSE;
 float g_prevRenderTime = 0;
 BOOL g_eventsPaused = FALSE;
 
-
+float g_mapStartTime = 0;
 
 
 
@@ -2142,6 +2144,13 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	
+	static float disallowSmoothBlendTime = 0.15;
+	//if(m_nFrameCount < 2){
+	if(m_clTime - g_mapStartTime < disallowSmoothBlendTime){
+		m_pCurrentEntity->latched.sequencetime = -0.2;
+	}
+
+	
 	if (m_fDoInterp &&
 		m_pCurrentEntity->latched.sequencetime &&
 		( m_pCurrentEntity->latched.sequencetime + 0.2 > m_clTime ) && 
@@ -2908,6 +2917,13 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		b_PlayerMarkerParsed = false;
 		m_nCachedFrameCount = m_nFrameCount;
 
+
+		if(m_nFrameCount < 2){
+			// Mark the start time to know to handle some logic differently (no smoothing model blending like torso pitch, causes
+			// some things on the instant of a load-game to appear facing downward and quickly warp into their normal place)
+			// See 'disallowSmoothBlendTime' in the comments elsewhere for what does the smooth blocking
+			g_mapStartTime = m_clTime;
+		}
 
 		for (int i = 0; i < 32; i++) {
 			ary_g_recentInterpEstimateHandled[i] = FALSE;

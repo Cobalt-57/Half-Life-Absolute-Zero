@@ -788,10 +788,12 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 
 
 	//MODDD - NEW SECTION
+	// Picked the same node to be used as the start and end node?  That's... interesting, a sign that the target is in
+	// an odd place unmarked by any node so it picked up the same one the montser's standing in as the 'best' too?
+	// Send it back anyway and check for matching start/dest nodes.
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (iStart == iDest)
 	{
-
 		if (EASY_CVAR_GET_DEBUGONLY(pathfindPrintout) == 1) {
 			easyForcePrintLine("WARNING!!! FindShortestPath reports the start and end nodes are exactly the same. Returning start position, satisfied!");
 		}

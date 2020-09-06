@@ -1668,12 +1668,12 @@ Schedule_t	slTakeCoverFromOrigin[] =
 
 
 
+
 //MODDD - NEW!!!
-//TODO: make more interruptable.
-//=========================================================
-// move away from where you're currently standing. But just walk to get there, not in a hurry. Just bored.
-//=========================================================
-Task_t	tlWalkAwayFromOrigin[] =
+//TODO: make more interruptable.  ...really?  that's a lot of interrupt conditions as it is
+
+// move away from where you're currently standing. But just walk to get there, not in a hurry.
+Task_t	tlTakeCoverFromOriginWalk[] =
 {
 	{ TASK_STOP_MOVING,					(float)0					},
 	//{ TASK_WAIT,						(float)2					},
@@ -1684,11 +1684,11 @@ Task_t	tlWalkAwayFromOrigin[] =
 	//{ TASK_TURN_LEFT,					(float)179					},
 };
 
-Schedule_t	slWalkAwayFromOrigin[] =
+Schedule_t	slTakeCoverFromOriginWalk[] =
 {
 	{ 
-		tlWalkAwayFromOrigin,
-		ARRAYSIZE ( tlWalkAwayFromOrigin ), 
+		tlTakeCoverFromOriginWalk,
+		ARRAYSIZE ( tlTakeCoverFromOriginWalk ), 
 		bits_COND_NEW_ENEMY |
         bits_COND_SEE_ENEMY |
         bits_COND_SEE_DISLIKE |
@@ -1697,12 +1697,58 @@ Schedule_t	slWalkAwayFromOrigin[] =
         bits_COND_SEE_FEAR |
 		bits_COND_LIGHT_DAMAGE |
 		bits_COND_HEAVY_DAMAGE |
-		bits_COND_HEAR_SOUND,
+		bits_COND_HEAR_SOUND |
+		bits_COND_CAN_ATTACK,
 		bits_SOUND_COMBAT		|// sound flags
 		//bits_SOUND_WORLD		|
 		bits_SOUND_PLAYER		|
 		bits_SOUND_DANGER,
-		"WalkAwayFromOrigin"
+		"TakeCoverFromOriWalk"
+	},
+};
+
+
+
+
+
+
+//MODDD - NEW.  Like TakeCoverFromOrigin in picking a random spot, but doesn't care if it's out of the line ot sight of the origin.
+// Decent fallback for failing to take cover from the origin (if the point is to move anywhere but here, even reaching a less-than-
+// ideal point is better than doing nothing)
+// Not to be confused with the RANDOMWANDER schedule.  That one is much more crude, picks a random point nearby and doesn't
+// involve nodes.  For simple creatures like chumtoads that look more organic moving around every so often.
+Task_t	tlMoveFromOrigin[] =
+{
+	{ TASK_STOP_MOVING,					(float)0					},
+	{ TASK_MOVE_FROM_ORIGIN,		(float)0					},
+	{ TASK_RUN_PATH,					(float)0					},
+	{ TASK_WAIT_FOR_MOVEMENT,			(float)0					},
+	//{ TASK_REMEMBER,					(float)bits_MEMORY_INCOVER	},
+	//{ TASK_TURN_LEFT,					(float)179					},
+};
+
+Schedule_t	slMoveFromOrigin[] =
+{
+	{ 
+		tlMoveFromOrigin,
+		ARRAYSIZE ( tlMoveFromOrigin ), 
+		bits_COND_NEW_ENEMY |
+		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
+		bits_COND_NEW_ENEMY |
+        bits_COND_SEE_ENEMY |
+        bits_COND_SEE_DISLIKE |
+        bits_COND_SEE_HATE |
+        bits_COND_SEE_NEMESIS | 
+        bits_COND_SEE_FEAR |
+		bits_COND_LIGHT_DAMAGE |
+		bits_COND_HEAVY_DAMAGE |
+		bits_COND_HEAR_SOUND |
+		bits_COND_CAN_ATTACK,
+		bits_SOUND_COMBAT		|// sound flags
+		//bits_SOUND_WORLD		|
+		bits_SOUND_PLAYER		|
+		bits_SOUND_DANGER,
+		"slMoveFromOrigin"
 	},
 };
 
@@ -1962,7 +2008,8 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slAnimationSmartAndStop,
 	slInvestigateSoundBait,
 	slCantFollowBait,
-	slWalkAwayFromOrigin,
+	slTakeCoverFromOriginWalk,
+	slMoveFromOrigin,
 	slRandomWander,
 	slRandomWanderUninterruptable,
 	slTakeCoverFromEnemyOrChase,
@@ -2228,9 +2275,12 @@ Schedule_t* CBaseMonster::GetScheduleOfType ( int Type )
 		return &slTakeCoverFromOrigin[ 0 ];
 	}
 	//MODDD - NEW
-	case SCHED_WALK_AWAY_FROM_ORIGIN:{
-		return &slWalkAwayFromOrigin[0];
+	case SCHED_TAKE_COVER_FROM_ORIGIN_WALK:{
+		return &slTakeCoverFromOriginWalk[0];
 	}
+	case SCHED_MOVE_FROM_ORIGIN:
+		return &slMoveFromOrigin[0];
+	break; 
 	case SCHED_RANDOMWANDER: {
 		return &slRandomWander[0];
 	}
