@@ -286,7 +286,10 @@ void CFlyingMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir,
 		else
 			m_flightSpeed = UTIL_Approach( 20, m_flightSpeed, 300 * flInterval );
 		
-		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) )
+		//MODDD - wait.  As-is, CheckLocalMove, and didn't check that it's LOCALMOVE_VALID
+		// (since CheckLocalMove can also return LOCALMOVE_INVALID_DONT_TRIANGULATE, which is also non-zero)???
+		// No idea.  Now it's checked.
+		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) == LOCALMOVE_VALID)
 		{
 			m_vecTravel = (vecMove - pev->origin);
 			m_vecTravel = m_vecTravel.Normalize();

@@ -819,8 +819,9 @@ void CScientist::SayIdleToPlayer(CBaseEntity* argPlayerTalkTo) {
 				// only interrupt the idle activity to do this, and not in SCRIPT.  Just in case.
 				this->SetSequenceByIndex(g_scientist_checktie_sequenceID, 1.0, FALSE);
 
-				//usingCustomSequence = FALSE;  // don't block returning to idle anim
+				usingCustomSequence = FALSE;  // don't block returning to idle anim
 				// WAIT, should not happen anymore.  Being set to a sequence that doesn't loop will fall back to idle-anim-picking after it is done now
+				// NEVERMIND, requiring it again.  Explicitness is good.
 
 				doNotResetSequence = TRUE; // don't reset myself.
 			}
@@ -1442,7 +1443,7 @@ void CScientist::StartTask( Task_t *pTask )
 		//	vecGoal = test->vecLocation;
 
 
-		//	if (!CheckLocalMove(pev->origin, vecGoal, NULL, NULL)) {
+		//	if (CheckLocalMove(pev->origin, vecGoal, NULL, NULL) != LOCALMOVE_VALID) {
 		//		TaskFail();
 		//		return;
 		//	}

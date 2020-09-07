@@ -23,6 +23,11 @@
 
 // monsters.h merged with this file.
 
+// whether unspecified BuildNearestRoute calls start at a random node to look for cover from or use the current start node.
+// See notes at the start of BuildNearestRoute for more comments on that.
+#define DEFAULT_randomNodeSearchStart TRUE
+
+
 #define DEFAULT_FORGET_SMALL_FLINCH_TIME 12
 #define DEFAULT_FORGET_BIG_FLINCH_TIME 6
 
@@ -746,6 +751,8 @@ public:
 
 	virtual void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 	virtual BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
+	virtual BOOL CheckPreMove(void);
+
 
 	virtual Activity GetStoppedActivity( void ) { return ACT_IDLE; }
 	virtual void Stop( void ) { m_IdealActivity = GetStoppedActivity(); }
@@ -892,6 +899,7 @@ public:
 	int IScheduleFlags ( void );
 	//MODDD - made virtual.
 	virtual BOOL FRefreshRoute( void );
+	virtual BOOL FRefreshRouteCheap( void );
 	virtual BOOL FRefreshRouteChaseEnemySmart(void);
 	BOOL FRouteClear ( void );
 
@@ -908,7 +916,7 @@ public:
 	//MODDD - made virtual.
 	virtual void MakeIdealYaw( Vector vecTarget );
 
-	virtual void SetYawSpeed ( void ) { return; };// allows different yaw_speeds for each activity
+	virtual void SetYawSpeed ( void ) { return; }// allows different yaw_speeds for each activity
 	
 	//MODDD - made virtual like BuildNearestRoute was. If something overrides this we should probably use their version.
 	virtual BOOL BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget );
@@ -916,8 +924,8 @@ public:
 	//MODDD - now accepts an optional moveflag and optional target entity just like BuildRoute does. To whatever route it makes with BuildRoute,
 	//        it should be able to pass that information along just as if BuildRoute were called plainly.
 	//        But calling BuildNearestRoute without those things is possible too for pure retail behavior.
-	virtual BOOL BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
-	virtual BOOL BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, int iMoveFlag, CBaseEntity* pTarget );
+	virtual BOOL BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, BOOL randomNodeSearchStart );
+	virtual BOOL BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, BOOL randomNodeSearchStart, int iMoveFlag, CBaseEntity* pTarget);
 
 
 
@@ -927,7 +935,8 @@ public:
 	
 	BOOL FindLateralCover ( const Vector &vecThreat, const Vector &vecViewOffset );
 	virtual BOOL FindCover ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
-	virtual BOOL FindRandom ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
+	virtual BOOL FindRandom ( Activity movementAct, Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist );
+	virtual BOOL SCHEDULE_attemptFindCoverFromEnemy(Task_t* pTask);
 	virtual BOOL FValidateCover(const Vector& vecCoverLocation);
 	virtual float CoverRadius( void ) { return DEFAULT_COVER_SEEK_DISTANCE; } // Default cover radius
 
@@ -1072,6 +1081,7 @@ public:
 	BOOL MoveToNode( Activity movementAct, float waitTime, const Vector &goal );
 	BOOL MoveToTarget( Activity movementAct, float waitTime );
 	BOOL MoveToLocation( Activity movementAct, float waitTime, const Vector &goal );
+	BOOL MoveToLocationCheap( Activity movementAct, float waitTime, const Vector &goal );
 	BOOL MoveToEnemy( Activity movementAct, float waitTime );
 
 	// Returns the time when the door will be open
@@ -1183,6 +1193,7 @@ public:
 	                                        //        GibMonster will call FadeMonster if the monster is to be deleted without spawning any gibs.
 
 	Vector ShootAtEnemy( const Vector &shootOrigin );
+	Vector ShootAtEnemyEyes( const Vector &shootOrigin );
 	Vector ShootAtEnemyMod( const Vector &shootOrigin );
 	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ) * 0.75 + EyePosition() * 0.25; }		// position to shoot at
 	//MODDD
@@ -1266,7 +1277,6 @@ public:
 	int BloodColorRedFilter(void);
 	int CanUseGermanModel(void);
 
-	BOOL attemptFindCoverFromEnemy(Task_t* pTask);
 	WayPoint_t* GetGoalNode(void);
 
 	virtual void ReportGeneric(void);

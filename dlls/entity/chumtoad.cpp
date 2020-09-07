@@ -1728,7 +1728,7 @@ void CChumToad::StartTask ( Task_t *pTask )
 			vecStart = pev->origin;
 			vecEnd = vecStart + vec_forward * (500 + RANDOM_LONG(-50, 50));
 
-			success = this->CheckLocalMove(vecStart, vecEnd, NULL, &distReg);
+			success = this->CheckLocalMove(vecStart, vecEnd, NULL, &distReg) == LOCALMOVE_VALID;
 			totalDist = (vecEnd - vecStart).Length();
 
 			if(success){

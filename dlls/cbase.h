@@ -616,7 +616,7 @@ public:
 
 // Classify - returns the type of group (i.e, "houndeye", or "human military" so that monsters with different classnames
 // still realize that they are teammates. (overridden for monsters that form groups)
-	virtual int Classify ( void ) { return CLASS_NONE; };
+	virtual int Classify ( void ) { return CLASS_NONE; }
 	virtual void DeathNotice ( entvars_t *pevChild ) {}// monster maker children use this to tell the monster maker that they have died.
 
 
@@ -655,7 +655,7 @@ public:
 	virtual BOOL RemovePlayerItem( CBasePlayerItem *pItem ) { return 0; }
 	
 	//MODDD - 'const char*' now
-	virtual int	GiveAmmo( int iAmount, const char* szName, int iMax ) { return -1; };
+	virtual int	GiveAmmo( int iAmount, const char* szName, int iMax ) { return -1; }
 	virtual float GetDelay( void ) { return 0; }
 	virtual int	IsMoving( void ) { return pev->velocity != g_vecZero; }
 	virtual void OverrideReset( void ) {}
@@ -666,8 +666,12 @@ public:
 
 	// This is ONLY used by the node graph to test movement through a door
 	virtual void SetToggleState( int state ) {}
-	virtual void    StartSneaking( void ) {}
-	virtual void    StopSneaking( void ) {}
+	
+	//MODDD - NOTE.     what.   Only overridden by the player and nothing checks
+	// for anything related to there either.
+	//virtual void    StartSneaking( void ) {}
+	//virtual void    StopSneaking( void ) {}
+	
 	virtual BOOL	OnControls( entvars_t *pev ) { return FALSE; }
 	virtual BOOL    IsSneaking( void ) { return FALSE; }
 
@@ -699,31 +703,31 @@ public:
 	void (CBaseEntity ::*m_pfnUse)( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	void (CBaseEntity ::*m_pfnBlocked)( CBaseEntity *pOther );
 
-	virtual void Think( void ) { if (m_pfnThink) (this->*m_pfnThink)(); };
+	virtual void Think( void ) { if (m_pfnThink) (this->*m_pfnThink)(); }
 	
 
 
-	virtual void Touch( CBaseEntity *pOther ) { if (m_pfnTouch) (this->*m_pfnTouch)( pOther ); };
+	virtual void Touch( CBaseEntity *pOther ) { if (m_pfnTouch) (this->*m_pfnTouch)( pOther ); }
 	virtual void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value ) 
 	{ 
 		//easyPrintLine("WELL IS IT????? %d %s", m_pfnUse == NULL, pCaller!=NULL?pCaller->getClassname():"blankcaller?");
 		if (m_pfnUse) 
 			(this->*m_pfnUse)( pActivator, pCaller, useType, value );
 	}
-	virtual void Blocked( CBaseEntity *pOther ) { if (m_pfnBlocked) (this->*m_pfnBlocked)( pOther ); };
+	virtual void Blocked( CBaseEntity *pOther ) { if (m_pfnBlocked) (this->*m_pfnBlocked)( pOther ); }
 
 	// allow engine to allocate instance data
     void *operator new( size_t stAllocateBlock, entvars_t *pev )
 	{
 		return (void *)ALLOC_PRIVATE(ENT(pev), stAllocateBlock);
-	};
+	}
 
 	// don't use this.
 #if _MSC_VER >= 1200 // only build this code if MSVC++ 6.0 or higher
 	void operator delete(void *pMem, entvars_t *pev)
 	{
 		pev->flags |= FL_KILLME;
-	};
+	}
 #endif
 
 	void UpdateOnRemove( void );
@@ -827,28 +831,28 @@ public:
 	// virtual functions used by a few classes
 	
 	// used by monsters that are created by the MonsterMaker
-	virtual	void UpdateOwner( void ) { return; };
+	virtual	void UpdateOwner( void ) { return; }
 
-	virtual BOOL FBecomeProne( void ) {return FALSE;};
-	edict_t *edict() { return ENT( pev ); };
-	EOFFSET eoffset( ) { return OFFSET( pev ); };
-	int entindex( ) { return ENTINDEX( edict() ); };
+	virtual BOOL FBecomeProne( void ) {return FALSE;}
+	edict_t *edict() { return ENT( pev ); }
+	EOFFSET eoffset( ) { return OFFSET( pev ); }
+	int entindex( ) { return ENTINDEX( edict() ); }
 
-	virtual Vector Center( ) { return (pev->absmax + pev->absmin) * 0.5; }; // center point of entity
-	virtual Vector EyePosition( ) { return pev->origin + pev->view_ofs; };			// position of eyes
+	virtual Vector Center( ) { return (pev->absmax + pev->absmin) * 0.5; } // center point of entity
+	virtual Vector EyePosition( ) { return pev->origin + pev->view_ofs; }			// position of eyes
 
 	//MODDD - new. Don't add the position in this one.
 	//Anything overriding EyePosition should override EyeOffset too.
-	virtual Vector EyeOffset( ) { return pev->view_ofs; };			// position of eyes
+	virtual Vector EyeOffset( ) { return pev->view_ofs; }			// position of eyes
 
-	virtual Vector EarPosition( ) { return pev->origin + pev->view_ofs; };			// position of ears
-	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ); };		// position to shoot at
+	virtual Vector EarPosition( ) { return pev->origin + pev->view_ofs; }			// position of ears
+	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ); }		// position to shoot at
 	//MODDD - This method was created to mimick BodyTarget (a clone of it most of the time across the rest
 	//        of in-game objects that customize it), but for CBasePlayer, it doesn't try to "randomize" the
 	//        result (shift vertically, for some reason...).
-	virtual Vector BodyTargetMod( const Vector &posSrc ) { return Center( ); };		// position to shoot at
+	virtual Vector BodyTargetMod( const Vector &posSrc ) { return Center( ); }		// position to shoot at
 
-	virtual int Illumination( ) { return GETENTITYILLUM( ENT( pev ) ); };
+	virtual int Illumination( ) { return GETENTITYILLUM( ENT( pev ) ); }
 
 	//MODDD NOTE - despite these being virtual, they are never implemented elsewhere.  May be for the best.
 	//             Adding features to these by other smaller implementable (virtual) methods, like the new
@@ -934,11 +938,11 @@ public:
 
 	static	TYPEDESCRIPTION m_SaveData[];
 
-	EHANDLE		m_rgEntities[MS_MAX_TARGETS];
-	int		m_rgTriggered[MS_MAX_TARGETS];
+	EHANDLE m_rgEntities[MS_MAX_TARGETS];
+	int m_rgTriggered[MS_MAX_TARGETS];
 
-	int		m_iTotal;
-	string_t	m_globalstate;
+	int m_iTotal;
+	string_t m_globalstate;
 };
 
 

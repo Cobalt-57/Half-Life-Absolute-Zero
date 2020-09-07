@@ -322,7 +322,7 @@ void CGrenade::DetonateUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 
 BOOL CGrenade::isOrganic(){return FALSE;}
 BOOL CGrenade::usesSoundSentenceSave(){return FALSE;}
-void CGrenade::groundContact(void) {};
+void CGrenade::groundContact(void) {}
 
 
 
@@ -381,9 +381,11 @@ void CBaseMonster::RouteClear ( void ) { }
 void CBaseMonster::RouteNew ( void ) { }
 BOOL CBaseMonster::FRouteClear ( void ) { return FALSE; }
 BOOL CBaseMonster::FRefreshRoute ( void ) { return 0; }
+BOOL CBaseMonster::FRefreshRouteCheap ( void ) { return 0; }
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmart ( void ) { return 0; }
 BOOL CBaseMonster::MoveToEnemy( Activity movementAct, float waitTime ) { return FALSE; }
 BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
+BOOL CBaseMonster::MoveToLocationCheap( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
 BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime ) { return FALSE; }
 BOOL CBaseMonster::MoveToNode( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
 int ShouldSimplify( int routeType ) { return TRUE; }
@@ -531,6 +533,7 @@ BOOL CBaseMonster::usesSegmentedMove(void) {return FALSE;}
 int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt) { return FALSE; }
 void CBaseMonster::Move ( float flInterval ) { }
 BOOL CBaseMonster::ShouldAdvanceRoute( float flWaypointDist, float flInterval ) { return FALSE; }
+BOOL CBaseMonster::CheckPreMove(void) {return FALSE;}
 void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval ) { }
 void CBaseMonster::MonsterInit ( void ) { }
 void CBaseMonster::MonsterInitThink ( void ) { }
@@ -550,10 +553,11 @@ int CBaseMonster::IRelationship ( CBaseEntity *pTarget ) { return 0; }
 //int CBaseMonster::IRelationshipOfClass (int argClassValue, CBaseEntity* pTarget ){return 0;}
 
 BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
-BOOL CBaseMonster::FindRandom ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
+BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
+BOOL CBaseMonster::SCHEDULE_attemptFindCoverFromEnemy(Task_t* pTask){return FALSE;}
 BOOL CBaseMonster::FValidateCover(const Vector& vecCoverLocation){return FALSE;}
-BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ) { return FALSE; }
-BOOL CBaseMonster::BuildNearestRoute( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, int iMoveFlag, CBaseEntity* pTarget ){return FALSE;}
+BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, BOOL randomNodeSearchStart ) { return FALSE; }
+BOOL CBaseMonster::BuildNearestRoute( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, BOOL randomNodeSearchStart, int iMoveFlag, CBaseEntity* pTarget ){return FALSE;}
 
 void CBaseMonster::SetTurnActivity(void){}
 void CBaseMonster::SetTurnActivityForceAct(void){}
@@ -662,6 +666,7 @@ int CBaseMonster::CanPlaySequence( BOOL fDisregardMonsterState, int interruptLev
 
 BOOL CBaseMonster::FindLateralCover ( const Vector &vecThreat, const Vector &vecViewOffset ) { return FALSE; }
 Vector CBaseMonster::ShootAtEnemy( const Vector &shootOrigin ) { return g_vecZero; }
+Vector CBaseMonster::ShootAtEnemyEyes( const Vector &shootOrigin ) { return g_vecZero; }
 Vector CBaseMonster::ShootAtEnemyMod( const Vector &shootOrigin ) { return g_vecZero; }
 BOOL CBaseMonster::FacingIdeal( void ) { return FALSE; }
 BOOL CBaseMonster::FacingIdeal(float argDegreeTolerance){return FALSE;}
@@ -781,7 +786,7 @@ BOOL CBaseMonster::usesSoundSentenceSave(void){return FALSE;}
 
 
 float CBaseMonster::TimedDamageBuddhaFilter(float dmgIntent) { return 0; }
-void CBaseMonster::TimedDamagePostBuddhaCheck(void) {};
+void CBaseMonster::TimedDamagePostBuddhaCheck(void) {}
 int CBaseMonster::convert_itbd_to_damage(int i){ return 0;}
 void CBaseMonster::removeTimedDamage(int arg_type, int* m_bitsDamageTypeRef) {}
 void CBaseMonster::removeTimedDamageImmediate(int arg_type, int* m_bitsDamageTypeRef, BYTE bDuration) {}
@@ -790,7 +795,7 @@ void CBaseMonster::parse_itbd(int i) {}
 void CBaseMonster::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {}
 void CBaseMonster::CheckTimeBasedDamage(void){}
 
-void CBaseMonster::setTimedDamageDuration(int i, int* m_bitsDamageTypeRef) {};
+void CBaseMonster::setTimedDamageDuration(int i, int* m_bitsDamageTypeRef) {}
 void CBaseMonster::attemptResetTimedDamage(BOOL forceReset) {}
 void CBaseMonster::applyNewTimedDamage(int arg_bitsDamageType, int arg_bitsDamageTypeMod) {}
 
@@ -821,7 +826,6 @@ float CBaseMonster::MoveYawDegreeTolerance(){return 0;}
 int CBaseMonster::BloodColorRedFilter(){return 0;}
 int CBaseMonster::CanUseGermanModel(){return 0;}
 
-BOOL CBaseMonster::attemptFindCoverFromEnemy(Task_t* pTask){return FALSE;}
 WayPoint_t* CBaseMonster::GetGoalNode(){return NULL;}
 void CBaseMonster::ReportGeneric(){}
 void CBaseMonster::onEnemyDead(CBaseEntity* pRecentEnemy) {}
@@ -890,11 +894,15 @@ GENERATE_GIBMONSTER_IMPLEMENTATION_DUMMY_CLIENT(CBasePlayer)
 
 
 void CBasePlayer::PackDeadPlayerItems( void ) { }
-void CBasePlayer::RemoveAllAmmo(void) {};
+void CBasePlayer::RemoveAllAmmo(void) {}
 void CBasePlayer::RemoveAllItems( BOOL removeSuit ) { }
 void CBasePlayer::SetAndUpdateBattery(int argNewBattery) {}
 
 void CBasePlayer::FadeMonster( void ) { }
+
+
+Vector CBasePlayer::BodyTarget(const Vector& posSrc) { return g_vecZero; }
+Vector CBasePlayer::BodyTargetMod(const Vector& posSrc) { return g_vecZero; }
 
 void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim ) { }
 void CBasePlayer::WaterMove() { }
@@ -910,7 +918,7 @@ void CBasePlayer::PreThink(void) { }
 
 
 float CBasePlayer::TimedDamageBuddhaFilter(float dmgIntent) { return 0; }
-void CBasePlayer::TimedDamagePostBuddhaCheck(void) {};
+void CBasePlayer::TimedDamagePostBuddhaCheck(void) {}
 void CBasePlayer::removeTimedDamageImmediate(int arg_type, int* m_bitsDamageTypeRef, BYTE bDuration) {}
 void CBasePlayer::parse_itbd(int i) {}
 BYTE CBasePlayer::parse_itbd_duration(int i) { return 0; }

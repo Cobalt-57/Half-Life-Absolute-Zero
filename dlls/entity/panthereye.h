@@ -26,6 +26,7 @@ public:
 	
 	float HearingSensitivity(void);
 	BOOL testLeapNoBlock(void);
+	BOOL testLeapNoBlock_Forward(void);
 
 	int  IRelationship( CBaseEntity *pTarget );
 	void panthereye_findCoverFromEnemy(void);
@@ -68,12 +69,15 @@ public:
     float maxWaitPVSTime;
 	//MODDD - NOTE!  Is this now redundant with CBaseMonster's forgetSmallFlinchTime and forgetBigFlinchTime ?
 	float m_flNextFlinch;
-
+	float pissedRunTime;
 
 
 
 	CPantherEye(void);
 
+
+	void setModel(void);
+	void setModel(const char* m);
 
 	void SetObjectCollisionBox(void) {
 		if (pev->deadflag != DEAD_NO) {
@@ -107,15 +111,17 @@ public:
 	
 	void SetEyePosition(void);
 
+	int ISoundMask ( void );
+	int IgnoreConditions ( void );
+
 	void SetYawSpeed( void );
 	int  Classify ( void );
 	
 	void HandleEventQueueEvent(int arg_eventID);
+	void JumpEvent(BOOL enemyAccurate);
 	void HandleAnimEvent( MonsterEvent_t *pEvent );
 
-	int IgnoreConditions ( void );
-
-
+	BOOL FCanCheckAttacks(void);
 	BOOL CheckMeleeAttack1 ( float flDot, float flDist );
 	BOOL CheckMeleeAttack2 ( float flDot, float flDist );
 	

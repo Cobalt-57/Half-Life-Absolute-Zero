@@ -376,7 +376,8 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_ARRAY(CBasePlayer, m_rgAmmo, FIELD_INTEGER, MAX_AMMO_TYPES),
 	DEFINE_FIELD(CBasePlayer, m_idrowndmg, FIELD_INTEGER),
 	DEFINE_FIELD(CBasePlayer, m_idrownrestored, FIELD_INTEGER),
-	DEFINE_FIELD(CBasePlayer, m_tSneaking, FIELD_TIME),
+	//           why
+	//DEFINE_FIELD(CBasePlayer, m_tSneaking, FIELD_TIME),
 
 	DEFINE_FIELD(CBasePlayer, m_iTrain, FIELD_INTEGER),
 	DEFINE_FIELD(CBasePlayer, m_bitsHUDDamage, FIELD_INTEGER),
@@ -2116,6 +2117,38 @@ void CBasePlayer::stopSelfSounds(void) {
 	//////////////////////////////////////////////////////////////////////////////////////
 
 }//END OF stopSelfSounds
+
+
+// position to shoot at
+Vector CBasePlayer::BodyTarget( const Vector &posSrc ){
+	return Center( ) + pev->view_ofs * RANDOM_FLOAT( 0.5, 1.1 );
+};		
+
+Vector CBasePlayer::BodyTargetMod( const Vector &posSrc ) {
+	/*
+	Vector org = Center( ) + pev->view_ofs;
+	if ( pev->flags & FL_DUCKING )
+	{
+	org = org + ( VEC_HULL_MIN - VEC_DUCK_HULL_MIN );
+	}
+	*/
+
+	if ( !(pev->flags & FL_DUCKING) ){
+		return Center() + pev->view_ofs;
+	}else{
+		/*
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 1){
+		return pev->origin + Vector(0, 0, VEC_DUCK_HULL_MAX.z);
+		}else{
+		//old way
+		return Center() + pev->view_ofs;
+		}
+		*/
+		return pev->origin + Vector(0, 0, VEC_DUCK_HULL_MAX.z - 6);
+	}
+};// position to shoot at
+
+
 
 
 
@@ -6718,7 +6751,9 @@ void CBasePlayer::Spawn( BOOL revived ){
 	m_bloodColor	= BLOOD_COLOR_RED;
 
 	m_flNextAttack	= UTIL_WeaponTimeBase();
-	StartSneaking();
+
+	// what
+	//StartSneaking();
 
 	m_iFlashBattery = 99;
 	m_flFlashLightTime = 1; // force first message
@@ -7326,11 +7361,6 @@ BOOL CBasePlayer::HasWeapons( void )
 void CBasePlayer::SelectPrevItem( int iItem )
 {
 }
-
-
-
-
-
 
 
 const char *CBasePlayer::TeamID( void )

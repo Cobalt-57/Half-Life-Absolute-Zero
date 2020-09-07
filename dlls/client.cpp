@@ -3431,7 +3431,7 @@ void ClientCommand( edict_t *pEntity )
 		
 		Vector vecStart = tempplayer->pev->origin + Vector(0, 0, 10);
 		Vector vecEnd = vecStart + gpGlobals->v_forward * dist;
-		BOOL success = tempplayer->CheckLocalMove(vecStart, vecEnd, NULL, &distReg);
+		BOOL success = (tempplayer->CheckLocalMove(vecStart, vecEnd, NULL, &distReg) == LOCALMOVE_VALID);
 		//UTIL_TraceLine(tempplayer->pev->origin + tempplayer->pev->view_ofs + gpGlobals->v_forward * 5,pMe->pev->origin + pMe->pev->view_ofs + gpGlobals->v_forward * 2048,dont_ignore_monsters, pMe->edict(), &tr );
 
 		::DebugLine_ClearAll();
@@ -3446,7 +3446,101 @@ void ClientCommand( edict_t *pEntity )
 			::DebugLine_Setup(0, vecStart, vecEnd, (distReg / fullLength));
 		}
 
-	}
+	}else if( FStrEq(pcmdRefinedRef, "testnoderouteformonster") ){
+		// Take the ID of the monster to test on, and the nodes in the route (each should have a straight-line path between then).
+		// Returns whether the route is deemed valid for this monster to take, or, if not, why it failed.
+
+		if(CMD_ARGC() <= 1){
+			// only itself?  Print help instead
+			easyForcePrintLine("***No parameters given, printing out help info***");
+			easyForcePrintLine("Method takes the monster ID to use followed by a list of nodes in the route to test.  Must be at least one.");
+		}else if(CMD_ARGC() == 2){
+			easyForcePrintLine("***Not enough parameters, needs at least one more for the route to test.***");
+		}else if((CMD_ARGC() > 34)){
+			easyForcePrintLine("***Too many parameters, at most 32 nodes may be described.***");
+		}else{
+			// Go.
+			float routeLength = 0;
+			float linkLength = 0;
+			int i;
+			int theMonsterID;
+			int nodeParameterCount = CMD_ARGC() - 2;
+			int nodeList[32];
+			BOOL parseSuccess;
+			BOOL movePass;
+			BOOL routeSuccess = TRUE;  // assume it is until proven otherwise
+			// (the method ending early by 'return' never reaches a success message so that is the same as failing)
+
+			parseSuccess = attemptParseStringToInt(pEntity, &theMonsterID, CMD_ARGV(1), "ERROR!  Could not read MonsterID.", "???");
+			if(!parseSuccess)return;
+
+			for(i = 0; i < nodeParameterCount; i++){
+				int thisNodeNumber;
+				// UTIL_VarArgs?  nah, not worth generating an error message that won't be seen.  
+				// sprintf?  Hm.
+				parseSuccess = attemptParseStringToInt(pEntity, &thisNodeNumber, CMD_ARGV(i + 2), "ERROR!  Could not read a node, bad characters?", "???");
+				if(!parseSuccess){
+					easyForcePrintLine("***Failed to read \"%s\".***", CMD_ARGV(i + 2));
+					return;
+				}
+
+				// little validation. That's a valid node, right?
+				if(thisNodeNumber >= 0 && thisNodeNumber < WorldGraph.m_cNodes){
+					// proceed
+					nodeList[i] = thisNodeNumber;
+				}else{
+					easyForcePrintLine("ERROR! Node of invalid index, negative or exceeding this map's node count not allowed.  Node given: %d   Map max: %d", thisNodeNumber, WorldGraph.m_cNodes);
+				}
+
+			}
+			
+			CBaseMonster* theMon = getMonsterWithID(theMonsterID);
+			if(theMon == NULL){
+				easyForcePrintLine("ERROR!  Monster of ID '%d' not found.", theMonsterID);
+				return;
+			}
+
+			easyForcePrintLine("***Route read successfully, testing***");
+			CNode* theNode = &WorldGraph.Node(nodeList[0]);
+
+			// Now with the nodes, check to see that the monster can reach the first node.
+			movePass = (theMon->CheckLocalMove(theMon->pev->origin + theMon->pev->view_ofs, theNode->m_vecOrigin + theMon->pev->view_ofs, NULL, &linkLength ) == LOCALMOVE_VALID);
+			routeLength += linkLength;
+
+			// is that fair
+			float linkLengthPotential = Distance(theMon->pev->origin, theNode->m_vecOrigin);
+
+			if(!movePass){
+				easyForcePrintLine("Route failed!  Monster could not reach first node from its current point."); // Link length reached:%.2f  Potential:%.2f", linkLength, linkLengthPotential);
+				return;
+			}
+
+			// Now, test between every two nodes in the route from start to end
+			// (if only one node was given, this was only a test from where the monster is to that one node)
+			for(i = 0; i < nodeParameterCount-1; i++){
+				CNode* firstNode = &WorldGraph.Node(nodeList[i]);
+				CNode* secondNode = &WorldGraph.Node(nodeList[i+1]);
+				
+				movePass = (theMon->CheckLocalMove(firstNode->m_vecOrigin + theMon->pev->view_ofs, secondNode->m_vecOrigin + theMon->pev->view_ofs, NULL, &linkLength ) == LOCALMOVE_VALID);
+				routeLength += linkLength;
+
+				if(!movePass){
+					easyForcePrintLine("Route failed!  Monster could not from node #%d (%d) to #%d (%d).");//  Link length reached:%.2f  Potential:%.2f", i, nodeList[i], i+1, nodeList[i+1], linkLength, linkLengthPotential);
+					routeSuccess = FALSE;
+					break;
+				}
+
+			}
+
+			if(routeSuccess){
+				easyForcePrintLine("***Route success!  All nodes reached.  Route length: %.2f***", routeLength);
+			}else{
+				// oh
+				easyForcePrintLine("***Incomplete route length: %.2f***", routeLength);
+			}
+
+		}//arg count check
+	}//end of command
 
 	/*
 	else if( FStrEq(pcmdRefinedRef, "debugcine1")){

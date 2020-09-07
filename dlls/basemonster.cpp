@@ -21,6 +21,21 @@
 */
 
 
+
+// NOTE!!! Bad change I made a long while ago.
+// BuildNearestRoute should NOT give the 'bits_MF_TO_ENEMY' moveflag.
+// This tricks other areas of pathfinding into thinking the route is directly to the enemy
+// (often way off coming from BuildNearestRoute, the point is to get unscrambled hopefully to a better position it seems),
+// so that it notices there is over 80 units of distance between the enemy LKP (say position) and the current goal node, so that
+// it must re-route.  This ONLY makes sense for a route intended to be directly to the enemy, so that the enemy moving too far
+// from the 'goal' of a direct route means it should be refreshed.
+// Refreshing NearestRoutes for being too far will lead to refreshing every single frame, not good.
+// hgrunts placed just right while standing can oscillate between going towards different nodes very quickly
+// from taking different randomly picked goal-nodes each time.
+// It is now safe to send the moveflag anyway, the method will ignore it.  Or maybe use it in some other way sometime.
+// Just don't let nodes placed by BuildNearestRoute take the moveflag.
+
+
 // Should 'usingCustomSequence' and 'doNotResetSequence' be saved?  I have no idea.
 
 //MODDD - TODO! See the comment by the start of 'm_SaveData'.  Saving schedules and routes may
@@ -876,6 +891,7 @@ void CBaseMonster::Listen ( void )
 
 
 
+
 	m_iAudibleList = SOUNDLIST_EMPTY; 
 	ClearConditions(bits_COND_HEAR_SOUND | bits_COND_SMELL | bits_COND_SMELL_FOOD);
 	m_afSoundTypes = 0;
@@ -892,6 +908,8 @@ void CBaseMonster::Listen ( void )
 	}
 	
 
+
+	/*
 	//bits_SOUND_COMBAT
 	if(FClassnameIs(pev, "monster_stukabat")){
 		//different.
@@ -903,7 +921,7 @@ void CBaseMonster::Listen ( void )
 		iMySounds |= bits_SOUND_CARCASS;
 		
 	}
-
+	*/
 
 
 
@@ -957,6 +975,7 @@ void CBaseMonster::Listen ( void )
 			
 			if ( pCurrentSound->FIsSound() )
 			{
+				//DebugLine_SetupPoint(pCurrentSound->m_vecOrigin + Vector(0, 0, 12), 0, 0, 255);
 				// this is an audible sound.
 				
 				//easyForcePrintLine("%s:ID%d I SO HEARD IT IT.", this->getClassnameShort(), this->monsterID);
@@ -2174,11 +2193,14 @@ void CBaseMonster::MonsterThink ( void )
 	// !!! WAIT.  Wouldn't an easy check in place of the '!usingCustomSequence' be, if using a custom sequence but it doesn't loop, go ahead and pick a new one?
 	// Yea, let's try that.    Idea behind it is, if using a custom sequence with a definite end (monster stuck looking frozen),
 	// ignore the usingCustomSequence and pick a new sequence anyway to fit the IDLE intent, better than looking frozen unintentionally.
+	// NEVERMIND, let thing setting custom sequences that should switch over to ordinary idle tick usingCustomSequence off after calling for them.
+	// This seems to cause random rare issues with idle anims getting picked for things that really, really don't want them, like right before/after
+	// (unclear) hassault firing to make it a little glitchy, same for panthereye on jumps.   UGH.
 	if (
 		//!(m_pSchedule != NULL && getTaskNumber() ==  
 		
 		//!(m_fSequenceLoops && usingCustomSequence) && 
-		!IsMoving() && pev->framerate != 0 && m_fSequenceFinished && (!usingCustomSequence || !m_fSequenceLoops) &&
+		!IsMoving() && pev->framerate != 0 && m_fSequenceFinished && (!usingCustomSequence) &&  //  || !m_fSequenceLoops
 		!getMonsterBlockIdleAutoUpdate() && m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_DEAD &&
 		( (m_Activity == ACT_IDLE ) ) ) 
 	{
@@ -2546,6 +2568,263 @@ BOOL CBaseMonster::FRouteClear ( void )
 
 
 
+//=========================================================
+// FRefreshRoute - after calculating a path to the monster's
+// target, this function copies as many waypoints as possible
+// from that path to the monster's Route array
+//=========================================================
+BOOL CBaseMonster::FRefreshRoute ( void )
+{
+	CBaseEntity	*pPathCorner;
+	int		i;
+	BOOL		returnCode;
+
+	RouteNew();
+
+	returnCode = FALSE;
+
+	switch( m_movementGoal )
+	{
+		case MOVEGOAL_PATHCORNER:
+			{
+				// monster is on a path_corner loop
+				pPathCorner = m_pGoalEnt;
+				i = 0;
+
+				while ( pPathCorner && i < ROUTE_SIZE )
+				{
+					m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
+					m_Route[ i ].vecLocation = pPathCorner->pev->origin;
+
+					pPathCorner = pPathCorner->GetNextTarget();
+
+					// Last path_corner in list?
+					if ( !pPathCorner )
+						m_Route[i].iType |= bits_MF_IS_GOAL;
+					
+					i++;
+				}
+				//MODDD - looks safe to treat 'i' as the route length then.
+				// If there is no GoalEnt (first pPathCorner choice), there is no route (0 length).
+				// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
+				// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
+				m_iRouteLength = i;
+			}
+			returnCode = TRUE;
+			break;
+
+		case MOVEGOAL_ENEMY:
+
+			/*
+			if(m_hEnemy == FALSE){
+				//what's the point?
+				//...but we can still follow the existing LKP? I don't know.
+				return FALSE;
+			}
+			*/
+
+			////m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
+			//setEnemyLKP(m_hEnemy->pev->origin);
+			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
+
+
+			//MODDD - why wasn't there a BuildNearestRoute attempt if above failed?
+			if (returnCode == FALSE)
+			{
+				// ?????   so sending the enemy-goal moveflag is bad (reasons why at the top of this file).
+				// can we send the m_hEnemy anyway?
+				// Go ahead and send both, but the method will know not to use the moveflag.
+				returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, m_hEnemy );
+				//returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), DEFAULT_randomNodeSearchStart, 0, m_hEnemy);
+			}
+
+			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
+			if(returnCode){
+				m_vecMoveGoal = m_vecEnemyLKP;
+			}
+
+			break;
+
+		case MOVEGOAL_LOCATION:
+			returnCode = BuildRoute( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
+
+			//MODDD - can we do a nearest instead?
+			if(returnCode == FALSE){
+				returnCode = BuildNearestRoute(m_vecMoveGoal, pev->view_ofs, 0, (m_vecMoveGoal - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_LOCATION, NULL );
+			}
+
+			break;
+
+		case MOVEGOAL_TARGETENT:
+			if (m_hTargetEnt != NULL)
+			{
+				returnCode = BuildRoute( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
+
+				if(!returnCode){
+					//is this okay?
+					returnCode = BuildNearestRoute( m_hTargetEnt->pev->origin, m_hTargetEnt->pev->view_ofs, 0, (m_hTargetEnt->pev->origin - this->pev->origin).Length() + 500, DEFAULT_randomNodeSearchStart, bits_MF_TO_TARGETENT, m_hTargetEnt  );
+				}
+
+			}else{
+				returnCode = FALSE;
+			}
+
+			if(returnCode){
+				//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
+				if(returnCode){
+					m_vecMoveGoal = m_hTargetEnt->pev->origin;
+				}
+			}
+
+			break;
+
+		case MOVEGOAL_NODE:
+			returnCode = FGetNodeRoute( m_vecMoveGoal );
+			//MODDD - NOTE.  Found commented out as-is.  Is simplifying a node-route really that bad, or it's just not done this soon?
+			// Maybe that's already part of FGetNodeRoute.
+//			if ( returnCode )
+//				RouteSimplify( NULL );
+			break;
+	}//movegoal?
+
+
+	//MODDD
+	// Now, do another check to make sure this route is actually passable for at least one frame.
+	// It is possible to pick a route that will fail the very next time, leading to flinching back and forth between
+	// a standing and move animation.  If this fails, that point isn't reached.
+	// (some things don't want this check or don't have custom move script properly separated, they turn 'SegmentedMove' off
+	// to avoid this).
+	if (usesSegmentedMove() && returnCode != FALSE) {
+		returnCode = CheckPreMove();
+	}
+
+	return returnCode;
+}//FRefreshRoute
+
+
+
+
+//MODDD - NEW.  Like FRefreshRoute but doesn't use 'BuildNearestRoute'.  Either we can reach a given node or don't.
+// Checks for picking the best randon nearby node will go through many BuildRoute calls and BuildNearest route could end
+// up being very expensive and redundant on top of that.
+BOOL CBaseMonster::FRefreshRouteCheap ( void )
+{
+	CBaseEntity	*pPathCorner;
+	int		i;
+	BOOL		returnCode;
+
+	RouteNew();
+
+	returnCode = FALSE;
+
+	switch( m_movementGoal )
+	{
+		case MOVEGOAL_PATHCORNER:
+			{
+				// monster is on a path_corner loop
+				pPathCorner = m_pGoalEnt;
+				i = 0;
+
+				while ( pPathCorner && i < ROUTE_SIZE )
+				{
+					m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
+					m_Route[ i ].vecLocation = pPathCorner->pev->origin;
+
+					pPathCorner = pPathCorner->GetNextTarget();
+
+					// Last path_corner in list?
+					if ( !pPathCorner )
+						m_Route[i].iType |= bits_MF_IS_GOAL;
+					
+					i++;
+				}
+				//MODDD - looks safe to treat 'i' as the route length then.
+				// If there is no GoalEnt (first pPathCorner choice), there is no route (0 length).
+				// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
+				// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
+				m_iRouteLength = i;
+			}
+			returnCode = TRUE;
+			break;
+
+		case MOVEGOAL_ENEMY:
+
+			/*
+			if(m_hEnemy == FALSE){
+				//what's the point?
+				//...but we can still follow the existing LKP? I don't know.
+				return FALSE;
+			}
+			*/
+
+			////m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
+			//setEnemyLKP(m_hEnemy->pev->origin);
+			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
+
+
+			//if (returnCode == FALSE)
+			//{
+			//	returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, m_hEnemy );
+			//}
+
+			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
+			if(returnCode){
+				m_vecMoveGoal = m_vecEnemyLKP;
+			}
+
+			break;
+
+		case MOVEGOAL_LOCATION:
+			returnCode = BuildRoute( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
+
+			//MODDD - can we do a nearest instead?              no
+			//if(returnCode == FALSE){
+			//	returnCode = BuildNearestRoute(m_vecMoveGoal, pev->view_ofs, 0, (m_vecMoveGoal - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_LOCATION, NULL );
+			//}
+
+			break;
+
+		case MOVEGOAL_TARGETENT:
+			if (m_hTargetEnt != NULL)
+			{
+				returnCode = BuildRoute( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
+
+				//if(!returnCode){
+				//	//is this okay?             no
+				//	returnCode = BuildNearestRoute( m_hTargetEnt->pev->origin, m_hTargetEnt->pev->view_ofs, 0, (m_hTargetEnt->pev->origin - this->pev->origin).Length() + 500, DEFAULT_randomNodeSearchStart, bits_MF_TO_TARGETENT, m_hTargetEnt  );
+				//}
+
+			}else{
+				returnCode = FALSE;
+			}
+
+			if(returnCode){
+				//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
+				if(returnCode){
+					m_vecMoveGoal = m_hTargetEnt->pev->origin;
+				}
+			}
+
+			break;
+
+		case MOVEGOAL_NODE:
+			returnCode = FGetNodeRoute( m_vecMoveGoal );
+//			if ( returnCode )
+//				RouteSimplify( NULL );
+			break;
+	}
+
+	if (usesSegmentedMove() && returnCode != FALSE) {
+		returnCode = CheckPreMove();
+	}
+
+	return returnCode;
+}//FRefreshRouteCheap
+
+
+
+
+
 //MODDD - new. Clone of FRefreshRoute that better incorporates the method calls done in "CHASE_ENEMY"'s schedule.
 // This ends up being similar to a call to MoveToEnemy followed by FRefreshRoute.
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
@@ -2617,7 +2896,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 		returnCode = TRUE;
 	}
 	//else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length() ))
-	else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), iMoveFlaggg, pEnemy ))
+	else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), DEFAULT_randomNodeSearchStart, iMoveFlaggg, pEnemy ))
 	{
 		//TaskComplete();
 		returnCode = TRUE;
@@ -2630,10 +2909,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 		returnCode = FALSE;
 	}
 
-
-
-
-
+	
 	//MODDD - NEW.
 	// - in case a revert is needed
 	// Nevermind, let outside methods handle this.  by... maybe not setting m_movementActivity or waittimes if
@@ -2644,264 +2920,26 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 	// Don't keep that move activity change if trying to move a single frame on this route would fail.
 	// It might be possible to integrate this check into any "FRefreshRoute" call too, if necessary.
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	if (usesSegmentedMove()) {
-		if (returnCode != FALSE) {
-			// unused, but expected by the method anyway
-
-			// Success? try a pre-move on that new route then.
-			// And interval.   uhhh.   assume 0.1 here?
-			// Ahah!  We have m_flInterval now, even set before AI calls.
-
-			int maxTimes = 2;
-			while (maxTimes > 0) {
-				maxTimes--;
-
-				if (MovementIsComplete()) {
-					// looks like we're already where we want to be?
-					break;
-				}
-
-
-				float flWaypointDist;
-				float flCheckDist;
-				float flDist;
-				Vector vecDir;
-				CBaseEntity* pTargetEnt;
-
-				float flInterval = m_flInterval;
-				int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
-
-				// A value of -1 is also possible to signify failure.  a "thing == 0" or FALSE check isn't good enough.
-
-				if (localMovePass != 1) {
-					//revert these
-					disableEnemyAutoNode = m1;
-					m_movementActivity = m2;
-					m_moveWaitTime = m3;
-					m_movementGoal = m4;
-					m_vecMoveGoal = m5;
-					return FALSE;
-				}
-
-				BOOL shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
-
-				if (shouldItAgain) {
-					// do it again! 
-					AdvanceRoute(flWaypointDist, flInterval);
-
-				}
-				else {
-					// Route left to go?  get out the loop then
-					break;
-				}
-			}//END OF while loop
-
-		}
+	if (usesSegmentedMove() && returnCode != FALSE) {
+		returnCode = CheckPreMove();
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+	if(returnCode == FALSE){
+		// revert here too?
+		disableEnemyAutoNode = m1;
+		m_movementActivity = m2;
+		m_moveWaitTime = m3;
+		m_movementGoal = m4;
+		m_vecMoveGoal = m5;
+	}
 
 	return returnCode;
 }//END OF FRefreshRouteChaseEnemySmart
 
 
-//=========================================================
-// FRefreshRoute - after calculating a path to the monster's
-// target, this function copies as many waypoints as possible
-// from that path to the monster's Route array
-//=========================================================
-BOOL CBaseMonster::FRefreshRoute ( void )
-{
-	CBaseEntity	*pPathCorner;
-	int		i;
-	BOOL		returnCode;
 
-	RouteNew();
-
-	returnCode = FALSE;
-
-	switch( m_movementGoal )
-	{
-		case MOVEGOAL_PATHCORNER:
-			{
-				// monster is on a path_corner loop
-				pPathCorner = m_pGoalEnt;
-				i = 0;
-
-				while ( pPathCorner && i < ROUTE_SIZE )
-				{
-					m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
-					m_Route[ i ].vecLocation = pPathCorner->pev->origin;
-
-					pPathCorner = pPathCorner->GetNextTarget();
-
-					// Last path_corner in list?
-					if ( !pPathCorner )
-						m_Route[i].iType |= bits_MF_IS_GOAL;
-					
-					i++;
-				}
-				//MODDD - looks safe to treat 'i' as the route length then.
-				// If there is no GoalEnt (first pPathCorner choice), there is no route (0 length).
-				// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
-				// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
-				m_iRouteLength = i;
-			}
-			returnCode = TRUE;
-			break;
-
-		case MOVEGOAL_ENEMY:
-
-			/*
-			if(m_hEnemy == FALSE){
-				//what's the point?
-				//...but we can still follow the existing LKP? I don't know.
-				return FALSE;
-			}
-			*/
-
-			////m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
-			//setEnemyLKP(m_hEnemy->pev->origin);
-			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
-
-
-			//MODDD - why wasn't there a BuildNearestRoute attempt if above failed?
-			if (returnCode == FALSE)
-			{
-				returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), bits_MF_TO_ENEMY, m_hEnemy );
-			}
-
-			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
-			if(returnCode){
-				m_vecMoveGoal = m_vecEnemyLKP;
-			}
-
-			break;
-
-		case MOVEGOAL_LOCATION:
-			returnCode = BuildRoute( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
-
-			//MODDD - can we do a nearest instead?
-			if(returnCode == FALSE){
-				returnCode = BuildNearestRoute(m_vecMoveGoal, pev->view_ofs, 0, (m_vecMoveGoal - pev->origin).Length(), bits_MF_TO_LOCATION, NULL );
-			}
-
-			break;
-
-		case MOVEGOAL_TARGETENT:
-			if (m_hTargetEnt != NULL)
-			{
-				returnCode = BuildRoute( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
-
-				if(!returnCode){
-					//is this okay?
-					returnCode = BuildNearestRoute( m_hTargetEnt->pev->origin, m_hTargetEnt->pev->view_ofs, 0, (m_hTargetEnt->pev->origin - this->pev->origin).Length() + 500, bits_MF_TO_TARGETENT, m_hTargetEnt  );
-				}
-
-			}else{
-				returnCode = FALSE;
-			}
-
-			if(returnCode){
-				//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
-				if(returnCode){
-					m_vecMoveGoal = m_hTargetEnt->pev->origin;
-				}
-			}
-
-			break;
-
-		case MOVEGOAL_NODE:
-			returnCode = FGetNodeRoute( m_vecMoveGoal );
-//			if ( returnCode )
-//				RouteSimplify( NULL );
-			break;
-	}
-
-
-
-
-	//MODDD - NEW.
-	// - in case a revert is needed
-	// Nevermind, let outside methods handle this.  by... maybe not setting m_movementActivity or waittimes if
-	// FRefreshRoute fails...?
-	//Activity oldMoveAct = m_movementActivity;
-	//float oldMoveWaitTime = m_moveWaitTime;
-
-	// Don't keep that move activity change if trying to move a single frame on this route would fail.
-	// It might be possible to integrate this check into any "FRefreshRoute" call too, if necessary.
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (usesSegmentedMove()) {
-		if (returnCode != FALSE) {
-
-			int maxTimes = 2;
-			while (maxTimes > 0) {
-				maxTimes--;
-
-				if (MovementIsComplete()) {
-					// looks like we're already where we want to be?
-					break;
-				}
-
-
-				// unused, but expected by the method anyway
-				float flWaypointDist;
-				float flCheckDist;
-				float flDist;
-				Vector vecDir;
-				CBaseEntity* pTargetEnt;
-
-				// Success? try a pre-move on that new route then.
-				// And interval.   uhhh.   assume 0.1 here?
-				// Ahah!  We have m_flInterval now, even set before AI calls.
-				float flInterval = m_flInterval;
-
-				////////////////////////////////////////////////////////////////////////////////////
-				//MODDD - TODO.  Should this all be surrounded ba "!IsMovementComplete" check?
-				// That way an odd case of a route saying 'you're already there' is handled early, if that can happen.
-				// Maybe if IsMovementComplete passes here, instead return a special code that
-				// calls for the outside context to restore its vars and percolate up to the calling
-				// script in schedule.cpp (probably) to say TaskComplete.
-				// There is also right after the "AdvanceRoute" call further down.  I don't know.
-				// ...  maybe later.
-				////////////////////////////////////////////////////////////////////////////////////
-
-
-				int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
-
-				// A value of -1 is also possible to signify failure.  a "thing == 0" or FALSE check isn't good enough.
-				if (localMovePass != 1) {
-					// oh dear.  Revert and stop.  (whatever outside context that saved something should handle that)
-					//m_movementActivity = oldMoveAct;
-					//m_moveWaitTime = m_moveWaitTime;
-					return FALSE;
-				}
-
-				// Now, see if we're near the end of the route.  If so, redo this check.
-				// This can end very odd small routes that say "You can go!", only for 1 frame to pass,
-				// advance that node in place, and then go "Oh nevermind."  ugly oscillation between stand and move activities.
-				BOOL shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
-
-				if (shouldItAgain) {
-					// do it again! 
-					AdvanceRoute(flWaypointDist, flInterval);
-				
-					// MovementIsComplete() could go here, or at the beginning of this while loop.
-					// In case it's already 'done' before even one check.
-				}
-				else {
-					// Route left to go?  get out the loop then
-					break;
-				}
-			}//END OF while loop
-		}
-	}
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-	return returnCode;
-}//FRefreshRoute
 
 
 BOOL CBaseMonster::MoveToEnemy( Activity movementAct, float waitTime )
@@ -2939,6 +2977,30 @@ BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const V
 
 	//MODDD - only keep movement activity if this passes
 	BOOL theResult = FRefreshRoute();
+	if (!theResult) {
+		m_movementActivity = m1;
+		m_moveWaitTime = m2;
+		m_movementGoal = m3;
+		m_vecMoveGoal = m4;
+	}
+	return theResult;
+}
+
+
+BOOL CBaseMonster::MoveToLocationCheap( Activity movementAct, float waitTime, const Vector &goal )
+{
+	Activity m1 = m_movementActivity;
+	float m2 = m_moveWaitTime;
+	int m3 = m_movementGoal;
+	Vector m4 = m_vecMoveGoal;
+
+	m_movementActivity = movementAct;
+	m_moveWaitTime = waitTime;
+	m_movementGoal = MOVEGOAL_LOCATION;
+	m_vecMoveGoal = goal;
+
+	//MODDD - only keep movement activity if this passes
+	BOOL theResult = FRefreshRouteCheap();
 	if (!theResult) {
 		m_movementActivity = m1;
 		m_moveWaitTime = m2;
@@ -3450,9 +3512,9 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 	
 		//IsAlive_FromAI takes "this" monster as a parameter. It already knows what itself is.
 
-	if(FClassnameIs(pev, "monster_barney")){
-		int x = 666;
-	}
+	//if(FClassnameIs(pev, "monster_barney")){
+	//	int x = 666;
+	//}
 
 
 
@@ -3476,7 +3538,7 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 			int x = 45;
 		}
 
-		easyForcePrintLine("DO IT BE THO %d : %.2f", (pEnemy->pev->deadflag, pEnemy->pev->frame) );
+		//easyForcePrintLine("DO IT BE THO %d : %.2f", (pEnemy->pev->deadflag, pEnemy->pev->frame) );
 
 		//MODDD - new event, called when the checked enemy is dead
 		// (as bits_COND_ENEMY_DEAD is set)
@@ -6109,6 +6171,91 @@ BOOL CBaseMonster::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 }
 
 
+
+
+
+
+//MODDD - NEW.  For pathfinding to test whether a route will fail in the first step it is taken.
+// Avoids changing to a move anim for a frame only to go 'oh wait I can't do this'.  Why not use the 
+// same logic this same frame to get started and see if that gets interrupted.  If so, it's not the
+// route you thought it was.
+BOOL CBaseMonster::CheckPreMove(void){
+	// to reach this point, we assume the route picked so far has been safe.
+	// Failing the pre-move will change this.
+	BOOL returnCode = TRUE;
+
+	int maxTimes = 2;
+	while (maxTimes > 0) {
+		maxTimes--;
+
+		if (MovementIsComplete()) {
+			// looks like we're already where we want to be?
+			break;
+		}
+
+
+		// unused, but expected by the method anyway
+		float flWaypointDist;
+		float flCheckDist;
+		float flDist;
+		Vector vecDir;
+		CBaseEntity* pTargetEnt;
+
+		// Success? try a pre-move on that new route then.
+		// And interval.   uhhh.   assume 0.1 here?
+		// Ahah!  We have m_flInterval now, even set before AI calls.
+		float flInterval = m_flInterval;
+
+		////////////////////////////////////////////////////////////////////////////////////
+		//MODDD - TODO.  Should this all be surrounded ba "!IsMovementComplete" check?
+		// That way an odd case of a route saying 'you're already there' is handled early, if that can happen.
+		// Maybe if IsMovementComplete passes here, instead return a special code that
+		// calls for the outside context to restore its vars and percolate up to the calling
+		// script in schedule.cpp (probably) to say TaskComplete.
+		// There is also right after the "AdvanceRoute" call further down.  I don't know.
+		// ...  maybe later.
+		////////////////////////////////////////////////////////////////////////////////////
+
+
+		int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
+
+		// A value of -1 is also possible to signify failure.  a "thing == 0" or FALSE check isn't good enough.
+		if (localMovePass != 1) {
+			// oh dear.  Revert and stop.  (whatever outside context that saved something should handle that)
+			//m_movementActivity = oldMoveAct;
+			//m_moveWaitTime = m_moveWaitTime;
+			returnCode = FALSE;
+			break;
+		}
+
+		// Now, see if we're near the end of the route.  If so, redo this check.
+		// This can end very odd small routes that say "You can go!", only for 1 frame to pass,
+		// advance that node in place, and then go "Oh nevermind."  ugly oscillation between stand and move activities.
+		BOOL shouldItAgain = ShouldAdvanceRoute(flWaypointDist, flInterval);
+
+		if (shouldItAgain) {
+			// Node really close?  Advance the route and do another pre-move check!
+			AdvanceRoute(flWaypointDist, flInterval);
+				
+			// MovementIsComplete() could go here, or at the beginning of this while loop.
+			// In case it's already 'done' before even one check.
+		}
+		else {
+			// Route left to go?  get out the loop then
+			break;
+		}
+	}//END OF while loop
+
+	return returnCode;
+}//CheckPreMove
+
+
+
+
+
+
+
+
 void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
 #if defined(USE_MOVEMENT_BOUND_FIX) || defined(USE_MOVEMENT_BOUND_FIX_ALT)
@@ -6714,13 +6861,94 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 
 	vecLookersOffset = vecThreat + vecViewOffset;// calculate location of enemy's eyes
 
-	// we'll do a rough sample to find nodes that are relatively nearby
-	for ( i = 0 ; i < WorldGraph.m_cNodes ; i++ )
-	{
-		int nodeNumber = (i + WorldGraph.m_iLastCoverSearch) % WorldGraph.m_cNodes;
+	
+	//MODDD - cached at startup now in case any other pathfinding calls shift this in the middle of this method,
+	// might not be good.
+	// WAIT.  Shouldn't this have been an as-is bug???   m_iLastCoverSearch was used as the start node each iteration,
+	// but changed to 'LastCoverSearch = LastCoverSearch + 1' right after.  So next iteration bumps up i, which gets
+	// 1 + (LastCoverSearch + 1).
+	// Such as, say m_iLastCoverSearch starts at 20.  i starts at 0.  Ignore modulus stuff.
+	// Start with nodeNumber = (0 + 20). 20.
+	// Then we set m_iLastCoverSearch to, nodeNumber (20) + 1.  It is 21.
+	// Next iteration: i = 1.
+	// nodeNumber = 1 + 21.  22.
+	// nodeNumber skipped ever being '21' !   LastCoverSearch was set to that but never used for nodeNumber.
+	// But wait, it gets worse.  Next iteration: i = 2.
+	// nodeNumber = 2 + 22. 24.  m_iLastCoverSearch = 25.
+	// Next iteration: i = 3.
+	// nodeNumber = 3 + 25. 28.  LastCoverSearch = 29.
+	// i = 4. 
+	// nodeNumber = 4 + 29. 33.
+	// More and more nodes get skipped.  Skipping some 30 nodes at a time yet doing this once from 0 to the node-count would be
+	// wild if it does indeed count every single node once (and from testing, it didn't seem to).
 
+	// Cacheing iLastCoverSearch as startSearchNode to begin with fixes that.
+	// Although m_iLastCoverSearch could just as well have been set as a 'return' is being made then, no sense
+	// setting 50+ times when it couldn't be referred to by anything else until after this method finishes.
+
+
+	// changes to 1 and -1 with each use
+	int alternatingChoice;
+	int startSearchNode;
+	int maxTries;
+
+
+
+	alternatingChoice = 1;
+	// ANY WAY BUT NEWEST
+	startSearchNode = WorldGraph.m_iLastCoverSearch;
+	maxTries = WorldGraph.m_cNodes;
+	// NEWEST
+	//startSearchNode = iMyNode;
+	//maxTries = WorldGraph.m_cNodes - 1;
+
+	// we'll do a rough sample to find nodes that are relatively nearby
+	for ( i = 0 ; i < maxTries ; i++ )
+	{
+
+		/*
+		// NEWEST WAY.  Start from the marked 'iMyNode' instead and alternate in adding/subtracting from startSearchNode
+		// each time.  Also move i up half as fast (since it's +1, -1, +2, -2, etc.     +1, -2, +3, -4 skips nodes, BAD)
+		// Also, start i at 2 from it's normal start (0) so that the divide by 2 still ends up at a different value.
+		// Using the closest node (might be standing at already) isn't very interesting, after all.
+		////////////////////////////////////////////////////////////////
+		int nodeNumber = ((alternatingChoice * (int)((i+2)*0.5)) + startSearchNode) % WorldGraph.m_cNodes;
+		if (nodeNumber < 0) nodeNumber += WorldGraph.m_cNodes;  // in negatives, get out of the negative range, loop back around
+		CNode &node = WorldGraph.Node( nodeNumber );
+
+		if(alternatingChoice == 1){
+			alternatingChoice = -1;
+		}else{
+			alternatingChoice = 1;
+		}
+		*/
+
+
+		//MODDD - NOPE.  Do at the end.
+		//WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
+		
+		////////////////////////////////////////////////////////////////
+
+		// NEW WAY
+		////////////////////////////////////////////////////////////////
+		/*
+		int nodeNumber = (i + startSearchNode) % WorldGraph.m_cNodes;
+		CNode &node = WorldGraph.Node( nodeNumber );
+		//MODDD - NOPE.  Do at the end.
+		//WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
+		*/
+		////////////////////////////////////////////////////////////////
+
+		
+		// OLD WAY
+		////////////////////////////////////////////////////////////////
+		int nodeNumber = (i + WorldGraph.m_iLastCoverSearch) % WorldGraph.m_cNodes;
 		CNode &node = WorldGraph.Node( nodeNumber );
 		WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
+		////////////////////////////////////////////////////////////////
+		
+
+
 
 		// could use an optimization here!!
 		flDist = ( pev->origin - node.m_vecOrigin ).Length();
@@ -6735,11 +6963,13 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 			// if this node will block the threat's line of sight to me...
 			if ( tr.flFraction != 1.0 )
 			{
+				//DebugLine_Setup(0, node.m_vecOrigin + vecViewOffset, vecLookersOffset, tr.flFraction);
+
+
 				// ..and is also closer to me than the threat, or the same distance from myself and the threat the node is good.
 				if ( ( iMyNode == iThreatNode ) || WorldGraph.PathLength( iMyNode, nodeNumber, iMyHullIndex, m_afCapability ) <= WorldGraph.PathLength( iThreatNode, nodeNumber, iMyHullIndex, m_afCapability ) )
 				{
 
-					
 					if ( FValidateCover ( node.m_vecOrigin ) && MoveToLocation( ACT_RUN, 0, node.m_vecOrigin ) )
 					{
 						
@@ -6758,12 +6988,15 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 						MESSAGE_END();
 						*/
 
+						//MODDD - set this now
+						WorldGraph.m_iLastCoverSearch = nodeNumber + 1;
 						return TRUE;
 					}
 				}
 			}
 		}
 	}
+	// any point in setting m_iLastCoverSearch if this failed?
 	return FALSE;
 }
 
@@ -6771,7 +7004,11 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 
 
 //MODDD - clone of FindCover that, well, doesn't really care about the 'cover' aspect.  Just move away somewhat.
-BOOL CBaseMonster::FindRandom ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist )
+// Points further away and obscurred from my origin are more likely to get picked, however.  I do want to pick a more
+// interesting point to explore than 5 inches away or that I can already see, after all.
+// Also takes a preference of movement activity (ACT_WALK or ACT_RUN most likely), since this might be casual for otherwise
+// fast-moving entities.
+BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist )
 {
 	int i;
 	int iMyHullIndex;
@@ -6828,24 +7065,72 @@ BOOL CBaseMonster::FindRandom ( Vector vecThreat, Vector vecViewOffset, float fl
 	CNode* bestNode = NULL;
 	
 
+
+
+
+
+
+	int alternatingChoice;
+	int startSearchNode;
+	int maxTries;
+
+	alternatingChoice = 1;
+	// ANY WAY BUT NEWEST
+	//int startSearchNode = WorldGraph.m_iLastCoverSearch;
+	//int maxTries = WorldGraph.m_cNodes;
+	// NEWEST
+	startSearchNode = iMyNode;
+	maxTries = WorldGraph.m_cNodes - 1;
+
 	// we'll do a rough sample to find nodes that are relatively nearby
-	for ( i = 0 ; i < WorldGraph.m_cNodes ; i++ )
+	for ( i = 0 ; i < maxTries ; i++ )
 	{
 		float thisNodeDesirability = 0;
 
+		// NEWEST WAY
+		int nodeNumber = ((alternatingChoice * (int)((i+2)*0.5)) + startSearchNode) % WorldGraph.m_cNodes;
+		if (nodeNumber < 0) nodeNumber += WorldGraph.m_cNodes;  // in negatives, get out of the negative range, loop back around
+		CNode &node = WorldGraph.Node( nodeNumber );
+
+		if(alternatingChoice == 1){
+			alternatingChoice = -1;
+		}else{
+			alternatingChoice = 1;
+		}
+
+		// NEW WAY
+		/*
 		//MODDD - TODO?   Does relying on the same 'recent' node from Cover even make sense here?
 		// No harm though, probably.  But don't commit this for other monsters that want to look for real cover.
-		int nodeNumber = (i + WorldGraph.m_iLastCoverSearch) % WorldGraph.m_cNodes;
+		int nodeNumber = (i + startSearchNode) % WorldGraph.m_cNodes;
 
 		CNode &node = WorldGraph.Node( nodeNumber );
 		// !!! COMMENTED OUT, related to above node
 		//WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
+		*/
+
+
+
+		// TEST!!!
+		//if(nodeNumber == 73 || nodeNumber == 77 || nodeNumber == 79 || nodeNumber == 75){
+		//	easyForcePrintLine("IM present %d", nodeNumber);
+		//}
+
 
 		// could use an optimization here!!
 		flDist = ( pev->origin - node.m_vecOrigin ).Length();
 
 		// DON'T do the trace check on a node that is farther away than a node that we've already found to 
 		// provide cover! Also make sure the node is within the mins/maxs of the search.
+		// ALSO, beware of calling 'MoveToLocation' several times (does not actually do the move, tries to build a 
+		// route to a given point/target and leaves with that route in place....... great naming guys.)
+		// ANYWAY. Each time likely calls BuildNearestRoute, which leads to "WorldGraph.m_iLastCoverSearch" getting shifted.
+		// So we're likely to check for some nodes twice and others none while counting through all nodes.  BLEGH.
+		// Changed to 'MoveToLocationCheap', which avoids BuildNearestRoute calls if plain BuildRoute ones fail
+		// (makes sense, on checking so many nodes 'BuildNearestRoute' many times will just get expensive and redundant).
+		// And changed m_iLastCoverSearch to get saved to a temp-var and used out of paranoia (changes to LastCoverSearch
+		// since would not affect what we're counting off of; no skipped or twice-tried nodes)
+		// GOD I FUCKING LOVE FRAGILE PATHFINDING LOGIC
 		if ( flDist >= flMinDist && flDist < flMaxDist )
 		{
 			UTIL_TraceLine ( node.m_vecOrigin + vecViewOffset, vecLookersOffset, ignore_monsters, ignore_glass,  ENT(pev), &tr );
@@ -6869,6 +7154,17 @@ BOOL CBaseMonster::FindRandom ( Vector vecThreat, Vector vecViewOffset, float fl
 				// Probably?
 				thisNodeDesirability += 0.25;
 			}
+
+			// More distnace, up to a point, more desirability.  More interesting to go further in general.
+			// NOTE - this is a cheap check of distance between me and the node being tested, not the length
+			// of the route to get there.  Although a route that's longer is more interesting for random wandering than
+			// just ending up at a further point, it might not be by much and that's wa more expensive to test
+			// (instead of checking only the most 'desirable' nodes at a time for pathfinding, but only including their
+			// route lengths would bias things compared to nodes that we don't attempt to route to)
+			// NEVERMIND.  Seems the route's distance is only written if it failed a WALK_MOVE call, and only
+			// up to the most recently failed WALK_MOVE call (moves in increments of step-size, 16 units).
+			// Could fix but.    eh.    Kinda sick and tired of this 'change one insignificant thing, the world comes
+			// crashing down a few months later from some obscure bug caused by that' shit.
 			if(flDist <= 200){
 				// eh.
 				thisNodeDesirability += 0.0;
@@ -6882,7 +7178,7 @@ BOOL CBaseMonster::FindRandom ( Vector vecThreat, Vector vecViewOffset, float fl
 
 			if(thisNodeDesirability > bestNodeDesirability){
 				// Now wait!  Can we actually pathfind to this o wondrous node?
-				BOOL canPath = MoveToLocation(ACT_RUN, 0, node.m_vecOrigin);
+				BOOL canPath = MoveToLocationCheap(movementAct, 0, node.m_vecOrigin);
 				if(canPath){
 					// take it!
 					bestNodeDesirability = thisNodeDesirability;
@@ -6929,12 +7225,19 @@ BOOL CBaseMonster::FValidateCover(const Vector& vecCoverLocation){
 // value
 //=========================================================
 //MODDD - now supports optional moveflags and target entity just like BuildRoute does to send to it if provided.
-BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist ){
+// ALSO, must be told whether this starts from a random node (retail, although likely unintentional in most cases) or uses its current
+// node to start a search.  Nodes close in number are often close along a path as placed in the map, but there is no guarantee that some
+// perfectly fine node nearby varries wildly in number.
+// Although, it looks like the intention was to start searching from 1 after the most recently successfully picked cover node
+// game-wide (WorldGraph.m_iLastCoverSearch), but this is unlikely to be as relevant for monsters completely unrelated to the one that picked
+// that number (in distance or team).  And it still didn't work quite right, skipped all over the place instead of counting up through all
+// the nodes as likely intended, so it ended up being very random in real use anyway (like how default randomNodeSearchStart of TRUE would work).
+BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, BOOL randomNodeSearchStart ){
 	//default moveflag is bits_MF_TO_LOCATION.  That was always sent to BuildRoute in BuildNearestRoute as of retail.
-	return BuildNearestRoute(vecThreat, vecViewOffset, flMinDist, flMaxDist, bits_MF_TO_LOCATION, NULL);
+	return BuildNearestRoute(vecThreat, vecViewOffset, flMinDist, flMaxDist, randomNodeSearchStart, bits_MF_TO_LOCATION, NULL);
 }
 
-BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, int iMoveFlag, CBaseEntity* pTarget )
+BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist, BOOL randomNodeSearchStart, int iMoveFlag, CBaseEntity* pTarget )
 {
 	int i;
 	int iMyHullIndex;
@@ -6988,13 +7291,120 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 	//DebugLine_ClearAll();
 
 
-	// we'll do a rough sample to find nodes that are relatively nearby
-	for ( i = 0 ; i < WorldGraph.m_cNodes ; i++ )
-	{
-		int nodeNumber = (i + WorldGraph.m_iLastCoverSearch) % WorldGraph.m_cNodes;
+	int alternatingChoice;
+	int startSearchNode;
+	int maxTries;
+	int iOffset;
 
+
+
+
+	/*
+	// TEST.  Force conditions.
+	WorldGraph.m_cNodes = 108;
+	iOffset = 1;
+	alternatingChoice = -1;
+	startSearchNode = 7; //(int)RANDOM_LONG(0, WorldGraph.m_cNodes-1);
+	maxTries = WorldGraph.m_cNodes;
+
+	// record how many times each node was picked as 'nodeNumber'.  Each should be picked only once, except the start node (never).
+	int daNodes[256];
+	memset(&daNodes[0], 0, sizeof(int) * 256);
+	
+	// TEST: what nodes does this logic go through?
+	for ( i = 0 ; i < maxTries ; i++ )
+	{
+		// NEWEST WAY.  Start from the marked 'iMyNode' instead and alternate in adding/subtracting from startSearchNode
+		// each time.  Also move i up half as fast (since it's +1, -1, +2, -2, etc.     +1, -2, +3, -4 skips nodes, BAD)
+		// Also, start i at 2 from it's normal start (0) so that the divide by 2 still ends up at a different value.
+		// Using the closest node (might be standing at already) isn't very interesting, after all.
+		////////////////////////////////////////////////////////////////
+		int nodeNumber = ((alternatingChoice * (int)((i+iOffset)*0.5)) + startSearchNode) % WorldGraph.m_cNodes;
+		if (nodeNumber < 0) nodeNumber += WorldGraph.m_cNodes;  // in negatives, get out of the negative range, loop back around
+		
+		if(alternatingChoice == 1){
+			alternatingChoice = -1;
+		}else{
+			alternatingChoice = 1;
+		}
+
+		daNodes[nodeNumber] = 1;
+		int x = 45;
+	}
+
+	for(i = 0; i < WorldGraph.m_cNodes; i++){
+		easyForcePrintLine("#%d : %d", i, daNodes[i]);
+	}
+	for (i = WorldGraph.m_cNodes; i < WorldGraph.m_cNodes + 16;  i++) {
+		easyForcePrintLine("OUT OF BOUNDS CHECK: #%d : %d", i, daNodes[i]);
+	}
+	*/
+
+
+	if(randomNodeSearchStart){
+		// If this monster wants random behavior, include the node picked since it might not be
+		// the start node (no reason to specifically include it).
+		// Picking a different node to start searching from may influence what location gets picked in the end,
+		// if several meet the criteria.
+		// This also means using a starting offset of 1 instead (since that divided by 2 is 0.5, truncates to 0,
+		// means no change to startSearchNode: exactly the start node, once). Next iteration, alternatingChoice
+		// goes from the -1 here to 1, and 'iOffset' (1) + i (1) makes 2.  Divide by 2, 1.  Next time,
+		// -1*(i=2)/2, makes -1, then 2, then -2, 3, -3, etc.  Alternating choices continue as normal.
+		// Although go up to the max number of nodes instead of '-1'.
+		iOffset = 1;
+		alternatingChoice = -1;
+		startSearchNode = (int)RANDOM_LONG(0, WorldGraph.m_cNodes-1);
+		maxTries = WorldGraph.m_cNodes;
+
+	}else{
+		// start searching from my own start node.
+		// iOffset of 2 so that 'i = 0' is treated as 2.  Divided by 2 that starts at '1', add another for 3, 
+		// divided by 2 makes 1.5, truncates to 1 (for being subtracted instead of added to).  4 / 2 = 2,
+		// then -2, +3, -3, etc.
+		iOffset = 2;
+		alternatingChoice = 1;
+		// ANY WAY BUT NEWEST
+		//startSearchNode = WorldGraph.m_iLastCoverSearch;
+		//maxTries = WorldGraph.m_cNodes;
+		// NEWEST
+		startSearchNode = iMyNode;
+		maxTries = WorldGraph.m_cNodes - 1;
+	}
+
+
+	// we'll do a rough sample to find nodes that are relatively nearby
+	for ( i = 0 ; i < maxTries; i++ )
+	{
+		// NEWEST WAY.
+		////////////////////////////////////////////////////////////////
+		int nodeNumber = ((alternatingChoice * (int)((i+iOffset)*0.5)) + startSearchNode) % WorldGraph.m_cNodes;
+
+		if (nodeNumber == startSearchNode)continue;  //can happen with a random start-search node. Any node after can be picked.
+
+		if (nodeNumber < 0) nodeNumber += WorldGraph.m_cNodes;  // in negatives, get out of the negative range, loop back around
+		CNode &node = WorldGraph.Node( nodeNumber );
+
+		if(alternatingChoice == 1){
+			alternatingChoice = -1;
+		}else{
+			alternatingChoice = 1;
+		}
+		
+		// NEW WAY
+		/*
+		int nodeNumber = (i + startSearchNode) % WorldGraph.m_cNodes;
+		CNode &node = WorldGraph.Node( nodeNumber );
+		//MODDD - why not do this at the end and on success?
+		//WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
+		*/
+
+		// OLD WAY
+		/*
+		int nodeNumber = (i + WorldGraph.m_iLastCoverSearch) % WorldGraph.m_cNodes;
 		CNode &node = WorldGraph.Node( nodeNumber );
 		WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
+		*/
+
 
 		// can I get there?
 		if (WorldGraph.NextNodeInRoute( iMyNode, nodeNumber, iMyHullIndex, 0 ) != iMyNode)
@@ -7093,11 +7503,20 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 				{
 					// try to get there
 					//MODDD - involve the now parameterized "iMoveFlag" and "pTarget".
-					//if ( BuildRoute ( node.m_vecOrigin, bits_MF_TO_LOCATION, NULL ) )
-					if ( BuildRoute ( node.m_vecOrigin, iMoveFlag, pTarget ) )
+					// WARNING: don't give the moveflag, fools us into thinking the route is to something
+					// really specific when it most likely isn't, can be refreshed at bad times (routes to enemies
+					// are expected to be accurate to an enemy's locaiton with the enemy moveflag set).
+					// Described moreso at the top of the file.
+					// For now don't send 'iMoveFlag', the target should be fine maybe?
+					// CAREFUL!  No moveflags is bad, retail way of TO_LOCATION is fine.
+					if ( BuildRoute ( node.m_vecOrigin, bits_MF_TO_LOCATION, NULL ) )
+					//if ( BuildRoute ( node.m_vecOrigin, iMoveFlag, pTarget ) )
+					//if ( BuildRoute ( node.m_vecOrigin, 0, NULL ) )
 					{
 						flMaxDist = flDist;
 						m_vecMoveGoal = node.m_vecOrigin;
+						//MODDD - there we go
+						WorldGraph.m_iLastCoverSearch = nodeNumber + 1;
 						return TRUE; // UNDONE: keep looking for something closer!
 					}
 				}
@@ -8363,6 +8782,9 @@ BOOL CBaseMonster::FCheckAITrigger ( void )
 	case AITRIGGER_SQUADLEADERDIE:
 		break;
 */
+
+	//MODDD - I really doubt that involving 'bits_SOUND_X' in HasConditions is a good idea, but maybe there's something
+	// more to this that I don't get.  Just looks like that conflicts with bitflags that mean very different things to HasConditions.
 	case AITRIGGER_HEARWORLD:
 		if ( HasAllConditions(bits_COND_HEAR_SOUND | bits_SOUND_WORLD) )
 		{
@@ -8528,6 +8950,28 @@ Vector CBaseMonster::ShootAtEnemy( const Vector &shootOrigin )
 	//MODDD NOTICE - isn't trusting "gpGlobals->v_forward" kinda dangerous? This assumes we recently called MakeVectors and not privately for v_forward to be relevant
 	//               to this monster.
 }
+
+// yowch
+Vector CBaseMonster::ShootAtEnemyEyes( const Vector &shootOrigin )
+{
+	CBaseEntity *pEnemy = m_hEnemy;
+
+	if ( pEnemy )
+	{
+		//MODDD NOTE ........ what is this formula?
+		//    I'm guessing that the BodyTarget includes the enemy's pev->origin, but we subtract it out so we can substitute it with m_vecEnemyLKP.
+		//    So why not make a separate BodyTarget method that never added pev->origin in the first place? Who knows.
+		return ( (pEnemy->EyePosition() - pEnemy->pev->origin) + m_vecEnemyLKP - shootOrigin ).Normalize();
+	}
+	else
+		return gpGlobals->v_forward;
+	//MODDD NOTICE - isn't trusting "gpGlobals->v_forward" kinda dangerous? This assumes we recently called MakeVectors and not privately for v_forward to be relevant
+	//               to this monster.
+}
+
+
+
+
 
 //Similar to above, but uses BodyTargetMod instead of BodyTarget. BodyTargetMod returns the true center of the player so that things that use this result to determine
 //aim pitch don't appear to jitter around up and down (with changes in the slightly randomly returned BodyCenter) just to get an aim pitch.

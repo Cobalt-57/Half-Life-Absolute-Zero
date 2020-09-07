@@ -367,7 +367,7 @@ void DebugCall3(CBasePlayer* somePlayer) {
 	Vector vecEnd = debugPoint2;
 
 	//BOOL success = this->CheckLocalMove(vecStart, vecStart + gpGlobals->v_forward * dist, NULL, &distReg);
-	BOOL success = somePlayer->CheckLocalMove(vecStart, vecEnd, NULL, &distReg);
+	BOOL success = (somePlayer->CheckLocalMove(vecStart, vecEnd, NULL, &distReg) == LOCALMOVE_VALID);
 	//UTIL_TraceLine(tempplayer->pev->origin + tempplayer->pev->view_ofs + gpGlobals->v_forward * 5,pMe->pev->origin + pMe->pev->view_ofs + gpGlobals->v_forward * 2048,dont_ignore_monsters, pMe->edict(), &tr );
 
 	if (success) {

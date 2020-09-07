@@ -572,7 +572,10 @@ Schedule_t	slControllerStrafe[] =
 Task_t	tlControllerTakeCover[] =
 {
 	{ TASK_WAIT,					(float)0.2					},
-	{ TASK_FIND_COVER_FROM_ENEMY,	(float)0					},
+	//MODDD - try this? Little less likely to derp-out when the enemy is close to me, maybe
+	{ TASK_MOVE_FROM_ORIGIN,	(float)0					},
+	//{ TASK_FIND_COVER_FROM_ENEMY,	(float)0					},
+
 	{ TASK_WAIT_FOR_MOVEMENT,		(float)0					},
 	{ TASK_WAIT,					(float)1					},
 };
@@ -653,8 +656,8 @@ void CController::StartTask ( Task_t *pTask )
 			// !!!!!!!
 			// NOPE.  Bad.  Makes the controller dive-bomb towards the player, which wasn't intended.  Keep them off.
 			// Maybe dropping those alone makes the controller want to route around the player instead of allow a path directly towards?  Don't know.
-			//if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, enemyTest ))
-			if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024 ))
+			//if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024, DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, enemyTest ))
+			if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024, DEFAULT_randomNodeSearchStart ))
 			{
 				TaskComplete();
 			}
@@ -678,7 +681,7 @@ void CController::StartTask ( Task_t *pTask )
 
 
 			// Nope!  Had this at the end for the broken version:    MF_TO_ENEMY, pEnemy
-			if (BuildNearestRoute(pEnemy->pev->origin, pEnemy->pev->view_ofs, pTask->flData, (pEnemy->pev->origin - pev->origin).Length() + 1024))
+			if (BuildNearestRoute(pEnemy->pev->origin, pEnemy->pev->view_ofs, pTask->flData, (pEnemy->pev->origin - pev->origin).Length() + 1024, DEFAULT_randomNodeSearchStart))
 			{
 				TaskComplete();
 			}

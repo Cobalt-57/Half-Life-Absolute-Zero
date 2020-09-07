@@ -76,7 +76,7 @@ public:
 	BOOL soundgiven;
 	//MODDD - new.
 	BOOL spinuptimeSet;
-
+	BOOL shootpref_eyes;
 
 
 
@@ -97,6 +97,7 @@ public:
 
 	Vector GetGrenadeSPawnPosition(void);
 
+	Vector HASSAULT_ShootAtEnemyEyes(const Vector& shootOrigin);
 
 	int IRelationship ( CBaseEntity *pTarget );
 	
@@ -128,6 +129,10 @@ public:
 
 	void Spawn( void );
 	void Precache( void );
+
+	int ISoundMask ( void );
+	int IgnoreConditions ( void );
+
 	void SetYawSpeed( void );
 	int  Classify ( void );
 	BOOL isOrganic(void){return !CanUseGermanModel();}
@@ -141,7 +146,6 @@ public:
 
 	void HandleEventQueueEvent( int arg_eventID);
 	void HandleAnimEvent( MonsterEvent_t *pEvent );
-//	int IgnoreConditions ( void );
 
 	
 	BOOL FCanCheckAttacks();
@@ -180,7 +184,6 @@ public:
 	void MonsterThink( void );
 	
 	BOOL FValidateCover ( const Vector &vecCoverLocation );
-	int ISoundMask ( void );
 
 	BOOL FOkToSpeak( void );
 	void JustSpoke( void );

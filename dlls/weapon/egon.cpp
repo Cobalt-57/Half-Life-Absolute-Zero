@@ -835,39 +835,45 @@ void CEgon::ItemPostFrameThink(void){
 
 	BOOL forceIdle = FALSE;
 
-	if(holdingPrimary && holdingSecondary){
-		// FUCK THIS
-		if(!fireException &&
-			(
-			(m_fireState != FIRE_OFF) ||
-				(fireExceptionPrev) ||
-				m_pBeam != NULL
-				)   // dear god I'm tired of this shit
-		)
-		{
-			//easyForcePrintLine("ATTAK END BOTH A");
-			//EndAttack(TRUE);
+	//if(!(m_pPlayer->m_bHolstering)){
+		if(holdingPrimary && holdingSecondary) {
+			// FUCK THIS
+			if(!fireException &&
+				(
+				(m_fireState != FIRE_OFF) ||
+					(fireExceptionPrev) ||
+					m_pBeam != NULL
+					)   // dear god I'm tired of this shit
+			)
+			{
+				//easyForcePrintLine("ATTAK END BOTH A");
+				//EndAttack(TRUE);
 
-		}else if(fireException){
-			// USE THAT AMMO
-			//ChangePlayerPrimaryAmmoCount(-1);
-			//m_chargeReady &= ~32;
-			//easyForcePrintLine("ATTAK END BOTH B");
-			//EndAttack(TRUE);
+			}else if(fireException){
+				// USE THAT AMMO
+				//ChangePlayerPrimaryAmmoCount(-1);
+				//m_chargeReady &= ~32;
+				//easyForcePrintLine("ATTAK END BOTH B");
+				//EndAttack(TRUE);
 
+			}
+
+			fireException = FALSE;
+			m_chargeReady &= ~32;
+
+			///WeaponIdle();
+			//return;
+
+			// try me
+			holdingPrimary = FALSE;
+			holdingSecondary = FALSE;
+			forceIdle = TRUE;
 		}
-
-		fireException = FALSE;
-		m_chargeReady &= ~32;
-
-		///WeaponIdle();
-		//return;
-
-		// try me
-		holdingPrimary = FALSE;
-		holdingSecondary = FALSE;
-		forceIdle = TRUE;
-	}
+	//}else{
+	//	// holstering?  Block inputs, but don't forceIdle.
+	//	holdingPrimary = FALSE;
+	//	holdingSecondary = FALSE;
+	//}
 
 
 

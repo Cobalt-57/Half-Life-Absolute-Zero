@@ -173,10 +173,11 @@ float CGauss::GetFullChargeTime(void)
 		// ALPHA: any differences for multiplayer unknown.  How about 30% less time?
 		if (IsMultiplayer())
 		{
-			return (0.8*12 - 1.3)*0.7;
+			// - 1.3 ?
+			return (0.8*13)*0.7;
 		}
 
-		return 0.8*12 - 1.3;
+		return 0.8 * 13; // - 1.3;
 	}
 	
 }
@@ -266,6 +267,15 @@ BOOL CGauss::Deploy()
 	// undo the 'BlockLooping' that DefaultDeploy calls for in this case.
 	stopBlockLooping();
 
+	
+	m_fInAttack = 0;
+	m_fireState = 0;
+	inAttackPrev = 0;
+
+	fuser1_store = -1;
+	ignoreIdleTime = -1;
+	
+
 	return depResult;
 }
 
@@ -277,8 +287,15 @@ void CGauss::Holster(int skiplocal /* = 0 */)
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
 
 	SendWeaponAnim(GAUSS_HOLSTER);
-	m_fInAttack = 0;
 
+	
+	m_fInAttack = 0;
+	m_fireState = 0;
+	inAttackPrev = 0;
+
+	fuser1_store = -1;
+	ignoreIdleTime = -1;
+	
 
 	DefaultHolster(GAUSS_HOLSTER, skiplocal, 0, (31.0f + 1.0f) / (60.0f));
 }
@@ -410,21 +427,18 @@ void CGauss::_SecondaryAttack()
 		{
 			EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM);
 			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
+			m_flNextPrimaryAttack = m_pPlayer->m_flNextAttack;
+			m_flNextSecondaryAttack = m_pPlayer->m_flNextAttack;
 			return;
 		}
 
-
-
-
+		// well gee, is that so
 		m_fPrimaryFire = FALSE;
 
 		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0) {
 			// take one ammo just to start the spin
 			ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);
 		}
-
-
-
 
 		//TODO - MINOR.  Any reason why holding down both primary & secondary while charging causes the fired shot
 		// to be invisible? or some odd combo, I forget.  If easy though.
@@ -447,8 +461,6 @@ void CGauss::_SecondaryAttack()
 			m_flNextSecondaryAttack = m_pPlayer->m_flNextAttack;
 			return;
 		}
-
-
 
 		m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + chargeAmmoUsageDelay;
 
@@ -489,7 +501,6 @@ void CGauss::_SecondaryAttack()
 		// during the charging process, eat one bit of ammo every once in a while
 		if (UTIL_WeaponTimeBase() >= m_pPlayer->m_flNextAmmoBurn && m_pPlayer->m_flNextAmmoBurn != 1000)
 		{
-
 			//MODDD - moved here, was below this 'nextAmmoBurn' check.
 			// Now runs at the time of the next ammo-burn cycle instead.
 			if (m_fireState < chargeAmmoStoredMax - 1 && PlayerPrimaryAmmoCount() < chargeAmmoUsage)
@@ -506,14 +517,12 @@ void CGauss::_SecondaryAttack()
 				return;
 			}
 
-
 			ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);
 			m_fireState++;
 			m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + chargeAmmoUsageDelay;
 		}
 
 		
-
 		//MODDD - purpose of m_flAmmoStartCharge changed, counts ammo used by the charge, not
 		// time to stop charging.
 		/*
@@ -534,8 +543,21 @@ void CGauss::_SecondaryAttack()
 		// ALSO.  Better adjusts for different charge-delay times between gauss_mode choices.
 		// Add -chargeInitialDelay in so that time lost waiting for the initial charge does not contribute
 		// to the pitch.
-		int pitch = (int)(( -chargeInitialDelay + 100.0f - (pev->fuser1) ) * ((maxPitch-(startPitch) ) / GetFullChargeTime()) +(startPitch));
+		//int pitch = (int)(( -chargeInitialDelay + 100.0f - (pev->fuser1) ) * ((maxPitch-(startPitch) ) / GetFullChargeTime()) +(startPitch));
 		
+		int pitch;
+		float currentChargeTime = (-chargeInitialDelay + 100.0f - (pev->fuser1));
+		float daChargeTime = GetFullChargeTime();
+
+		if(currentChargeTime >= daChargeTime){
+			// max it goes
+			pitch = maxPitch;
+		}else{
+			// go upwards
+			pitch = (currentChargeTime / GetFullChargeTime()) * (maxPitch - startPitch) + startPitch;
+		}
+
+
 		if(pitch < 50){
 			// WARNING!  Pitch should never go under the starting 100 for 0 charge time!
 			// This is to avoid that annoying glitchy high-pitched caused by a deep negative value in some bug.
@@ -546,7 +568,7 @@ void CGauss::_SecondaryAttack()
 		if (pitch > maxPitch){
 			pitch = maxPitch;
 		}
-		//easyForcePrintLine("OH dear PITCH %.2f : %d", pev->fuser1, pitch);
+		easyForcePrintLine("OH dear PITCH %.2f / %.2f : %d", currentChargeTime, daChargeTime, pitch);
 
 
 
@@ -595,7 +617,9 @@ void CGauss::_SecondaryAttack()
 //=========================================================
 void CGauss::StartFire(void)
 {
-	inAttackPrev = m_fInAttack;
+	// NOT GOOD.  Forces Prev to m_fInAttack in whatever state it is, which likely won't be 0 as intended by this.
+	// Of course as-is never set m_fInAttack to 0 in StartFire, but always did right after calling it...? what?
+	//inAttackPrev = m_fInAttack;
 
 	float flDamage;
 
@@ -1121,8 +1145,8 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 void CGauss::onFreshFrame(void){
 
 	// ???????????????????
-	m_fInAttack = 0;
-	inAttackPrev = 0;
+	//m_fInAttack = 0;
+	//inAttackPrev = 0;
 
 	ignoreIdleTime = gpGlobals->time + 0.8;
 
@@ -1177,15 +1201,21 @@ void CGauss::ItemPostFrameThink(void){
 	
 	BOOL forceIdle = FALSE;
 
-	if(holdingPrimary && holdingSecondary){
-		//m_chargeReady &= ~32;
-		///WeaponIdle();
-		//return;
-		// try me
-		holdingPrimary = FALSE;
-		holdingSecondary = FALSE;
-		forceIdle = TRUE;
-	}
+	//if(!m_pPlayer->m_bHolstering){
+		if((holdingPrimary && holdingSecondary) ){
+			//m_chargeReady &= ~32;
+			///WeaponIdle();
+			//return;
+			// try me
+			holdingPrimary = FALSE;
+			holdingSecondary = FALSE;
+			forceIdle = TRUE;
+		}
+	//}else{
+	//	// holstering?  Block inputs, but don't forceIdle.
+	//	holdingPrimary = FALSE;
+	//	holdingSecondary = FALSE;
+	//}
 
 
 	if(holdingSecondary  ){
@@ -1202,6 +1232,7 @@ void CGauss::ItemPostFrameThink(void){
 		// FUCK SHIT AVENUE
 		StartFire();
 		m_fInAttack = 0;
+		inAttackPrev = 0;
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.0;
 
 		//MODDD - why not?
@@ -1254,6 +1285,7 @@ void CGauss::WeaponIdle(void)
 	{
 		StartFire();
 		m_fInAttack = 0;
+		inAttackPrev = 0;
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.0;
 
 		//MODDD - why not?

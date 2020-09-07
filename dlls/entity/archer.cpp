@@ -1031,7 +1031,7 @@ void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 		else
 			m_flightSpeed = UTIL_Approach( 20, m_flightSpeed, 300 * gpGlobals->frametime );
 		
-		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) )
+		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) == LOCALMOVE_VALID )
 		{
 			m_vecTravel = (vecMove - pev->origin);
 			m_vecTravel = m_vecTravel.Normalize();
@@ -1454,7 +1454,7 @@ void CArcher::StartTask( Task_t *pTask ){
 				if(BuildRoute(surfaceGuess + Vector(0, 0, -60), bits_MF_TO_LOCATION, NULL)){
 					//okay!	
 				}else{
-					//oh dear.  Any other tries like BuildRouteNearest?
+					//oh dear.  Any other tries like BuildNearestRoute?
 					continue;
 				}
 
@@ -1530,7 +1530,7 @@ void CArcher::StartTask( Task_t *pTask ){
 
 				//okay!	
 			}else{
-				//oh dear.  Any other tries like BuildRouteNearest?
+				//oh dear.  Any other tries like BuildNearestRoute?
 				TaskFail(); return;
 			}
 
@@ -1550,7 +1550,7 @@ void CArcher::StartTask( Task_t *pTask ){
 			if(BuildRoute(wellBelowOrigin, bits_MF_TO_LOCATION, NULL)){
 				//okay!	
 			}else{
-				//oh dear.  Any other tries like BuildRouteNearest?
+				//oh dear.  Any other tries like BuildNearestRoute?
 				TaskFail(); return;
 			}
 

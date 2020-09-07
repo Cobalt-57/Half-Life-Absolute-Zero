@@ -569,6 +569,10 @@ An hassault standing that decides to stop spinning the chaingun plays the 'spind
 
 General pathfinding bug fixed: 'SimplifyRoute' could involve parts of the node array that were not properly set for the current route, leading to using garbage memory as waypoints.
 
+Great pathfinding fix - attempts to find cover were ignoring many nodes each check from skipping around the list of nodes unintentionally.  Valid nearby nodes could be missed and cause 'FindCover' or (new) 'FindRandom' calls to fail when they should not have.
+
+Issue from monsters sometimes oscillating between differnet routes (turning quickly to face different nodes from refreshing too often on off-course routes) fixed.
+
 'Routes with same start/end node check' restored and made more efficient, no longer does expensive checks over long distances.
 In other words, monsters are less likely to (try to) take odd paths to impossible points that cannot be reached if the player stands in odd places unmarked by nodes.
 
@@ -609,7 +613,14 @@ Slight chance of clientside events called by the EV_ system on the local player 
 
 Viewmodel anims in multiplayer further improved (less glitchiness like odd frames of animations between weapon changes).
 
-HAssault aiming the wrong way pitch-wise (very high for lower targets, very low for higher targets) fixed.
+HASSAULT AI:
+- HAssault aiming the wrong way pitch-wise (very high for lower targets, very low for higher targets) fixed.
+- Issue seeing the player, moving to a point and staring in the same direction until the player comes into sight or deals damage fixed (clear in a2a1a).
+- HAssault may fire at the player's head if a clear bodyshot is not possible (can shoot over the sandbags in a2a1a.bsp ).
 
-IN PROGRESS:  better debug method to help see why what looks like an obvious route can't be selected by wanting to move to any random nearby node.
+Panthereyes have an easier time getting unstuck from odd places like after landing on the couch in a1a2b.  Several general path improvements.  Can also randomly wander on failing to route to the player.
+
+TODO - general archer AI fix for tight spaces
+- some oddities on quickswapping while the gauss is charing, but low priority.
+
 

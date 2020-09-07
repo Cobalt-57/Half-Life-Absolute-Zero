@@ -49,8 +49,9 @@ extern CGraph WorldGraph;
 
 
 
-//MODDD - new.
-BOOL CBaseMonster::attemptFindCoverFromEnemy(Task_t* pTask){
+//MODDD - new.  Helper method for some schedules, not really for basemonster.cpp calls.
+// (if taking a Task_t was any sign... name changed to be even more obvious)
+BOOL CBaseMonster::SCHEDULE_attemptFindCoverFromEnemy(Task_t* pTask){
 	entvars_t *pevCover;
 
 	if ( m_hEnemy == NULL )
@@ -80,7 +81,7 @@ BOOL CBaseMonster::attemptFindCoverFromEnemy(Task_t* pTask){
 		// no coverwhatsoever.
 		return FALSE;//TaskFail();
 	}
-}//END OF attemptFindCoverFromEnemy()
+}//END OF SCHEDULE_attemptFindCoverFromEnemy()
 
 
 
@@ -326,6 +327,11 @@ BOOL CBaseMonster::FScheduleValid ( void )
 
 	if ( HasConditions( m_pSchedule->iInterruptMask | bits_COND_SCHEDULE_DONE | bits_COND_TASK_FAILED ) )
 	{
+		// !!! NOTICE !!!
+		// This is a great place for a breakpoint.  Schedule's interrupted, give what it was here, what task it was, etc.
+		// It's often really fast when a schedule gets interrupted, issues from scheduels getting picked/interrupted over and over
+		// can be nightmarish to figure out otherwise.
+
 
 		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("FScheduleValid: fail B: %s %d :::%d %d %d", m_pSchedule->pName, m_pSchedule->iInterruptMask, (m_afConditions & m_pSchedule->iInterruptMask), (m_afConditions & bits_COND_SCHEDULE_DONE), (m_afConditions & bits_COND_TASK_FAILED) );
 		
@@ -1200,7 +1206,7 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 			{
 				TaskComplete();
 			}
-			else if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length() ))
+			else if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length(), DEFAULT_randomNodeSearchStart ))
 			{
 				TaskComplete();
 			}
@@ -2030,7 +2036,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		}
 	case TASK_FIND_COVER_FROM_ENEMY:
 		{
-			BOOL coverAttempt = attemptFindCoverFromEnemy(pTask);
+			BOOL coverAttempt = SCHEDULE_attemptFindCoverFromEnemy(pTask);
 
 			if(coverAttempt){
 				TaskComplete(); //assume the cover is setup and ready to use.
@@ -2045,7 +2051,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		}
 	case TASK_FIND_COVER_FROM_ENEMY_OR_CHASE:
 	{
-		BOOL coverAttempt = attemptFindCoverFromEnemy(pTask);
+		BOOL coverAttempt = SCHEDULE_attemptFindCoverFromEnemy(pTask);
 
 		if(coverAttempt){
 			TaskComplete(); //assume the cover is setup and ready to use.
@@ -2056,7 +2062,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 	}
 	case TASK_FIND_COVER_FROM_ENEMY_OR_FIGHT:
 	{
-		BOOL coverAttempt = attemptFindCoverFromEnemy(pTask);
+		BOOL coverAttempt = SCHEDULE_attemptFindCoverFromEnemy(pTask);
 
 		//if(coverAttempt){
 		//	TaskComplete(); //assume the cover is setup and ready to use.
@@ -2123,7 +2129,8 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		break;
 	case TASK_MOVE_FROM_ORIGIN:{
 		//MODDD - NEW.  Modified 'FindCover' method that doesn't care about, well, being in cover.  Any other criteria is fine?
-		if ( FindRandom( pev->origin, pev->view_ofs, 100, CoverRadius() ) )
+		// For now only the hassault uses this, have a separate TASK_WALK_FROM_ORIGIN for other stuff, that might look better.
+		if ( FindRandom( ACT_RUN, pev->origin, pev->view_ofs, 30, CoverRadius() ) )
 		{
 			//easyForcePrintLine("TASK_FIND_COVER_FROM_ORIGIN: I FOUND COVER OKAYYYYYYYYYY");
 			// then try for plain ole cover
@@ -2796,7 +2803,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			{
 				TaskComplete();
 			}
-			else if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), bits_MF_TO_ENEMY, enemyTest )  )
+			else if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, enemyTest )  )
 			{
 				TaskComplete();
 			}
@@ -2834,7 +2841,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			{
 				TaskComplete();
 			}
-			else if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length() ))
+			else if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length(), DEFAULT_randomNodeSearchStart ))
 			{
 				TaskComplete();
 			}
@@ -3386,7 +3393,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 
 
 			//test!
-			success = this->CheckLocalMove(vecStart, vecEnd, NULL, &distReg);
+			success = (this->CheckLocalMove(vecStart, vecEnd, NULL, &distReg) == LOCALMOVE_VALID);
 				
 			if(success){
 				//because on success, distReg is likely not written to. Bizarre.

@@ -278,8 +278,9 @@ public:
 	//MODDD
 	BOOL			m_fLongJumpMemory;
 
+	// ??????????
+	//float	m_tSneaking;
 
-	float	m_tSneaking;
 	int		m_iUpdateTime;		// stores the number of frame ticks before sending HUD update messages
 	//MODDD - now floats.
 	float		m_iClientHealth;	// the health currently known by the client.  If this changes, send a new
@@ -549,40 +550,16 @@ public:
 	void onDelete(void);
 	void stopSelfSounds(void);
 
-	virtual Vector BodyTarget( const Vector &posSrc ) { return Center( ) + pev->view_ofs * RANDOM_FLOAT( 0.5, 1.1 ); };		// position to shoot at
+	virtual Vector BodyTarget( const Vector &posSrc );		// position to shoot at
+	virtual Vector BodyTargetMod(const Vector& posSrc);
 	
 	
-
-	//MODDD
-	//is one multiple of pev->view_ofs   okay?
-	virtual Vector BodyTargetMod( const Vector &posSrc ) {
-			/*
-			Vector org = Center( ) + pev->view_ofs;
-			if ( pev->flags & FL_DUCKING )
-			{
-				org = org + ( VEC_HULL_MIN - VEC_DUCK_HULL_MIN );
-			}
-			*/
-			
-			if ( !(pev->flags & FL_DUCKING) ){
-				return Center() + pev->view_ofs;
-			}else{
-				/*
-				if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == 1){
-					return pev->origin + Vector(0, 0, VEC_DUCK_HULL_MAX.z);
-				}else{
-					//old way
-					return Center() + pev->view_ofs;
-				}
-				*/
-				return pev->origin + Vector(0, 0, VEC_DUCK_HULL_MAX.z);
-			}
-	};// position to shoot at
-	
-	
+	//MODDD NOTE - RRrrrrrreeeeeaaaaaally don't know what the point of these was.
+	/*
 	virtual void StartSneaking( void ) { m_tSneaking = gpGlobals->time - 1; }
 	virtual void StopSneaking( void ) { m_tSneaking = gpGlobals->time + 30; }
 	virtual BOOL IsSneaking( void ) { return m_tSneaking <= gpGlobals->time; }
+	*/
 
 	virtual BOOL IsAlive( void ) { return (pev->deadflag == DEAD_NO) && pev->health > 0; }
 	virtual BOOL IsAlive_FromAI( CBaseMonster* whoWantsToKnow ) { return (pev->deadflag == DEAD_NO) && pev->health > 0; }

@@ -491,14 +491,14 @@ public:
 	virtual void FallInit( void );
 
 	void CheckRespawn( void );
-	virtual int GetItemInfo(ItemInfo *p) { return 0; };	// returns 0 if struct not filled out
-	virtual BOOL CanDeploy( void ) { return TRUE; };
+	virtual int GetItemInfo(ItemInfo *p) { return 0; }	// returns 0 if struct not filled out
+	virtual BOOL CanDeploy( void ) { return TRUE; }
 	virtual BOOL Deploy( )								// returns is deploy was successful
-		 { return TRUE; };
+		 { return TRUE; }
 
-	virtual BOOL CanHolster( void ) { return TRUE; };// can this weapon be put away right now?
+	virtual BOOL CanHolster( void ) { return TRUE; }// can this weapon be put away right now?
 	virtual void Holster( int skiplocal = 0 );
-	virtual void UpdateItemInfo( void ) { return; };
+	virtual void UpdateItemInfo( void ) { return; }
 
 	virtual void ItemPreFrame( void )	{ return; }		// called each frame by the player PreThink
 	virtual void ItemPostFrame( void ) { return; }		// called each frame by the player PostThink
@@ -513,14 +513,14 @@ public:
 	virtual void Kill( void );
 	virtual void AttachToPlayer ( CBasePlayer *pPlayer );
 
-	virtual void customAttachToPlayer( CBasePlayer *pPlayer) { };  //can default to doing nothing.
+	virtual void customAttachToPlayer( CBasePlayer *pPlayer) { }  //can default to doing nothing.
 
-	virtual int PrimaryAmmoIndex() { return -1; };
-	virtual int SecondaryAmmoIndex() { return -1; };
+	virtual int PrimaryAmmoIndex() { return -1; }
+	virtual int SecondaryAmmoIndex() { return -1; }
 
 	virtual int UpdateClientData( CBasePlayer *pPlayer ) { return 0; }
 
-	virtual CBasePlayerItem *GetWeaponPtr( void ) { return NULL; };
+	virtual CBasePlayerItem *GetWeaponPtr( void ) { return NULL; }
 
 	static ItemInfo ItemInfoArray[MAX_WEAPONS];
 	//MODDD - NEW.
@@ -577,7 +577,7 @@ public:
 	void forceBlockLooping(void);
 	void stopBlockLooping(void);
 
-	BOOL isBasePlayerWeapon(void){return TRUE;};
+	BOOL isBasePlayerWeapon(void){return TRUE;}
 
 
 	//MODDD - new.  Get the time to add to an idle animation's delay (beyond the bare minimum to finish the current anim of course)
@@ -589,14 +589,14 @@ public:
 	virtual BOOL AddToPlayer( CBasePlayer *pPlayer );
 	virtual BOOL AddDuplicate( CBasePlayerItem *pItem );
 
-	virtual BOOL ExtractAmmo( CBasePlayerWeapon *pWeapon ); //{ return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
-	virtual BOOL ExtractClipAmmo( CBasePlayerWeapon *pWeapon );// { return TRUE; };			// Return TRUE if you can add ammo to yourself when picked up
+	virtual BOOL ExtractAmmo( CBasePlayerWeapon *pWeapon ); //{ return TRUE; }			// Return TRUE if you can add ammo to yourself when picked up
+	virtual BOOL ExtractClipAmmo( CBasePlayerWeapon *pWeapon );// { return TRUE; }			// Return TRUE if you can add ammo to yourself when picked up
 
 	//MODDD -  impossible to return FALSE but still expected to do something (ExtractAmmo)?  Works though.
 	virtual BOOL AddWeapon( void ) {
 		ExtractAmmo( this );
 		return TRUE;
-	};	// Return TRUE if you want to add yourself to the player
+	}	// Return TRUE if you want to add yourself to the player
 
 	// generic "shared" ammo handlers
 	//MODDD - "AddPrimaryAmmo" has been made "virtual" so that overriden methods in child classes get priority.
@@ -605,7 +605,7 @@ public:
 	
 	BOOL AddSecondaryAmmo( int iCount, char *szName, int iMaxCarry );
 
-	virtual void UpdateItemInfo( void ) {};	// updates HUD state
+	virtual void UpdateItemInfo( void ) {}	// updates HUD state
 
 	virtual BOOL PlayEmptySound( void );
 	virtual void ResetEmptySound( void );
@@ -650,7 +650,7 @@ public:
 
 	
 	//MODDD
-	virtual void customAttachToPlayer(CBasePlayer *pPlayer ) {};
+	virtual void customAttachToPlayer(CBasePlayer *pPlayer ) {}
 
 
 	
@@ -660,15 +660,15 @@ public:
 	virtual void WeaponIdle( void ) { return; }					// called when no buttons pressed
 	virtual int UpdateClientData( CBasePlayer *pPlayer );		// sends hud info to client dll, if things have changed
 	virtual void RetireWeapon( void );
-	virtual BOOL ShouldWeaponIdle( void ) {return FALSE; };
+	virtual BOOL ShouldWeaponIdle( void ) {return FALSE; }
 	virtual void Holster( int skiplocal = 0 );
-	virtual BOOL UseDecrement( void ) { return FALSE; };
+	virtual BOOL UseDecrement( void ) { return FALSE; }
 
 	//MODDD - new
-	virtual void PrimaryNotHeld( void ) { return; };
-	virtual void SecondaryNotHeld( void ) { return; };
-	virtual void NeitherHeld( void ) { return; };
-	virtual void BothHeld( void ) { return; };
+	virtual void PrimaryNotHeld( void ) { return; }
+	virtual void SecondaryNotHeld( void ) { return; }
+	virtual void NeitherHeld( void ) { return; }
+	virtual void BothHeld( void ) { return; }
 	
 	int PrimaryAmmoIndex(void);
 	int SecondaryAmmoIndex(void);
@@ -698,7 +698,7 @@ public:
 	float getPlayerBaseFOV(void);
 
 
-	virtual CBasePlayerItem *GetWeaponPtr( void ) { return (CBasePlayerItem *)this; };
+	virtual CBasePlayerItem *GetWeaponPtr( void ) { return (CBasePlayerItem *)this; }
 
 	//MODDD - NEW. Convenience method, set both attack delays.
 	inline void SetAttackDelays(float targetTime) {

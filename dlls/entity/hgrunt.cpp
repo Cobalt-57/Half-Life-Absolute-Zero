@@ -3741,6 +3741,8 @@ void CHGrunt::RunTask ( Task_t *pTask )
 
 void CHGrunt::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
+
+
 //	float flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );// build a yaw that points to the goal.
 //	WALK_MOVE( ENT(pev), flYaw, m_flGroundSpeed * flInterval, WALKMOVE_NORMAL );
 	if ( m_IdealActivity != m_movementActivity )

@@ -1114,7 +1114,18 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 			// make sure that vecOrigin can trace to this node!
 			//MODDD - involving nodeSearchStartVerticalOffset now.
 			Vector vecStart = vecOrigin;
-			vecStart.z = EASY_CVAR_GET_DEBUGONLY(nodeSearchStartVerticalOffset);
+
+			//if(g_tempMonster->isMovetypeFlying()){
+			///
+			//}
+
+			if(m_pNodes[iNode].m_afNodeInfo & (bits_NODE_LAND)){
+				// has the LAND flag?  Add the vertical offset
+				//MODDD - TODO.  ish.
+				// Iif ever doing any hack to treat land nodes as air nodes to force using them, that needs to be checked separately)
+				vecStart.z += EASY_CVAR_GET_DEBUGONLY(nodeSearchStartVerticalOffset);
+			}
+
 			//UTIL_TraceLine ( vecOrigin, m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
 			UTIL_TraceLine(vecStart, m_pNodes[iNode].m_vecOriginPeek, ignore_monsters, 0, &tr);
 

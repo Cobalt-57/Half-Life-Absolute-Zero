@@ -567,6 +567,9 @@ void CCrossbow::WeaponIdle( void )
 	easyForcePrintLine("SV: WOOHOO! %.2f %.2f %d", m_flTimeWeaponIdle, UTIL_WeaponTimeBase(), (UTIL_WeaponTimeBase() >= m_flTimeWeaponIdle) );
 #endif
 	*/
+
+		forceBlockLooping();
+
 		float flRand = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 0, 1 );
 		if (flRand <= 0.75)
 		{

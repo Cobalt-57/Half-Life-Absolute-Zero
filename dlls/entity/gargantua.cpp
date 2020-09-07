@@ -2398,7 +2398,8 @@ void CGargantua::StartTask( Task_t *pTask )
 		}
 
 		SetSequenceByIndex(g_gargantua_shootflames1_sequenceID, m_flFramerateSuggestion, FALSE);
-		
+		usingCustomSequence = FALSE;  // don't switch over to idle after this
+
 	break;
 	case TASK_FLAME_SWEEP:
 
@@ -3018,6 +3019,7 @@ int CGargantua::LookupActivityHard(int activity){
 		break;
 		case ACT_WALK:
 			// oh.  Just do that then?
+			return CBaseAnimating::LookupActivity(activity);
 		break;
 		case ACT_RUN:
 			// If 'pissedRunTime', run.  Otherwise, walk.
@@ -3026,6 +3028,7 @@ int CGargantua::LookupActivityHard(int activity){
 			if(m_IdealMonsterState == MONSTERSTATE_SCRIPT){
 				m_flFramerateSuggestion = 1.0;
 				pev->framerate = 1.0;
+				return g_gargantua_run_sequenceID;
 			}else{
 
 				if(gpGlobals->time < pissedRunTime){
@@ -3037,6 +3040,7 @@ int CGargantua::LookupActivityHard(int activity){
 						m_flFramerateSuggestion = 0.93;
 					}
 					pev->framerate = m_flFramerateSuggestion;
+					return g_gargantua_run_sequenceID;
 				}else{
 					// not pissed?  power-walk it
 					if(g_iSkillLevel == SKILL_HARD){
@@ -3047,7 +3051,7 @@ int CGargantua::LookupActivityHard(int activity){
 						m_flFramerateSuggestion = 1.10;
 					}
 					pev->framerate = m_flFramerateSuggestion;
-					return LookupSequence("walk");
+					return g_gargantua_walk_sequenceID;
 				}
 			}
 			

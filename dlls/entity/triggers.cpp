@@ -2361,10 +2361,11 @@ void CTriggerPush::Touch( CBaseEntity *pOther )
 			//easyForcePrintLine("HOW ARE THEY %.2f %d", pevToucher->basevelocity.z, (pevToucher->flags & FL_ONGROUND));
 			if(pevToucher->basevelocity.z > 0 && (pevToucher->flags & FL_ONGROUND) ){
 				
-				pevToucher->flags & ~FL_ONGROUND;
+				pevToucher->flags &= ~FL_ONGROUND;
 				pevToucher->groundentity = NULL;
 				// And yes, this is needed to make sure the player doesn't stay stuck to the surface of something while
 				// it's in effect.  Not 0.8, not 1.8.  2.
+				// OORrrrrrrr my stupid ass forgot to put the equal sign in the "pevToucher->flags &= ~FL_ONGROUND" line.  Probably that.
 				pevToucher->origin.z += 2;
 				// eh why not.
 				if(pevToucher->velocity.z < 5){

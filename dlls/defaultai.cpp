@@ -76,10 +76,6 @@ Schedule_t	slWaitForReviveSequence[] =
 //MODDD - new schedules for everything.
 //also, "slInvestigateSound" is interesting...
 
-//=========================================================
-// InvestigateSound - sends a monster to the location of the
-// sound that was just heard, to check things out. 
-//=========================================================
 Task_t tlAnimationSmartAndStop[] =
 {
 	{ TASK_STOP_MOVING,				(float)0				},
@@ -596,6 +592,10 @@ Schedule_t	slAlertStand[] =
 //=========================================================
 Task_t tlInvestigateSound[] =
 {
+	//MODDD - NEW.  HAssassins should not sit in place simply because there isn't a route to the sound heard.
+	// At least face it, might see something.
+	{ TASK_SET_FAIL_SCHEDULE_HARD,	(float)SCHED_ALERT_FACE	},
+
 	{ TASK_STOP_MOVING,				(float)0				},
 	{ TASK_STORE_LASTPOSITION,		(float)0				},
 	{ TASK_GET_PATH_TO_BESTSOUND,	(float)0				},
@@ -1720,7 +1720,7 @@ Schedule_t	slTakeCoverFromOriginWalk[] =
 Task_t	tlMoveFromOrigin[] =
 {
 	{ TASK_STOP_MOVING,					(float)0					},
-	{ TASK_MOVE_FROM_ORIGIN,		(float)0					},
+	{ TASK_MOVE_FROM_ORIGIN,			(float)0					},
 	{ TASK_RUN_PATH,					(float)0					},
 	{ TASK_WAIT_FOR_MOVEMENT,			(float)0					},
 	//{ TASK_REMEMBER,					(float)bits_MEMORY_INCOVER	},
@@ -1735,11 +1735,16 @@ Schedule_t	slMoveFromOrigin[] =
 		bits_COND_NEW_ENEMY |
 		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
 		bits_COND_NEW_ENEMY |
+
+		// Seeing the enemy is great and all, but uh.   Can I attack em'?
+		// Being interrupted if I can't isn't all that helpful, but kinda depends on the monster.
+		/*
         bits_COND_SEE_ENEMY |
         bits_COND_SEE_DISLIKE |
         bits_COND_SEE_HATE |
         bits_COND_SEE_NEMESIS | 
         bits_COND_SEE_FEAR |
+		*/
 		bits_COND_LIGHT_DAMAGE |
 		bits_COND_HEAVY_DAMAGE |
 		bits_COND_HEAR_SOUND |

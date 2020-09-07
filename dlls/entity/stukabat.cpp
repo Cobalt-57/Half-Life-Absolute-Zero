@@ -1640,8 +1640,8 @@ void CStukaBat::getPathToEnemyCustom(){
 		//TaskComplete();
 		//???!!!
 	}
-	//else if (BuildNearestRouteSimple( vecDest, m_hEnemy->pev->view_ofs, 0, (vecDest - pev->origin).Length() )  )
-	else if (BuildNearestRoute( vecDest, m_hEnemy->pev->view_ofs, 0, (m_hEnemy->pev->origin - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, m_hEnemy  )  )
+	//else if (BuildNearestRouteSimple( vecDest, m_hEnemy->pev->view_ofs, 0, (vecDest - pev->origin).Length() ), DEFAULT_randomNodeSearchStart  )
+	else if (BuildNearestRoute( vecDest, m_hEnemy->pev->view_ofs, 0, (m_hEnemy->pev->origin - pev->origin).Length() + 1024, DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, m_hEnemy  )  )
 	{
 		int x = 66;
 		//TaskComplete();
@@ -1796,7 +1796,7 @@ void CStukaBat::StartTask ( Task_t *pTask )
 
 			TaskComplete();
 		}
-		else if (BuildNearestRoute( tempGoal, pev->view_ofs, 0, distToSpot ))
+		else if (BuildNearestRoute( tempGoal, pev->view_ofs, 0, distToSpot, DEFAULT_randomNodeSearchStart ))
 		{	
 			//Is that okay?
 			this->SetActivity(ACT_WALK);
@@ -1860,7 +1860,7 @@ void CStukaBat::StartTask ( Task_t *pTask )
 			TaskComplete();
 		}
 		//No need for viewoffset, the 2nd argument. scent_loc already has this.
-		else if (BuildNearestRoute( scent_Loc, Vector(0,0,0), 0, (scent_Loc - pev->origin).Length() ))
+		else if (BuildNearestRoute( scent_Loc, Vector(0,0,0), 0, (scent_Loc - pev->origin).Length(), DEFAULT_randomNodeSearchStart ))
 		{
 			TaskComplete();
 		}
@@ -1981,7 +1981,7 @@ void CStukaBat::StartTask ( Task_t *pTask )
 				TaskComplete();
 				return;
 			}
-			else if (BuildNearestRoute( tempGoal, pev->view_ofs, 0, (tempGoal - pev->origin).Length() ))
+			else if (BuildNearestRoute( tempGoal, pev->view_ofs, 0, (tempGoal - pev->origin).Length(), DEFAULT_randomNodeSearchStart ))
 			{
 				PRINTQUEUE_STUKA_SEND(stukaPrint.eatRelated, "LANDROUTE_2!"  );
 
@@ -2147,7 +2147,7 @@ void CStukaBat::StartTask ( Task_t *pTask )
 		/*
 	case TASK_GET_PATH_TO_ENEMY_LKP:
 		{
-			if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024 ))
+			if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, pTask->flData, (m_vecEnemyLKP - pev->origin).Length() + 1024, DEFAULT_randomNodeSearchStart ))
 			{
 				TaskComplete();
 			}
@@ -2172,7 +2172,7 @@ void CStukaBat::StartTask ( Task_t *pTask )
 				return;
 			}
 
-			if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, pTask->flData, (pEnemy->pev->origin - pev->origin).Length() + 1024 ))
+			if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, pTask->flData, (pEnemy->pev->origin - pev->origin).Length() + 1024, DEFAULT_randomNodeSearchStart ))
 			{
 				TaskComplete();
 			}
@@ -2204,7 +2204,7 @@ void CStukaBat::StartTask ( Task_t *pTask )
 			TaskComplete();
 		}
 			
-		else if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length() + 1024, bits_MF_TO_ENEMY, enemyTest ))
+		else if (BuildNearestRoute( m_vecEnemyLKP, pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length() + 1024, DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, enemyTest ))
 		{
 			TaskComplete();
 		}

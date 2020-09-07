@@ -1276,7 +1276,7 @@ BOOL CHAssassin::CheckMeleeAttack1 ( float flDot, float flDist )
 
 
 //=========================================================
-// CheckMeleeAttack1 - jump like crazy if the enemy gets too close. 
+// CheckMeleeAttack2 - jump like crazy if the enemy gets too close. 
 //=========================================================
 BOOL CHAssassin::CheckMeleeAttack2 ( float flDot, float flDist )
 {

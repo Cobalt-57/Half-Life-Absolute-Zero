@@ -42,6 +42,7 @@
 #include "hgrunt.h"  // for some common constants, maybe
 
 #include "cvar_custom_info.h"
+#include "util_debugdraw.h"
 
 
 
@@ -255,13 +256,19 @@ Schedule_t	slHAssaultFireOver[] =
 Task_t	tlHAssaultGenericFail[] =
 {
 	{ TASK_STOP_MOVING,			0				},
-	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
-	{ TASK_WAIT,				(float)0.2		},
+
+	// uhhh.. why not set activity idle here, why was this commented out?   Maybe only happen if doing a turn activity?  Don't know
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
+
+	{ TASK_WAIT,				(float)0.4		},
 	{ TASK_WAIT_PVS,			(float)0		},
 
-	// is that a good idea?
+	// is that a good idea?    No.  Not even MOVE_FROM_ORIGIN.
+	// See panthereye on why this is the case for a common fail method.
+	// Specific ones that don't loop back around here though, like the chase schedule, are fine to
+	// use that.
 	//{ TASK_SET_SCHEDULE,			(float)SCHED_TAKE_COVER_FROM_ORIGIN },
-	{ TASK_SET_SCHEDULE,			(float)SCHED_MOVE_FROM_ORIGIN },
+	//{ TASK_SET_SCHEDULE,			(float)SCHED_MOVE_FROM_ORIGIN },
 };
 
 Schedule_t	slHAssaultGenericFail[] =
@@ -404,8 +411,9 @@ Task_t tlHAssault_follow[] =
 
 Task_t tlHAssault_follow[] = 
 {
-	//NO
-	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_HASSAULT_GENERIC_FAIL	},
+	//{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_HASSAULT_GENERIC_FAIL	},
+	// pick a random point then
+	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_MOVE_FROM_ORIGIN	},
 	
 	//{ TASK_GET_PATH_TO_ENEMY,	(float)0					},
 	//{ TASK_RUN_PATH,			(float)0					},
@@ -987,11 +995,11 @@ int CHAssault::Restore( CRestore &restore )
 
 
 float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
-
-	if(pev->sequence == SEQ_HASSAULT_ATTACK){
+	
+	//SEQ_HASSAULT_ATTACK
+	if(pev->sequence == SEQ_HASSAULT_SPINUP){
 		// startup spin? reverse the angle.
-		// Wait wait.  No more, it seems.
-		//flValue *= -1;
+		flValue *= -1;
 	}
 
 
@@ -999,14 +1007,11 @@ float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
 }//END OF SafeSetBlending
 
 
-//Some commonly used script for aiminat at the enemy consistently (no jitter).
-//Also doesn't aim ridiculously high if the enemy gets close like it usually would.
+// Some commonly used script for aiminat at the enemy consistently (no jitter).
+// Also doesn't aim ridiculously high if the enemy gets close like it usually would.
 void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 	//DebugLine_ClearAll();
 
-	//return;
-	
-	
 	//if there is no enemy or this is residual fire, just fire straight.
 	if(m_hEnemy == NULL || m_pSchedule == slHAssault_residualFire){
 		//no enemy? Just aim straight across.
@@ -1017,20 +1022,23 @@ void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 		Vector vectoFlat = Vector(vecto.x, vecto.y, 0).Normalize();
 
 		refVecShootDir = vectoFlat;
-		SafeSetBlending( 0, 0 );
+		// for what purpose?  Stay aiming where you already are
+		//SafeSetBlending( 0, 0 );
 		return;
 	}else{
 		//Vector vecShootOrigin = GetGunPositionAI();
-		//good distance? Normal aiming.
+		// good distance? Normal aiming.
 		//Vector vecShootDirMod = ShootAtEnemyMod( argVecShootOrigin);
 		Vector vecShootOriginAI = GetGunPositionAI();
 		Vector vecShootDirAI = ShootAtEnemyMod( vecShootOriginAI );  //less jitter.
 		//MODDD - just like hgrunt does it.
+		Vector theEnemyCenter = m_hEnemy->Center();
 
 		//easyForcePrintLine("IS THE eee %.2f", (m_hEnemy->pev->origin - this->pev->origin).Length());
 
-		if((m_hEnemy->pev->origin - this->pev->origin).Length() < 150){
-			//See if a straight line ground-wise hits them. Then try the usual aiming if not.
+		if((m_hEnemy->pev->origin - this->pev->origin).Length() < 140 && (fabs(theEnemyCenter.z - this->pev->origin.z) < 40) ){
+			// Close enough, and not a significant Z distance?  Aim normally, don't want to look too weird
+			// See if a straight line ground-wise hits them. Then try the usual aiming if not.
 			TraceResult tr;
 
 			//2D direction:
@@ -1045,15 +1053,15 @@ void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 			//::DebugLine_Setup(0, vecShootOriginAI, enemyLocLinedup, tr.flFraction);
 
 			if(tr.pHit != NULL && tr.pHit == m_hEnemy.Get()){
-				//success - aim straight.
+				// success - aim straight.
 
 				//refVecShootDir = Vector(vecShootDirMod.x, vecShootDirMod.y, 0).Normalize();
 
-				//only the pitch changes, so reuse the same angle, doesn't not differ groundwise.
+				// only the pitch changes, so reuse the same angle, doesn't not differ groundwise.
 				//Vector angDir2D = Vector(angDirAI.x, angDirAI.y, 0).Normalize();
 				//SafeSetBlending( 0, angDir2D.x );
 				
-				//wait... just aim straight, sheesh.
+				// wait.  just aim straight, sheesh.
 				SafeSetBlending(0, 0);
 
 				refVecShootOrigin = GetGunPosition(); //no change needed.
@@ -1063,22 +1071,49 @@ void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 				return; //don't do the default below.
 			}else{
 				//DebugLine_ColorFail(0);
-				//fail? Fall thru for the default.
+				// fail? Fall thru for the default.
 			}
 
 		}else{
-			//No impact. fall thru for the default.
+			// No impact. fall thru for the default.
 		}
 
+		// If not way too close or wasn't hit by a line-trace to make an exception if so (?), aim normally.
 		Vector angDirAI = UTIL_VecToAngles( vecShootDirAI );
 
 		refVecShootOrigin = GetGunPosition();
-		refVecShootDir = ShootAtEnemy(refVecShootOrigin);
+
+		if(!shootpref_eyes){
+			// Unless eyes are the only option, fire at the general body as usual
+			refVecShootDir = ShootAtEnemy(refVecShootOrigin);
+		}else{
+			// custom one, aim a little higher
+			refVecShootDir = HASSAULT_ShootAtEnemyEyes(refVecShootOrigin);
+		}
 		
 		SafeSetBlending( 0, angDirAI.x );
 		//SafeSetBlending( 0, 30 );
 	}//'NULL enemy or residual-fire' check
 }//END OF AimAtEnemy
+
+
+// aim a little higher
+Vector CHAssault::HASSAULT_ShootAtEnemyEyes( const Vector &shootOrigin )
+{
+	CBaseEntity *pEnemy = m_hEnemy;
+
+	if ( pEnemy )
+	{
+		//MODDD NOTE ........ what is this formula?
+		//    I'm guessing that the BodyTarget includes the enemy's pev->origin, but we subtract it out so we can substitute it with m_vecEnemyLKP.
+		//    So why not make a separate BodyTarget method that never added pev->origin in the first place? Who knows.
+		return ( (pEnemy->EyePosition() + Vector(0,0,3) - pEnemy->pev->origin) + m_vecEnemyLKP - shootOrigin ).Normalize();
+	}
+	else
+		return gpGlobals->v_forward;
+	//MODDD NOTICE - isn't trusting "gpGlobals->v_forward" kinda dangerous? This assumes we recently called MakeVectors and not privately for v_forward to be relevant
+	//               to this monster.
+}
 
 
 int CHAssault::IRelationship ( CBaseEntity *pTarget )
@@ -1420,11 +1455,11 @@ void CHAssault::HandleAnimEvent( MonsterEvent_t *pEvent )
 	
 	
 	//is that okay (to be commented out)?
-	//CBaseMonster::HandleAnimEvent( pEvent );
+	//CSquadMonster::HandleAnimEvent( pEvent );
 }
 
 
-CHAssault::CHAssault(){
+CHAssault::CHAssault(void){
 	signal1Cooldown = -1;
 	signal2Cooldown = -1;
 	
@@ -1455,6 +1490,7 @@ CHAssault::CHAssault(){
 	residualFireTimeBehindCheck = -1;
 
 	alertSoundCooldown = -1;
+	shootpref_eyes = FALSE;
 }
 
 
@@ -1529,7 +1565,10 @@ void CHAssault::Spawn()
 	// Should probably be starting a bit outwards in the direction this monster is facing, but other monsters do this so I suppose it is ok.
 	//m_HackedGunPos = Vector(0, 0, 48);
 	// More accurate version to an observed average position while the gun is firing.  Yes, still relative to the forward, right, up vectors.
-	m_HackedGunPos = Vector(9.594678, 41.80166, 42.344753);
+	// NO. DO BETTER
+	//m_HackedGunPos = Vector(9.594678, 41.80166, 42.344753);
+	//m_HackedGunPos = Vector(40, 9, 52);  // y, x, z.  because... of course.
+	// NEVERMIND!  Hardcode this into the GetGunPositionAI method!  Restored games don't take effect from this change.
 
 
 
@@ -1600,7 +1639,7 @@ void CHAssault::Precache()
 /*
 int CHAssault::IgnoreConditions ( void )
 {
-	int iIgnore = CBaseMonster::IgnoreConditions();
+	int iIgnore = CSquadMonster::IgnoreConditions();
 
 	if ((m_Activity == ACT_MELEE_ATTACK1) || (m_Activity == ACT_MELEE_ATTACK1))
 	{
@@ -1624,6 +1663,32 @@ int CHAssault::IgnoreConditions ( void )
 }*/
 
 
+
+
+int CHAssault::ISoundMask ( void )
+{
+	return	bits_SOUND_WORLD	|
+		bits_SOUND_COMBAT	|
+		bits_SOUND_PLAYER	|
+		bits_SOUND_DANGER	|
+		//MODDD - new
+		bits_SOUND_BAIT;
+}
+
+
+int CHAssault::IgnoreConditions ( void ){
+
+
+	if(m_pSchedule == slMoveFromOrigin && !HasConditionsMod(bits_COND_COULD_RANGE_ATTACK1)){
+		// if it isn't the case I could range_attack1 from facing a different direction, don't bother with sound
+		// during this schedule.
+		return (CSquadMonster::IgnoreConditions() | bits_COND_HEAR_SOUND);
+	}
+
+	return CSquadMonster::IgnoreConditions();
+}
+
+
 Vector CHAssault::GetGunPosition(void){
 	// maybe this would be better?
 	Vector vecGunPos;
@@ -1640,7 +1705,8 @@ Vector CHAssault::GetGunPositionAI(void){
 
 	//TEST: if I WERE facing the enemy right now...
 	if(m_hEnemy != NULL){
-		angle = ::UTIL_VecToAngles(m_hEnemy->pev->origin - pev->origin);
+		//angle = ::UTIL_VecToAngles(m_hEnemy->pev->origin - pev->origin);
+		angle = ::UTIL_VecToAngles(m_hEnemy->Center() - this->EyePosition());
 	}else{
 		angle = pev->angles;
 	}
@@ -1648,10 +1714,14 @@ Vector CHAssault::GetGunPositionAI(void){
 	angle.x = 0; //pitch is not a factor here.
 	UTIL_MakeVectorsPrivate( angle, v_forward, v_right, v_up);
 	
+	// just hardcode this here or make a server-side global vector
+	// (for the hassault of course... or static for hassault then).
+	// m_HackedGunPos is mapped to the save file, annoying for debugging.
 	const Vector vecSrc = pev->origin 
-					+ v_forward * m_HackedGunPos.y 
-					+ v_right * m_HackedGunPos.x 
-					+ v_up * m_HackedGunPos.z;
+					+ v_forward * 24
+					+ v_right * 9.5
+					+ v_up * 39;
+	
 
 	return vecSrc;
 }//END OF GetGunPositionAI
@@ -1990,13 +2060,14 @@ void CHAssault::SetActivity(Activity NewActivity){
 
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "HASS ACTIVITY: %d", NewActivity));
 	CSquadMonster::SetActivity(NewActivity);
-
 }
-
 
 
 BOOL CHAssault::FCanCheckAttacks ( void )
 {
+	// reset every frame, set to 'true' if it's the only option in CheckRangeAttack1
+	shootpref_eyes = FALSE;
+
 	//MODDD - now allowing even without the enemy in sight since grenades need that.
 
 	EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "WELL DO YA PUNK %d %d", HasConditions(bits_COND_SEE_ENEMY), HasConditions( bits_COND_ENEMY_TOOFAR )));
@@ -2013,9 +2084,8 @@ BOOL CHAssault::FCanCheckAttacks ( void )
 	}
 
 	return FALSE;
-
-
 }
+
 
 BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 {
@@ -2035,12 +2105,15 @@ BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 		return FALSE;
 	}
 
+
+	// NOT SO SOON.   Allow setting 'bits_COND_COULD_RANGEATTACK1'
+	/*
 	if(!HasConditions(bits_COND_SEE_ENEMY)){
 		// now possible to reach here, since attacks may be checked even if the enemy isn't visible.
 		return FALSE;
 	}
+	*/
 
-	
 	const Vector vecShootOrigin = GetGunPositionAI();
 
 	/*
@@ -2118,24 +2191,33 @@ BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 		if( (!tr.fStartSolid && tr.flFraction == 1.0) || (tr.pHit != NULL && tr.pHit == m_hEnemy.Get())  )
 		{
 			//nothing in the way, or the blocking object is our target? good.
+			//DebugLine_Setup(0, vecSrc, m_hEnemy->BodyTargetMod(vecSrc), tr.flFraction);
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "PASSLINE PASSED!"));
 		}else{
-			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "Passline Failed"));
-			return FALSE;
+			// WAIT!  Can we aim for the head?   Yea yea... go figure
+			//DebugLine_Setup(0, vecSrc, m_hEnemy->EyePosition() + Vector(0,0,3), tr.flFraction);
+			UTIL_TraceLine( vecSrc, m_hEnemy->EyePosition() + Vector(0,0,3), ignore_monsters, ignore_glass, ENT(pev), &tr);
+			if( (!tr.fStartSolid && tr.flFraction == 1.0) || (tr.pHit != NULL && tr.pHit == m_hEnemy.Get())  )
+			{
+				// ok!
+				shootpref_eyes = TRUE;
+				EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "PASSLINE EYE PASSED!"));
+			}else{
+				// oh.
+				EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "Passline Failed"));
+				return FALSE;
+			}
 		}
 
 		
-		// in the very least, could attack if turned the right way. And we're looking at them, we aren't psychic after all.
-		if(HasConditions(bits_COND_SEE_ENEMY)){
-			SetConditionsMod(bits_COND_COULD_RANGE_ATTACK1);
-		}
-		
-
-		if(flDot >= 0.5 && HasConditions(bits_COND_SEE_ENEMY)){
-			//proceed, nothing to see here.
+		if(HasConditions(bits_COND_SEE_ENEMY) && flDot >= 0.5){
+			// proceed, nothing to see here.
 			return TRUE;
 		}else{
-			//would've happened.
+			// in the very least, could attack if turned the right way.
+			SetConditionsMod(bits_COND_COULD_RANGE_ATTACK1);
+			
+			// would've happened.
 			return FALSE;
 		}
 	}
@@ -2162,6 +2244,11 @@ BOOL CHAssault::CheckRangeAttack2 ( float flDot, float flDist )
 		return FALSE;
 	}
 
+	if(HasConditions(bits_COND_CAN_RANGE_ATTACK1)){
+		// Don't try throwing grenades while there's already a clear shot for minigun fire, I prefer to do that.
+		// Throwing a grenade also shouldn't interrupt firing normally.
+		return FALSE;
+	}
 
 	// HAssaults can go ahead and throw even if moving, they spend more time moving.
 	/*
@@ -2186,7 +2273,6 @@ BOOL CHAssault::CheckRangeAttack2 ( float flDot, float flDist )
 		return FALSE;
 	}
 	*/
-
 
 	// MODDD - wait, so. It's ok to throw a grenade at something that is off the ground, not in water but below you?...     why that exception?
 	// Changing to the FLY check instead of ONGROUND as stated in the as-is comment below anyway.  In fact just check for MOVETYPE_STEP or WALK.
@@ -2262,7 +2348,6 @@ BOOL CHAssault::CheckRangeAttack2 ( float flDot, float flDist )
 		}
 	}
 	
-
 	return m_fThrowGrenade;
 }
 
@@ -2329,6 +2414,7 @@ BOOL CHAssault::CheckMeleeAttack2 ( float flDot, float flDist )
 
 void CHAssault::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
+	// ??? is that really necessary
 	if(firing){
 		return;
 	}
@@ -2391,7 +2477,7 @@ void CHAssault::StartTask ( Task_t *pTask ){
 		}
 		*/
 		
-		CBaseMonster::StartTask( pTask );
+		CSquadMonster::StartTask( pTask );
 	break;
 	case TASK_HASSAULT_RESIDUAL_FIRE:
 		residualFireTime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultResidualAttackTime);
@@ -2423,6 +2509,7 @@ void CHAssault::StartTask ( Task_t *pTask ){
 
 			//only assign "spinuptime" if it hasn't been set yet.
 			waittime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultWaitTime);
+
 			spinuptime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultSpinupStartTime);
 			spinuptimeIdleSoundDelay = gpGlobals->time + 1.151;
 		}else if(spinuptime > gpGlobals->time){
@@ -2508,7 +2595,7 @@ void CHAssault::StartTask ( Task_t *pTask ){
 		break;
 
 	default: 
-		CBaseMonster::StartTask( pTask );
+		CSquadMonster::StartTask( pTask );
 	break;
 	}
 
@@ -2530,22 +2617,6 @@ BOOL CHAssault::FValidateCover ( const Vector &vecCoverLocation )
 	
 	//far too badass for cover.
 	//return FALSE;
-}
-
-
-//=========================================================
-// ISoundMask - Overidden for human grunts because they
-// hear the DANGER sound that is made by hand grenades and
-// other dangerous items.
-//=========================================================
-int CHAssault::ISoundMask ( void )
-{
-	return	bits_SOUND_WORLD	|
-			bits_SOUND_COMBAT	|
-			bits_SOUND_PLAYER	|
-			bits_SOUND_DANGER	|
-			//MODDD - new
-			bits_SOUND_BAIT;
 }
 
 
@@ -2670,7 +2741,12 @@ void CHAssault::RunTask ( Task_t *pTask )
 
 	break;
 	case TASK_HASSAULT_WAIT_FOR_SPIN_FINISH:    //piggy back off of the script below.
-	case TASK_HASSAULT_SPIN:
+	case TASK_HASSAULT_SPIN:{
+
+		//aim  during this time
+		Vector vecShootOrigin;
+		Vector vecShootDir;
+		AimAtEnemy(vecShootOrigin, vecShootDir);
 
 		spinuptimeremain = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultSpinupRemainTime);
 		waittime = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(hassaultWaitTime);
@@ -2682,10 +2758,8 @@ void CHAssault::RunTask ( Task_t *pTask )
 		//yeeeyyy
 		//"spinuptimeremain" being under gpGlobals->time means, we're already spun up from a previous time.
 		if( spinuptime <= gpGlobals->time){
-			
 			spinuptime = -1;
-		
-
+			
 			TaskComplete();
 			return;
 		}
@@ -2701,7 +2775,7 @@ void CHAssault::RunTask ( Task_t *pTask )
 			SetTurnActivity(); 
 		}
 		//m_IdealActivity = ACT_STAND;
-	break;
+	}break;
 
 
 	case TASK_WAIT_FOR_MOVEMENT:
@@ -2752,7 +2826,7 @@ void CHAssault::RunTask ( Task_t *pTask )
 
 		//should we stop firing?
 		if(!HasConditionsEither(bits_COND_CAN_RANGE_ATTACK1) ){
-		//if(!HasConditionsSetThisFrame(bits_COND_CAN_RANGE_ATTACK1) ){
+			//if(!HasConditionsSetThisFrame(bits_COND_CAN_RANGE_ATTACK1) ){
 
 			//MODD - check for """could""" to just stop shooting but turn to look maybe?
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyForcePrintLine("OH snap my man"));
@@ -2777,13 +2851,11 @@ void CHAssault::RunTask ( Task_t *pTask )
 				//mODDD NOTE - !!! Is this call a good idea here?!
 				SetTurnActivity(); 
 			}
-		
 		}
 		
 		//CSquadMonster::RunTask( pTask );
 
 		
-
 		MakeIdealYaw ( m_vecEnemyLKP );
 		ChangeYaw ( pev->yaw_speed );
 
@@ -2797,11 +2869,12 @@ void CHAssault::RunTask ( Task_t *pTask )
 		*/
 
 
-		if ( m_fSequenceFinished )
+		// ??????????   how can this happen?
+		if ( m_fSequenceFinishedSinceLoop && pev->sequence != SEQ_HASSAULT_ATTACK)
 		{
-			//Force a reset, cut out the middleman!
-			//pev->frame = 0;
-			//...wait doesn't this already naturally loop? what?
+			SetSequenceByIndex(SEQ_HASSAULT_ATTACK);
+			this->usingCustomSequence = FALSE;
+
 		}
 
 	break;
@@ -3193,20 +3266,19 @@ Schedule_t* CHAssault::GetSchedule(){
 			else if ( !HasConditions(bits_COND_SEE_ENEMY) )
 			{
 
-				if ( HasConditions( bits_COND_ENEMY_OCCLUDED ) ){
-					//MODDD - Can I toss a grenade?
-					if ( HasConditions(bits_COND_CAN_RANGE_ATTACK2) )
+				//MODDD - Can I toss a grenade?
+				// Might be able to see but still not attack normally (especially if minigun is too low to fire over something).
+				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK2) )
+				{
+					// also from hgrunt
+					if (FOkToSpeak())
 					{
-						// also from hgrunt
-						if (FOkToSpeak())
-						{
-							SayGrenadeThrow();
-							JustSpoke();
-						}
-
-						return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
+						SayGrenadeThrow();
+						JustSpoke();
 					}
-				}//occluded
+
+					return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
+				}
 
 				//MODDD - yes?
 				if ( HasConditions ( bits_COND_HEAR_SOUND ) )
@@ -3289,6 +3361,7 @@ Schedule_t* CHAssault::GetSchedule(){
 			}
 			else  
 			{
+
 				//MODDD - yes?
 				if ( HasConditions ( bits_COND_HEAR_SOUND ) )
 				{
@@ -3304,6 +3377,19 @@ Schedule_t* CHAssault::GetSchedule(){
 					return GetScheduleOfType( SCHED_HASSAULT_MELEE1 );
 				}
 
+
+
+				if ( HasConditions(bits_COND_CAN_RANGE_ATTACK2) )
+				{
+					// also from hgrunt
+					if (FOkToSpeak())
+					{
+						SayGrenadeThrow();
+						JustSpoke();
+					}
+
+					return GetScheduleOfType( SCHED_RANGE_ATTACK2 );
+				}
 
 
 				// we can see the enemy

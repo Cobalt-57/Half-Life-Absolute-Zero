@@ -40,6 +40,13 @@ extern DLL_GLOBAL int g_iSkillLevel;
 
 
 
+int g_panthereye_crouch_to_jump_sequenceID = -1;
+int g_panthereye_walk_sequenceID = -1;
+int g_panthereye_run_sequenceID = -1;
+
+
+
+
 #if REMOVE_ORIGINAL_NAMES != 1
 	LINK_ENTITY_TO_CLASS( monster_panthereye, CPantherEye );
 #endif
@@ -75,6 +82,7 @@ enum
 {
 	TASK_PANTHEREYE_PLAYANIM_GETBUG = LAST_COMMON_TASK + 1,
 	TASK_PANTHEREYE_PLAYANIM_CROUCHTOJUMP,
+	TASK_PANTHEREYE_PLAYANIM_CROUCHTOJUMP_UNSTUCK,
 	TASK_PANTHEREYE_SNEAK_WAIT,
 	TASK_PANTHER_NORMALMOVE,
 	TASK_PANTHEREYE_FIND_COVER_FROM_ENEMY,
@@ -285,11 +293,35 @@ Schedule_t	slPanthereyeJumpAtEnemy[] =
 };
 
 
+Task_t	tlPanthereyeJumpUnstuck[] =
+{
+	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_PANTHEREYE_GENERIC_FAIL	},
+	{ TASK_STOP_MOVING,			0				},
+	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
+	//{ TASK_WAIT,				(float)0.4		},
+	{ TASK_FACE_IDEAL,			(float)35		},   //set before going to this sched...
+	{ TASK_PANTHEREYE_PLAYANIM_CROUCHTOJUMP_UNSTUCK,			(float)0		},  //includes wait for anim finish
+
+};
+
+Schedule_t	slPanthereyeJumpAtEnemyUnstuck[] =
+{
+	{
+		tlPanthereyeJumpUnstuck,
+		ARRAYSIZE ( tlPanthereyeJumpUnstuck ),
+		//TODO: much more!  sound_  stuff too.
+		0,
+		0,
+		"Panther_JumpAtEnemy_unstuck"
+	},
+};
+
 
 // Chase enemy schedule
 Task_t tlPanthereyeChaseEnemy[] = 
 {
-	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_PANTHEREYE_GENERIC_FAIL	},
+	// If this fails, move a random point away
+	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_MOVE_FROM_ORIGIN	},
 	//{ TASK_GET_PATH_TO_ENEMY,	(float)0		},
 	//{ TASK_RUN_PATH,			(float)0		},
 	//{ TASK_WAIT_FOR_MOVEMENT,	(float)0		},
@@ -397,7 +429,7 @@ Schedule_t	slPantherEyeCoverFail[] =
 		bits_COND_CAN_ATTACK | 
 		bits_COND_HEAVY_DAMAGE,
 		0,
-		"Panther_genFail"
+		"Panther_coverFail"
 	},
 };
 
@@ -408,9 +440,16 @@ Task_t	tlPantherEyeGenericFail[] =
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_PANTHEREYE_GENERIC_FAIL	},
 	{ TASK_STOP_MOVING,			0				},
 	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
-	{ TASK_WAIT,				(float)0.2		},
+	{ TASK_WAIT,				(float)0.4		},
 	{ TASK_WAIT_PVS,			(float)0		},
 	{ TASK_UPDATE_LKP, (float)0		},
+
+	// No, only do this onfailing pathfinding methods.
+	// Possible to lead to an endless loop (not crashing, just conceptually) of failing some other schedule,
+	// pikcing MOVE_FROM_ORIGIN, failing that, which leads to GenericFail, which leads to MOVE_FROM_ORIGIN,
+	// which fails again, etc.  GetSchedule never gets called during any of that, so any change in conditions
+	// elsewhere never has a chance to take effect (no attacking something in plain sight)
+	//{ TASK_SET_SCHEDULE,			(float)SCHED_MOVE_FROM_ORIGIN },
 };
 
 Schedule_t	slPantherEyeGenericFail[] =
@@ -434,6 +473,7 @@ DEFINE_CUSTOM_SCHEDULES( CPantherEye )
 	slPantherEyeGenericFail,
 	slPanthereyeGetBug,
 	slPanthereyeJumpAtEnemy,
+	slPanthereyeJumpAtEnemyUnstuck,
 
 	slPanthereyeChaseEnemy,
 
@@ -512,8 +552,8 @@ const char *CPantherEye::pDeathSounds[] =
 
 TYPEDESCRIPTION	CPantherEye::m_SaveData[] = 
 {
-	//DEFINE_FIELD( CBaseEntity,m_pfnThink , FIELD_FUNCTION),
-	DEFINE_FIELD(CPantherEye, sneakMode, FIELD_INTEGER)
+	DEFINE_FIELD(CPantherEye, sneakMode, FIELD_INTEGER),
+	DEFINE_FIELD(CPantherEye, pissedRunTime, FIELD_TIME)
 //	*m_pfnThink
 };
 //IMPLEMENT_SAVERESTORE( CPantherEye, CBaseMonster );
@@ -546,11 +586,14 @@ float CPantherEye::HearingSensitivity(void){
 }//END OF HearingSensitivity
 
 
+
+
+
+
 BOOL CPantherEye::testLeapNoBlock(void){
 
 	//jump!... or try to.
 	TraceResult tr;
-
 
 	if(m_hEnemy != NULL){
 		Vector vTestStart = pev->origin + Vector(0, 0, 10);
@@ -616,6 +659,76 @@ BOOL CPantherEye::testLeapNoBlock(void){
 
 
 
+
+// don't care about the enemy, just see if jumping forward is possible
+BOOL CPantherEye::testLeapNoBlock_Forward(void){
+
+	//jump!... or try to.
+	TraceResult tr;
+
+
+	Vector vTestStart = pev->origin + Vector(0, 0, 10);
+
+	//Vector vTestEnd = m_hEnemy->pev->origin + Vector(0, 0, 10);
+
+	::UTIL_MakeAimVectors(this->pev->angles);
+	Vector vTestEnd = Center() + gpGlobals->v_forward * RANDOM_FLOAT(360, 530);
+
+
+	/*
+	//DEBUG - player pos?
+	edict_t *pPlayer = FIND_CLIENT_IN_PVS( edict() );
+	CBaseEntity* someEnt = NULL;
+	if(pPlayer != NULL){
+	someEnt = CBaseEntity::Instance(pPlayer);
+	}else{
+	return FALSE;
+	}
+	Vector vTestEnd = someEnt->pev->origin + Vector(0, 0, 10);
+
+	//vTestEnd = vTestStart + ((vTestEnd - vTestStart).Normalize() * (vTestEnd - vTestStart).Length() * 0.5);
+	*/
+
+	//old way?
+	//UTIL_TraceHull( vTestStart, vTestEnd, dont_ignore_monsters, head_hull, ENT( m_hEnemy->pev ), &tr );
+
+
+	//TRACE_MONSTER_HULL(edict(), vTestStart, vTestEnd, dont_ignore_monsters, m_hEnemy->edict(), &tr);
+
+	//First paramter is the entity to use for the hull size. 5th parameter is the entity to ignore.
+	//May be tempting to make it the enemy, but don't. Make it the same entity (me) checking against another and just
+	//allow a collision with that target entity if it happens.
+	TRACE_MONSTER_HULL(edict(), vTestStart, vTestEnd, dont_ignore_monsters, edict(), &tr);
+	//is this a better check for seeing if jumping is still okay?
+
+	if(EASY_CVAR_GET_DEBUGONLY(drawDebugPathfinding2) == 1)DebugLine_Setup(0, vTestStart, vTestEnd, tr.flFraction);
+
+	//don't do the "!tr.fAllSolid" check.  ?
+	//and !tr.fStartSolid ?  Why is that always true even if on the ground and the origin is bumped up? ugh.
+
+	const char* hitName;
+	if(tr.pHit != NULL){
+		hitName = STRING(tr.pHit->v.classname);
+	}else{
+		hitName = "NULL";
+	}
+	//easyForcePrintLine(hitName);
+
+	//NOTE - if relation R_NO with what was hit is ever included for satisfying this, be sure to exclude what's hit by a "worldspawn" classnamecheck,
+	//       or more completely, as an entity, IsWorld and IsWorldAffiliated.
+
+	//if(  tr.flFraction >= 1.0 || (tr.pHit != NULL && (tr.pHit == m_hEnemy.Get() || this->IRelationship( CBaseEntity::Instance(tr.pHit) ) > R_NO))    ){
+	if(traceResultObstructionValidForAttack(tr)){
+		//did not hit anything on the way or hit the enemy? or something I would have attacked anyways? it is OK.
+		//proceed
+	}else{
+		//stop!
+		return FALSE;
+	}
+	
+
+	return TRUE;
+}//END OF testLeapNoBlock
 
 
 
@@ -755,6 +868,16 @@ void CPantherEye::SetYawSpeed ( void )
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CPantherEye)
 {
+
+	if(flDamage > 1){
+		// ow!
+		pissedRunTime = gpGlobals->time + 12;
+		if(pev->sequence == g_panthereye_walk_sequenceID){
+			// change it
+			SetActivity(ACT_RUN);
+		}
+	}
+
 	GENERATE_TRACEATTACK_PARENT_CALL(CBaseMonster);
 }
 
@@ -819,7 +942,11 @@ int CPantherEye::LookupActivityHard(int activity){
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
-
+		
+		case ACT_WALK:
+			// nothing special then
+			return CBaseAnimating::LookupActivity(activity);
+		break;
 		case ACT_IDLE:
 
 			iRandChoice = -1;
@@ -952,7 +1079,7 @@ int CPantherEye::LookupActivityHard(int activity){
 			//jump with the delay.
 			//animEventQueuePush(10.35f/(15.0f), 2 );
 			
-			return LookupSequence("crouch_to_jump");
+			return g_panthereye_crouch_to_jump_sequenceID;
 		break;
 		case ACT_SMALL_FLINCH:
 		case ACT_BIG_FLINCH:
@@ -976,20 +1103,39 @@ int CPantherEye::LookupActivityHard(int activity){
 			m_flFramerateSuggestion = 2.1f;
 			return CBaseAnimating::LookupActivity(activity);
 		break;
-		case ACT_RUN:
-			//base method does fine, we just want to... 'intervene', so to speak.
+		case ACT_RUN:{
 
-			if(g_iSkillLevel == SKILL_EASY){
-				m_flFramerateSuggestion = 1.08;
-			}else if(g_iSkillLevel == SKILL_MEDIUM){
-				m_flFramerateSuggestion = 1.14;
-			}else if(g_iSkillLevel == SKILL_HARD){
-				m_flFramerateSuggestion = 1.23;
+			if(m_IdealMonsterState == MONSTERSTATE_SCRIPT){
+				m_flFramerateSuggestion = 1.0;
+				pev->framerate = 1.0;
+				return g_panthereye_run_sequenceID;
+			}else{
+				if(gpGlobals->time < pissedRunTime){
+					if(g_iSkillLevel == SKILL_EASY){
+						m_flFramerateSuggestion = 1.00;
+					}else if(g_iSkillLevel == SKILL_MEDIUM){
+						m_flFramerateSuggestion = 1.05;
+					}else if(g_iSkillLevel == SKILL_HARD){
+						m_flFramerateSuggestion = 1.10;
+					}
+					pev->framerate = m_flFramerateSuggestion;
+					return g_panthereye_run_sequenceID;
+				}else{
+					// not pissed?  power-walk it
+					if(g_iSkillLevel == SKILL_HARD){
+						m_flFramerateSuggestion = 1.19;
+					}else if(g_iSkillLevel == SKILL_MEDIUM){
+						m_flFramerateSuggestion = 1.13;
+					}else{
+						m_flFramerateSuggestion = 1.08;
+					}
+					pev->framerate = m_flFramerateSuggestion;
+					return g_panthereye_walk_sequenceID;
+				}
 			}
-			return CBaseAnimating::LookupActivity(activity);
-		break;
+		}break;
 
-	}
+	}//swithc(activity)
 	
 	//not handled by above?  try the real deal.
 	return CBaseAnimating::LookupActivity(activity);
@@ -1001,7 +1147,11 @@ int CPantherEye::tryActivitySubstitute(int activity){
 
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
-
+		
+		case ACT_WALK:
+			// just to say we have something, I forget if the model has ACT_WALK but may as well say we do.
+			return CBaseAnimating::LookupActivity(ACT_RUN);
+		break;
 		case ACT_IDLE:
 			return LookupSequence("subtle_motion");
 		break;
@@ -1011,7 +1161,7 @@ int CPantherEye::tryActivitySubstitute(int activity){
 		break;
 		case ACT_MELEE_ATTACK2:
 			//Don't trust the model for this.
-			return LookupSequence("crouch_to_jump");
+			return g_panthereye_crouch_to_jump_sequenceID;
 		break;
 		case ACT_SMALL_FLINCH:
 			return CBaseAnimating::LookupActivity(activity);
@@ -1075,8 +1225,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 	
 
 	switch(arg_eventID){
-		case 0:
-			{
+		case 0:{
 			// do stuff for this event.
 	//		ALERT( at_console, "Slash right!\n" );
 
@@ -1107,10 +1256,8 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 				AttackSound();
 
 
-			break;
-			}
-		case 1:
-			{
+		}break;
+		case 1:{
 			//
 			UTIL_MakeVectors(pev->angles);
 
@@ -1145,102 +1292,131 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 
 			bugAnimBlockedTime = gpGlobals->time + RANDOM_LONG(6, 15);
 
-		break;
-			}
-		case 2:
-			{
+		}break;
+		case 2:{
 
-			BOOL isJumpOkay = testLeapNoBlock();
+			
+			JumpEvent(TRUE);
 
+		}break;
+		case 3:{
+			// A jump, but I don't care about the enemy position
+			
+			JumpEvent(FALSE);
 
-			//In any case this counts for setting the leap cooldown. Don't even try again for a little if this attempt is
-			//suddenly blocked and interrupted.
-			leapAttackCooldown = gpGlobals->time + 5;
-
-
-			if(!isJumpOkay){
-				TaskFail();
-				//force a new animation to be fetched.
-				m_Activity = ACT_RESET;
-				this->SetActivity(ACT_IDLE);
-				return;
-			}
-
-
-
-			ClearBits( pev->flags, FL_ONGROUND );
-
-			UTIL_SetOrigin (pev, pev->origin + Vector ( 0 , 0 , 1) );// take him off ground so engine doesn't instantly reset onground 
-			UTIL_MakeVectors ( pev->angles );
-
-			Vector vecJumpDir;
-			if (m_hEnemy != NULL)
-			{
-				float gravity = g_psv_gravity->value;
-				if (gravity <= 1)
-					gravity = 1;
-
-				// How fast does the headcrab need to travel to reach that height given gravity?
-				float height = (m_hEnemy->pev->origin.z + m_hEnemy->pev->view_ofs.z - pev->origin.z);
-
-				float speedExtraMult = 1;
-				//was a minimum of 15.
-				if (height < 11)
-					height = 11;
-
-				if(height > 40){
-					//CRUDE. Take how much height was above 40 and let it add to speedExtraMult.
-					speedExtraMult = 1 + (height - 40) / 40;
-					height = 40;
-				}
-
-				//was 2 * gravity * height.
-				float speed = sqrt( 1.7 * gravity * height * speedExtraMult);
-				float time = speed / gravity;
-
-				// Scale the sideways velocity to get there at the right time
-				//???
-				//vecJumpDir = (m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs - pev->origin);
-
-				//must jump at least "240" far...
-				vecJumpDir = max( (m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs - pev->origin).Length() - 80, 320 ) * gpGlobals->v_forward;
-				
-				vecJumpDir = vecJumpDir * ( 1.0 / time );
-
-				// Speed to offset gravity at the desired height
-				vecJumpDir.z = speed;
-
-				// Don't jump too far/fast
-				float distance = vecJumpDir.Length();
-							
-				//vecJumpDir = (distance -50) * vecJumpDir.Normalize();
-
-				//I'm not entirely sure what this is doing...
-				//OH, I see, forcing a dist of 650 exactly, factoring out the old value.  It's how vectors work.
-				if (distance > 950)
-				{
-					vecJumpDir = vecJumpDir * ( 950.0 / distance );
-				}
-
-			}
-			else
-			{
-				// jump hop, don't care where
-				vecJumpDir = Vector( gpGlobals->v_forward.x, gpGlobals->v_forward.y, gpGlobals->v_up.z ) * 350;
-			}
-
-			int iSound = RANDOM_LONG(0,2);
-			if ( iSound != 0 )
-				UTIL_PlaySound( edict(), CHAN_VOICE, pAttackSounds[iSound], 1, ATTN_IDLE, 0, 100 );
-
-			pev->velocity = vecJumpDir;
-
-			SetTouch( &CPantherEye::LeapTouch );
-		break;
-		}
+		}break;
 	}//END OF switch(arg_eventID)
 
 }
+
+
+// the actual jump
+void CPantherEye::JumpEvent(BOOL enemyAccurate){
+	
+	BOOL isJumpOkay;
+	
+	if(enemyAccurate){
+		isJumpOkay = testLeapNoBlock();
+	}else{
+		isJumpOkay = testLeapNoBlock_Forward();
+	}
+
+	//In any case this counts for setting the leap cooldown. Don't even try again for a little if this attempt is
+	//suddenly blocked and interrupted.
+	leapAttackCooldown = gpGlobals->time + 5;
+
+
+	// ahhhh screw it.  for now.
+	isJumpOkay = TRUE;
+
+	if(!isJumpOkay){
+		TaskFail();
+		//force a new animation to be fetched.
+		m_Activity = ACT_RESET;
+		this->SetActivity(ACT_IDLE);
+		return;
+	}
+
+	// jumping puts me in a frenzy
+	pissedRunTime = gpGlobals->time + 12;
+
+	ClearBits( pev->flags, FL_ONGROUND );
+	pev->groundentity = NULL;  //safety?
+
+	UTIL_SetOrigin (pev, pev->origin + Vector ( 0 , 0 , 1) );// take him off ground so engine doesn't instantly reset onground 
+	UTIL_MakeVectors ( pev->angles );
+
+	Vector vecJumpDir;
+	if (enemyAccurate && m_hEnemy != NULL)
+	{
+		float gravity = g_psv_gravity->value;
+		if (gravity <= 1)
+			gravity = 1;
+
+		// How fast does the headcrab need to travel to reach that height given gravity?
+		float height = (m_hEnemy->pev->origin.z + m_hEnemy->pev->view_ofs.z - pev->origin.z);
+
+		float speedExtraMult = 1;
+		//was a minimum of 15.
+		if (height < 11)
+			height = 11;
+
+		if(height > 40){
+			//CRUDE. Take how much height was above 40 and let it add to speedExtraMult.
+			speedExtraMult = 1 + (height - 40) / 40;
+			height = 40;
+		}
+
+		//was 2 * gravity * height.
+		float speed = sqrt( 1.7 * gravity * height * speedExtraMult);
+		float time = speed / gravity;
+
+		// Scale the sideways velocity to get there at the right time
+		//???
+		//vecJumpDir = (m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs - pev->origin);
+
+		//must jump at least "240" far...
+		vecJumpDir = max( (m_hEnemy->pev->origin + m_hEnemy->pev->view_ofs - pev->origin).Length() - 80, 320 ) * gpGlobals->v_forward;
+				
+		vecJumpDir = vecJumpDir * ( 1.0 / time );
+
+		// Speed to offset gravity at the desired height
+		vecJumpDir.z = speed;
+
+		// Don't jump too far/fast
+		float distance = vecJumpDir.Length();
+							
+		//vecJumpDir = (distance -50) * vecJumpDir.Normalize();
+
+		//I'm not entirely sure what this is doing...
+		//OH, I see, forcing a dist of 650 exactly, factoring out the old value.  It's how vectors work.
+		if (distance > 950)
+		{
+			vecJumpDir = vecJumpDir * ( 950.0 / distance );
+		}
+
+	}
+	else
+	{
+		// jump hop, don't care where
+		vecJumpDir = Vector( gpGlobals->v_forward.x, gpGlobals->v_forward.y, gpGlobals->v_up.z ) * 350;
+	}
+
+	int iSound = RANDOM_LONG(0,2);
+	if ( iSound != 0 )
+		UTIL_PlaySound( edict(), CHAN_VOICE, pAttackSounds[iSound], 1, ATTN_IDLE, 0, 100 );
+
+	pev->velocity = vecJumpDir;
+
+	SetTouch( &CPantherEye::LeapTouch );
+
+
+}//JumpEvent
+
+
+
+
+
 
 
 
@@ -1354,6 +1530,23 @@ CPantherEye::CPantherEye(void){
 
 	findCoverTaskDataMem = -1;
 
+	pissedRunTime = -1;
+
+}
+
+
+void CPantherEye::setModel(void){
+	CPantherEye::setModel(NULL);
+}
+void CPantherEye::setModel(const char* m){
+	CBaseMonster::setModel(m);
+
+	if (g_panthereye_crouch_to_jump_sequenceID == -1) {
+		g_panthereye_crouch_to_jump_sequenceID = LookupSequence("crouch_to_jump");
+		g_panthereye_walk_sequenceID = LookupSequence("walk");
+		g_panthereye_run_sequenceID = LookupSequence("run");
+		
+	}
 }
 
 
@@ -1366,7 +1559,7 @@ void CPantherEye::Spawn()
 {
 	Precache( );
 
-	SET_MODEL(ENT(pev), "models/panthereye.mdl");
+	setModel("models/panthereye.mdl");
 	// size made a little more snug.
 	UTIL_SetSize( pev, Vector(-28, -28, 0), Vector(28, 28, 36) );
 	//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
@@ -1403,6 +1596,38 @@ void CPantherEye::Spawn()
 void CPantherEye::SetEyePosition(void){
 	pev->view_ofs = VEC_VIEW;
 }//END OF SetEyePosition
+
+
+
+
+
+
+int CPantherEye::ISoundMask ( void )
+{
+	return	bits_SOUND_WORLD	|
+		bits_SOUND_COMBAT	|
+		bits_SOUND_PLAYER	|
+		//bits_SOUND_DANGER	|
+		//MODDD - new
+		bits_SOUND_BAIT;
+}
+
+
+int CPantherEye::IgnoreConditions ( void ){
+
+
+	if(m_pSchedule == slMoveFromOrigin && !HasConditionsMod(bits_COND_COULD_MELEE_ATTACK1)){
+		// if it isn't the case I could range_attack1 from facing a different direction, don't bother with sound
+		// during this schedule.
+		return (CBaseMonster::IgnoreConditions() | bits_COND_HEAR_SOUND);
+	}
+
+	return CBaseMonster::IgnoreConditions();
+}
+
+
+
+
 
 
 extern int global_useSentenceSave;
@@ -1446,6 +1671,28 @@ void CPantherEye::DeathSound ( void )
 
 
 
+
+
+BOOL CPantherEye::FCanCheckAttacks ( void )
+{
+	// allow without the enemy in sight
+	/*
+	if ( HasConditions(bits_COND_SEE_ENEMY) && !HasConditions( bits_COND_ENEMY_TOOFAR ) )
+	{
+		return TRUE;
+	}
+	*/
+
+	if ( !HasConditions( bits_COND_ENEMY_TOOFAR ) )
+	{
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+
+
 BOOL CPantherEye::CheckMeleeAttack1 ( float flDot, float flDist )
 {
 	/*
@@ -1462,8 +1709,10 @@ BOOL CPantherEye::CheckMeleeAttack1 ( float flDot, float flDist )
 	{
 
 		//also need to be looking closely enough.
-		if(flDot >= 0.7){
+		if(flDot >= 0.7 && HasConditions(bits_COND_SEE_ENEMY)){
 			return TRUE;
+		}else{
+			SetConditionsMod(bits_COND_COULD_MELEE_ATTACK1);
 		}
 
 	}
@@ -1529,7 +1778,7 @@ BOOL CPantherEye::CheckMeleeAttack2 ( float flDot, float flDist )
 		if(!isJumpOkay)return FALSE;
 
 		//also need to be looking closely enough.
-		if(flDot >= 0.91){
+		if(flDot >= 0.91 && HasConditions(bits_COND_SEE_ENEMY)){
 			return TRUE;
 		}
 
@@ -1544,15 +1793,6 @@ BOOL CPantherEye::CheckMeleeAttack2 ( float flDot, float flDist )
 
 
 
-
-
-int CPantherEye::IgnoreConditions ( void )
-{
-	int iIgnore = CBaseMonster::IgnoreConditions();
-
-	return iIgnore;
-	
-}
 
 
 BOOL CPantherEye::hasSeeEnemyFix(void){
@@ -1615,6 +1855,37 @@ void CPantherEye::MonsterThink ( void )
 	if(pev->deadflag == DEAD_NO){
 		//ok?
 		//return;
+
+		// not working?... oops?
+		if(m_afSoundTypes & (bits_SOUND_COMBAT | bits_SOUND_PLAYER) ){
+			// Hey!
+			pissedRunTime = gpGlobals->time + 12;
+			if(pev->sequence == g_panthereye_walk_sequenceID){
+				// change it
+				SetActivity(ACT_RUN);
+			}
+		}
+		
+		if(gpGlobals->time < pissedRunTime){
+			if(HasConditions(bits_COND_SEE_ENEMY)){
+				// keep the frenzy going
+				pissedRunTime = gpGlobals->time + 12;
+			}
+		}else{
+			if(m_hEnemy != NULL){
+				float daDistah = Distance(pev->origin, m_hEnemy->pev->origin);
+				if(daDistah < 500){
+					// in my territory?  FRENZY
+					pissedRunTime = gpGlobals->time + 12;
+				}
+			}
+
+		}
+
+
+
+
+
 
 		if(newPathDelay != -1){
 			if(newPathDelay <= gpGlobals->time){
@@ -1872,6 +2143,16 @@ Schedule_t *CPantherEye::GetSchedule ( void )
 			}
 			else if ( !HasConditions(bits_COND_SEE_ENEMY) )
 			{
+
+
+				if(HasConditionsMod(bits_COND_COULD_MELEE_ATTACK1 | bits_COND_COULD_MELEE_ATTACK2 | bits_COND_COULD_RANGE_ATTACK1 | bits_COND_COULD_RANGE_ATTACK2))
+				{
+					//turn
+					return GetScheduleOfType( SCHED_COMBAT_FACE );
+				}
+
+
+
 				// we can't see the enemy
 				if ( !HasConditions(bits_COND_ENEMY_OCCLUDED) )
 				{
@@ -2060,7 +2341,22 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 		break;
 		case SCHED_FAIL:
 		case SCHED_CHASE_ENEMY_FAILED:
-			//what is usually called on failure.  Can call something else if preferred.
+
+			if(m_pSchedule == slMoveFromOrigin){
+				// That's what failed?  Try to turn and face our enemy in case jumping at them is possible.
+				if(m_hEnemy != NULL){
+					setEnemyLKP(m_hEnemy->pev->origin);
+					MakeIdealYaw(m_vecEnemyLKP);
+					SetTurnActivity();
+				}else{
+					// where I'm already facing?
+					//MODDD - TODO: try testing at a random angle a few times to see what is ok to jump from
+					pev->ideal_yaw = pev->angles.y;
+				}
+				return &slPanthereyeJumpAtEnemyUnstuck[0];
+			}
+
+			// what is usually called on failure.  Can call something else if preferred.
 			return &slPantherEyeGenericFail[ 0 ];
 		break;
 	}
@@ -2079,9 +2375,11 @@ BOOL CPantherEye::needsMovementBoundFix(void){
 
 void CPantherEye::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
+	// !!!!!!!!!!!!!!
+	//return;
 
 	if(this->m_pSchedule == slPanthereyeJumpAtEnemy){
-		//dont do it
+		// dont do it.  not that this should be necessary?
 		return;
 	}
 
@@ -2193,23 +2491,16 @@ void CPantherEye::StartTask ( Task_t *pTask ){
 			
 		break;
 		case TASK_PANTHEREYE_PLAYANIM_CROUCHTOJUMP:
-			
 			//desired frame / framerate (factor in pev->framerate if other than "1" by multiplying default framerate by pev->framerate BEFORE division)
-			
 			//this->setAnimationSmart("crouch_to_jump", 0.95f);  //m_flFramerateSuggestion and pev->framerate become "2".
-			
 			//resetEventQueue();
-			
-			
 			animEventQueuePush(10.35f/(15.0f), 2 );
 			//animEventQueuePush(10.35f/(15.0f), 2 );
-				
-			
-			
-			this->SetSequenceByName("crouch_to_jump", 0.95f);
-			
-					
-			
+			this->SetSequenceByIndex(g_panthereye_crouch_to_jump_sequenceID, 0.92f, FALSE);
+		break;
+		case TASK_PANTHEREYE_PLAYANIM_CROUCHTOJUMP_UNSTUCK:
+			animEventQueuePush(10.35f/(15.0f), 3 );
+			this->SetSequenceByIndex(g_panthereye_crouch_to_jump_sequenceID, 0.92f, FALSE);
 		break;
 		case TASK_WAIT_PVS:
 			maxWaitPVSTime = gpGlobals->time + 2;
@@ -2677,13 +2968,17 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 
 		break;
 		case TASK_PANTHEREYE_PLAYANIM_CROUCHTOJUMP:
-
 			if(m_hEnemy == NULL){
 				//reset anim info?  Make sure other failure is considered too,.
 				TaskFail();
 				break;
 			}
-			
+
+			if(pev->sequence != g_panthereye_crouch_to_jump_sequenceID && m_fSequenceFinishedSinceLoop){
+				// ?????? WHAT?  HOW?
+				SetSequenceByIndex(g_panthereye_crouch_to_jump_sequenceID, 0.92f, FALSE);
+			}
+
 			//before the first event check...
 			if(animEventQueueTime[0] != -1 && (animEventQueueTime[0] + animEventQueueStartTime > gpGlobals->time) ){
 				//just the start of the anim, can still turn...
@@ -2702,6 +2997,28 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 				return;
 			}
 
+		break;
+		case TASK_PANTHEREYE_PLAYANIM_CROUCHTOJUMP_UNSTUCK:
+			if(pev->sequence != g_panthereye_crouch_to_jump_sequenceID && m_fSequenceFinishedSinceLoop){
+				// ?????? WHAT?  HOW?
+				SetSequenceByIndex(g_panthereye_crouch_to_jump_sequenceID, 0.92f, FALSE);
+			}
+
+			//before the first event check...
+			if(animEventQueueTime[0] != -1 && (animEventQueueTime[0] + animEventQueueStartTime > gpGlobals->time) ){
+				//just the start of the anim, can still turn...
+				MakeIdealYaw(m_hEnemy->pev->origin);
+				ChangeYaw(42);
+			}
+
+			EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WHAT THE : %.2f %d", pev->frame, m_fSequenceFinished));
+			//TODO: an "onGround" check may be nice.
+			if(this->m_fSequenceFinished){
+				TaskComplete();
+				//no leap-touch, if still here.
+				SetTouch( NULL );
+				return;
+			}
 		break;
 		case TASK_WAIT_PVS:
 			if(gpGlobals->time >= maxWaitPVSTime){

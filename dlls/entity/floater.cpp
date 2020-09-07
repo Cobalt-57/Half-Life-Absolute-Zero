@@ -693,7 +693,7 @@ void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float
 		else
 			m_flightSpeed = UTIL_Approach( 20, m_flightSpeed, 300 * gpGlobals->frametime );
 		
-		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) )
+		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) == LOCALMOVE_VALID )
 		{
 			m_vecTravel = (vecMove - pev->origin);
 			m_vecTravel = m_vecTravel.Normalize();

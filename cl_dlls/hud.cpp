@@ -810,7 +810,10 @@ void command_lastinv(void) {
 	gHUD.m_Ammo.gWR.CancelSelection();
 
 
-	
+
+	localPlayer.SelectLastItem();
+
+	/*
 	//if (!IsMultiplayer()) {
 	//	localPlayer.SelectLastItem();
 	//}
@@ -823,7 +826,7 @@ void command_lastinv(void) {
 		localPlayer.m_bHolstering = TRUE;
 		localPlayer.m_fCustomHolsterWaitTime = gpGlobals->time + 10;
 	}
-	
+	*/
 
 	// can call for localPlayer.SelectLastItem() during the next input frame too but eh.
 	// Still strangely inferior to the above approach.  Just.  Weird.
