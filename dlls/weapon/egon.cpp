@@ -644,6 +644,11 @@ int CEgon::Save(CSave& save){
 	if (!CBasePlayerWeapon::Save(save))
 		return 0;
 
+	// Interesting, check out cbase.cpp's 'WriteEntVars', which involves util.cpp's 'gEntvarsDescription' list.
+	// So it is possible to save pev-> values like 'pev->fuser1', although I don't know if that should be trusted
+	// anywhere else.  This engine is mad at times, keeping the 'fuser1_store' approach.  Not a net difference
+	// anyway, it's still some float getting written/restored all the same.
+		
 	fuser1_store = pev->fuser1;
 
 	return save.WriteFields("CEgon", this, m_SaveData, ARRAYSIZE(m_SaveData));

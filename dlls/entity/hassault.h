@@ -78,14 +78,14 @@ public:
 	BOOL spinuptimeSet;
 	BOOL shootpref_eyes;
 
+	BOOL recentChaseFailedAtDistance;
 
 
 
 
 
 
-
-
+	CHAssault(void);
 
 	float SafeSetBlending ( int iBlender, float flValue );
 
@@ -115,8 +115,6 @@ public:
 	virtual int	Save( CSave &save );
 	static TYPEDESCRIPTION m_SaveData[];
 
-
-	CHAssault(void);
 
 
 	int getIdleSpinChannel(void );
@@ -204,6 +202,9 @@ public:
 
 	BOOL canResetBlend0(void);
 	BOOL onResetBlend0(void);
+
+	float getDistTooFar(void);
+
 
 	CUSTOM_SCHEDULES;
 	

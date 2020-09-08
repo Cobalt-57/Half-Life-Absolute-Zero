@@ -406,7 +406,7 @@ int CFriendly::Restore( CRestore &restore )
 	return readFieldsResult;
 }
 
-void CFriendly::PostRestore() {
+void CFriendly::PostRestore(void) {
 	if (nextNormalThinkTime == 0)nextNormalThinkTime = 0.01;
 	if (pev->nextthink == 0)pev->nextthink = 0.01;
 

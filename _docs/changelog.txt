@@ -378,9 +378,10 @@ Downward-incline smoothness slightly further improved.
 NEW CVAR: cl_interp_view_standard, compare to cl_interp_view_extra.  Default grants no changes, but set to 2 is an alternate mid-air fix for crouching mid-air that may have a differnet feel.
 
 NEW CVAR: sv_player_midair_fix, 0 for retail, 1 for the following:
--Support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
--As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
--This may also stop getting stuck in certain terrain, such as tracks in a2a1
+- Support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
+- As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes, even the tops of human-height monsters) is much easier; reach of jumps slightly improved.
+- This may also stop getting stuck in certain terrain, such as tracks in a2a1
+
 
 Going up/down fast-moving platforms no longer causes the interp-smoothness to awkwardly lag behind the position of where the player actually is.  (best fix singleplayer, still improved otherwise)
 
@@ -422,6 +423,8 @@ NEW CVAR: gauss_mode, defaults to 1.  0 is retail-based, 1 is pre-release/alpha 
 - Gauss charge force-fire from running out of charge happens at the next ammo-usage cycle that sees there isn't enough ammo instead of the instant the ammo runs out (more noticeable in gauss mode #1).
 - Primary fire bounces can no longer gib.
 - Gauss reflect/hit logic stops on hitting the skybox.  Glow effects nor sparks can be made from hitting the skybox, and it can not be reflected off of.
+- changing weapons by quickswap while the gauss is charging is no longer as glitchy.   (but why would you do this)
+- Gauss automatic discharge from charging for too long shows properly clientside; visible like a normal charged shot and doesn't continue playing the pitch.
 
 GAUSS MODE 0:
 - Minimum ammo used for charge (1) no longer surpasses primary fire damage (20).  Instead, a charged shot of 1 ammo deals only 8 damage but becomes increasingly more efficient with more ammo used (already better than primary slightly at 2).
@@ -600,6 +603,7 @@ GARGANTUA
 - Defaults to the walk animation unless provoked by taking hits from attacks that do enough damage.
 - Gargantuas that die have their model pivot's reset (no more being arched oddly above the ground while dead).
 - All garg sounds carry further (less attenuation).
+- New throw attack (CVar sv_gargantua_throwattack)!  Defaults to 1, for a 20% chance on any melee (may still revert to normal melee on not finding enough empty space nearby)
 
 SLIGHT RESTORE BUG: Fixed monsters needing to change from the default blend (such as the torso bending to look straight down) to the one the game was saved with.
 
@@ -618,9 +622,18 @@ HASSAULT AI:
 - Issue seeing the player, moving to a point and staring in the same direction until the player comes into sight or deals damage fixed (clear in a2a1a).
 - HAssault may fire at the player's head if a clear bodyshot is not possible (can shoot over the sandbags in a2a1a.bsp ).
 
+HGrunts skip the 'sweep' schedule (looking left and right 180 degrees each) if their enemy is in sight.  Could happen on getting blocked by friendlies in the way.
+HGrunts and hassaults are able to fire from a greater distance, but will still prefer to get closer if a route exists than fire at extreme distances.
+Grenade range of hgrunts/hassaults reduced by 20%.
+
+Weaponboxes spawned by player drops now use the correct pitch on the initial toss (was inverted; high if the player was looking down or low if the player was looking up).
+
 Panthereyes have an easier time getting unstuck from odd places like after landing on the couch in a1a2b.  Several general path improvements.  Can also randomly wander on failing to route to the player.
 
-TODO - general archer AI fix for tight spaces
-- some oddities on quickswapping while the gauss is charing, but low priority.
+Zombies and some other melee monsters may be better at attacking flying targets.  Jumping will not affect a zombie's willingness to melee.
+
+
+TODO - general archer AI fix for tight spaces, in progress
+
 
 

@@ -645,8 +645,12 @@ void CZombie::HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->punchangle.x = 5;
 					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
 				}
+
 				// Play a random attack hit sound
-				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				// How about this?
+				//UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				//playStandardMeleeAttackHitSound(pHurt, pAttackHitSounds, ARRAYSIZE(pAttackHitSounds), 1.0, ATTN_NORM, 100 + -5, 100 + 5);
+				determineStandardMeleeAttackHitSound(pHurt);
 			}
 			else{ // Play a random attack miss sound
 				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
@@ -671,7 +675,9 @@ void CZombie::HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->punchangle.x = 5;
 					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 100;
 				}
-				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				//UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				//playStandardMeleeAttackHitSound(pHurt, pAttackHitSounds, ARRAYSIZE(pAttackHitSounds), 1.0, ATTN_NORM, 100 + -5, 100 + 5);
+				determineStandardMeleeAttackHitSound(pHurt);
 			}
 			else{
 				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
@@ -695,7 +701,9 @@ void CZombie::HandleAnimEvent( MonsterEvent_t *pEvent )
 					pHurt->pev->punchangle.x = 5;
 					pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * -100;
 				}
-				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				//UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+				//playStandardMeleeAttackHitSound(pHurt, pAttackHitSounds, ARRAYSIZE(pAttackHitSounds), 1.0, ATTN_NORM, 100 + -5, 100 + 5);
+				determineStandardMeleeAttackHitSound(pHurt);
 			}
 			else{
 				UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );

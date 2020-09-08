@@ -271,7 +271,9 @@ void resetGlobalVars(void) {
 
 
 
-
+/*
+//MODDD - Nothing used this?   Whoops.  Might be a good idea to use UTIL_MakeAimVectors instead
+// of UTIL_MakeVectors anyway
 void UTIL_ParametricRocket( entvars_t *pev, Vector vecOrigin, Vector vecAngles, edict_t *owner )
 {	
 	pev->startpos = vecOrigin;
@@ -291,7 +293,7 @@ void UTIL_ParametricRocket( entvars_t *pev, Vector vecOrigin, Vector vecAngles, 
 	pev->starttime = gpGlobals->time;
 	pev->impacttime = gpGlobals->time + travelTime;
 }
-
+*/
 
 // Normal overrides
 void UTIL_SetGroupTrace( int groupmask, int op )
@@ -774,6 +776,43 @@ CBaseEntity	*UTIL_PlayerByIndex( int playerIndex )
 }
 
 
+//MODDD - NOTE.  Kinda backwards, but UTIL_MakeVectors inverts the pitch.
+// UTIL_MakeAimVectors, doesn't.  So that's better for nearly anything unless there's some strong
+// reason to think the pitch needs to be treated as inverted (mostly dealing with player v_angles).
+// Confusing that MakeVectors sends the angle-vector plainly, yet MakeAimVectors inverts the pitch
+// before sending it?  That's because the engine call (MAKE_VECTORS) automatically inverts the pitch.
+// So to get a result as though the pitch weren't inverted, you have to invert the pitch to make it
+// a double negative (as MakeAimVectors does).  Ain't that grand.
+
+
+/*
+// LINE DEMO, put somewhere and see the lines, green ones are good calls.
+// Only use UTIL_MakeVectors on the pev->v_angle of players (v_angle is useless for anything else).
+// Any math converting between vectors and angles, or the player's pev->angles, must use UTIL_MakeAimVectors
+// instead (the engine's automatic pitch invert from MakeVectors is bad).
+// Monster pev->angles can use either since the pitch is 0.
+
+UTIL_MakeVectors( arg_entDest->pev->v_angle );
+DebugLine_Setup(0, arg_entDest->Center(), arg_entDest->Center() + gpGlobals->v_forward * 800, 0, 255, 0);
+UTIL_MakeAimVectors( arg_entDest->pev->v_angle );
+DebugLine_Setup(1, arg_entDest->Center(), arg_entDest->Center() + gpGlobals->v_forward * 800, 255, 0, 0);
+
+UTIL_MakeVectors( arg_entDest->pev->angles );
+DebugLine_Setup(2, arg_entDest->Center(), arg_entDest->Center() + gpGlobals->v_forward * 800, 255, 0, 255);
+UTIL_MakeAimVectors( arg_entDest->pev->angles );
+DebugLine_Setup(3, arg_entDest->Center(), arg_entDest->Center() + gpGlobals->v_forward * 800, 0, 255, 0);
+*/
+
+// Another test, proof that v_angles + viewpunch gets the way the player is looking while kickback is still decaying.
+/*
+UTIL_MakeVectors(pev->v_angle + pev->punchangle);
+DebugLine_Setup(pev->origin + pev->view_ofs, pev->origin + pev->view_ofs + gpGlobals->v_forward * 500, 0, 255, 0);
+
+UTIL_MakeVectors(pev->v_angle);
+DebugLine_Setup(pev->origin + pev->view_ofs, pev->origin + pev->view_ofs + gpGlobals->v_forward * 500, 255, 0, 0);
+*/
+
+
 void UTIL_MakeVectors( const Vector &vecAngles )
 {
 	MAKE_VECTORS( vecAngles );
@@ -1174,6 +1213,7 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 		return;
 	}
 
+
 	BOOL extraBlood = FALSE;
 
 	if(FClassnameIs(arg_entSrc->pev, "monster_headcrab")){
@@ -1196,13 +1236,15 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 
 
-
-	if (arg_entSrc->IsPlayer())
-		UTIL_MakeVectors( arg_entSrc->pev->angles );
-	else
-		UTIL_MakeAimVectors( arg_entSrc->pev->angles );
-	//...for what to expect out of "gpGlobals->v_forward"
-
+	// Wrong!  Any pev->angles may as well use UTIL_MakeAimVectors.
+	// Makes no difference for monster pev->angles (0 pitch), but the player needs MakeAimVectors for this.
+	// Does the player even ever call tis as a 'entSrc'?  oh.  ah well.
+	//if (arg_entSrc->IsPlayer()){
+	//	UTIL_MakeVectors( arg_entSrc->pev->angles );
+	//}else{
+	//	UTIL_MakeAimVectors( arg_entSrc->pev->angles );
+	//}
+	UTIL_MakeAimVectors(arg_entSrc->pev->angles);
 
 
 	
@@ -6789,8 +6831,48 @@ void UTIL_playMetalGibSound(entvars_t* pevSoundSource){
 	case 4:
 		UTIL_PlaySound(ENT(pevSoundSource), CHAN_STATIC, "debris/metal5.wav", 1, ATTN_NORM - 0.17, FALSE);
 	break;
-	}//END OF switch
-}//END OF UTIL_playMetalGibSound
+	}//switch
+}//UTIL_playMetalGibSound
+
+
+// To be exchanged for zombie hit-sounds whenever something metallic is hit instead.
+void UTIL_playMeleeMetalHitSound(entvars_t* pevSoundSource){
+	
+	//UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+
+	const int randomSound = RANDOM_LONG(0, 5);
+	const float metalVol = 0.57;
+	const float metalAttn = ATTN_NORM - 0.02;
+	switch (randomSound) {
+	case 0:UTIL_PlaySound(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal1.wav", metalVol - 0.15, metalAttn, 0, 92 + RANDOM_LONG(0, 5), FALSE); break;
+	case 1:UTIL_PlaySound(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal2.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5), FALSE); break;
+	case 2:UTIL_PlaySound(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal3.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5), FALSE); break;
+	case 3:UTIL_PlaySound(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal4.wav", metalVol - 0.1, metalAttn, 0, 90 + RANDOM_LONG(0, 5), FALSE); break;
+	case 4:UTIL_PlaySound(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal5.wav", metalVol - 0.08, metalAttn, 0, 92 + RANDOM_LONG(0, 5), FALSE); break;
+	case 5:UTIL_PlaySound(ENT(pevSoundSource), CHAN_WEAPON, "debris/metal6.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5), FALSE); break;
+	}//switch
+
+}//UTIL_playMeleeMetalHitSound
+
+
+// Plays sounds ambiend like the rest of texturehit (sound.cpp).
+// BEWARE !  Keep in synch with the cl_dlls/ev_hldm.cpp equivalent for clientside in its texturehit method
+void UTIL_playMetalTextureHitSound(entvars_t* pevSoundSource, const Vector& vecOrigin){
+
+	const int randomSound = RANDOM_LONG(0, 5);
+	const float metalVol = 0.57;
+	const float metalAttn = ATTN_NORM - 0.02;
+	switch (randomSound) {
+	case 0:EMIT_AMBIENT_SOUND(ENT(pevSoundSource), vecOrigin, "debris/metal1.wav", metalVol - 0.15, metalAttn, 0, 92 + RANDOM_LONG(0, 5)); break;
+	case 1:EMIT_AMBIENT_SOUND(ENT(pevSoundSource), vecOrigin, "debris/metal2.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5)); break;
+	case 2:EMIT_AMBIENT_SOUND(ENT(pevSoundSource), vecOrigin, "debris/metal3.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5)); break;
+	case 3:EMIT_AMBIENT_SOUND(ENT(pevSoundSource), vecOrigin, "debris/metal4.wav", metalVol - 0.1, metalAttn, 0, 90 + RANDOM_LONG(0, 5)); break;
+	case 4:EMIT_AMBIENT_SOUND(ENT(pevSoundSource), vecOrigin, "debris/metal5.wav", metalVol - 0.08, metalAttn, 0, 92 + RANDOM_LONG(0, 5)); break;
+	case 5:EMIT_AMBIENT_SOUND(ENT(pevSoundSource), vecOrigin, "debris/metal6.wav", metalVol, metalAttn, 0, 94 + RANDOM_LONG(0, 5)); break;
+	}//switch
+
+}//UTIL_playMetalTextureHitSound
+
 
 
 

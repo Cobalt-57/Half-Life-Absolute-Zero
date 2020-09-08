@@ -66,7 +66,7 @@ public:
 	virtual int Save( CSave &save ); 
 	virtual int Restore( CRestore &restore );
 	//////////////////////////////////////////////////////////////////////////////////
-	virtual void PostRestore(void);
+	void PostRestore(void);
 
 
 	CFriendly(void);

@@ -54,8 +54,8 @@ EASY_CVAR_EXTERN_DEBUGONLY(gargantuaFallSound)
 EASY_CVAR_EXTERN_DEBUGONLY(gargantuaBleeds)
 EASY_CVAR_EXTERN_DEBUGONLY(animationKilledBoundsRemoval)
 EASY_CVAR_EXTERN_DEBUGONLY(gargantuaKilledBoundsAssist)
-
-
+EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
+EASY_CVAR_EXTERN_DEBUGONLY(sv_gargantua_throwattack)
 
 
 
@@ -90,7 +90,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(gargantuaKilledBoundsAssist)
 
 #define SPIRAL_INTERVAL		0.1  //025
 
-//MODDD - twice as much, too many sprite effects can crash.
+//MODDD - twice as long for less sprites, too many sprite effects can crash.
 //#define STOMP_INTERVAL	0.025
 #define STOMP_INTERVAL		0.050
 
@@ -481,7 +481,7 @@ void CSpiral::Think(void)
 
 		position.z += (pev->health * pev->dmg) * fraction;
 		pev->angles.y = (pev->health * 360 * 8) * fraction;
-		UTIL_MakeVectors(pev->angles);
+		UTIL_MakeAimVectors(pev->angles);
 		position = position + gpGlobals->v_forward * radius;
 		direction = (direction + gpGlobals->v_forward).Normalize();
 
@@ -553,10 +553,10 @@ void CStomp::Spawn( void )
 
 
 	//MODDD - uhhh.  why not?
-	pev->movetype = MOVETYPE_STEP;
-	pev->solid = SOLID_NOT;
-	UTIL_SetSize(pev, g_vecZero, g_vecZero );
-
+	// nope, blocks proper incline/wall-skipping.  because of course it does.
+	//pev->movetype = MOVETYPE_STEP;
+	//pev->solid = SOLID_NOT;
+	//UTIL_SetSize(pev, g_vecZero, g_vecZero );
 
 	float attn;
 	float vol;
@@ -572,6 +572,8 @@ void CStomp::Spawn( void )
 
 	UTIL_PlaySound( edict(), CHAN_BODY, GARG_STOMP_BUZZ_SOUND, vol, attn, 0, PITCH_NORM * 0.55, FALSE);
 }
+
+
 
 
 void CStomp::Think( void )
@@ -697,7 +699,6 @@ void CStomp::Think( void )
 
 
 
-
 void CSmoker::Spawn( void )
 {
 	pev->movetype = MOVETYPE_NONE;
@@ -758,8 +759,32 @@ TYPEDESCRIPTION	CGargantua::m_SaveData[] =
 	DEFINE_FIELD( CGargantua, m_flameY, FIELD_FLOAT ),
 	DEFINE_FIELD( CGargantua, pissedRunTime, FIELD_TIME ),
 };
+//IMPLEMENT_SAVERESTORE( CGargantua, CBaseMonster );
 
-IMPLEMENT_SAVERESTORE( CGargantua, CBaseMonster );
+int CGargantua::Save( CSave &save )
+{
+	if ( !CBaseMonster::Save(save) )
+		return 0;
+	int writeFieldsResult = save.WriteFields( "CGargantua", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	return writeFieldsResult;
+}
+int CGargantua::Restore( CRestore &restore )
+{
+	if ( !CBaseMonster::Restore(restore) )
+		return 0;
+	int readFieldsResult = restore.ReadFields( "CGargantua", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	PostRestore();
+	return readFieldsResult;
+}
+
+void CGargantua::PostRestore() {
+	if (nextNormalThinkTime == 0)nextNormalThinkTime = 0.01;
+	if (pev->nextthink == 0)pev->nextthink = 0.01;
+
+}
+
 
 const char *CGargantua::pAttackHitSounds[] = 
 {
@@ -869,6 +894,9 @@ CGargantua::CGargantua(void){
 	consecutiveStomps = 0;
 	grabbedEnt = NULL;
 
+	usingFastThink = FALSE;
+	nextNormalThinkTime = 0;
+
 }
 
 
@@ -925,6 +953,23 @@ int CGargantua::IRelationship( CBaseEntity *pTarget )
 }
 
 
+
+void CGargantua::SetFastThink(BOOL newVal){
+
+	if(usingFastThink != newVal){
+		if(newVal){
+			// nextthink will be given to nextNormalThinkTime.
+			// Then replace it with whichever is sooner: where it was already going, or current time + 0.025
+			nextNormalThinkTime = pev->nextthink;
+			pev->nextthink = min(pev->nextthink, gpGlobals->time + 0.025);
+		}else{
+			// restore nextthink.
+			pev->nextthink = nextNormalThinkTime;
+		}
+		usingFastThink = newVal;
+	}
+}
+
 void CGargantua::MonsterThink(void){
 
 
@@ -941,182 +986,255 @@ void CGargantua::MonsterThink(void){
 	}
 	*/
 
+	BOOL doNormalThink;
+	
+	if(usingFastThink){
+
+		if(gpGlobals->time >= nextNormalThinkTime){
+			doNormalThink = TRUE;
+			nextNormalThinkTime = gpGlobals->time + 0.1;
+			// !!! Doing it this way only works if nextNormalThinkTime is set
+			// to gpGlobals->time at the time usingFastThink is turned on
+			//nextNormalThinkTime = nextNormalThinkTime + 0.1;
+		}else{
+			doNormalThink = FALSE;
+		}
+
+	}else{
+		// always.
+		doNormalThink = TRUE;
+	}
+
 
 
 	if(pev->sequence == g_gargantua_throwbody_sequenceID){
 
-		if(!grabbedEnt){
+		if(grabbedEnt == NULL){
 			// nevermind, check is handled by a queue event now.  Interrupts the melee schedule if there is no grabbed ent.
 			//if(pev->frame >= (10.0f/27.0f) * 255.0f){
 			//	// no grabbedEnt, yet this far into the animation?  Give up.
 			//	TaskFail();
 			//}
 		}else{
+
+			/*
+			if(grabbedEnt->pev->deadflag != DEAD_NO){
+				// should I drop dead things instantly? unsure
+				releaseGrabbedEnt();
+			}
+			*/
+
 			// force it to the arm
 			Vector posGun, angleGun;
 			//int attach = i%2;
 			int attach = 0;
 			// attachment is 0 based in GetAttachment
-			GetAttachment( attach+1, posGun, angleGun );
+			GetAttachment( attach+0, posGun, angleGun );
 
-			grabbedEnt->pev->origin = posGun;
+			Vector finalEntPos;
+
+			if(grabbedEnt->IsPlayer()){
+				// bend things a little so that the player camera isn't looking through the garg
+				// (want to make a custom var that adds an offset in cl_dlls/view.cpp?  Me neither.
+				// Although the barnacle does that already, see 'global2PSEUDO_grabbedByBarancle'
+				// and how it's filled.  Then again this is all pretty cheezy anyway.)
+				// Player is centered on pev->origin so no need to adjust that.
+
+				UTIL_MakeAimVectors(this->pev->angles);
+
+				finalEntPos = posGun + gpGlobals->v_forward * 18 + -gpGlobals->v_right * 6 + Vector(0, 0, -32);
+
+
+			}else{
+				// Any other entity?  Assmue there is some difference in z that needs to be adjusted.
+				finalEntPos = posGun;
+				// multiple of 0 to 0.5 is from on top of the hand to mid-way,
+				// multiple of 0.5 to 1 is from mid-way to below the hand. 
+				finalEntPos.z += -(grabbedEnt->pev->maxs.z + grabbedEnt->pev->mins.z) * 0.67;
+			}
+
+			grabbedEnt->pev->origin = finalEntPos;
 		}
 
 	}
 
 
 
-	// nextNormalThink, blablabla
+	if(doNormalThink){
 
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
-		switch(RANDOM_LONG(0, 45)){
-			case 0:
-				this->SetSequenceByName("bust");
-			break;
-			case 1:
-				this->SetSequenceByName("bust");
-			break;
-			case 2:
-				this->SetSequenceByName("bust");
-			break;
-			case 3:
-				this->SetSequenceByName("pushcar");
-			break;
-			case 4:
-				this->SetSequenceByName("kickcar");
-			break;
-			case 5:
-				this->SetSequenceByName("kickcar");
-			break;
-			case 6:
-				this->SetSequenceByName("kickcar");
-			break;
-			case 7:
-				this->SetSequenceByName("kickcar");
-			break;
-			case 8:
-				this->SetSequenceByName("rollcar");
-			break;
-			case 9:
-				this->SetSequenceByName("rollcar");
-			break;
-			case 10:
-				this->SetSequenceByName("smash");
-			break;
-			case 11:
-				this->SetSequenceByName("smash");
-			break;
-			case 12:
-				this->SetSequenceByName("smash");
-			break;
-			case 13:
-				this->SetSequenceByName("smash");
-			break;
-			case 14:
-				this->SetSequenceByName("throwbody");
-			break;
-			case 15:
-				this->SetSequenceByName("throwbody");
-			break;
-			case 16:
-				this->SetSequenceByName("bitehead");
-			break;
-			case 17:
-				this->SetSequenceByName("bitehead");
-			break;
-			case 18:
-				this->SetSequenceByName("bitehead");
-			break;
-			case 19:
-				this->SetSequenceByName("Flinchheavy");
-			break;
-			case 20:
-				this->SetSequenceByName("Flinchheavy");
-			break;
-			case 21:
-				this->SetSequenceByName("flinchlight");
-			break;
-			case 22:
-				this->SetSequenceByName("flinchlight");
-			break;
-			case 23:
-				this->SetSequenceByName("flinchlight");
-			break;
-			case 24:
-				this->SetSequenceByName("flinchlight");
-			break;
-			case 25:
-				this->SetSequenceByName("flinchlight");
-			break;
-			case 26:
-				this->SetSequenceByName("flinchlight");
-			break;
-			case 27:
-				this->SetSequenceByName("180right");
-			break;
-			case 28:
-				this->SetSequenceByName("180right");
-			break;
-			case 29:
-				this->SetSequenceByName("180left");
-			break;
-			case 30:
-				this->SetSequenceByName("180left");
-			break;
-			case 31:
-				this->SetSequenceByName("stomp");
-			break;
-			case 32:
-				this->SetSequenceByName("Attack");
-			break;
-			case 33:
-				this->SetSequenceByName("Attack");
-			break;
-			case 34:
-				this->SetSequenceByName("Attack");
-			break;
-			case 35:
-				this->SetSequenceByName("shootflames2");
-			break;
-			case 36:
-				this->SetSequenceByName("shootflames2");
-			break;
-			case 37:
-				this->SetSequenceByName("shootflames2");
-			break;
-			case 38:
-				this->SetSequenceByName("shootflames1");
-			break;
-			case 39:
-				this->SetSequenceByName("shootflames1");
-			break;
-			case 40:
-				this->SetSequenceByName("shootflames1");
-			break;
-			case 41:
-				this->SetSequenceByName("idle1");
-			break;
-			case 42:
-				this->SetSequenceByName("idle1");
-			break;
-			case 43:
-				this->SetSequenceByName("idle1");
-			break;
-			case 44:
-				this->SetSequenceByName("idle2");
-			break;
-			case 45:
-				this->SetSequenceByName("idle4");
-			break;
+		if(pev->sequence != g_gargantua_throwbody_sequenceID && pev->yaw_speed == 0){
+			easyPrintLine("WARNING!!! Garg sequence is not throwbody (%d) yet yaw_speed was 0, corrected!", pev->sequence);
+			pev->yaw_speed = 60;
+		}
 
+
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
+			switch(RANDOM_LONG(0, 45)){
+				case 0:
+					this->SetSequenceByName("bust");
+				break;
+				case 1:
+					this->SetSequenceByName("bust");
+				break;
+				case 2:
+					this->SetSequenceByName("bust");
+				break;
+				case 3:
+					this->SetSequenceByName("pushcar");
+				break;
+				case 4:
+					this->SetSequenceByName("kickcar");
+				break;
+				case 5:
+					this->SetSequenceByName("kickcar");
+				break;
+				case 6:
+					this->SetSequenceByName("kickcar");
+				break;
+				case 7:
+					this->SetSequenceByName("kickcar");
+				break;
+				case 8:
+					this->SetSequenceByName("rollcar");
+				break;
+				case 9:
+					this->SetSequenceByName("rollcar");
+				break;
+				case 10:
+					this->SetSequenceByName("smash");
+				break;
+				case 11:
+					this->SetSequenceByName("smash");
+				break;
+				case 12:
+					this->SetSequenceByName("smash");
+				break;
+				case 13:
+					this->SetSequenceByName("smash");
+				break;
+				case 14:
+					this->SetSequenceByName("throwbody");
+				break;
+				case 15:
+					this->SetSequenceByName("throwbody");
+				break;
+				case 16:
+					this->SetSequenceByName("bitehead");
+				break;
+				case 17:
+					this->SetSequenceByName("bitehead");
+				break;
+				case 18:
+					this->SetSequenceByName("bitehead");
+				break;
+				case 19:
+					this->SetSequenceByName("Flinchheavy");
+				break;
+				case 20:
+					this->SetSequenceByName("Flinchheavy");
+				break;
+				case 21:
+					this->SetSequenceByName("flinchlight");
+				break;
+				case 22:
+					this->SetSequenceByName("flinchlight");
+				break;
+				case 23:
+					this->SetSequenceByName("flinchlight");
+				break;
+				case 24:
+					this->SetSequenceByName("flinchlight");
+				break;
+				case 25:
+					this->SetSequenceByName("flinchlight");
+				break;
+				case 26:
+					this->SetSequenceByName("flinchlight");
+				break;
+				case 27:
+					this->SetSequenceByName("180right");
+				break;
+				case 28:
+					this->SetSequenceByName("180right");
+				break;
+				case 29:
+					this->SetSequenceByName("180left");
+				break;
+				case 30:
+					this->SetSequenceByName("180left");
+				break;
+				case 31:
+					this->SetSequenceByName("stomp");
+				break;
+				case 32:
+					this->SetSequenceByName("Attack");
+				break;
+				case 33:
+					this->SetSequenceByName("Attack");
+				break;
+				case 34:
+					this->SetSequenceByName("Attack");
+				break;
+				case 35:
+					this->SetSequenceByName("shootflames2");
+				break;
+				case 36:
+					this->SetSequenceByName("shootflames2");
+				break;
+				case 37:
+					this->SetSequenceByName("shootflames2");
+				break;
+				case 38:
+					this->SetSequenceByName("shootflames1");
+				break;
+				case 39:
+					this->SetSequenceByName("shootflames1");
+				break;
+				case 40:
+					this->SetSequenceByName("shootflames1");
+				break;
+				case 41:
+					this->SetSequenceByName("idle1");
+				break;
+				case 42:
+					this->SetSequenceByName("idle1");
+				break;
+				case 43:
+					this->SetSequenceByName("idle1");
+				break;
+				case 44:
+					this->SetSequenceByName("idle2");
+				break;
+				case 45:
+					this->SetSequenceByName("idle4");
+				break;
+
+
+			}
 
 		}
 
+		CBaseMonster::MonsterThink();
+		//////////////////////////////////////////////////////////////
+		// END OF normal think space
+	}else{
+		//
 	}
 
 
-	CBaseMonster::MonsterThink();
-}
+	if(usingFastThink){
+		// override the slower think speed that MonsterThink would set this to
+		// (and this would never be done otherwise in frames that don't call MonsterThink)
+		pev->nextthink = gpGlobals->time + 0.025;
+	}
+	// Why would this happen??  Don't report it when we're being deleted (supposed to happen)
+	if (pev->nextthink <= 0 && !(pev->flags & FL_KILLME) ) {
+		easyForcePrintLine("!!!WARNING!  Gargantua had a pev->nextthink at or below 0. This can kill the AI!");
+		// save it.
+		pev->nextthink = gpGlobals->time + 0.1;
+	}
+
+}//MonsterThink
 
 
 
@@ -1151,7 +1269,7 @@ void CGargantua::StompAttack( void )
 {
 	TraceResult trace;
 
-	UTIL_MakeVectors( pev->angles );
+	UTIL_MakeAimVectors( pev->angles );
 	Vector vecStart = pev->origin + Vector(0,0,60) + 35 * gpGlobals->v_forward;
 
 	// vecAim is fine for a direction, at least floor-wise, but why use it to see how far to place
@@ -1159,15 +1277,17 @@ void CGargantua::StompAttack( void )
 	// the garg to the enemy will run into the ramp and give a lot shorter distance than there actually
 	// is to the enemy.  And clearly to fire in this direction he sees them anyway.
 	// Don't need the trace, for this at least.
-	Vector vecAim = ShootAtEnemy( vecStart );
+	//Vector vecAim = ShootAtEnemy( vecStart );
 	//Vector vecEnd = (vecAim * 1024) + vecStart;
-
 	//UTIL_TraceLine( vecStart, vecEnd, ignore_monsters, edict(), &trace );
 
 	//Vector pointDelta = (trace.vecEndPos - vecStart);
 	Vector pointDelta = (m_vecEnemyLKP - vecStart);
+
 	// floor-wise only, no Z difference.
-	pointDelta.z = 0;
+	// NOPE!  Do that and the effect doesn't travel over inclines or walls as well.
+	// YYYYYYYyyyyyyyyyyyyyeeeeeeeeaaaaaaaaahhhhhhhhhh.
+	//pointDelta.z = 0;
 
 	Vector theDir = pointDelta.Normalize();
 	float theDist = pointDelta.Length();
@@ -1178,14 +1298,14 @@ void CGargantua::StompAttack( void )
 	int stompMaxSpeed;
 
 	if(g_iSkillLevel == SKILL_HARD){
-		stompStartSpeed = 40;
+		stompStartSpeed = 26;
 		stompMaxSpeed = 300;
 	}else if(g_iSkillLevel == SKILL_MEDIUM){
-		stompStartSpeed = 30;
-		stompMaxSpeed = 200;
-	}else{
 		stompStartSpeed = 20;
-		stompMaxSpeed = 100;
+		stompMaxSpeed = 230;
+	}else{
+		stompStartSpeed = 12;
+		stompMaxSpeed = 140;
 	}
 
 
@@ -1203,6 +1323,7 @@ void CGargantua::StompAttack( void )
 
 
 	CStomp::StompCreate( vecStart, theDir, theDist, stompStartSpeed, stompMaxSpeed, this->edict() );
+	//DebugLine_Setup(0, vecStart, vecStart + theDir * theDist, 0, 255, 0);
 
 	if(g_iSkillLevel == SKILL_HARD){
 		// spawn two more X degrees apart left/right!  ...  uh-oh, MATH
@@ -1221,15 +1342,19 @@ void CGargantua::StompAttack( void )
 			angleShift = 1.5;
 		}
 
+		//TEST?
+		angleShift = 9;
 		
 		Vector theAngLeft(theAngles.x, fmod(theAngles.y - angleShift, 360), theAngles.z);
 		Vector theAngRight(theAngles.x, fmod(theAngles.y + angleShift, 360), theAngles.z);
 
-		UTIL_MakeVectorsPrivate( theAngLeft, currentForward, NULL, NULL );
+		UTIL_MakeAimVectorsPrivate( theAngLeft, currentForward, NULL, NULL );
 		CStomp::StompCreate( vecStart, currentForward, theDist, stompStartSpeed, stompMaxSpeed, this->edict() );
+		//DebugLine_Setup(1, vecStart, vecStart + currentForward * theDist, 255, 0, 0);
 
-		UTIL_MakeVectorsPrivate( theAngRight, currentForward, NULL, NULL );
+		UTIL_MakeAimVectorsPrivate( theAngRight, currentForward, NULL, NULL );
 		CStomp::StompCreate( vecStart, currentForward, theDist, stompStartSpeed, stompMaxSpeed, this->edict() );
+		//DebugLine_Setup(2, vecStart, vecStart + currentForward * theDist, 0, 0, 255);
 
 	}//g_iSkillLevel check
 
@@ -1327,7 +1452,8 @@ void CGargantua::FlameUpdate( void )
 			vecAim.x += m_flameX;
 			vecAim.y += m_flameY;
 
-			UTIL_MakeVectors( vecAim );
+			//MODDD - anything based in pev->angles that involves pitch should use MakeAimVectors!
+			UTIL_MakeAimVectors( vecAim );
 
 			GetAttachment( i+1, vecStart, angleGun );
 			Vector vecEnd = vecStart + (gpGlobals->v_forward * GARG_FLAME_LENGTH_LOGIC); //  - offset[i] * gpGlobals->v_right;
@@ -1502,6 +1628,14 @@ void CGargantua::SetYawSpeed ( void )
 {
 	int ys;
 
+
+	if(pev->sequence == g_gargantua_throwbody_sequenceID){
+		// no turnin'.  Can't even rely on m_Activity, because likely only m_IdealActivity has been
+		// set at this point.  YYYYYYEEEEEEEEEAAAAAAAAAAHHHHHHHHHHHhhhhhhhhhh.
+		pev->yaw_speed = 0;
+		return;
+	}
+
 	switch ( m_Activity )
 	{
 	case ACT_IDLE:
@@ -1518,13 +1652,7 @@ void CGargantua::SetYawSpeed ( void )
 
 	case ACT_MELEE_ATTACK1:
 		// melee
-
-		if(pev->sequence == g_gargantua_throwbody_sequenceID){
-			// no turnin
-			ys = 0;
-		}else{
-			ys = 80;
-		}
+		ys = 80;
 	break;
 	case ACT_MELEE_ATTACK2:
 		// flamethrower
@@ -2258,6 +2386,37 @@ CBaseEntity* CGargantua::GargantuaCheckTraceHullAttack(float flDist, int iDamage
 }
 
 
+
+//MODDD - NEW.  Like CheckTraceHullAttack, but doen't deal damage, just 'gets' the entity that would've been
+// fetched by the call (such as verifying the entity grabbed by CheckTraceHullAttack would have certain stats
+// before changing animations).
+CBaseEntity* CGargantua::GargantuaCheckTraceHull(float flDist)
+{
+	TraceResult tr;
+
+	UTIL_MakeVectors( pev->angles );
+	Vector vecStart = pev->origin;
+	vecStart.z += 64;
+	Vector vecEnd = vecStart + (gpGlobals->v_forward * flDist) - (gpGlobals->v_up * flDist * 0.3);
+
+	UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, ENT(pev), &tr );
+
+	if ( tr.pHit )
+	{
+		CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
+		// that's it
+		return pEntity;
+	}
+
+	return NULL;
+}
+
+
+
+
+
+
+
 BOOL CGargantua::needsMovementBoundFix(void) {
 	return TRUE;
 }
@@ -2380,6 +2539,17 @@ void CGargantua::StartTask( Task_t *pTask )
 
 	switch ( pTask->iTask )
 	{
+	case TASK_FACE_ENEMY:
+
+		if(pev->sequence == g_gargantua_throwbody_sequenceID){
+			// Let me turn then, this sequence is left-over from a previous schedule
+			easyPrintLine("GARG: Debug flag 234");
+			pev->yaw_speed = 60;
+			//this->signalActivityUpdate = TRUE;
+		}
+
+		CBaseMonster::RunTask(pTask);
+	break;
 	case TASK_PLAY_PRE_FLAMETHROWER_SEQUENCE:
 
 		// If the current activity is not yet melee, do the pre-attack sequence first.
@@ -2535,6 +2705,18 @@ void CGargantua::RunTask( Task_t *pTask )
 			TaskComplete();
 		}
 
+	break;
+	case TASK_FACE_ENEMY:
+
+		CBaseMonster::RunTask(pTask);
+	break;
+	case TASK_STOP_MOVING:
+		
+		CBaseMonster::RunTask(pTask);
+	break;
+	case TASK_MELEE_ATTACK1:
+
+		CBaseMonster::RunTask(pTask);
 	break;
 	case TASK_RANGE_ATTACK1:
 		// stomp attack.  On hard difficulty, have a 2nd stomp when the first finishes!
@@ -2991,6 +3173,18 @@ int CGargantua::LookupActivityHard(int activity){
 	// any animation events in progress?  Clear it.
 	resetEventQueue();
 
+
+	// Any activity change also releases the grabbed ent (not that this should be interrupted?)
+	if(grabbedEnt){
+		// release, simply drop
+		UTIL_MakeVectors( pev->angles );
+		grabbedEnt->pev->velocity = gpGlobals->v_forward * 180 + Vector(0, 0, 48);
+		releaseGrabbedEnt();
+	}
+
+	// any activity change, by default, doesn't use FastThink
+	SetFastThink(FALSE);
+
 	switch(activity){
 		case ACT_IDLE:
 			if(m_pSchedule == slGargFlamePreAttack){
@@ -3069,50 +3263,91 @@ int CGargantua::LookupActivityHard(int activity){
 		break;
 		case ACT_MELEE_ATTACK1:{
 			// melee attack.  Go figure.
-
-
 			float randoVal = RANDOM_FLOAT(0, 1);
 
 			// TEST, force it
 			//randoVal = 0.04;
 
-			// NEVERMIND THIS.  "tossbody" will be pretty hard to get working right, lots of checks to see that area to the right and upper 
-			// portions of the garg are completely safe.  And need to forbid any rotating while the sequence is playing, oops. (done now?).
-			// Main thing is to also turn off gravity for the player if they're the grabbed ent, a 'pev->gravity = 0' setting isn't enough.
-			// So some player physics flag most likely just for that.   EHHHHhhhhhhh.
-			/*
-			if(randoVal < 0.08){
-				// good amount of space above me?
-				TraceResult tr;
-				Vector vecTop = pev->origin + Vector(0, 0, pev->maxs.z);
-				UTIL_TraceLine(vecTop, vecTop + Vector(0, 0, 60), dont_ignore_monsters, edict(), &tr);
+			BOOL throwAttempt;
+			if(EASY_CVAR_GET_DEBUGONLY(sv_gargantua_throwattack) == 1){
+				// normal use: 20% of the time
+				throwAttempt = (randoVal < 0.2);
+			}else if(EASY_CVAR_GET_DEBUGONLY(sv_gargantua_throwattack) == 2){
+				// guaranteed
+				throwAttempt = TRUE;
+			}else{
+				// nope
+				throwAttempt = FALSE;
+			}
 
-				if(tr.flFraction >= 1){
-					// ok, good.  Another one.
+			if(throwAttempt){
+				// Do a few line-traces?  Clipping the thrown thing through map geometry while it's being tossed
+				// isn't pleasant.
+				// PROCEDURAL LOOP
+				BOOL passedTraces = FALSE;  //reach the end to be TRUE
+				while(TRUE){
+					TraceResult tr;
+					Vector vecStart;
+
+					// good amount of space above me?
+					vecStart = pev->origin + Vector(0, 0, pev->maxs.z);
+					UTIL_TraceLine(vecStart, vecStart + Vector(0, 0, 60), dont_ignore_monsters, edict(), &tr);
+					if(tr.fStartSolid || tr.fAllSolid || tr.flFraction < 1.0f){
+						// no.
+						break;
+					}
+
 					UTIL_MakeVectors(pev->angles);
 					
-					Vector vecCenter = Center();
-
-					UTIL_TraceLine(vecCenter, vecCenter + -gpGlobals->v_right * 100, dont_ignore_monsters, edict(), &tr);
-
-					if(tr.flFraction >= 1){
-						// that passed too?  ok.  Can proceed.
-
-						m_flFramerateSuggestion = 0.9;
-						pev->framerate = m_flFramerateSuggestion;
-
-						this->animEventQueuePush(3.8f / 16.0f, 6);
-						this->animEventQueuePush(10.5f / 16.0f, 7);
-						this->animEventQueuePush(15.7f / 16.0f, 8);
-
-						// no turnin
-						pev->yaw_speed = 0;
-
-						return g_gargantua_throwbody_sequenceID;
+					// To the left?
+					vecStart = Center() + Vector(0,0,18);
+					UTIL_TraceLine(vecStart, vecStart + -gpGlobals->v_right * 80, dont_ignore_monsters, edict(), &tr);
+					if(tr.fStartSolid || tr.fAllSolid || tr.flFraction < 1.0f){
+						break;
 					}
+
+					// How about forward?
+					vecStart = Center() + Vector(0,0,18) + -gpGlobals->v_right * 14;
+					UTIL_TraceLine(vecStart, vecStart + gpGlobals->v_forward * 350 + gpGlobals->v_right * 14, dont_ignore_monsters, edict(), &tr);
+					if(tr.fStartSolid || tr.fAllSolid || tr.flFraction < 1.0f){
+						break;
+					}
+
+
+					// One more check:  Is the thing in front of me suitable for throwing?  Try getting it through a damge-less hull trace
+					CBaseEntity* pHurt = GargantuaCheckTraceHull(GARG_MELEEATTACKDIST + 7);
+
+					if (pHurt && !pHurt->IsWorldOrAffiliated() && (pHurt->pev->movetype == MOVETYPE_WALK || pHurt->pev->movetype == MOVETYPE_STEP) )
+					{
+						// acceptable, proceed
+					}else{
+						break;
+					}
+
+					passedTraces = TRUE;  //ok!
+					break;
 				}
-			}
-			*/
+
+					
+				if(passedTraces){
+					m_flFramerateSuggestion = 0.9;
+					pev->framerate = m_flFramerateSuggestion;
+
+					this->animEventQueuePush(3.8f / 16.0f, 6);
+					this->animEventQueuePush(10.5f / 16.0f, 7);
+					this->animEventQueuePush(15.7f / 16.0f, 8);
+
+					// no turnin
+					pev->yaw_speed = 0;
+
+
+					SetFastThink(TRUE);  // do logic more often to keep things more smooth
+
+					return g_gargantua_throwbody_sequenceID;
+				}
+				
+			}//randoValue check for testing throw anim
+			
 
 			if(randoVal < 0.5){
 				// standard melee
@@ -3270,19 +3505,22 @@ void CGargantua::HandleEventQueueEvent(int arg_eventID){
 	case 6:{
 		// throwbody: the grab.  Or attempt to.  (little damage)
 		CBaseEntity *pHurt = GargantuaCheckTraceHullAttack( GARG_MELEEATTACKDIST + 7, gSkillData.gargantuaDmgSlash * 0.15, DMG_SLASH, DMG_BLEEDING );
-		if (pHurt)
+
+		// YES REALLY.  Don't try to grab the world.   Doing anything to that will royally <mess> your <stuff> up.
+		// Yeah.   Really.        Lots of stuff will report all space as solid, like hand grenades not going anywhere
+		// (stuck in place slowly descending as soon as their thrown), and mp5 grenades exploding the moment they're fired.
+		// Not doing a size-check, a gargantua picking up another gargantua and tossing it would be very rare,
+		// but just friggin' hilarious to witness.  And it would come from spawning stuff on your own anyway,
+		// never even two gargs in one place, nor would they even attack each other.
+		// Also. Only pickup things that walk, aiming so low to pickup flyers that could very well be higher might look wonky,
+		// and things that never intend on moving (like sentries) will just defy gravity forever, pretty silly.
+		// Could force to a movetype of TOSS since being thrown and restore the normal movetype on hitting the ground but.
+		// Ehhh.  Is that really worth supporting, every single entity would need default 'Touch' behavior on top of whatever
+		// custom 'touch' it already has, although the 'MonsterThink' idea going everywhere really is the same idea on top of
+		// the entity's 'Think' event method.
+		if (pHurt && !pHurt->IsWorldOrAffiliated() && (pHurt->pev->movetype == MOVETYPE_WALK || pHurt->pev->movetype == MOVETYPE_STEP) )
 		{
-			//MODDD - TODO!  If the thing detected is too large, don't do this.
-			
-			// no hit sound
-			grabbedEnt = pHurt;
-			grabbedEnt->pev->gravity = 0;
-			grabbedEnt->pev->flags &= ~FL_ONGROUND;
-			grabbedEnt->pev->groundentity = NULL;
-			grabbedEnt->pev->origin.z += 1;
-			//pev->nextNormalThink = pev->nextThink;
-			//pev->nextThink = gpGlobals->time + 0.01;
-			//
+			grabEnt(pHurt);
 		}
 		else{ // Play a random attack miss sound
 			// ALSO, give up the task.  Doesn't make sense to finish this one on a miss.
@@ -3300,9 +3538,8 @@ void CGargantua::HandleEventQueueEvent(int arg_eventID){
 		// throwbody:  the 'throw'.  Release and, well, chuck em' across.
 
 		if(grabbedEnt != NULL){
-			UTIL_MakeVectors( pev->angles );
-			grabbedEnt->pev->velocity = gpGlobals->v_forward * 750 + gpGlobals->v_right * 160 + Vector(0, 0, 130);
-
+			UTIL_MakeAimVectors( pev->angles );
+			grabbedEnt->pev->velocity = gpGlobals->v_forward * 750 + -gpGlobals->v_right * 50 + Vector(0, 0, 130);
 			releaseGrabbedEnt();
 		}
 	}break;
@@ -3336,10 +3573,46 @@ float CGargantua::ScriptEventSoundVoiceAttn(void){
 	return 0.58;
 }
 
-// TODO - physics flag for the player to restore gravity  (not implemented, yet?)
-void CGargantua::releaseGrabbedEnt(void){
 
-	grabbedEnt->pev->gravity = 1.0f;
+void CGargantua::grabEnt(CBaseEntity* toGrab){
+	// no hit sound
+	grabbedEnt = toGrab;
+
+	//grabbedEnt->grabbedByGargantua = this;
+	// nah just do this.  This is in case the game gets saved while something is grabbed.
+	// I can 
+	grabbedEnt->isGrabbed = TRUE;
+	grabbedEnt->m_vecOldBoundsMins = grabbedEnt->pev->mins;
+	grabbedEnt->m_vecOldBoundsMaxs = grabbedEnt->pev->maxs;
+
+	grabbedEntOldMins = pev->mins;
+	grabbedEntOldMaxs = pev->maxs;
+	UTIL_SetSize(grabbedEnt->pev, g_vecZero, g_vecZero);
+
+	grabbedEnt->pev->flags &= ~FL_ONGROUND;
+	grabbedEnt->pev->groundentity = NULL;
+	grabbedEnt->pev->origin.z += 1;
+
+	// disable that gravity
+	grabbedEnt->SetGravity(0);
+
+	//pev->nextNormalThink = pev->nextThink;
+	//pev->nextThink = gpGlobals->time + 0.01;
+	//
+}
+
+void CGargantua::releaseGrabbedEnt(void){
+	// Special call that sets 'pev->gravity' for most entities, does some extra steps
+	// needed for the player here.
+	grabbedEnt->SetGravity(1.0f);
+	UTIL_SetSize(grabbedEnt->pev, grabbedEntOldMins, grabbedEntOldMaxs);
+	
+	//grabbedEnt->grabbedByGargantua = NULL;
+	// no need?
+	//grabbedEnt->pev->mins = grabbedEnt->m_vecOldBoundsMins;
+	//grabbedEnt->pev->maxs = grabbedEnt->m_vecOldBoundsMaxs;
+
+	grabbedEnt->isGrabbed = FALSE;
 	grabbedEnt = NULL;
 }
 

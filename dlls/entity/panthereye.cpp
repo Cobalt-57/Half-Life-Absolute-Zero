@@ -1259,7 +1259,7 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 		}break;
 		case 1:{
 			//
-			UTIL_MakeVectors(pev->angles);
+			UTIL_MakeAimVectors(pev->angles);
 
 			//....
 			Vector vecForwardFrom = pev->origin + gpGlobals->v_forward * 40;
@@ -1344,14 +1344,16 @@ void CPantherEye::JumpEvent(BOOL enemyAccurate){
 	pev->groundentity = NULL;  //safety?
 
 	UTIL_SetOrigin (pev, pev->origin + Vector ( 0 , 0 , 1) );// take him off ground so engine doesn't instantly reset onground 
-	UTIL_MakeVectors ( pev->angles );
+	UTIL_MakeAimVectors ( pev->angles );
 
 	Vector vecJumpDir;
 	if (enemyAccurate && m_hEnemy != NULL)
 	{
 		float gravity = g_psv_gravity->value;
-		if (gravity <= 1)
-			gravity = 1;
+		
+		// UHhhhh.  Is that wise, less than 1 gets interpreted as 1 anyway?  Doubt it?
+		//if (gravity <= 1)
+		//	gravity = 1;
 
 		// How fast does the headcrab need to travel to reach that height given gravity?
 		float height = (m_hEnemy->pev->origin.z + m_hEnemy->pev->view_ofs.z - pev->origin.z);

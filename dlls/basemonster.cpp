@@ -3355,12 +3355,18 @@ BOOL CBaseMonster::CheckMeleeAttack1 ( float flDot, float flDist )
 {
 	// Decent fix to keep folks from kicking/punching hornets and snarks is to check the onground flag(sjb)
 
-	//MODDD NOTE - isn't the above comment from the as-is script outdated, even before any modding? hornets are meant to be untargetable by Classify()
-	//             preventing alien bioweapons from being targetable, I think. Worst case scenrio some extra "projectileIgnore()" check per enemy
-	//             to see if it is worth targeting like this would be good. As for snarks I don't see the problem with trying to melee them?
-	//             Natural reflex to swat off annoying fast-moving "bugs".
+	//MODDD NOTE - isn't the above comment from the as-is script outdated, even before any modding? hornets are
+	// meant to be untargetable by Classify(), preventing alien bioweapons from being targetable, I think.
+	// Worst case scenario some extra "projectileIgnore()" check per enemy to see if it is worth targeting like
+	// this would be good. As for snarks I don't see the problem with trying to melee them? Natural reflex to
+	// swat off annoying fast-moving "bugs".
+	// Zombies will also endlessly 'chase' turrets and miniturrets that are on the ground without ever
+	// attacking them (runs into them over and over).  Seems to be from lacking FL_ONGROUND.
+	// Probably from never touching the ground from the lack of gravity for the engine to set it.
+	// Anyway, requirement removed.
 
-	if ( flDist <= 64 && flDot >= 0.7 && m_hEnemy != NULL && FBitSet ( m_hEnemy->pev->flags, FL_ONGROUND ) )
+	// FBitSet(m_hEnemy->pev->flags, FL_ONGROUND)
+	if ( flDist <= 64 && flDot >= 0.7 && m_hEnemy != NULL )
 	{
 		return TRUE;
 	}
@@ -7130,7 +7136,6 @@ BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector v
 		// (makes sense, on checking so many nodes 'BuildNearestRoute' many times will just get expensive and redundant).
 		// And changed m_iLastCoverSearch to get saved to a temp-var and used out of paranoia (changes to LastCoverSearch
 		// since would not affect what we're counting off of; no skipped or twice-tried nodes)
-		// GOD I FUCKING LOVE FRAGILE PATHFINDING LOGIC
 		if ( flDist >= flMinDist && flDist < flMaxDist )
 		{
 			UTIL_TraceLine ( node.m_vecOrigin + vecViewOffset, vecLookersOffset, ignore_monsters, ignore_glass,  ENT(pev), &tr );
@@ -8528,7 +8533,8 @@ void CBaseMonster::ReportAIState( void )
 		
 	easyForcePrintLine("STATES: Current: %s  Ideal: %s", pStateNames[this->m_MonsterState], pStateNames[this->m_IdealMonsterState]);
 
-
+	easyForcePrintLine("Can attack? m1::%d m2:%d r1:%d r2:%d", HasConditions(bits_COND_CAN_MELEE_ATTACK1), HasConditions(bits_COND_CAN_MELEE_ATTACK2), HasConditions(bits_COND_CAN_RANGE_ATTACK1), HasConditions(bits_COND_CAN_RANGE_ATTACK2) );
+	easyForcePrintLine("Could attack? m1::%d m2:%d r1:%d r2:%d", HasConditionsMod(bits_COND_COULD_MELEE_ATTACK1), HasConditionsMod(bits_COND_COULD_MELEE_ATTACK2), HasConditionsMod(bits_COND_COULD_RANGE_ATTACK1), HasConditionsMod(bits_COND_COULD_RANGE_ATTACK2) );
 
 
 
@@ -8987,17 +8993,13 @@ Vector CBaseMonster::ShootAtEnemyMod( const Vector &shootOrigin )
 		return ( (pEnemy->BodyTargetMod( shootOrigin ) - pEnemy->pev->origin) + m_vecEnemyLKP - shootOrigin ).Normalize();
 	}
 	else {
-		UTIL_MakeAimVectors(this->pev->angles);
+		UTIL_MakeAimVectors(pev->angles);
 		return gpGlobals->v_forward;
 	}
 	//MODDD NOTICE - isn't trusting "gpGlobals->v_forward" kinda dangerous? This assumes we recently called MakeVectors and not privately for v_forward to be relevant
 	//               to this monster.
 	//  CHANGED,  just call it then in such a case for the love of.
 }
-
-
-
-
 
 
 //=========================================================
@@ -10267,6 +10269,46 @@ void CBaseMonster::playStandardMeleeAttackMissSound(void){
 void CBaseMonster::playStandardMeleeAttackHitSound(void){
 	UTIL_PlaySound( ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pStandardAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
 }
+void CBaseMonster::playStandardMeleeAttackMetalHitSound(void){
+	UTIL_playMeleeMetalHitSound(pev);
+}
+
+// Similar to above, but offering a custom hit-sound array and volume/attn/pitch stats for the normal sounds to use if picked.
+void CBaseMonster::playStandardMeleeAttackHitSound(CBaseEntity* hitEnt, const char** normalHitSounds, int normalHitSoundsSize, float vol, float attn, int pitchMin, int pitchMax){
+	// a choice?  ok, is it organic or not?
+	// Play the normal sound anyway on most map-related things (IsWorldOrAffiliated may have worked fine).
+	if(hitEnt == NULL || hitEnt->IsWorld() || hitEnt->Classify() == CLASS_NONE || hitEnt->isOrganic()){
+		// normal sounds.  Use the custom sound list and other info given.
+		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, normalHitSounds[ RANDOM_LONG(0, normalHitSoundsSize-1) ], vol, attn, 0, RANDOM_LONG(pitchMin, pitchMax) );
+	}else{
+		// metal ones
+		playStandardMeleeAttackMetalHitSound();
+	}
+}
+
+
+// Given an entity hit, can decide whether to play the metal hit sounds instead.
+// A monster can override the 'playStandardMeleeAttackHitSound & MetalHitSound' methods for custom behavior each that way too.
+// The TraceAttack call can then call 'determineStandardMeleeAttackHitSound(pHurt)' to pick which one.
+void CBaseMonster::determineStandardMeleeAttackHitSound(CBaseEntity* hitEnt){
+	// Play the normal sound anyway on most map-related things (IsWorldOrAffiliated may have worked fine).
+	if(hitEnt == NULL || hitEnt->IsWorld() || hitEnt->Classify() == CLASS_NONE || hitEnt->isOrganic()){
+		// normal sounds
+		playStandardMeleeAttackHitSound();
+	}else{
+		// metal ones
+		playStandardMeleeAttackMetalHitSound();
+	}
+}
+
+
+
+
+
+
+
+
+
 
 BOOL CBaseMonster::traceResultObstructionValidForAttack(const TraceResult& arg_tr){
 	//Given a TraceResult that has already been written to by some trace method,

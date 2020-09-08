@@ -3590,8 +3590,9 @@ void CBasePlayer::Jump()
 		return;
 	}
 
+	//MODDD - use UTIL_MakeAimVectors on pev->angles
 // many features in this function use v_forward, so makevectors now.
-	UTIL_MakeVectors (pev->angles);
+	UTIL_MakeAimVectors (pev->angles);
 
 	// ClearBits(pev->flags, FL_ONGROUND);		// don't stairwalk
 	
@@ -3844,7 +3845,6 @@ void CBasePlayer::UpdateStatusBar()
 
 void CBasePlayer::PreThink(void)
 {
-	
 	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(testVar) == -1)
 	//	return;
 	
@@ -4420,12 +4420,15 @@ void CBasePlayer::parse_itbd(int i) {
 	}break;
 	// Overwriting this one compltely to use UTIL_MakeVectors instead of UTIL_MakeAimVectors.
 	// Yes, the player uses MakeVectors and monsters use MakeAimVectors.   Go.   Figure.
+	// ONLY for pev->v_angle, which only the player uses!   MakeAimVectors is needed for player pev->angles,
+	// but that's not being used here (Make_Vectors choices are interchangeable for monster pev->angles,
+	// always 0 pitch).
 	case itbd_Bleeding: {
 
 		// this will always ignore the armor (hence DMG_TIMEDEFFECT).
 		TakeDamage(pev, pev, TimedDamageBuddhaFilter(BLEEDING_DAMAGE), 0, damageType | DMG_TIMEDEFFECTIGNORE);
 
-		UTIL_MakeVectors(pev->v_angle);
+		UTIL_MakeVectors(pev->v_angle + pev->punchangle);
 		//pev->origin + pev->view_ofs
 		//BodyTargetMod(g_vecZero)
 		// BLEEDING_DAMAGE
@@ -5685,7 +5688,7 @@ void CBasePlayer::UpdatePlayerSound ( void )
 	if (m_iWeaponFlash < 0)
 		m_iWeaponFlash = 0;
 
-	//UTIL_MakeVectors ( pev->angles );
+	//UTIL_MakeAimVectors ( pev->angles );
 	//gpGlobals->v_forward.z = 0;
 
 	// Below are a couple of useful little bits that make it easier to determine just how much noise the 
@@ -6507,14 +6510,8 @@ void CBasePlayer::OnFirstAppearance(void) {
 }//END OF OnFirstAppearance
 
 
-
-//MODDD - new.  Without args, assume we're not reviving from adrenaline.
-void CBasePlayer::Spawn( void ){
-	Spawn(FALSE);
-}
-
-//The hideDamage CVar makes the player unaffected by punches.
-//It is still up to individual cases to check for this "blocksImpact" feature of any entity and know not to do the camera punch + movement force if it is on.
+// The hideDamage CVar makes the player unaffected by punches.
+// It is still up to individual cases to check for this "blocksImpact" feature of any entity and know not to do the camera punch + movement force if it is on.
 BOOL CBasePlayer::blocksImpact(void){
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(hideDamage) <= 0){
 		return FALSE;
@@ -6522,6 +6519,14 @@ BOOL CBasePlayer::blocksImpact(void){
 		return TRUE;
 	}
 }//END OF blocksImpact
+
+
+
+
+//MODDD - new.  Without args, assume we're not reviving from adrenaline.
+void CBasePlayer::Spawn( void ){
+	Spawn(FALSE);
+}
 
 void CBasePlayer::Spawn( BOOL revived ){
 	
@@ -6698,6 +6703,7 @@ void CBasePlayer::Spawn( BOOL revived ){
 		//new phyiscs var: player ladder movement.  This is related to a CVar that may be changed.
 		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "plm", "0" );
 
+		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "gmm", "1" );
 	}//END OF if(!revived)
 
 
@@ -6767,6 +6773,7 @@ void CBasePlayer::Spawn( BOOL revived ){
 	if(!revived){
 		//get the spawn spot.
 		g_pGameRules->GetPlayerSpawnSpot( this );
+		pev->punchangle = g_vecZero;  // that too?
 	}else{
 		//not spawning, reviving.  re-appear close to the same spot, probably adjust the view ang. to look forward.
 		pev->origin = pev->origin + Vector(0,0,1);
@@ -7079,8 +7086,13 @@ int CBasePlayer::Restore( CRestore &restore )
 	//assume we have a weapon out.
 	// + randomIdleAnimationDelay()
 
+
+	// Need to keep this in synch with the physics key since loading?
+	SetGravity(pev->gravity);
+
+
 	return status;
-}
+}//Restore
 
 
 
@@ -7418,6 +7430,7 @@ void CSprayCan::Think( void )
 	// ALERT(at_console, "Spray by player %i, %i of %i\n", playernum, (int)(pev->frame + 1), nFrames);
 
 
+	//MODDD - NOTE.  Aha!  This pev->angles is a copy of the player's v_angle so this is ok
 	UTIL_MakeVectors(pev->angles);
 	UTIL_TraceLine ( pev->origin, pev->origin + gpGlobals->v_forward * 128, ignore_monsters, pev->owner, & tr);
 
@@ -9717,8 +9730,9 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 				MESSAGE_END();
 			}
 
-
-			UTIL_MakeVectors ( pev->angles ); 
+			//MODDD - whoops!  Don't use MakeVectors on pev->angles.  That's only for player pev->v_angle!
+			// use UTIL_MakeAimVectors here
+			UTIL_MakeAimVectors ( pev->angles ); 
 
 			pev->weapons &= ~(1<<pWeapon->m_iId);// take item off hud
 
@@ -9988,8 +10002,26 @@ BOOL CBasePlayer::usesSoundSentenceSave(void) {
 	return FALSE;
 }
 
+void CBasePlayer::SetGravity(float newGravityVal){
+	// do this anyway I guess?
+	pev->gravity = newGravityVal;
 
+	// don't allow things too extreme?
+	float filter = UTIL_clamp(newGravityVal, -4, 4);
 
+	// canned values: set em' fast
+	if(filter == 0){
+		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "gmm", "0" );
+	}else if(filter == 1.0f){
+		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "gmm", "1" );
+	}else{
+		// parse away
+		char buffer[13];
+		tryFloatToStringBuffer(buffer, filter );
+		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "gmm", buffer );
+	}
+	
+}
 
 
 

@@ -551,9 +551,10 @@ void CBaseMonster::MaintainSchedule ( void )
 					pNewSchedule = GetScheduleOfType( SCHED_FAIL );
 				}
 
-				//MODDD - same schedule as the current one?  No more iterations for this loop.
+				//MODDD - same schedule as the current one?  No more iterations for this loop,
+				// but still continue this one until the end.
 				if(pNewSchedule == pPrevSchedule){
-					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! Same schedule picked in the same frame, BLOCKED. <fail>");}
+					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! %s:%d Same schedule (%s) picked in the same frame, BLOCKED. <fail>", getClassname(), monsterID, m_pSchedule->pName);}
 					i = 999;
 				}
 
@@ -604,7 +605,7 @@ void CBaseMonster::MaintainSchedule ( void )
 
 				//MODDD - yea.
 				if(pNewSchedule == pPrevSchedule){
-					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! Same schedule picked in the same frame, BLOCKED. <normal>");}
+					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! %s:%d Same schedule (%s) picked in the same frame, BLOCKED. <normal>", getClassname(), monsterID, m_pSchedule->pName);}
 					i = 999;
 				}
 

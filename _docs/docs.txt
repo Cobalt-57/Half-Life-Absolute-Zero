@@ -1608,3 +1608,10 @@ For any laginess, look for calls to 'FindRandom', it could do pathfind-checks fo
 The controller now uses it (good for stress-testing AI).  HAssault also uses it when failing pathfinding-related things, usually.
 
 
+Seems a bit odd that melee-focused things (like zombies) will endlessly walk into turrets and miniturrets on the ground
+and never start a melee attack.  Looks to be becase the default CheckMeleeAttack1 (basemonster.cpp) expected the enemy
+to be on the ground (FL_ONGROUND), yet even spawned turrets placed on the ground don't count as that?
+Maybe from having no gravity to touch the ground for the engine to set that.
+Then again the sentry is attackable just fine (has the flag).  Weird.
+But nevermind, onground requirement removed from CheckMeleeAttack1 anyway.
+

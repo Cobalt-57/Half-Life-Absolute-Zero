@@ -438,6 +438,9 @@ float CTurret::getGibCVar(){
 
 void CTurret::Spawn()
 { 
+	// TEST.  Default is floor (0), used when spawned by commands otherwise.
+	//m_iOrientation = 1;
+
 	Precache( );
 	SET_MODEL(ENT(pev), "models/turret.mdl");
 	pev->health			= gSkillData.turretHealth;
@@ -449,8 +452,12 @@ void CTurret::Spawn()
 
 	pev->classname = MAKE_STRING("monster_turret");
 
-	m_iRetractHeight = 16;
-	m_iDeployHeight = 32;
+	//MODDD - bit more there?  Odd for projectiles to go through the top portion
+	//m_iRetractHeight = 16;
+	//m_iDeployHeight = 32;
+	m_iRetractHeight = 18;
+	m_iDeployHeight = 46;
+
 	m_iMinPitch	= -15;
 	UTIL_SetSize(pev, Vector(-32, -32, -m_iRetractHeight), Vector(32, 32, m_iRetractHeight));
 	

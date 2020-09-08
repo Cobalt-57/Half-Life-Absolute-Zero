@@ -1543,7 +1543,7 @@ cl_viewmodel_fidget (2) - MODEVAR.  Affects how/when fidget animations for certa
 1: Randomly while idle (retail).  Does not block firing.
 2: Right-click to trigger them, blocks firing.
 
-sv_player_midair_fix (1) - BOOL.  When on, support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
+sv_player_midair_fix (0) - BOOL.  When on, support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
 -As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
 -This may also stop getting stuck in certain terrain, such as tracks in a2a1.
 -Slight jumpiness one frame (very fast) when crouch-jumping against something, helped by cl_interp_view_extra set to 2.  NEW: fixed for cl_interp_view_extra set to 1 too.
@@ -1592,8 +1592,10 @@ sv_explosion_shake_amp (1) - ADJUSTABLE.  How intense is the shake-effect?
 sv_explosion_shake_freq (1) - ADJUSTABLE.  How rapidly does the shake-effect occur?
 sv_explosion_shake_duration (1) - ADJUSTABLE.  How long does the shake-effect last?  Higher = intensity decays more slowly.
 
-
-
+sv_gargantua_throwattack (1) - MODEVAR.  If above 0, the throw attack may be used to pick up the entity in melee range instead, if some nearby space is availble for swinging its arm around and there is enough clear space forward.
+0: no effect.
+1: There is a 20% chance any gargantua melee attempts to pick up the entity in front and toss it.
+2: The throw-attempt replaces all melee.  (still goes back to normal melee if nearby empty-space checks fail)
 
 
 

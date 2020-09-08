@@ -420,6 +420,14 @@ public:
 	int timeOfDeath_sequence;
 
 	float waitForScriptedTime;
+	
+	// For being grabbed by a gargantua.  Revert the old pev->mins/maxs right before saving, then back to the ones to be used
+	// while grabbed (0'd).
+	BOOL isGrabbed;
+	Vector m_vecOldBoundsMins;
+	Vector m_vecOldBoundsMaxs;
+
+
 
 
 
@@ -738,7 +746,7 @@ public:
 	void EXPORT SUB_StartFadeOut ( void );
 	void EXPORT SUB_FadeOut ( void );
 	void EXPORT SUB_CallUseToggle( void ) { this->Use( this, this, USE_TOGGLE, 0 ); }
-	int		ShouldToggle( USE_TYPE useType, BOOL currentState );
+	int ShouldToggle( USE_TYPE useType, BOOL currentState );
 
 
 	//MODDD - new.
@@ -863,6 +871,7 @@ public:
 	virtual BOOL FVisible (const Vector& vecLookerOrigin, const Vector &vecTargetOrigin );
 
 	virtual BOOL SeeThroughWaterLine(void);
+	virtual void SetGravity(float newGravityVal);
 
 };
 

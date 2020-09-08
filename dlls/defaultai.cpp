@@ -30,6 +30,9 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindStumpedMode)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindStumpedWaitTime)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindStumpedForgetEnemy)
 
+
+
+
 Task_t tlWaitForSequence[] =
 {
 	{ TASK_WAIT_FOR_SEQUENCEFINISH,	(float)0				},
@@ -47,6 +50,8 @@ Schedule_t	slWaitForSequence[] =
 		"WaitForSequence"
 	},
 };
+
+
 
 //Same as above but sets pev->framerate and m_flFramerateSuggestion to 1 when done for safety.
 Task_t tlWaitForReviveSequence[] =

@@ -49,6 +49,12 @@ public:
 	float pissedRunTime;
 	int consecutiveStomps;
 	CBaseEntity* grabbedEnt;
+	Vector grabbedEntOldMins;
+	Vector grabbedEntOldMaxs;
+	
+	BOOL usingFastThink;
+	float nextNormalThinkTime;
+
 
 public:
 	CGargantua(void);
@@ -59,8 +65,9 @@ public:
 	BOOL getMonsterBlockIdleAutoUpdate(void);
 
 	//MODDD - new
-	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType, int iDmgTypeMod);
 	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType);
+	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType, int iDmgTypeMod);
+	CBaseEntity* GargantuaCheckTraceHull(float flDist);
 
 	BOOL needsMovementBoundFix(void);
 
@@ -73,6 +80,7 @@ public:
 	
 	BOOL isSizeGiant(void);
 
+	void SetFastThink(BOOL newVal);
 	void MonsterThink(void);
 	int  IRelationship( CBaseEntity *pTarget );
 	
@@ -160,11 +168,14 @@ public:
 	
 	float ScriptEventSoundAttn(void);
 	float ScriptEventSoundVoiceAttn(void);
+
+	void grabEnt(CBaseEntity* toGrab);
 	void releaseGrabbedEnt(void);
 
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
 	static TYPEDESCRIPTION m_SaveData[];
+	void PostRestore(void);
 
 	CUSTOM_SCHEDULES;
 		

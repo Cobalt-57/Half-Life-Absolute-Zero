@@ -285,6 +285,7 @@ void CGauss::Holster(int skiplocal /* = 0 */)
 	PLAYBACK_EVENT_FULL(FEV_RELIABLE | FEV_GLOBAL, m_pPlayer->edict(), m_usGaussFire, 0.01, (float*)&m_pPlayer->pev->origin, (float*)&m_pPlayer->pev->angles, 0.0, 0.0, 0, 0, 0, 1);
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
+	SetAttackDelays(m_pPlayer->m_flNextAttack);
 
 	SendWeaponAnim(GAUSS_HOLSTER);
 
@@ -331,6 +332,7 @@ void CGauss::_PrimaryAttack()
 	{
 		PlayEmptySound();
 		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
+		SetAttackDelays(m_pPlayer->m_flNextAttack);
 		return;
 	}
 
@@ -350,15 +352,14 @@ void CGauss::_PrimaryAttack()
 
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0) {
 		// And, time between primary attacks changed from 0.2 to 0.25.  Time to secondary lengthened further.
+		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + attackAgainDelay;
 		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + attackAgainDelay;
 		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + attackAgainSecDelay;
 
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + attackAgainDelay;
 	}
 	else {
 		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
-		m_flNextPrimaryAttack = m_pPlayer->m_flNextAttack;
-		m_flNextSecondaryAttack = m_pPlayer->m_flNextAttack;
+		SetAttackDelays(m_pPlayer->m_flNextAttack);
 	}
 }
 
@@ -427,8 +428,7 @@ void CGauss::_SecondaryAttack()
 		{
 			EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM);
 			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
-			m_flNextPrimaryAttack = m_pPlayer->m_flNextAttack;
-			m_flNextSecondaryAttack = m_pPlayer->m_flNextAttack;
+			SetAttackDelays(m_pPlayer->m_flNextAttack);
 			return;
 		}
 
@@ -457,8 +457,7 @@ void CGauss::_SecondaryAttack()
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
 
 			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom);
-			m_flNextPrimaryAttack = m_pPlayer->m_flNextAttack;
-			m_flNextSecondaryAttack = m_pPlayer->m_flNextAttack;
+			SetAttackDelays(m_pPlayer->m_flNextAttack);
 			return;
 		}
 
@@ -510,9 +509,8 @@ void CGauss::_SecondaryAttack()
 				m_fInAttack = 0;
 				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
 				m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1;
-
 				//MODDD - why not?
-				SetAttackDelays(UTIL_WeaponTimeBase() + 1);
+				SetAttackDelays(m_pPlayer->m_flNextAttack);
 
 				return;
 			}
@@ -568,7 +566,7 @@ void CGauss::_SecondaryAttack()
 		if (pitch > maxPitch){
 			pitch = maxPitch;
 		}
-		easyForcePrintLine("OH dear PITCH %.2f / %.2f : %d", currentChargeTime, daChargeTime, pitch);
+		//easyForcePrintLine("OH dear PITCH %.2f / %.2f : %d", currentChargeTime, daChargeTime, pitch);
 
 
 
@@ -596,6 +594,7 @@ void CGauss::_SecondaryAttack()
 			m_fInAttack = 0;
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
 			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1.0;
+			SetAttackDelays(m_pPlayer->m_flNextAttack);
 
 #ifndef CLIENT_DLL
 			m_pPlayer->TakeDamage(VARS(eoNullEntity), VARS(eoNullEntity), 50, DMG_SHOCK);
@@ -1195,13 +1194,17 @@ void CGauss::ItemPostFrameThink(void){
 
 	BOOL holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
 	BOOL holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
-
+	
+		//easyForcePrintLine("WHATS GOOD charstag:%d ammochar:%d", m_fInAttack, m_fireState);
+//#ifdef CLIENT_DLL
+		//easyForcePrintLine("WHATS GOOD nextprim:%.2f", m_flNextPrimaryAttack);
+//#endif
 
 
 	
 	BOOL forceIdle = FALSE;
 
-	//if(!m_pPlayer->m_bHolstering){
+	if(!m_pPlayer->m_bHolstering){
 		if((holdingPrimary && holdingSecondary) ){
 			//m_chargeReady &= ~32;
 			///WeaponIdle();
@@ -1211,11 +1214,11 @@ void CGauss::ItemPostFrameThink(void){
 			holdingSecondary = FALSE;
 			forceIdle = TRUE;
 		}
-	//}else{
-	//	// holstering?  Block inputs, but don't forceIdle.
-	//	holdingPrimary = FALSE;
-	//	holdingSecondary = FALSE;
-	//}
+	}else{
+		// holstering?  Block inputs, but don't forceIdle.
+		holdingPrimary = FALSE;
+		holdingSecondary = FALSE;
+	}
 
 
 	if(holdingSecondary  ){

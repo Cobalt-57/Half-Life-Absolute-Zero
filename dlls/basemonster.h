@@ -625,6 +625,12 @@ public:
 	virtual void precacheStandardMeleeAttackHitSounds(void);
 	virtual void playStandardMeleeAttackMissSound(void);
 	virtual void playStandardMeleeAttackHitSound(void);
+	virtual void playStandardMeleeAttackMetalHitSound(void);
+	void playStandardMeleeAttackHitSound(CBaseEntity* hitEnt, const char** normalHitSounds, int normalHitSoundsSize, float vol, float attn, int pitchMin, int pitchMax);
+
+	void determineStandardMeleeAttackHitSound(CBaseEntity* hitEnt);
+
+
 
 	//don't override this.  it's a general utility that pops up in a lot of places.  Just use custom code if any part of it needs changes.
 	BOOL traceResultObstructionValidForAttack(const TraceResult& arg_tr);

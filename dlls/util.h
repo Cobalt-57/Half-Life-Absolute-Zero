@@ -897,6 +897,8 @@ extern BOOL entityHidden(edict_t* test);
 
 extern void UTIL_playOrganicGibSound(entvars_t* pevSoundSource);
 extern void UTIL_playMetalGibSound(entvars_t* pevSoundSource);
+extern void UTIL_playMeleeMetalHitSound(entvars_t* pevSoundSource);
+extern void UTIL_playMetalTextureHitSound(entvars_t* pevSoundSource, const Vector& vecOrigin);
 
 extern void updateCVarRefs(BOOL isEarly);
 

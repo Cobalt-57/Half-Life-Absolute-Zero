@@ -243,43 +243,6 @@ const char* CArcher::pAttackMissSounds[] =
 
 
 
-
-TYPEDESCRIPTION	CArcher::m_SaveData[] = 
-{
-	DEFINE_FIELD( CArcher, preSurfaceAttackLocation, FIELD_VECTOR ),
-};
-
-//IMPLEMENT_SAVERESTORE( CArcher, CFlyingMonster );
-int CArcher::Save( CSave &save )
-{
-	if ( !CFlyingMonster::Save(save) )
-		return 0;
-	int iWriteFieldsResult = save.WriteFields( "CArcher", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-
-	return iWriteFieldsResult;
-}
-int CArcher::Restore( CRestore &restore )
-{
-	if ( !CFlyingMonster::Restore(restore) )
-		return 0;
-	int iReadFieldsResult = restore.ReadFields( "CArcher", this, m_SaveData, ARRAYSIZE(m_SaveData) );
-
-	return iReadFieldsResult;
-}
-
-
-CArcher::CArcher(void){
-	shootCooldown = 0;
-	m_flightSpeed = 0;
-	tempCheckTraceLineBlock = FALSE;
-	m_velocity = Vector(0,0,0);
-	lastVelocityChange = -1;
-	
-
-}//END OF CArcher constructor
-
-
-
 //Thank you bullsquid, you know what is up dog.
 Task_t	tlArcherRangeAttack1[] =
 {
@@ -444,6 +407,41 @@ Schedule_t	slArcherFailWait[] =
 	},
 };
 
+
+
+
+
+Task_t	tlArcherGenericFail[] =
+{
+	//{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_ARCHER_GENERIC_FAIL	},
+	{ TASK_STOP_MOVING,			0				},
+	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
+	{ TASK_WAIT,				(float)0.4		},
+	{ TASK_WAIT_PVS,			(float)0		},
+	{ TASK_UPDATE_LKP, (float)0		},
+
+	// No, only do this onfailing pathfinding methods.
+	// Possible to lead to an endless loop (not crashing, just conceptually) of failing some other schedule,
+	// pikcing MOVE_FROM_ORIGIN, failing that, which leads to GenericFail, which leads to MOVE_FROM_ORIGIN,
+	// which fails again, etc.  GetSchedule never gets called during any of that, so any change in conditions
+	// elsewhere never has a chance to take effect (no attacking something in plain sight)
+	//{ TASK_SET_SCHEDULE,			(float)SCHED_MOVE_FROM_ORIGIN },
+};
+
+Schedule_t	slArcherGenericFail[] =
+{
+	{
+		tlArcherGenericFail,
+		ARRAYSIZE ( tlArcherGenericFail ),
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"Panther_genFail"
+	},
+};
+
+
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -457,6 +455,56 @@ DEFINE_CUSTOM_SCHEDULES( CArcher )
 
 };
 IMPLEMENT_CUSTOM_SCHEDULES( CArcher, CFlyingMonster );
+
+
+
+
+
+
+
+
+
+
+
+
+TYPEDESCRIPTION	CArcher::m_SaveData[] = 
+{
+	DEFINE_FIELD( CArcher, preSurfaceAttackLocation, FIELD_VECTOR ),
+};
+
+//IMPLEMENT_SAVERESTORE( CArcher, CFlyingMonster );
+int CArcher::Save( CSave &save )
+{
+	if ( !CFlyingMonster::Save(save) )
+		return 0;
+	int iWriteFieldsResult = save.WriteFields( "CArcher", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	return iWriteFieldsResult;
+}
+int CArcher::Restore( CRestore &restore )
+{
+	if ( !CFlyingMonster::Restore(restore) )
+		return 0;
+	int iReadFieldsResult = restore.ReadFields( "CArcher", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	return iReadFieldsResult;
+}
+
+
+CArcher::CArcher(void){
+	shootCooldown = 0;
+	m_flightSpeed = 0;
+	tempCheckTraceLineBlock = FALSE;
+	m_velocity = Vector(0,0,0);
+	lastVelocityChange = -1;
+
+
+}//END OF CArcher constructor
+
+
+
+
+
 
 
 	
@@ -529,7 +577,7 @@ void CArcher::Spawn( void )
 
 	pev->movetype		= MOVETYPE_FLY;
 
-	//pev->solid			= SOLID_BBOX;  //not SOLID_SLIDEBOX
+	//pev->solid		= SOLID_BBOX;  //not SOLID_SLIDEBOX
 	pev->solid			= SOLID_SLIDEBOX;  //SOLID_TRIGGER?  Difference?
 	//pev->movetype		= MOVETYPE_BOUNCEMISSILE;
 	
@@ -588,8 +636,6 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 
 
 
-
-	
 	//Now wait a moment.  We can't move to a point that's out of the water can we? Deny if so.
 	int conPosition = UTIL_PointContents(vecEnd);
 	if( conPosition != CONTENTS_WATER){
@@ -598,9 +644,6 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 	}
 
 
-
-
-	
 
 
 	/*
@@ -1265,11 +1308,19 @@ Schedule_t* CArcher::GetSchedule ( void )
 }//END OF GetSchedule()
 
 
+
+
 Schedule_t* CArcher::GetScheduleOfType( int Type){
 	
 	switch(Type){
+		case SCHED_FAIL:{
 
+			if(m_pSchedule == slPrimaryMeleeAttack || m_pSchedule == slSecondaryMeleeAttack){
+				SetActivity(ACT_IDLE);
+			}
 
+			return slArcherGenericFail;
+		}
 		case SCHED_ARCHER_FAIL_WAIT:
 			return slArcherFailWait;
 		break;
@@ -1291,26 +1342,27 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 			}else{
 				//Enemy isn't in the water? Wait for them to come back. Can interrupt by being able to attack too.
 				//slWaitForEnemyToEnterWater ?
-				return slArcherSurfaceRangeAttack;
+				return (pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC) ? slArcherSurfaceRangeAttack : slArcherRangeAttack1;
 			}
 
 		break;}
 		case SCHED_CHASE_ENEMY_FAILED:{
-			//Repeat from what schedule.cpp.  I'm not calling the parent method just for this.
+			// Repeat from what schedule.cpp.  I'm not calling the parent method just for this.
 			if(m_hEnemy != NULL){
 				//this->m_vecEnemyLKP = m_hEnemy->pev->origin;
 				setEnemyLKP(m_hEnemy->pev->origin);
 			}
 
 			if(m_hEnemy != NULL && m_hEnemy->pev->waterlevel == 3){
-				//enemy is in the water and you failed?  Typical pathfind fail I guess.
-				return &slFail[ 0 ];
+				// enemy is in the water and you failed?  Typical pathfind fail I guess.
+				//return &slFail[ 0 ];
+				return &slArcherGenericFail[0];
 			}else{
 				//Enemy isn't in the water?  No wonder we can't get to them.
 				//Just stick to staring with continual checks for the enemy being in the water or not.
 				//That is be a little more reactive while waiting than just staring into space.
 				//slWaitForEnemyToEnterWater ?
-				return &slArcherSurfaceRangeAttack[ 0 ];
+				return (pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC) ? slArcherSurfaceRangeAttack : slArcherRangeAttack1;
 			}
 
 		break;}
@@ -1324,14 +1376,14 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 		case SCHED_RANGE_ATTACK1:{
 
 			if(m_hEnemy == NULL || m_hEnemy->pev->waterlevel == 3){
-				//Our enemy disappeared (will fail soon?) or is still in the water? Typical attack, nothing special.
+				// Our enemy disappeared (will fail soon?) or is still in the water? Typical attack, nothing special.
 				return slArcherRangeAttack1;
 			}else{
-				//Enemy isn't in the water?  Let's see if emerging at the surface of the water to do an attack is possible.
+				// Enemy isn't in the water?  Let's see if emerging at the surface of the water to do an attack is possible.
 				//return slWaitForEnemyToEnterWater;
 				//...
-				//TODO. change this later.
-				return slArcherSurfaceRangeAttack;
+				// TODO. change this later.
+				return (pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC) ? slArcherSurfaceRangeAttack : slArcherRangeAttack1;
 			}
 
 		break;}
@@ -2174,7 +2226,7 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 
 		//GetAttachment( 0, vecStart, angleGun );
 			
-		::UTIL_MakeVectorsPrivate(pev->angles, vecForward, NULL, NULL);
+		::UTIL_MakeAimVectorsPrivate(pev->angles, vecForward, NULL, NULL);
 
 		vecStart = pev->origin + vecForward * 18 + Vector(0, 0, 60);
 

@@ -398,6 +398,24 @@ void CGrenade::Detonate( void )
 // 
 void CGrenade::ExplodeTouch( CBaseEntity *pOther )
 {
+
+	/*
+	// WHO IS OWNER
+	CBaseEntity* myOwner = NULL;
+	if(pev->owner != NULL){
+		myOwner = CBaseEntity::Instance(pev->owner);
+	}
+	const char* daOwnerClassname;
+	if(myOwner != NULL){
+		daOwnerClassname = myOwner->getClassname();
+	}else{
+		daOwnerClassname = "NULL?!";
+	}
+	const char* daTouchedClassname = pOther->getClassname();
+	*/
+
+
+
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_touchNeverExplodes) != 1){
 		TraceResult tr;
 		Vector		vecSpot;// trace starts here!
@@ -714,6 +732,22 @@ CGrenade *CGrenade::ShootContact( entvars_t *pevOwner, Vector vecStart, Vector v
 
 	//MODDD - moved here, as this is the only other grenade spawn call.  Other is the hand grenade that uses w_grenade.mdl.
 	SET_MODEL(ENT(pGrenade->pev), "models/grenade.mdl");
+
+	/*
+	// WHO IS OWNER
+	CBaseEntity* myOwner = NULL;
+	if(pevOwner != NULL){
+		myOwner = CBaseEntity::Instance(pevOwner);
+	}
+	const char* daOwnerClassname;
+	if(myOwner != NULL){
+		daOwnerClassname = myOwner->getClassname();
+	}else{
+		daOwnerClassname = "NULL?!";
+	}
+	/////////////////////////////////////////////////////////
+	*/
+
 
 	// contact grenades arc lower
 	pGrenade->pev->gravity = 0.5;// lower gravity since grenade is aerodynamic and engine doesn't know it.

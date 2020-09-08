@@ -15,17 +15,7 @@
 
 // easyPrint methods are now available for C!
 
-
-#include "pm_shared.h"
-
-#include "external_lib_include.h"
 #include <assert.h>
-#include "mathlib.h"
-#include "const.h"
-#include "usercmd.h"
-#include "pm_defs.h"
-#include "pm_movevars.h"
-#include "pm_debug.h"
 
 //MODDD - NO YA DONT.  To external_lib_include.h
 /*
@@ -35,6 +25,18 @@
 #include <stdlib.h> // atoi
 #include <ctype.h>  // isspace
 */
+
+
+#include "pm_shared.h"
+
+#include "external_lib_include.h"
+#include "mathlib.h"
+#include "const.h"
+#include "usercmd.h"
+#include "pm_defs.h"
+#include "pm_movevars.h"
+#include "pm_debug.h"
+
 
 //MODDD - new file.
 #include "pm_printout.h"
@@ -54,15 +56,8 @@
 
 
 
-
-
-
-
 //MODDD - debug constant.  set to "1" (yes) to print out information during a fall concerning how far the player fell.
 #define DEBUG_PRINTFALL 0
-
-
-
 
 
 // Was testing with 0.48, but reverted.
@@ -154,6 +149,7 @@ float vJumpAngles[3];
 //MODDD - NEW, per player.
 static int ary_iJumpOffDenyLadderFrames[MAX_CLIENTS];
 static int ary_iDenyLadderFrames[MAX_CLIENTS];
+static float ary_flGravityModMulti[MAX_CLIENTS];
 
 
 
@@ -938,6 +934,33 @@ int PM_ClipVelocity (vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 	return blocked;
 }
 
+
+
+/*
+============
+PM_AddGravity
+============
+*/
+void PM_AddGravity ()
+{
+	float ent_gravity;
+
+	if (pmove->gravity)
+		ent_gravity = pmove->gravity;
+	else
+		ent_gravity = 1.0;
+
+
+	//MODDD - involve ary_flGravityModMulti[pmove->player_index]
+	ent_gravity *= ary_flGravityModMulti[pmove->player_index];
+
+	// Add gravity incorrectly
+	pmove->velocity[2] -= (ent_gravity * pmove->movevars->gravity * pmove->frametime );
+	pmove->velocity[2] += pmove->basevelocity[2] * pmove->frametime;
+	pmove->basevelocity[2] = 0;
+	PM_CheckVelocity();
+}
+
 void PM_AddCorrectGravity ()
 {
 	float ent_gravity;
@@ -949,6 +972,9 @@ void PM_AddCorrectGravity ()
 		ent_gravity = pmove->gravity;
 	else
 		ent_gravity = 1.0;
+
+	//MODDD - involve ary_flGravityModMulti[pmove->player_index]
+	ent_gravity *= ary_flGravityModMulti[pmove->player_index];
 
 	// Add gravity so they'll be in the correct position during movement
 	// yes, this 0.5 looks wrong, but it's not.  
@@ -971,6 +997,9 @@ void PM_FixupGravityVelocity ()
 		ent_gravity = pmove->gravity;
 	else
 		ent_gravity = 1.0;
+
+	//MODDD - involve ary_flGravityModMulti[pmove->player_index]
+	ent_gravity *= ary_flGravityModMulti[pmove->player_index];
 
 	// Get the correct velocity for the end of the dt 
   	pmove->velocity[2] -= (ent_gravity * pmove->movevars->gravity * pmove->frametime * 0.5 );
@@ -3369,27 +3398,8 @@ void PM_WaterJump (void)
 	pmove->velocity[1] = pmove->movedir[1];
 }
 
-/*
-============
-PM_AddGravity
 
-============
-*/
-void PM_AddGravity ()
-{
-	float ent_gravity;
 
-	if (pmove->gravity)
-		ent_gravity = pmove->gravity;
-	else
-		ent_gravity = 1.0;
-
-	// Add gravity incorrectly
-	pmove->velocity[2] -= (ent_gravity * pmove->movevars->gravity * pmove->frametime );
-	pmove->velocity[2] += pmove->basevelocity[2] * pmove->frametime;
-	pmove->basevelocity[2] = 0;
-	PM_CheckVelocity();
-}
 /*
 ============
 PM_PushEntity
@@ -4765,6 +4775,10 @@ void PM_Move ( struct playermove_s *ppmove, int server )
 	assert( pm_shared_initialized );
 
 	pmove = ppmove;
+
+
+	// keep up to date?
+	ary_flGravityModMulti[pmove->player_index] = atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "gmm" ) );
 
 
 	//MODDD - do a check. If the "res" physics flag is on ("1"), reset fall velocity and set that flag back to "0".

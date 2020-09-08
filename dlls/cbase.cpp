@@ -682,6 +682,8 @@ CBaseEntity::CBaseEntity(void){
 	waitForScriptedTime = -1;
 	//barnacleVictimException = FALSE; ???
 
+	isGrabbed = FALSE;
+
 }
 
 // Whether this entity uses the sound sentence save feature. By default, false.  Most commonly expected monsters will though.
@@ -965,12 +967,35 @@ void CBaseEntity::precacheGunPickupSound(){
 }
 
 
+
 int CBaseEntity::Save( CSave &save )
 {
-	if ( save.WriteEntVars( "ENTVARS", pev ) )
-		return save.WriteFields( "BASE", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+	if(isGrabbed){
+		// HOLD ON.  Save my normal bounds / gravity instead!
+		// This way, on resuming the game, anything significant modified by being picked-up isn't stuck that way,
+		// despite the garg not being mid-throw like at the time of save.
+		// Not worth saving a bunch of extra specifics for this gimmick anyway.
+		// And I don't think this needs UTIL_SetSize, this will get reverted back after saving is done.
+		// This is for getting the values before being grabbed only.
+		pev->mins = m_vecOldBoundsMins;
+		pev->maxs = m_vecOldBoundsMaxs;
+		SetGravity(1);  // ASSUMPTION, that gravity was 1 before being grabbed!
+	}
 
-	return 0;
+	int baseWriteFieldsResult = 0;
+	if ( save.WriteEntVars( "ENTVARS", pev ) ){
+		baseWriteFieldsResult = save.WriteFields( "BASE", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+	}
+
+	if(isGrabbed){
+		// all saved?  back to normal
+		pev->mins = g_vecZero;
+		pev->maxs = g_vecZero;
+		SetGravity(0);
+	}
+
+	//return 0;
+	return baseWriteFieldsResult;
 }
 
 int CBaseEntity::Restore( CRestore &restore )
@@ -1328,8 +1353,8 @@ CBaseEntity * CBaseEntity::CreateManual( const char *szName, const Vector &vecOr
 }
 
 //MODDD - comment below found as-is in the codebase:
-  // NOTE: szName must be a pointer to constant memory, e.g. "monster_class" because the entity
-  // will keep a pointer to it after this call.
+// NOTE: szName must be a pointer to constant memory, e.g. "monster_class" because the entity
+// will keep a pointer to it after this call.
 //...Also, szName is now const (constant)
 CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, int setSpawnflags, edict_t *pentOwner ){
 	CBaseEntity* pEntity = CBaseEntity::CreateManual(szName, vecOrigin, vecAngles, pentOwner);
@@ -1341,7 +1366,7 @@ CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, 
 	return pEntity;
 }
 CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner ){
-	//seems to happen from real-time creation, like on crating gibs, not creatures at map load.
+	// seems to happen from real-time creation, like on crating gibs, not creatures at map load.
 	CBaseEntity* pEntity = CBaseEntity::CreateManual(szName, vecOrigin, vecAngles, pentOwner);
 	if(!pEntity)return NULL;
 
@@ -1350,17 +1375,17 @@ CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, 
 }
 
 
-//Whether a monster can see monsters through the water line.
-//That is, whether submerged monsters can see monsters above the water, and vice versa (whichever this monster is).
-//Not whether other monsters can see this one itself past the waterline necessarily.
-//Defaults to FALSE like retail. Special cases need TRUE.
+// Whether a monster can see monsters through the water line.
+// That is, whether submerged monsters can see monsters above the water, and vice versa (whichever this monster is).
+// Not whether other monsters can see this one itself past the waterline necessarily.
+// Defaults to FALSE like retail. Special cases need TRUE.
 BOOL CBaseEntity::SeeThroughWaterLine(void){
 	return FALSE;
 }//END OF SeeThroughWaterLine
 
 void CBaseEntity::ReportGeneric(){
-	//To be determined further by each entity class and its own specific variables. But this general info is ok.
-	//Child classes implementing this method should call their parent methods to reach any other parent specifics available.
+	// To be determined further by each entity class and its own specific variables. But this general info is ok.
+	// Child classes implementing this method should call their parent methods to reach any other parent specifics available.
 
 	easyForcePrintLine("Classname:%s targetname:%s netname:%s", STRING(pev->classname), pev->targetname!=NULL?STRING(pev->targetname):"_NONE_", pev->netname!=NULL?STRING(pev->netname):"_NONE_");
 	easyForcePrintLine("nextthink:%.2f ltime:%.2f currenttime:%.2f", pev->nextthink, pev->ltime, gpGlobals->time);
@@ -1479,50 +1504,53 @@ void CBaseEntity::SetAngleZ(const float newVal) {
 }
 
 
-//Does this entity resist the effects of physical attacks?
-//By default no.
+// Does this entity resist the effects of physical attacks?
+// By default no.
 BOOL CBaseEntity::blocksImpact(void){
 	return FALSE;
 }//END OF Impact
 
-//How much of an effect this has on other pushable entities.
-//Things smaller than average should reduce this number. This larger should increase it.
-//Most things won't touch pushables very often.
-//But things that would look silly making a pushable go flying (like arrows or hornets) should make this tiny to not look so strange.
+// How much of an effect this has on other pushable entities.
+// Things smaller than average should reduce this number. This larger should increase it.
+// Most things won't touch pushables very often.
+// But things that would look silly making a pushable go flying (like arrows or hornets) should make this tiny to not look so strange.
 float CBaseEntity::massInfluence(void){
 	return 0.7f;
 }//END OF massInfluence
 
-//What type of projectile am I, if I am a projectile at all?
-//This includes bolts, grenades, and rockets.  Any entity with the sole purpose of moving in one direction or following a target just to do damage.
-//Can include throwable organics too (snarks / chumtoads).
+// What type of projectile am I, if I am a projectile at all?
+// This includes bolts, grenades, and rockets.  Any entity with the sole purpose of moving in one direction or following a target just to do damage.
+// Can include throwable organics too (snarks / chumtoads).
 int CBaseEntity::GetProjectileType(void){
 	return PROJECTILE_NONE;
 }
 
-//If something else needs and idea of what direction / speed we're moving in and we pay more attention to some other
-//variable more closely instead of pev->velocity (the engine-tied one), we need to say what that is.
-//Defaults to pev->velocity.
+// If something else needs and idea of what direction / speed we're moving in and we pay more attention to some other
+// variable more closely instead of pev->velocity (the engine-tied one), we need to say what that is.
+// Defaults to pev->velocity.
 Vector CBaseEntity::GetVelocityLogical(void){
 	return pev->velocity;
 }
-//Likewise, if something else wants to change our velocity, and we pay more attention to something other than pev->velocty,
-//we need to apply the change to that instead.  Or both, leaving that up to the thing implementing this.
+// Likewise, if something else wants to change our velocity, and we pay more attention to something other than pev->velocty,
+// we need to apply the change to that instead.  Or both, leaving that up to the thing implementing this.
 void CBaseEntity::SetVelocityLogical(const Vector& arg_newVelocity){
 	pev->velocity = arg_newVelocity;
 }
 
-//If I'm deflected (or reflected? whichever term is more fitting) by the kingpin, let this entity know.
-//Applies to projectiles only (RPG rockets, mp5 grenades, hand grenades, even hornets, snarks, etc.)
-//By default, no behavior but for things that don't typically move just by some other variable (like pev->velocity),
-//like a RPG rocket's tendancy to seek out "laser_spot"'s, need to set some flag to tell it not to do that here.
+// If I'm deflected (or reflected? whichever term is more fitting) by the kingpin, let this entity know.
+// Applies to projectiles only (RPG rockets, mp5 grenades, hand grenades, even hornets, snarks, etc.)
+// By default, no behavior but for things that don't typically move just by some other variable (like pev->velocity),
+// like a RPG rocket's tendancy to seek out "laser_spot"'s, need to set some flag to tell it not to do that here.
 void CBaseEntity::OnDeflected(CBaseEntity* arg_entDeflector){
 
 }
 
-
-
-
+// Set the gravity of this entity.
+// Most of the codebase will still use 'pev->gravity' as it has (works for most entities),
+// but players need a little more custom behavior to pull that off.
+void CBaseEntity::SetGravity(float newGravityVal){
+	pev->gravity = newGravityVal;
+}
 
 
 

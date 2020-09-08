@@ -98,6 +98,7 @@ public:
 	BOOL friendlyFireStrafeBlock;
 	BOOL strafeCanFire;
 
+	BOOL recentChaseFailedAtDistance;
 
 
 	CHGrunt(void);
@@ -232,6 +233,8 @@ public:
 	void checkHeadGore(void);
 	void checkHeadGore(int iGib );
 	void SayGrenadeThrow(void);
+
+	float getDistTooFar(void);
 
 };
 

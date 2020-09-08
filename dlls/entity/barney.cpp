@@ -2287,10 +2287,12 @@ int CBarney::LookupActivityHard(int activity){
 			}//END OF IsTalking check
 			
 		break;}
+		/*
 		case ACT_VICTORY_DANCE:
 			m_flFramerateSuggestion = 1.16;
 			return LookupSequence("hambone");
 		break;
+		*/
 
 	}//END OF switch
 	//not handled by above?  try the real deal.
@@ -2321,12 +2323,14 @@ int CBarney::tryActivitySubstitute(int activity){
 				return CBaseAnimating::LookupActivity(activity);
 			}
 		break;
+		/*
 		case ACT_VICTORY_DANCE:
 			// a small portion of the time, allow this.   why not.
 			if (RANDOM_FLOAT(0, 1) < 0.04) {
 				return LookupSequence("hambone");
 			}
 		break;
+		*/
 
 	}//END OF switch
 	

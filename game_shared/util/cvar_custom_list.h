@@ -649,6 +649,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sv_explosion_shake_amp, sv_explosion_shake_amp)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sv_explosion_shake_freq, sv_explosion_shake_freq)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sv_explosion_shake_duration, sv_explosion_shake_duration)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sv_gargantua_throwattack, sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -1114,6 +1115,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -1579,6 +1581,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(sv_explosion_shake_amp, sv_explosion_shake_amp)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(sv_explosion_shake_freq, sv_explosion_shake_freq)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(sv_explosion_shake_duration, sv_explosion_shake_duration)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(sv_gargantua_throwattack, sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -2099,6 +2102,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -2618,6 +2622,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -3136,6 +3141,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -3657,6 +3663,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -4177,6 +4184,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -4696,6 +4704,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -5214,6 +5223,7 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -5732,6 +5742,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -6249,6 +6260,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_RESET_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_RESET_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_RESET_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -6767,6 +6779,7 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_EXTERN_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 
@@ -7287,6 +7300,7 @@
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(sv_explosion_shake_amp)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(sv_explosion_shake_duration)\
+	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(sv_gargantua_throwattack)\
 	DUMMY
 
 

@@ -16,6 +16,13 @@
 // Agrunt - Dominant, warlike alien grunt monster
 //=========================================================
 
+// MODDD - TODO!  Try adding slAGruntHiddenRangeAttack back in, maybe?
+// Commented out as-is and fixed up a little since.  Unsure if it would ever get called as not sure how 
+// a range attack would be called for without seeing the enemy.  Make sure it gets picked ever or determine
+// how to make CheckRangedAttack show TRUE when the player isn't visible.
+// (also need to override FCanCheckAttacks to not stop at the enemy being hidden, like the hgrunt/hassault do
+// in order to allow firing grenades).
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -1598,7 +1605,12 @@ void CAGrunt::StartTask ( Task_t *pTask )
 			fSkip = FALSE;
 			vecCenter = Center();
 
-			UTIL_VecToAngles( m_vecEnemyLKP - pev->origin );
+			//MODDD - whoops!  As-is, never saved this or did some kind of "MakeVectors" call.
+			// What is this gpGlobals->v_forward then?
+			//UTIL_VecToAngles( m_vecEnemyLKP - pev->origin );
+			Vector theDir = (m_vecEnemyLKP - pev->origin).Normalize();
+			Vector theAng = UTIL_VecToAngles(theDir);
+			UTIL_MakeAimVectors(theAng);
 
 			UTIL_TraceLine( Center() + gpGlobals->v_forward * 128, m_vecEnemyLKP, ignore_monsters, ENT(pev), &tr);
 			if ( tr.flFraction == 1.0 )

@@ -803,6 +803,7 @@ public:
 
 	BOOL usesSoundSentenceSave(void);
 
+	void SetGravity(float newGravityVal);
 
 	//MODDD - NEW.  Also inline now, very simple method and consistent for client/serverside.
 	// HOWEVER, this is only for easily compiling in both places.

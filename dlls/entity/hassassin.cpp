@@ -44,7 +44,7 @@
 #include "soundent.h"
 #include "game.h"
 #include "crossbowbolt.h"
-
+#include "util_debugdraw.h"
 
 
 //#define HASSASSIN_CROSSBOW_RELOAD_APPLY_DELAY 1.1
@@ -979,7 +979,12 @@ void CHAssassin::Shoot ( void )
 	
 
 	UTIL_MakeVectors ( pev->angles );
-	
+
+	/*
+	DebugLine_Setup(0, Center() + Vector(0,0,6), Center() + Vector(0,0,6) + gpGlobals->v_forward * 400, 255, 0, 255);
+	UTIL_MakeAimVectors ( pev->angles );
+	DebugLine_Setup(1, Center() + Vector(0,0,-6), Center() + Vector(0,0,-6) + gpGlobals->v_forward * 400, 0, 255, 0);
+	*/
 	Vector vecShootDir = ShootAtEnemyMod( vecShootOrigin ) + Vector( RANDOM_FLOAT(-m_flDiviation, m_flDiviation), RANDOM_FLOAT(-m_flDiviation, m_flDiviation), RANDOM_FLOAT(-m_flDiviation, m_flDiviation) );
 	Vector anglesAim = UTIL_VecToAngles( vecShootDir );
 

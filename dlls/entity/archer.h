@@ -14,6 +14,13 @@
 #define ARCHER_H
 
 
+// If this spawnflag is on, archers will use long-range logic.
+// They will try to pathfind to random points in a large body of water to hide and reach the surface to launch
+// energy balls
+// (bad for being placed in shallow or small pools of water)
+#define SF_ARCHER_LONG_RANGE_LOGIC 8
+
+
 class CArcher : public CFlyingMonster{
 public:
 
@@ -61,7 +68,7 @@ public:
 	void Spawn(void);
 	
 	
-	Activity	GetStoppedActivity( void );
+	Activity GetStoppedActivity( void );
 	void	Stop( void );
 
 	int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );
@@ -132,7 +139,6 @@ public:
 	
 
 
-
 	void checkTraceLine(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist);
 	void checkTraceLine(const Vector& vecSuggestedDir, const float& travelMag, const float& flInterval, const Vector& vecStart, const Vector& vecRelativeEnd, const int& moveDist, const BOOL canBlockFuture);
 	
@@ -149,20 +155,14 @@ public:
 	void onDeathAnimationEnd(void);
 
 	BOOL SeeThroughWaterLine(void);
-
 	BOOL noncombat_Look_ignores_PVS_check(void);
-
 	void BecomeDead(void);
 	
 	Vector DoVerticalProbe(float flInterval);
-
 	BOOL attemptBuildRandomWanderRoute(const float& argWaterLevel);
-
 	BOOL FCanCheckAttacks(void);
 
 
-
-	
 	void SetObjectCollisionBox( void ){
 
 		if(pev->deadflag != DEAD_NO){

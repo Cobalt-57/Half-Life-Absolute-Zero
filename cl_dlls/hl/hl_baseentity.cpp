@@ -142,10 +142,20 @@ BOOL CBaseMonster::canPredictActRepeat(void){return FALSE;}
 CBaseEntity* CBaseMonster::HumanKick(void){return NULL;}
 CBaseEntity* CBaseMonster::HumanKick(float argCheckDistance){return NULL;}
 
+
 void CBaseMonster::precacheStandardMeleeAttackMissSounds(void){}
 void CBaseMonster::precacheStandardMeleeAttackHitSounds(void){}
 void CBaseMonster::playStandardMeleeAttackMissSound(void){}
 void CBaseMonster::playStandardMeleeAttackHitSound(void){}
+void CBaseMonster::playStandardMeleeAttackMetalHitSound(void){}
+void CBaseMonster::playStandardMeleeAttackHitSound(CBaseEntity* hitEnt, const char** normalHitSounds, int normalHitSoundsSize, float vol, float attn, int pitchMin, int pitchMax){}
+
+void CBaseMonster::determineStandardMeleeAttackHitSound(CBaseEntity* hitEnt){}
+
+
+
+
+
 
 BOOL CBaseMonster::traceResultObstructionValidForAttack(const TraceResult& arg_tr){return FALSE;}
 
@@ -573,7 +583,7 @@ BOOL CBaseEntity::FVisible (const Vector& vecLookerOrigin, const Vector &vecTarg
 
 //MODDD - new
 BOOL CBaseEntity::SeeThroughWaterLine(void){return FALSE;}
-
+void CBaseEntity::SetGravity(float newGravityVal) { }
 
 void CBaseMonster::MakeIdealYaw( Vector vecTarget ) { }
 float CBaseMonster::FlYawDiff ( void ) { return 0.0; }
@@ -966,6 +976,7 @@ void CBasePlayer::SetCustomDecalFrames( int nFrames ) { }
 int CBasePlayer::GetCustomDecalFrames( void ) { return -1; }
 void CBasePlayer::DropPlayerItem ( char *pszItemName ) { }
 
+void CBasePlayer::SetGravity(float newGravityVal) {}
 
 
 

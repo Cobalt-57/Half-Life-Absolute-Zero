@@ -177,6 +177,7 @@ enum
 	SCHED_HASSAULT_WAIT_FACE_ENEMY,
 	SCHED_HASSAULT_MELEE1,
 	SCHED_HASSAULT_VICTORY_DANCE_STAND,
+	SCHED_HASSAULT_CHASE_FAIL,
 
 };
 
@@ -413,7 +414,7 @@ Task_t tlHAssault_follow[] =
 {
 	//{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_HASSAULT_GENERIC_FAIL	},
 	// pick a random point then
-	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_MOVE_FROM_ORIGIN	},
+	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_HASSAULT_CHASE_FAIL	},
 	
 	//{ TASK_GET_PATH_TO_ENEMY,	(float)0					},
 	//{ TASK_RUN_PATH,			(float)0					},
@@ -459,7 +460,10 @@ Schedule_t slHAssault_follow[] =
 		bits_COND_TASK_FAILED		|
 		bits_COND_HEAR_SOUND,
 		
-		bits_SOUND_DANGER | bits_SOUND_PLAYER | bits_SOUND_WORLD,
+		// UNWISE TO HEAR ANY SOUNDS, not like I could react anyway
+		// (even hgrunts only listen for DANGER)
+		//bits_SOUND_DANGER | bits_SOUND_PLAYER | bits_SOUND_WORLD,
+		0,
 		"HA Chase Enemy"
 	},
 };
@@ -994,6 +998,48 @@ int CHAssault::Restore( CRestore &restore )
 }
 
 
+
+CHAssault::CHAssault(void){
+	signal1Cooldown = -1;
+	signal2Cooldown = -1;
+
+	nonStumpableCombatLook = FALSE;
+	previousAnimationActivity = -1;
+	fireDelay = -1;
+
+
+	forceBlockResidual = FALSE;
+	meleeAttackTimeMax = -1;
+	spinuptime = -1;
+	spinuptimeremain = -1;
+	waittime = -1;
+
+	rageTimer = -1;
+
+	movementBaseFramerate = 1.0f;
+
+	firing = FALSE;
+	recentSchedule = NULL;
+	recentRecentSchedule = NULL;
+
+	residualFireTime = -1;
+	idleSpinSoundDelay = -1;
+	chainFireSoundDelay = -1;
+	chainFiredRecently = FALSE;
+	spinuptimeIdleSoundDelay = -1;
+	residualFireTimeBehindCheck = -1;
+
+	alertSoundCooldown = -1;
+	shootpref_eyes = FALSE;
+
+	recentChaseFailedAtDistance = FALSE;
+
+}
+
+
+
+
+
 float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
 	
 	//SEQ_HASSAULT_ATTACK
@@ -1322,11 +1368,13 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 
 		if ( pHurt )
 		{
-			//MODDD - TODO:  make this draw blood on the victim...
+			//MODDD - TODO:  make this draw blood on the victim
 			UTIL_MakeVectors( pev->angles );
 
+			//DebugLine_Setup(0, Center(), Center() + gpGlobals->v_forward * 400, 255, 0, 255);
+
 			if(!pHurt->blocksImpact()){
-				//for now..
+				//for now
 				pHurt->pev->punchangle.x = 15;
 				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 47 + gpGlobals->v_up * 28;
 			}
@@ -1458,40 +1506,6 @@ void CHAssault::HandleAnimEvent( MonsterEvent_t *pEvent )
 	//CSquadMonster::HandleAnimEvent( pEvent );
 }
 
-
-CHAssault::CHAssault(void){
-	signal1Cooldown = -1;
-	signal2Cooldown = -1;
-	
-	nonStumpableCombatLook = FALSE;
-	previousAnimationActivity = -1;
-	fireDelay = -1;
-
-
-	forceBlockResidual = FALSE;
-	meleeAttackTimeMax = -1;
-	spinuptime = -1;
-	spinuptimeremain = -1;
-	waittime = -1;
-
-	rageTimer = -1;
-
-	movementBaseFramerate = 1.0f;
-
-	firing = FALSE;
-	recentSchedule = NULL;
-	recentRecentSchedule = NULL;
-
-	residualFireTime = -1;
-	idleSpinSoundDelay = -1;
-	chainFireSoundDelay = -1;
-	chainFiredRecently = FALSE;
-	spinuptimeIdleSoundDelay = -1;
-	residualFireTimeBehindCheck = -1;
-
-	alertSoundCooldown = -1;
-	shootpref_eyes = FALSE;
-}
 
 
 float CHAssault::getBarnacleForwardOffset(void){
@@ -1712,7 +1726,7 @@ Vector CHAssault::GetGunPositionAI(void){
 	}
 	
 	angle.x = 0; //pitch is not a factor here.
-	UTIL_MakeVectorsPrivate( angle, v_forward, v_right, v_up);
+	UTIL_MakeAimVectorsPrivate( angle, v_forward, v_right, v_up);
 	
 	// just hardcode this here or make a server-side global vector
 	// (for the hassault of course... or static for hassault then).
@@ -1737,7 +1751,9 @@ Vector CHAssault::GetGrenadeSPawnPosition(void){
 	angle = pev->angles;
 
 	angle.x = 0; //pitch is not a factor here.
-	UTIL_MakeVectorsPrivate( angle, v_forward, v_right, v_up);
+	// no need, angles.x is always 0?   ehhhh why not I'm paranoid
+
+	UTIL_MakeAimVectorsPrivate( angle, v_forward, v_right, v_up);
 
 	const Vector vecSrc = pev->origin 
 		+ v_forward * vecHAssaultGrenadeSpawnPos.y 
@@ -2105,6 +2121,21 @@ BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 		return FALSE;
 	}
 
+	// RANGE CHECK:
+	if(flDist < 1024.0){
+		// always passes
+	}else if(flDist < 1600){
+		// Fire anyway if recently failed to get closer while the enemy was that far
+		if(recentChaseFailedAtDistance == TRUE){
+			// ok
+		}else{
+			return FALSE;
+		}
+	}else{
+		// nope!
+		return FALSE;
+	}
+
 
 	// NOT SO SOON.   Allow setting 'bits_COND_COULD_RANGEATTACK1'
 	/*
@@ -2241,6 +2272,11 @@ BOOL CHAssault::CheckRangeAttack2 ( float flDot, float flDist )
 	//}
 
 	if(EASY_CVAR_GET_DEBUGONLY(hassaultAllowGrenades) == 0){
+		return FALSE;
+	}
+
+	if(flDist > 1024.0 * 0.8){
+		// I can't throw that far!
 		return FALSE;
 	}
 
@@ -3525,6 +3561,31 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 		case SCHED_FAIL:{
 			return slHAssaultFail;
 		}
+		case SCHED_HASSAULT_CHASE_FAIL:{
+			// ok, mark this?
+
+			if(m_hEnemy != NULL){
+				float flDistToEnemy;
+				flDistToEnemy = ( m_hEnemy->pev->origin - pev->origin ).Length();
+
+				if(flDistToEnemy > 900){
+					recentChaseFailedAtDistance = TRUE;
+
+					// Check the range attack again.
+					Vector2D vec2LOS;
+					vec2LOS = ( m_hEnemy->pev->origin - pev->origin ).Make2D();
+					vec2LOS = vec2LOS.Normalize();
+					float flDot = DotProduct (vec2LOS , gpGlobals->v_forward.Make2D() );
+					CheckRangeAttack1(flDot, flDistToEnemy);
+					if(HasConditions(bits_COND_CAN_RANGE_ATTACK1)){
+						// do it!
+						return GetScheduleOfType(SCHED_RANGE_ATTACK1);
+					}
+				}
+			}// m_hEnemy null check
+
+			return GetScheduleOfType(SCHED_MOVE_FROM_ORIGIN);
+		}break;
 		case SCHED_RANGE_ATTACK2:
 		{
 			//MODDD - grenade time
@@ -3581,6 +3642,10 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 		case SCHED_CHASE_ENEMY:
 			spinuptimeSet = FALSE;
 			EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "SCHED CHASE_ENEMY"));
+
+			// fresh attempt
+			recentChaseFailedAtDistance = FALSE;
+
 			return &slHAssault_follow[0];
 		break;
 		case SCHED_HASSAULT_FIRE:
@@ -3849,6 +3914,7 @@ void CHAssault::MonsterThink ( void )
 				if(m_IdealActivity == ACT_IDLE && pev->framerate == 0){
 
 					SetSequenceByName("spindown", 1.2f, FALSE);
+					this->usingCustomSequence = FALSE;
 
 					//this->signalActivityUpdate = TRUE;
 					//SetActivity(ACT_IDLE);
@@ -4233,5 +4299,12 @@ BOOL CHAssault::onResetBlend0(void){
 	return TRUE;
 }
 
+
+
+float CHAssault::getDistTooFar(void){
+	// Can allow firing from further away, but not preferrable.
+	// Only use the full range if pathfinding recently failed and the enemy is too far away.
+	return 1024.0 * 2;
+}
 
 

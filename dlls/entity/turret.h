@@ -105,8 +105,9 @@ public:
 	//Not virtual, no child classes intended.
 	GENERATE_GIBMONSTER_PROTOTYPE
 	
-	//MODDD - new.
-	void SetObjectCollisionBox( void )
+	/*
+	//MODDD - new.   Nevermind, per turret now.
+	virtual void SetObjectCollisionBox( void )
 	{
 		// also, when past the post-death beserk time.
 		if(pev->deadflag != DEAD_NO && gpGlobals->time >= postDeathEndTime){
@@ -118,6 +119,7 @@ public:
 			CBaseMonster::SetObjectCollisionBox();
 		}
 	}
+	*/
 
 
 	virtual void onDelete(void);
@@ -196,6 +198,19 @@ public:
 	GibInfo_t* getGibInfoRef(void){return CTurret::gibModelRef;}
 	float getGibCVar(void);
 
+	void SetObjectCollisionBox( void )
+	{
+		// also, when past the post-death beserk time.
+		if(pev->deadflag != DEAD_NO && gpGlobals->time >= postDeathEndTime){
+			pev->absmin = pev->origin + Vector(-46, -46, 0);
+			pev->absmax = pev->origin + Vector(46, 46, 48);
+			//pev->absmin = pev->origin + Vector(-4, -4, 0);
+			//pev->absmax = pev->origin + Vector(4, 4, 4);
+		}else{
+			CBaseMonster::SetObjectCollisionBox();
+		}
+	}
+
 	void Spawn(void);
 	void Precache(void);
 	// Think functions
@@ -225,6 +240,19 @@ public:
 	static GibInfo_t* gibModelRef;
 	GibInfo_t* getGibInfoRef(void){return CMiniTurret::gibModelRef;}
 	float getGibCVar(void);
+
+	void SetObjectCollisionBox( void )
+	{
+		// also, when past the post-death beserk time.
+		if(pev->deadflag != DEAD_NO && gpGlobals->time >= postDeathEndTime){
+			pev->absmin = pev->origin + Vector(-46, -46, 0);
+			pev->absmax = pev->origin + Vector(46, 46, 26);
+			//pev->absmin = pev->origin + Vector(-4, -4, 0);
+			//pev->absmax = pev->origin + Vector(4, 4, 4);
+		}else{
+			CBaseMonster::SetObjectCollisionBox();
+		}
+	}
 
 	void Spawn( );
 	void Precache(void);
