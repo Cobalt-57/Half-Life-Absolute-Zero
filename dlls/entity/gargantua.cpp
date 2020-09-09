@@ -2484,7 +2484,7 @@ Schedule_t *CGargantua::GetScheduleOfType( int Type )
 			}
 
 			if(m_hEnemy != NULL){
-				setEnemyLKP(m_hEnemy->pev->origin);
+				setEnemyLKP(m_hEnemy);
 			}
 
 			return &slFail[ 0 ];

@@ -14,9 +14,25 @@
 
 class CControllerHeadBall : public CBaseMonster
 {
-	//MODDD - public
 public:
+	float nextNormalThinkTime;
+	int m_iTrail;
+	int m_flNextAttack;
+	float timeOpacity;
+	Vector m_vecIdeal;
+	EHANDLE m_hOwner;
+	BOOL alreadyZapped;
+
+
 	CControllerHeadBall(void);
+
+	// good idea?  doesn't seem helpful, didn't think so though.
+	// Something sprite-based might not be able to benefit from collision-less bounds like this
+	// (no physical model to tell what parts were really hit within this)
+	void SetObjectCollisionBox( void ){
+		pev->absmin = pev->origin + Vector(-10,-10,-10);
+		pev->absmax = pev->origin + Vector(10,10,10);
+	}
 
 	void Spawn( void );
 	void Precache( void );
@@ -34,15 +50,21 @@ public:
 	virtual int GetProjectileType(void);
 
 	virtual float nearZapDamage(void);
+	// How much opacity do I lose per think cycle (0.1 seconds)?  Slow it down to last longer.
+	// NOTICE - This is for the natural fade while traveling around normally.
+	// The shot-down fadeout is much faster, doesn't involve this.
 	virtual float getFadeOutAmount(void);
+	virtual float StartHealth(void);
+	virtual float GetMaxSpeed(void);
 
 	void velocityCheck(const float& arg_maxSpeed);
 
-	float nextNormalThinkTime;
-	int m_iTrail;
-	int m_flNextAttack;
-	Vector m_vecIdeal;
-	EHANDLE m_hOwner;
+	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
+	GENERATE_KILLED_PROTOTYPE
+	void EXPORT DieFadeThink(void);
+
+	void AdministerZap(CBaseEntity* pEntity, TraceResult& tr);
+
 };
 
 

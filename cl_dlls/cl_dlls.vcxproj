@@ -305,6 +305,7 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
       </DataExecutionPrevention>
       <ImportLibrary>.\$(configuration)\client.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>

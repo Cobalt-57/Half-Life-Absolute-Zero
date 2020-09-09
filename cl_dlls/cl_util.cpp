@@ -46,6 +46,8 @@ int playingMov = FALSE;
 float movieStartTime = -1;
 
 
+extern BOOL g_queueCVarHiddenSave;
+
 // from inputw32.cpp
 extern void determineMouseParams(float argNew);
 extern void onUpdateRawInput(void);
@@ -76,9 +78,8 @@ float global2PSEUDO_auto_adjust_fov = -1;
 
 float g_cl_nextCVarUpdate = -1;
 
-
-
 BOOL g_lateCVarInit_called = FALSE;
+
 
 
 //is this accessible everywhere?
@@ -148,12 +149,6 @@ void updateClientCVarRefs(void){
 		return;
 	}
 	
-
-
-	if (gEngfuncs.GetClientTime() >= g_cl_nextCVarUpdate) {
-		g_cl_nextCVarUpdate = gEngfuncs.GetClientTime() + 1;
-		EASY_CVAR_UPDATE_CLIENT_MASS
-	}//g_cl_nextCVarUpdate check
 
 	//nope, this is what EASY_CVAR should be doing.  Or something better.
 	//if(cvar2_cl_interp_entity != NULL && cvar2_cl_interp_entity->value != global2_cl_interp_entity){\
@@ -225,6 +220,17 @@ void updateClientCVarRefs(void){
 		easyClientCommand("_auto_determined_fov %f", globalPSEUDO_autoDeterminedFOV);
 	}
 	
+
+
+	if (gEngfuncs.GetClientTime() >= g_cl_nextCVarUpdate) {
+		g_cl_nextCVarUpdate = gEngfuncs.GetClientTime() + 1;
+		EASY_CVAR_UPDATE_CLIENT_MASS
+		
+		if(g_queueCVarHiddenSave == TRUE){
+			saveHiddenCVars();
+		}
+		
+	}//g_cl_nextCVarUpdate check
 
 
 

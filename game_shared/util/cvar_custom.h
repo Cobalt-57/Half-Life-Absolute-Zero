@@ -2,7 +2,7 @@
 
 
 
-//This used to be in const.h. It now includes this file to keep custom CVars available everywhere.
+// This used to be in const.h. It now includes this file to keep custom CVars available everywhere.
 
 
 
@@ -414,12 +414,9 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		#define EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, valueV)\
 			if(IS_DEDICATED_SERVER()){\
 				CVAR_SET_FLOAT(#CVarName, valueV);\
-				global_##CVarName = valueV;\
-				CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
-			}else{\
-				global_##CVarName = valueV;\
-				CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
-			}
+			}\
+			global_##CVarName = valueV;\
+			CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)
 
 		// send a call to change it for one client?
 		#define EASY_CVAR_SET_CLIENTONLY_DEBUGONLY(CVarName, valueV)\
@@ -507,12 +504,9 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 		#define EASY_CVAR_RESET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName)\
 			if(IS_DEDICATED_SERVER()){\
 				CVAR_SET_FLOAT(#CVarName, DEFAULT_##CVarName);\
-				global_##CVarName = DEFAULT_##CVarName;\
-				CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
-			}else{\
-				global_##CVarName = DEFAULT_##CVarName;\
-				CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)\
-			}
+			}\
+			global_##CVarName = DEFAULT_##CVarName;\
+			CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(CVarName)
 
 			
 		#define EASY_CVAR_RESET_CLIENTONLY_DEBUGONLY(CVarName) DUMMY
@@ -1069,6 +1063,8 @@ Also, need to extern (all?) CVars in dlls/client.cpp.
 #else
 //RELEASE
 
+
+/*
 #define EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(CVarName, CVarNameLower)\
 if( FStrEq(pcmdRefinedRef, #CVarNameLower)  ){\
 	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);\
@@ -1082,7 +1078,7 @@ if( FStrEq(pcmdRefinedRef, #CVarNameLower)  ){\
 		try{\
 			tempF = tryStringToFloat(arg1ref);\
 			EASY_CVAR_SET_DEBUGONLY(CVarName, tempF)\
-			saveHiddenCVars();\
+			g_queueCVarHiddenSave = TRUE;\
 		}catch(int){\
 			easyForcePrintLineClient(pEntity, "ERROR: Bad input. No effect.");\
 		}\
@@ -1104,7 +1100,7 @@ if( FStrEq(pcmdRefinedRef, #CVarNameLower) ){\
 		try{\
 			tempF = tryStringToFloat(arg1ref);\
 			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, tempF)\
-			saveHiddenCVars();\
+			g_queueCVarHiddenSave = TRUE;\
 		}catch(int){\
 			easyForcePrintLineClient(pEntity, "ERROR: Bad input. No effect.");\
 		}\
@@ -1135,9 +1131,16 @@ if( FStrEq(pcmdRefinedRef, #CVarNameLower) ){\
 	return;\
 }
 
+*/
 
-
-
+// CHANGED.  Now, put info in an array instead.  Saves lots of instructions and cuts
+// the DLL size down by 150 kilobytes doing it this way instead of above.
+#define EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(CVarName, CVarNameLower)\
+	{#CVarName, #CVarNameLower, -1, &global_##CVarName, 0 },
+#define EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(CVarName, CVarNameLower, ID)\
+	{#CVarName, #CVarNameLower, CVarName##_ID, &global_##CVarName, 1 },
+#define EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY(CVarName, CVarNameLower, ID)\
+	{#CVarName, #CVarNameLower, CVarName##_ID, NULL, 2 },
 
 
 

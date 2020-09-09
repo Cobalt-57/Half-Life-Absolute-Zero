@@ -12,6 +12,16 @@
 #include "archer_ball.h"
 
 
+// Is there ever a reason to use the fast swim sequence?  Unsure.
+
+// TODO - melee trace is still odd, it does damage to things left and right of it.  weird.
+
+
+// !!!!
+// And why's the tracehull grab so mucch, like standing to the side of an attacking archer not looking at you,
+// hurts you instead (easy with autosneaky 1 while the archer's melee'ing something else in the water).
+
+
 //TODO MAJOR-ER.  Huge problem with the controller head balls / same balls the archer uses.
 //                If lightning effects are created while the source of lightning is still underwater but the endpoint is above.
 //                FIXABLE maybe...
@@ -33,6 +43,12 @@ EASY_CVAR_EXTERN_DEBUGONLY(STUSpeedMulti)
 
 //I would prefer to be this far off of the waterlevel if I intend to touch the surface.
 #define DESIRED_WATERLEVEL_SURFACE_OFFSET -7
+
+
+//#define ARCHER_SWIM_SEQ SEQ_ARCHER_IDLE1
+#define ARCHER_SWIM_SEQ SEQ_ARCHER_SWIM
+
+
 
 
 
@@ -435,7 +451,7 @@ Schedule_t	slArcherGenericFail[] =
 		ARRAYSIZE ( tlArcherGenericFail ),
 		bits_COND_HEAVY_DAMAGE,
 		0,
-		"Panther_genFail"
+		"Archer_genFail"
 	},
 };
 
@@ -452,6 +468,7 @@ DEFINE_CUSTOM_SCHEDULES( CArcher )
 	slArcherRetreatIntoWater,
 	slArcherSurfaceAttackPlanFail,
 	slArcherFailWait,
+	slArcherGenericFail,
 
 };
 IMPLEMENT_CUSTOM_SCHEDULES( CArcher, CFlyingMonster );
@@ -497,7 +514,7 @@ CArcher::CArcher(void){
 	tempCheckTraceLineBlock = FALSE;
 	m_velocity = Vector(0,0,0);
 	lastVelocityChange = -1;
-
+	waterLevelMem = -1;
 
 }//END OF CArcher constructor
 
@@ -574,8 +591,17 @@ void CArcher::Spawn( void )
 	//I am underwater.
 	pev->flags |= FL_SWIM;
 
-
-	pev->movetype		= MOVETYPE_FLY;
+	// wait no, leave this check up to MonsterThink.
+	// Who knows if whichever MOVETYPE will influence the MonsterInit.
+	/*
+	if ( pev->waterlevel == 0){
+		// mid-air?  fallin'
+		pev->movetype = MOVETYPE_TOSS;
+	}else{
+		pev->movetype = MOVETYPE_FLY;
+	}
+	*/
+	pev->movetype = MOVETYPE_FLY;
 
 	//pev->solid		= SOLID_BBOX;  //not SOLID_SLIDEBOX
 	pev->solid			= SOLID_SLIDEBOX;  //SOLID_TRIGGER?  Difference?
@@ -634,26 +660,73 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 	}
 	*/
 
+	Vector vecEndFiltered;
 
 
-	//Now wait a moment.  We can't move to a point that's out of the water can we? Deny if so.
-	int conPosition = UTIL_PointContents(vecEnd);
-	if( conPosition != CONTENTS_WATER){
-		//Water only!
-		return LOCALMOVE_INVALID_DONT_TRIANGULATE;
+	vecEndFiltered = vecEnd;
+	// NO NEED ANYMORE
+	/*
+	if(pTarget != NULL && m_hEnemy != NULL && pTarget->edict() == m_hEnemy->edict()){
+		// HACK!  If the thing I'm routing towards is my enemy (neither of those things being null),
+		// and I can see my enemy, and I'm using the LKP as a goal, I'd rather use the center of the
+		// enemy as a goal instead.  Might be possible to head towards their feet otherwise which is kinda odd,
+		// although other monsters probably won't be in the water to begin with.
+		// MODDD - TODO.  See top of file for proper fix idea
+		if(vecEnd == m_vecEnemyLKP){
+			// orrrr this makes no difference?...    okay?
+			// debugline point it
+			vecEndFiltered = pTarget->Center();
+		}else{
+			//nope, just use what you got
+			vecEndFiltered = vecEnd;
+		}
+	}else{
+		// nevermind
+		vecEndFiltered = vecEnd;
+	}
+	*/
+
+
+	// Now wait a moment.  We can't move to a point that's out of the water can we? Deny if so.
+	// WAIT!  This isn't good for an enemy (player) who's feet is in the water.
+	// If there is a target with a waterlevel above 0 (in water in any extent) and long-range
+	// logic isn't on (it is pickier), accept anyway
+
+	if(pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC){
+		// only do the point test.
+		int conPosition = UTIL_PointContents(vecEndFiltered);
+		if( conPosition != CONTENTS_WATER){
+			//Water only!
+			return LOCALMOVE_INVALID_DONT_TRIANGULATE;
+		}
+	}else{
+		if(pTarget != NULL){
+			if(pTarget->pev->waterlevel != 0){
+				// good to go
+			}else{
+				// nope.
+				return LOCALMOVE_INVALID_DONT_TRIANGULATE;
+			}
+		}else{
+			// point test, all we got.
+			int conPosition = UTIL_PointContents(vecEndFiltered);
+			if( conPosition != CONTENTS_WATER){
+				//Water only!
+				return LOCALMOVE_INVALID_DONT_TRIANGULATE;
+			}
+		}
 	}
 
 
 
-
 	/*
-	//Vector goalDir = vecEnd - vecStart;
+	//Vector goalDir = vecEndFiltered - vecStart;
 
 	//Gets a yaw (0 - 360 degrees).
 	//To radians:
-	//float goal_pitch = UTIL_VecToYaw(vecEnd - vecStart) * (M_PI/180.0f);
+	//float goal_pitch = UTIL_VecToYaw(vecEndFiltered - vecStart) * (M_PI/180.0f);
 
-	Vector goal_direction = (vecEnd - vecStart).Normalize();
+	Vector goal_direction = (vecEndFiltered - vecStart).Normalize();
 	Vector goal_direction_adjacent = CrossProduct(goal_direction, Vector(0, 0, 1) ).Normalize();
 
 	
@@ -676,7 +749,7 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 	
 	Vector whut = pev->origin;
 	Vector vecStartAlt = vecStart + vecCenterRel + goal_direction * boundXSize*1.3;
-	Vector vecEndAlt = vecEnd + vecCenterRel + -goal_direction * boundXSize*1.3;
+	Vector vecEndAlt = vecEndFiltered + vecCenterRel + -goal_direction * boundXSize*1.3;
 	
 
 
@@ -731,7 +804,7 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 
 	if (pflDist)
 	{
-		*pflDist = minFraction * (vecEnd - vecStart).Length();
+		*pflDist = minFraction * (vecEndFiltered - vecStart).Length();
 	}
 
 	iReturn = LOCALMOVE_VALID;
@@ -748,11 +821,11 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 	Vector vecStartTrace = vecStart + Vector( 0, 0, 6 );
 
 
-	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
-	UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 6), dont_ignore_monsters, head_hull, edict(), &tr );
+	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEndFiltered + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
+	UTIL_TraceHull( vecStartTrace, vecEndFiltered + Vector( 0, 0, 6), dont_ignore_monsters, head_hull, edict(), &tr );
 	
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
-	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
+	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEndFiltered.x, vecEndFiltered.y, vecEndFiltered.z );
 
 	if (pflDist)
 	{
@@ -800,8 +873,7 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 	}
 
 	return iReturn;
-}
-
+}//CheckLocalMove
 
 
 //Copied from flyingmonster.cpp. Our sequence may not properly convey the m_flGroundSpeed.
@@ -833,6 +905,7 @@ BOOL CArcher::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 
 				m_velocity = Vector(0, 0, 0);
 				pev->velocity = Vector(0, 0, 0);
+
 				UTIL_MoveToOrigin ( ENT(pev), Vector(pev->origin.x, pev->origin.y, m_Route[ m_iRouteIndex ].vecLocation.z), fabs(m_Route[ m_iRouteIndex ].vecLocation.z - pev->origin.z) , MOVE_STRAFE );
 			
 				return TRUE;
@@ -863,6 +936,14 @@ void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 {
 	const float waterLevel = UTIL_WaterLevel(pev->origin, pev->origin.z - 512, pev->origin.z + 4096.0);
 	const float waterLevelIdeal = waterLevel + DESIRED_WATERLEVEL_SURFACE_OFFSET;
+
+	if ( pev->waterlevel == 0){
+		// not in the water at all?  uh-oh
+		return;
+	}
+	
+
+
 
 	/*
 	if ( m_IdealActivity != m_movementActivity )
@@ -1013,13 +1094,6 @@ void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 		}
 
 
-
-
-
-
-
-
-
 		//pev->velocity = _velocity;
 		pev->velocity = m_velocity;
 
@@ -1039,8 +1113,6 @@ void CArcher::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 		pev->velocity = m_velocity;
 
 	}
-
-
 
 
 }//END OF MoveExecute
@@ -1335,22 +1407,44 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 		case SCHED_CHASE_ENEMY:{
 			//HOLD UP.  Does it make sense to try this?
 
-			if(m_hEnemy == NULL || m_hEnemy->pev->waterlevel == 3){
-				//our enemy disappeared (???) or is in the water? ok. proceed as usual.
-				//If they disappeared this will fail pretty fast. How'd it get called anyways?
-				return slChaseEnemySmart;
-			}else{
-				//Enemy isn't in the water? Wait for them to come back. Can interrupt by being able to attack too.
-				//slWaitForEnemyToEnterWater ?
-				return (pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC) ? slArcherSurfaceRangeAttack : slArcherRangeAttack1;
+			BOOL validFollow = FALSE;
+
+			if(m_hEnemy == NULL){
+				// ??? what?
+				return GetScheduleOfType(SCHED_FAIL);
 			}
 
+			if(pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC){
+				// must be all the way in the water, I can be pickier.
+				validFollow = (m_hEnemy->pev->waterlevel == 3);
+			}else{
+				// not long range?  Likely in a shallow body of water, crawl to its feet
+				// (more leech-like)
+				validFollow = (m_hEnemy->pev->waterlevel != 0);
+			}
+
+
+			if(validFollow){
+				// our enemy disappeared (???) or is in the water? ok. proceed as usual.
+				// If they disappeared this will fail pretty fast. How'd it get called anyways?
+				return slChaseEnemySmart;
+			}else{
+				// Enemy isn't in the water? Wait for them to come back. Can interrupt by being able to attack too.
+				//slWaitForEnemyToEnterWater ?
+
+				// NEW!  Make sure I have the 'can range attack1' condition.  Yeah, imagine that.
+				if(HasConditions(bits_COND_CAN_RANGE_ATTACK1)){
+					return (pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC) ? slArcherSurfaceRangeAttack : slArcherRangeAttack1;
+				}else{
+					// stare?  What else can we do?
+					return slCombatLook;
+				}
+			}
 		break;}
 		case SCHED_CHASE_ENEMY_FAILED:{
 			// Repeat from what schedule.cpp.  I'm not calling the parent method just for this.
 			if(m_hEnemy != NULL){
-				//this->m_vecEnemyLKP = m_hEnemy->pev->origin;
-				setEnemyLKP(m_hEnemy->pev->origin);
+				setEnemyLKP(m_hEnemy.GetEntity());
 			}
 
 			if(m_hEnemy != NULL && m_hEnemy->pev->waterlevel == 3){
@@ -1361,8 +1455,15 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 				//Enemy isn't in the water?  No wonder we can't get to them.
 				//Just stick to staring with continual checks for the enemy being in the water or not.
 				//That is be a little more reactive while waiting than just staring into space.
+
 				//slWaitForEnemyToEnterWater ?
-				return (pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC) ? slArcherSurfaceRangeAttack : slArcherRangeAttack1;
+				// NEW!  Make sure I have the 'can range attack1' condition.  Yeah, imagine that.
+				if(HasConditions(bits_COND_CAN_RANGE_ATTACK1)){
+					return (pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC) ? slArcherSurfaceRangeAttack : slArcherRangeAttack1;
+				}else{
+					// stare?  What else can we do?
+					return slCombatLook;
+				}
 			}
 
 		break;}
@@ -1549,8 +1650,9 @@ void CArcher::StartTask( Task_t *pTask ){
 				TaskFail(); return;
 			}
 
-			//if I made it here, seems fine. pass.  And set the LKP to where the enemy is now.
-			this->m_vecEnemyLKP = m_hEnemy->pev->origin;
+			// if I made it here, seems fine. pass.  And set the LKP to where the enemy is now.
+
+			setEnemyLKP(m_hEnemy.GetEntity());
 			TaskComplete();
 
 
@@ -1669,7 +1771,20 @@ void CArcher::StartTask( Task_t *pTask ){
 		break;}
 
 		case TASK_RANGE_ATTACK1:{
-			shootCooldown = gpGlobals->time + RANDOM_LONG(3.5, 6.2);
+
+			if(pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC){
+				// hmm.
+				shootCooldown = gpGlobals->time + RANDOM_LONG(4.0, 6.8);
+			}else{
+				// not long range logic?  Don't get too spammy, this can get called for often
+				if(g_iSkillLevel == SKILL_HARD){
+					shootCooldown = gpGlobals->time + RANDOM_LONG(5.2, 6.2);
+				}else if(g_iSkillLevel == SKILL_MEDIUM){
+					shootCooldown = gpGlobals->time + RANDOM_LONG(5.8, 6.7);
+				}else{
+					shootCooldown = gpGlobals->time + RANDOM_LONG(6.2, 7.3);
+				}
+			}
 			CFlyingMonster::StartTask(pTask);
 		break;}
 		case TASK_STOP_MOVING:{
@@ -1782,13 +1897,14 @@ BOOL CArcher::CheckRangeAttack1( float flDot, float flDist ){
 	if(gpGlobals->time >= shootCooldown){
 		//past cooldown? allowed.
 	}else{
-		//no.
+		// no.
 		return FALSE;
 	}
 
 
 	//if ( flDot > 0.5 && flDist > 256 && flDist <= 2048 )
-	if ( flDot > 0.5 && flDist <= 1024 )
+	// reduce range a it, 700 is plenty (was 1024)
+	if ( flDot > 0.5 && flDist <= 700 )
 	{
 		//easyForcePrintLine("YAY?!");
 		return TRUE;
@@ -1804,12 +1920,19 @@ BOOL CArcher::CheckRangeAttack2( float flDot, float flDist ){
 
 void CArcher::CustomTouch( CBaseEntity *pOther ){
 	int x = 46;
+
 	if(pOther == NULL){
 		return; //??????
 	}
-}
 
-
+	// hitting the ground without a waterlevel?  Goodbye
+	//  'pev->flags & FL_ONGROUND'  isn't set on time?  ah well.
+	if(pev->waterlevel == 0 && pev->deadflag == DEAD_NO){
+		// oh no, u ded
+		Killed(NULL, NULL, GIB_NORMAL);
+	}
+	
+}//CustomTouch
 
 
 
@@ -1833,6 +1956,18 @@ void CArcher::MonsterThink(){
 
 
 
+	if(pev->waterlevel != waterLevelMem){
+		waterLevelMem = pev->waterlevel;
+		if(pev->waterlevel == 0){
+			// oh dear, that ding-dang ol' gravity's at it again
+			pev->movetype = MOVETYPE_TOSS;
+			pev->gravity = 1.0;
+		}else{
+			pev->movetype = MOVETYPE_FLY;
+			pev->gravity = 0.0;
+		}
+	}
+
 
 
 	//easyForcePrintLine("IM GONNA %d %d", m_Activity, m_IdealActivity);
@@ -1849,18 +1984,16 @@ void CArcher::MonsterThink(){
 	}
 	*/
 
-
-	
-	
 	BOOL isItMovin = this->IsMoving();
 
-	if(pev->deadflag == DEAD_NO && !isItMovin){
-		//reduce our velocity each turn.
+	// why DEAD_NO here?  maybe this would mess with floating logic
+	if(pev->waterlevel != 0 && pev->deadflag == DEAD_NO && !isItMovin){
+		// reduce our velocity each turn.
 
-		if(m_velocity.Length() > 0 || pev->velocity.Length() > 0){
+		if( (m_velocity.Length() > 0 || pev->velocity.Length() > 0) ){
 			m_velocity = m_velocity * 0.74;
 			if(m_velocity.Length() < 0.02){
-				//just stop already.
+				// just stop already.
 				m_velocity = Vector(0, 0, 0);
 			}
 			pev->velocity = m_velocity;
@@ -1869,7 +2002,8 @@ void CArcher::MonsterThink(){
 
 
 
-	CFlyingMonster::MonsterThink();
+	//CFlyingMonster::MonsterThink();
+	CBaseMonster::MonsterThink();
 }//END OF MonsterThink
 
 // PrescheduleThink - this function runs after conditions are collected and before scheduling code is run.
@@ -1967,7 +2101,7 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CArcher)
 //Anything done here is meant to completely replace how the parent method gibs a monster in general. None of it is required.
 GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CArcher)
 {
-	//Nothing special.  Embarassing how long the floater's poison gib explosion stayed here.
+	// nothing special.
 	return GENERATE_GIBMONSTERGIB_PARENT_CALL(CFlyingMonster);
 }
 
@@ -2008,10 +2142,13 @@ GENERATE_KILLED_IMPLEMENTATION(CArcher)
 	GENERATE_KILLED_PARENT_CALL(CFlyingMonster);
 	pev->velocity = Vector( 0, 0, 0 );
 
-	//MODDD NOTE
-	//Forcing the movetype to MOVETYPE_STEP in CFlyingMonster's Killed above can be bad for the floating logic.
-	//Or flyers in general ever, MOVETYPE_TOSS falls just fine. no idea why
-	pev->movetype = MOVETYPE_FLY;
+
+	if(pev->waterlevel != 0){
+		//MODDD NOTE
+		//Forcing the movetype to MOVETYPE_STEP in CFlyingMonster's Killed above can be bad for the floating logic.
+		//Or flyers in general ever, MOVETYPE_TOSS falls just fine. no idea why
+		pev->movetype = MOVETYPE_FLY;
+	}
 
 
 	/*
@@ -2061,8 +2198,8 @@ BOOL CArcher::usesAdvancedAnimSystem(void){
 
 void CArcher::SetActivity(Activity NewActivity ){
 
-	//Little check. If this is to change IDLE to HOVER or HOVER to IDLE, don't reset the animation.
-	//it's fine the way it is, the are one and the same.
+	// Little check. If this is to change IDLE to HOVER or HOVER to IDLE, don't reset the animation.
+	// it's fine the way it is, the are one and the same.
 
 	if((NewActivity == ACT_IDLE || NewActivity == ACT_HOVER) &&
 		(m_Activity == ACT_IDLE || m_Activity == ACT_HOVER)){
@@ -2077,7 +2214,16 @@ void CArcher::SetActivity(Activity NewActivity ){
 
 }//END OF SetActivity
 
+Activity CArcher::GetDeathActivity ( void ){
 
+	// && pev->flags & FL_ONGROUND
+	if(pev->waterlevel == 0){
+		// enforce ACT_DIESIMPLE, just in case more activities are ever possible
+		return ACT_DIESIMPLE;
+	}
+
+	return CFlyingMonster::GetDeathActivity();
+}
 
 //IMPORTANT. To get the animation from the model the usual way, you must use "CBaseAnimating::LookupActivity(activity);" to do so,
 //           do NOT forget the "CBaseAnimating::" in front and do NOT use any other base class along the way, like CSquadMonster or CFlyingMonster.
@@ -2096,12 +2242,16 @@ int CArcher::tryActivitySubstitute(int activity){
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
 		//Let whoever know we have these anims.
+		case ACT_DIESIMPLE:
+			// eh, let this default.  Any real logic's for LookupActivityHard anyway
+		break;
 		case ACT_IDLE:
 			return SEQ_ARCHER_IDLE1;
 		break;
 		case ACT_WALK:
 		case ACT_RUN:
-			return SEQ_ARCHER_IDLE1;
+			//return SEQ_ARCHER_IDLE1;
+			return ARCHER_SWIM_SEQ;
 		break;
 		case ACT_MELEE_ATTACK1:
 			return SEQ_ARCHER_BITE;
@@ -2111,10 +2261,10 @@ int CArcher::tryActivitySubstitute(int activity){
 		break;
 		//Do these break anything?
 		case ACT_FLY:
-			return SEQ_ARCHER_IDLE1;
+			return ARCHER_SWIM_SEQ;
 		break;
 		case ACT_HOVER:
-			return SEQ_ARCHER_IDLE1;
+			return ARCHER_SWIM_SEQ;
 		break;
 	}//END OF switch
 
@@ -2136,15 +2286,37 @@ int CArcher::LookupActivityHard(int activity){
 	//    this->animEventQueuePush(10.0f / 30.0f, 3);  //Sets event #3 to happen at 1/3 of a second
 	//    return LookupSequence("die_backwards");      //will play animation die_backwards
 
-	
 	//no need for default, just falls back to the normal activity lookup.
 	switch(activity){
-		case ACT_IDLE:
-			return SEQ_ARCHER_IDLE1;
+		case ACT_DIESIMPLE:
+			//&& pev->flags & FL_ONGROUND
+			if(pev->waterlevel == 0 ){
+				// Dying on land?  Only use the 2nd one, and faster
+				m_flFramerateSuggestion = 1.6f;
+				return SEQ_ARCHER_DIE2;
+			}
+
+			return CBaseAnimating::LookupActivity(activity);
 		break;
+		case ACT_IDLE:{
+			// pick em'
+			float randoVal = RANDOM_FLOAT(0, 1);
+
+			if(randoVal < 0.4){
+				return SEQ_ARCHER_IDLE1;
+			}else if(randoVal < 0.7){
+				return SEQ_ARCHER_IDLE2;
+			}else{
+				return SEQ_ARCHER_IDLE3;
+			}
+		}break;
 		case ACT_WALK:
 		case ACT_RUN:
-			return SEQ_ARCHER_IDLE1;
+			// what?  we have a swim anim, why not use it?
+			// also force this, safety
+			m_flGroundSpeed = m_flightSpeed = 200;
+			
+			return ARCHER_SWIM_SEQ;
 		break;
 		case ACT_TURN_LEFT:
 		case ACT_TURN_RIGHT:
@@ -2164,10 +2336,10 @@ int CArcher::LookupActivityHard(int activity){
 		break;
 		//Do these break anything?
 		case ACT_FLY:
-			return SEQ_ARCHER_IDLE1;
+			return ARCHER_SWIM_SEQ;
 		break;
 		case ACT_HOVER:
-			return SEQ_ARCHER_IDLE1;
+			return ARCHER_SWIM_SEQ;
 		break;
 	}//END OF switch
 	
@@ -2272,10 +2444,17 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 	case 1:
 	{
 
+		UTIL_MakeAimVectors(pev->angles);
+		Vector offsetVecto = gpGlobals->v_forward * 25;
+		//offsetVecto.z += pev->maxs.z * 0.5;
+
 		//melee bite?
-		CBaseEntity *pHurt = CheckTraceHullAttack( 70, gSkillData.bullsquidDmgBite, DMG_SLASH, DMG_BLEEDING );
+		CBaseEntity *pHurt = CheckTraceHullAttack(offsetVecto, 50, gSkillData.bullsquidDmgBite, DMG_SLASH, DMG_BLEEDING );
 		
-		if(!pHurt){
+		//MODDD - I'd rather deal damage to my enemy, seems CheckTraceHullAttack is too grabby and can even get things left and right
+		// of me first.
+
+		//if(!pHurt){
 			//didn't get anything? Is our enemy in an odd spot like directly below or above? If so count to stop abusing this mechanic.
 			
 			if(m_hEnemy != NULL){
@@ -2285,14 +2464,15 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 
 				if(distToEnemy < 84 && distToEnemy2D < 60){
 
-					float zDiff = fabs(m_hEnemy->Center().z - this->Center().z);
-					if(zDiff > 30){
+					//float zDiff = fabs(m_hEnemy->Center().z - this->Center().z);
+					//if(zDiff > 30){
 						//just hurt the enemy.
 						pHurt = m_hEnemy;
-					}
+					//}
 				}
 			}
-		}
+		//}
+
 		
 		if ( pHurt )
 		{
@@ -2974,7 +3154,6 @@ BOOL CArcher::attemptBuildRandomWanderRoute(const float& argWaterLevel){
 		//TaskComplete();
 		//return;
 		return TRUE;
-
 	}//END OF while tries left
 
 
@@ -2986,13 +3165,16 @@ BOOL CArcher::attemptBuildRandomWanderRoute(const float& argWaterLevel){
 //let's be safe here...  don't exclude the player being immediately out of view.
 BOOL CArcher::FCanCheckAttacks(void){
 
-	if(m_hEnemy == NULL || (m_hEnemy->pev->waterlevel == 3)  ){
-		//If there is no enemy or they are in the water with me, do whatever the base class does?
-		return CBaseMonster::FCanCheckAttacks();
+	// 'always see out of water enemy' ability for long-range logic only
+	if(pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC){
+		if(m_hEnemy == NULL || (m_hEnemy->pev->waterlevel == 3)  ){
+			// If there is no enemy or they are in the water with me, do whatever the base class does?
+			return CBaseMonster::FCanCheckAttacks();
+		}
 	}
 
 
-	//otherwise, for enemies out of water, we can do checks without having a direct line of sight with the enemy.
+	// otherwise, for enemies out of water, we can do checks without having a direct line of sight with the enemy.
 	if ( !HasConditions( bits_COND_ENEMY_TOOFAR ) )
 	{
 		return TRUE;
@@ -3002,5 +3184,24 @@ BOOL CArcher::FCanCheckAttacks(void){
 		return FALSE;
 	}
 }
+
+
+void CArcher::setEnemyLKP(CBaseEntity* theEnt){
+	// I want the center for going towards the bulk of the enemy, not the feet
+	// Wait, how about like the hornet does, 'BodyTarget' for even more control from the entity?
+	//m_vecEnemyLKP = theEnt->Center();
+	m_vecEnemyLKP = theEnt->BodyTarget(pev->origin);
+
+	investigatingAltLKP = FALSE;
+}//
+
+
+/*
+// wait. nevermind, go ahead.  If 'Move' is barely changed, should be safe to use segmentedmove.
+void CArcher::usesSegmentedMove(void){
+	// safety. Should the stuka also not?
+	return FALSE;
+}
+*/
 
 

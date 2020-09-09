@@ -919,16 +919,16 @@ void CBaseEntity::SUB_FadeOut ( void  )
 //MODDD - note that the old form, missing the 2nd mask, now  redirects to the new form and just sends "0"
 //for the 2nd mask.  Safe to assume no damages meant there if nothing is supplied for it.
 CBaseEntity* CBaseMonster::CheckTraceHullAttack( float flDist, int iDamage, int iDmgType ){
-	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, 0, NULL);
+	return CheckTraceHullAttack(g_vecZero, flDist, iDamage, iDmgType, 0, NULL);
 }
 CBaseEntity* CBaseMonster::CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, TraceResult* out_traceResult ){
-	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, 0, out_traceResult);
+	return CheckTraceHullAttack(g_vecZero, flDist, iDamage, iDmgType, 0, out_traceResult);
 }
 CBaseEntity* CBaseMonster::CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, int iDmgTypeMod ){
-	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, iDmgTypeMod, NULL);
+	return CheckTraceHullAttack(g_vecZero, flDist, iDamage, iDmgType, iDmgTypeMod, NULL);
 }
 CBaseEntity* CBaseMonster::CheckTraceHullAttack( float flDist, int iDamage, int iDmgType, int iDmgTypeMod, TraceResult* out_traceResult ){
-	return CheckTraceHullAttack(Vector(0,0,0), flDist, iDamage, iDmgType, iDmgTypeMod, out_traceResult);
+	return CheckTraceHullAttack(g_vecZero, flDist, iDamage, iDmgType, iDmgTypeMod, out_traceResult);
 }
 CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, float flDist, int iDamage, int iDmgType ){
 	return CheckTraceHullAttack(vecStartOffset, flDist, iDamage, iDmgType, 0, NULL);
@@ -963,7 +963,9 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, fl
 
 	edict_t* thingHit = NULL;
 	UTIL_TraceHull( vecStart, vecEnd, dont_ignore_monsters, head_hull, ENT(pev), &tr );
-	
+
+	//DebugLine_Setup(0, vecStart, vecEnd, tr.flFraction);
+
 	//by default.
 	thingHit = tr.pHit;
 
@@ -1032,7 +1034,6 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, fl
 	if ( thingHit )
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( thingHit );
-		
 		
 		if (pEntity != NULL && iDamage > 0 )
 		{
@@ -1292,7 +1293,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseEntity)
 
 		//MODDD - old way.
 		//SpawnBlood(vecOrigin, blood, flDamage);// a little surface blood.
-		if(useBloodEffect){
+		if(useBloodEffect && CanMakeBloodParticles()){
 			Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
 			SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.
 
@@ -1669,7 +1670,7 @@ void CBaseEntity::SpawnBloodSlash(float flDamage, const Vector& vecDrawLoc, cons
 void CBaseEntity::SpawnBloodSlash(float flDamage, const Vector& vecDrawLoc, const Vector& vecTraceLine, const BOOL& extraBlood) {
 	int theBlood = BloodColor();
 
-	if (!UTIL_ShouldShowBlood(theBlood)) {
+	if (!CanMakeBloodParticles() || !UTIL_ShouldShowBlood(theBlood)) {
 		return;
 	}
 
@@ -1720,7 +1721,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseMonster)
 
 		
 		//MODDD - similar case below, robot requires this CVar to emit black oil blood.
-		if( !(this->CanUseGermanModel() && EASY_CVAR_GET_DEBUGONLY(germanRobotBleedsOil)==0 ) && useBloodEffect){
+		if( !(this->CanUseGermanModel() && EASY_CVAR_GET_DEBUGONLY(germanRobotBleedsOil)==0 ) && useBloodEffect && CanMakeBloodParticles()){
 			Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
 			SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.
 		}
@@ -2004,9 +2005,12 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	//easyForcePrintLine("TakeDamage. %s:%d health:%.2f gib damge bits: %d %d", this->getClassname(), monsterID, pev->health, (bitsDamageType&DMG_NEVERGIB), (bitsDamageType&DMG_ALWAYSGIB) );
 	
 
+	BOOL healthCheckBlock = FALSE;
 	if (!ChangeHealthFiltered(pevAttacker, flDamageTake)) {
 		// call to block the rest of the method if this returns FALSE. Sets g_rawDamageCumula already if that happens.
-		return 0;
+		// WAIT no.   Still want the AI to properly react for debugging, just ignore the pev->health == 0 check
+		//return 0;
+		healthCheckBlock = TRUE;
 	}
 	
 	// HACKHACK Don't kill monsters in a script.  Let them break their scripts first
@@ -2025,56 +2029,59 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	}
 
 
-	if ( pev->health <= 0 )
-	{
-		//MODDD - removing this. We can send the inflictor to killed now.
-		//g_pevLastInflictor = pevInflictor;
-		
-		// using g_rawDamageCumula instead of flDamageTake.
-		m_lastDamageAmount = g_rawDamageCumula;
-
-		attemptResetTimedDamage(TRUE);
-
-		float MYHEALTH = pev->health;
-		
-
-		//MODDD - Freshly dead?  Anticipate a BecomeDead call soon.
-		g_tossKilledCall = TRUE;
-		g_bitsDamageType = bitsDamageType;
-		g_bitsDamageTypeMod = bitsDamageTypeMod;
-
-		if ( bitsDamageType & DMG_ALWAYSGIB )
+	if(!healthCheckBlock){
+		if (pev->health <= 0 )
 		{
-			Killed( pevInflictor, pevAttacker, GIB_ALWAYS );
+			//MODDD - removing this. We can send the inflictor to killed now.
+			//g_pevLastInflictor = pevInflictor;
+		
+			// using g_rawDamageCumula instead of flDamageTake.
+			m_lastDamageAmount = g_rawDamageCumula;
+
+			attemptResetTimedDamage(TRUE);
+
+			float MYHEALTH = pev->health;
+		
+
+			//MODDD - Freshly dead?  Anticipate a BecomeDead call soon.
+			g_tossKilledCall = TRUE;
+			g_bitsDamageType = bitsDamageType;
+			g_bitsDamageTypeMod = bitsDamageTypeMod;
+
+			if ( bitsDamageType & DMG_ALWAYSGIB )
+			{
+				Killed( pevInflictor, pevAttacker, GIB_ALWAYS );
+			}
+			else if ( bitsDamageType & DMG_NEVERGIB )
+			{
+				Killed( pevInflictor, pevAttacker, GIB_NEVER );
+			}
+			else
+			{
+				Killed( pevInflictor, pevAttacker, GIB_NORMAL );
+			}
+
+			// Just in case BecomeDead didn't flick this off.
+			g_tossKilledCall = FALSE;
+
+
+			//g_pevLastInflictor = NULL;
+
+			g_rawDamageCumula = 0;  //ok
+			return 0;
 		}
-		else if ( bitsDamageType & DMG_NEVERGIB )
-		{
-			Killed( pevInflictor, pevAttacker, GIB_NEVER );
-		}
-		else
-		{
-			Killed( pevInflictor, pevAttacker, GIB_NORMAL );
-		}
-
-		// Just in case BecomeDead didn't flick this off.
-		g_tossKilledCall = FALSE;
-
-
-		//g_pevLastInflictor = NULL;
-
-		g_rawDamageCumula = 0;  //ok
-		return 0;
-	}
-	//MODDD - else, if not killed by this strike:
-	else{
+		//MODDD - else, if not killed by this strike:
+		else{
 
 		
-		// moved to above
-		//if(!blockTimedDamage){
-		//	applyNewTimedDamage(bitsDamageType, bitsDamageTypeMod);
-		//}
+			// moved to above
+			//if(!blockTimedDamage){
+			//	applyNewTimedDamage(bitsDamageType, bitsDamageTypeMod);
+			//}
 		
-	}//END OF pev->health 0 check
+		}//END OF pev->health 0 check
+	}//!healthCheckBlock
+
 
 	// react to the damage (get mad)
 	if ( (pev->flags & FL_MONSTER) && !FNullEnt(pevAttacker) )
@@ -3175,12 +3182,12 @@ Vector CBaseEntity::FireBulletsPlayer ( ULONG cShots, Vector vecSrc, Vector vecD
 
 
 
+// NOTICE!  Draws the decal only, doesn't involve blood particles.  Often called alongside
+// 'SpawnBlood' calls to do that
 void CBaseEntity::TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType )
 {
 	TraceBleed(flDamage, vecDir, ptr, bitsDamageType, 0);
-
 }
-
 void CBaseEntity::TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType, int bitsDamageTypeMod )
 {
 	if (!UTIL_ShouldShowBlood(BloodColor())) {

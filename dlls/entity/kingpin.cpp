@@ -2339,7 +2339,7 @@ BOOL CKingpin::CheckRangeAttack1( float flDot, float flDist ){
 		if(FVisible(vecStart, m_hEnemy->EyePosition())){
 			//this also counts.
 			//AND HACK: update our m_vecEnemyLKP to be safe.
-			setEnemyLKP(m_hEnemy->pev->origin);
+			setEnemyLKP(m_hEnemy);
 
 			seesEnemy = TRUE;
 		}

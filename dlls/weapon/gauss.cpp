@@ -424,24 +424,22 @@ void CGauss::_SecondaryAttack()
 
 	if (m_fInAttack == 0)
 	{
-		if (PlayerPrimaryAmmoCount() < chargeAmmoUsage)
-		{
-			EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM);
-			m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
-			SetAttackDelays(m_pPlayer->m_flNextAttack);
-			return;
-		}
-
-		// well gee, is that so
-		m_fPrimaryFire = FALSE;
-
+		// only do the out-of-ammo checks and init ammo drop if cheats are off
 		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0) {
+			if (PlayerPrimaryAmmoCount() < chargeAmmoUsage)
+			{
+				EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_WEAPON, "weapons/357_cock1.wav", 0.8, ATTN_NORM);
+				m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
+				SetAttackDelays(m_pPlayer->m_flNextAttack);
+				return;
+			}
 			// take one ammo just to start the spin
 			ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);
-		}
+		}//END OF cheats check
 
-		//TODO - MINOR.  Any reason why holding down both primary & secondary while charging causes the fired shot
-		// to be invisible? or some odd combo, I forget.  If easy though.
+	// well gee, is that so
+		m_fPrimaryFire = FALSE;
+
 
 		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0) {
 			// proceed with usual charging.
@@ -500,22 +498,27 @@ void CGauss::_SecondaryAttack()
 		// during the charging process, eat one bit of ammo every once in a while
 		if (UTIL_WeaponTimeBase() >= m_pPlayer->m_flNextAmmoBurn && m_pPlayer->m_flNextAmmoBurn != 1000)
 		{
-			//MODDD - moved here, was below this 'nextAmmoBurn' check.
-			// Now runs at the time of the next ammo-burn cycle instead.
-			if (m_fireState < chargeAmmoStoredMax - 1 && PlayerPrimaryAmmoCount() < chargeAmmoUsage)
-			{
-				// out of ammo! force the gun to fire
-				StartFire();
-				m_fInAttack = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
-				m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1;
-				//MODDD - why not?
-				SetAttackDelays(m_pPlayer->m_flNextAttack);
 
-				return;
-			}
+			// Only do 'charge force end from running out of ammo' and charge ammo drop if cheats are off
+			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip) == 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo) == 0) {
+				//MODDD - moved here, was below this 'nextAmmoBurn' check.
+				// Now runs at the time of the next ammo-burn cycle instead.
+				if (m_fireState < chargeAmmoStoredMax - 1 && PlayerPrimaryAmmoCount() < chargeAmmoUsage)
+				{
+					// out of ammo! force the gun to fire
+					StartFire();
+					m_fInAttack = 0;
+					m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
+					m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1;
+					//MODDD - why not?
+					SetAttackDelays(m_pPlayer->m_flNextAttack);
 
-			ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);
+					return;
+				}
+
+				ChangePlayerPrimaryAmmoCount(-chargeAmmoUsage);
+			}//END OF cheat check
+
 			m_fireState++;
 			m_pPlayer->m_flNextAmmoBurn = UTIL_WeaponTimeBase() + chargeAmmoUsageDelay;
 		}

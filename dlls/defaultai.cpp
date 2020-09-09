@@ -123,29 +123,8 @@ Schedule_t	slAnimationSmart[] =
 };
 
 
+
 //////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-/*
-			MakeIdealYaw( m_vecEnemyLKP );
-
-			ChangeYaw( pev->yaw_speed );
-
-			//easyForcePrintLine("TASK_FACE_ENEMY: %s%d WHAT? yawdif:%.2f yaw_spd:%.2f", this->getClassname(), this->monsterID,    FlYawDiff(), pev->yaw_speed);
-
-			if ( FacingIdeal() )
-			{
-				TaskComplete();
-			}
-*/
-
-
 //=========================================================
 // Stumped - a clone of Fail that is interrupted by seeing the enemy. Also a longer wait time in general.
 //=========================================================
@@ -2175,10 +2154,10 @@ Schedule_t* CBaseMonster::GetScheduleOfType ( int Type )
 	case SCHED_CHASE_ENEMY_FAILED:
 	{
 		//MODDD NOTE - nothing special?
-		//ACTUALLY YES, force an update on the enemy LKP just to unclog things maybe.
+		// actually yes, force an update on the enemy LKP just to unclog things maybe.
 
 		if(m_hEnemy != NULL){
-			setEnemyLKP(m_hEnemy->pev->origin);
+			setEnemyLKP(m_hEnemy);
 		}
 
 		return &slFail[ 0 ];
@@ -2336,8 +2315,7 @@ void CBaseMonster::ScheduleChange(void){
 		if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedMode) == 2){
 			//reget this to keep it up to date!
 			if(m_hEnemy != NULL){
-				//m_vecEnemyLKP = m_hEnemy->pev->origin;
-				setEnemyLKP(m_hEnemy->pev->origin);
+				setEnemyLKP(m_hEnemy);
 			}
 		}
 		

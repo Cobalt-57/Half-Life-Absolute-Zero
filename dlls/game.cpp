@@ -33,6 +33,7 @@ EASY_CVAR_EXTERN(soundSentenceSave)
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
 EASY_CVAR_EXTERN_DEBUGONLY(allowGermanModels)
+EASY_CVAR_EXTERN_DEBUGONLY(forceWorldLightOff)
 
 
 //MODDD - extern
@@ -42,6 +43,7 @@ extern float globalPSEUDO_cl_hornettrail;
 extern float globalPSEUDO_cl_hornetspiral;
 extern float globalPSEUDO_germanCensorshipMem;
 extern float globalPSEUDO_allowGermanModelsMem;
+extern float forceWorldLightOffMem;
 
 //extern cvar_t* cvar_sv_cheats;
 extern BOOL queueSkillUpdate;
@@ -850,6 +852,7 @@ void GameDLLInit( void )
 	loadHiddenCVars();
 
 
+
 	// NOTE!  Do this to avoid changing up other CVars just from noticing a discrepency in cl_bullsquidspit choice
 	// since changing the game.  Maybe someone wanted other specifics controlled by cl_bullsquidspit to stay
 	// the way they are.
@@ -859,6 +862,7 @@ void GameDLLInit( void )
 	
 	globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship);
 	globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET_DEBUGONLY(allowGermanModels);
+	forceWorldLightOffMem = EASY_CVAR_GET_DEBUGONLY(forceWorldLightOff);
 
 
 	// Once to go as early as possible

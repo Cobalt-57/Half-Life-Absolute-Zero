@@ -14,8 +14,9 @@
 
 class CControllerZapBall : public CBaseMonster
 {
-	//MODDD - why no public?
 public:
+	EHANDLE m_hOwner;
+
 	CControllerZapBall(void);
 
 	void Spawn( void );
@@ -29,7 +30,6 @@ public:
 	float massInfluence(void);
 	int GetProjectileType(void);
 
-	EHANDLE m_hOwner;
 };
 
 #endif //CONTROLLER_ZAP_BALL_H

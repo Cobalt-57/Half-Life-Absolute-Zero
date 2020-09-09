@@ -37,6 +37,7 @@
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
+EASY_CVAR_EXTERN_DEBUGONLY(forceWorldLightOff)
 
 
 #define SF_WORLD_DARK		0x0001		// Fade from black at startup
@@ -51,6 +52,10 @@ extern CBaseEntity* g_pLastSpawn;
 extern DLL_GLOBAL int gDisplayTitle;
 extern DLL_GLOBAL BOOL g_fGameOver;
 extern DLL_DECALLIST gDecals[];
+
+
+extern BOOL g_queueCVarHiddenSave;
+extern float forceWorldLightOffMem;
 
 
 //MODDD -
@@ -590,7 +595,7 @@ void CWorld::Precache( void )
 {
 	//MODDD - old place for startup.
 	
-	easyForcePrintLine("CWORLD::PRECACHE!!!");
+	easyForcePrintLine("---CWORLD::PRECACHE---");
 	
 
 	//uh, whut??
@@ -669,58 +674,19 @@ void CWorld::Precache( void )
 	//~Some other precache junk moved to PreacheAll.
 	
 	
-//
-// Setup light animation tables. 'a' is total darkness, 'z' is maxbright.
-//
-	/*
-	// 0 normal
-	LIGHT_STYLE(0, "m");
-	
-	// 1 FLICKER (first variety)
-	LIGHT_STYLE(1, "mmnmmommommnonmmonqnmmo");
-	
-	// 2 SLOW STRONG PULSE
-	LIGHT_STYLE(2, "abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba");
-	
-	// 3 CANDLE (first variety)
-	LIGHT_STYLE(3, "mmmmmaaaaammmmmaaaaaabcdefgabcdefg");
-	
-	// 4 FAST STROBE
-	LIGHT_STYLE(4, "mamamamamama");
-	
-	// 5 GENTLE PULSE 1
-	LIGHT_STYLE(5,"jklmnopqrstuvwxyzyxwvutsrqponmlkj");
-	
-	// 6 FLICKER (second variety)
-	LIGHT_STYLE(6, "nmonqnmomnmomomno");
-	
-	// 7 CANDLE (second variety)
-	LIGHT_STYLE(7, "mmmaaaabcdefgmmmmaaaammmaamm");
-	
-	// 8 CANDLE (third variety)
-	LIGHT_STYLE(8, "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa");
-	
-	// 9 SLOW STROBE (fourth variety)
-	LIGHT_STYLE(9, "aaaaaaaazzzzzzzz");
-	
-	// 10 FLUORESCENT FLICKER
-	LIGHT_STYLE(10, "mmamammmmammamamaaamammma");
+	//MODDD - lightsetup moved, see "turnWorldLightsOn" of util.cpp.
+	// Also, on startup, 'forceWorldLightOff' can influence whether the lights
+	// start on or off.
 
-	// 11 SLOW PULSE NOT FADE TO BLACK
-	LIGHT_STYLE(11, "abcdefghijklmnopqrrqponmlkjihgfedcba");
-	
-	// 12 UNDERWATER LIGHT MUTATION
-	// this light only distorts the lightmap - no contribution
-	// is made to the brightness of affected surfaces
-	LIGHT_STYLE(12, "mmnnmmnnnmmnn");
-	
-	// styles 32-62 are assigned by the light program for switchable lights
-
-	// 63 testing
-	LIGHT_STYLE(63, "a");
-	*/
-	//see "turnWorldLightsOn" of combat.cpp.
-	turnWorldLightsOn();
+	BOOL prevQueue = g_queueCVarHiddenSave;
+	if(EASY_CVAR_GET_DEBUGONLY(forceWorldLightOff) != 1){
+		turnWorldLightsOn();
+	}else{
+		turnWorldLightsOff();
+	}
+	forceWorldLightOffMem = EASY_CVAR_GET_DEBUGONLY(forceWorldLightOff);
+	// This call won't save
+	g_queueCVarHiddenSave = prevQueue;
 
 
 	// WHYYY won't ARRAYSIZE(gDecals) work just because it was moved to decals.cpp?? Damn you C++...

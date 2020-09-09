@@ -164,7 +164,7 @@ BOOL CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 		if (j <= 0)
 			m_pPlayer->m_rgAmmo[myPrimaryAmmoType] = 1;
 
-		return TRUE;
+		//return TRUE;
 	}
 
 

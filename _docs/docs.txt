@@ -1615,3 +1615,26 @@ Maybe from having no gravity to touch the ground for the engine to set that.
 Then again the sentry is attackable just fine (has the flag).  Weird.
 But nevermind, onground requirement removed from CheckMeleeAttack1 anyway.
 
+----------------------------------------------------------------------------------------------------------------------------
+IMPORTANT.  Remember how I complained about touch methods seeming to lack a way to get any more info about the actual touch,
+similar to what a UTIL_TraceLine would give?
+Check out this from controller_head_ball.cpp:
+
+void CControllerHeadBall::BounceTouch( CBaseEntity *pOther )
+{
+	Vector vecDir = m_vecIdeal.Normalize( );
+	TraceResult tr = UTIL_GetGlobalTrace( );
+	float n = -DotProduct(tr.vecPlaneNormal, vecDir);
+	vecDir = 2.0 * tr.vecPlaneNormal * n + vecDir;
+	m_vecIdeal = vecDir * m_vecIdeal.Length();
+}
+
+There we go,  UTIL_GetGlobalTrace in Touch methods.  Keep that in mind.
+----------------------------------------------------------------------------------------------------------------------------
+
+
+
+emergencyFix ?   Not a whole lot of purpose anymore it seems, may as well delete your hidden
+CVar text file to get a fresh start next time.
+
+

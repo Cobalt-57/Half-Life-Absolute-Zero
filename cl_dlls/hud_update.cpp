@@ -16,13 +16,19 @@
 //  hud_update.cpp
 //
 
-#include "external_lib_include.h"
+
+// still need these?
+#include <math.h>
+#include <memory.h>
 //#include <stdlib.h>
 
-#include <math.h>
+
+#include "external_lib_include.h"
+
 #include "hud.h"
 #include "cl_util.h"
-#include <memory.h>
+
+
 
 int CL_ButtonBits( int );
 void CL_ResetButtonBits( int bits );
@@ -43,7 +49,6 @@ extern void RenderFog(float currentTime);
 
 int CHud::UpdateClientData(client_data_t *cdata, float time)
 {
-	
 
 	//THANK YOU SPIRIT OF HALF LIFE 1 POINT NINE
 	RenderFog(time);

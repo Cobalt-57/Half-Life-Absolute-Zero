@@ -3823,8 +3823,9 @@ void CStukaBat::RunAI( void )
 {
 	CBaseMonster::RunAI();
 
-	if ( HasMemory( bits_MEMORY_KILLED ) )
-		return;
+	// for what purpose
+	//if ( HasMemory( bits_MEMORY_KILLED ) )
+	//	return;
 }
 
 

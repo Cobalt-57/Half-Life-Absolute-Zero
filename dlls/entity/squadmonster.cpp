@@ -259,7 +259,6 @@ void CSquadMonster::SquadPasteEnemyInfo ( void )
 {
 	CSquadMonster *pSquadLeader = MySquadLeader( );
 	if (pSquadLeader)
-		//pSquadLeader->m_vecEnemyLKP = m_vecEnemyLKP;
 		pSquadLeader->setEnemyLKP(m_vecEnemyLKP);
 }
 
@@ -275,7 +274,6 @@ void CSquadMonster::SquadCopyEnemyInfo ( void )
 {
 	CSquadMonster *pSquadLeader = MySquadLeader( );
 	if (pSquadLeader)
-		//m_vecEnemyLKP = pSquadLeader->m_vecEnemyLKP;
 		setEnemyLKP(pSquadLeader->m_vecEnemyLKP);
 }
 
@@ -315,8 +313,9 @@ void CSquadMonster::SquadMakeEnemy ( CBaseEntity *pEnemy )
 				// give them a new enemy
 				pMember->m_hEnemy = pEnemy;
 				
-				//pMember->m_vecEnemyLKP = pEnemy->pev->origin;
-				pMember->setEnemyLKP(pEnemy->pev->origin);
+				
+				//MODDD - involve the ent
+				pMember->setEnemyLKP(pEnemy);
 				
 				//MODDD NOTICE - need a special marker to keep the condition from getting
 				// forgotten between frames.  At the start of the next frame the other monster

@@ -51,8 +51,7 @@ EASY_CVAR_EXTERN(cl_viewpunch)
 EASY_CVAR_EXTERN(cl_viewroll)
 EASY_CVAR_EXTERN(cl_interp_view_extra)
 EASY_CVAR_EXTERN(cl_interp_view_standard)
-
-
+EASY_CVAR_EXTERN_CLIENTONLY(cl_viewpunch_mod)
 
 
 
@@ -2296,8 +2295,19 @@ void V_DropPunchAngle(float frametime, float* arg_ev_punchangle)
 
 	//MODDD - little touchup
 	// UNDONE, let's be careful about changes, even small ones.
-	len -= (10.0 + len * 0.5) * frametime;
-	//len -= (11.0 + len * 0.67) * frametime;
+	// Increased kickbacks since, go ahead.
+	// Now a CVar.
+
+	if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) != 1){
+		// retail
+		len -= (10.0 + len * 0.5) * frametime;
+		// alternate similar way?
+		//len -= (11.0 + len * 0.67) * frametime;
+	}else{
+		// modded way.  Decays much faster with distance, lower minimum rate.
+		// Expected to work with higher-kickbacks in general.
+		len -= (3.7 + len * 2.85) * frametime;
+	}
 
 	len = max(len, 0.0);
 	VectorScale(arg_ev_punchangle, len, arg_ev_punchangle);

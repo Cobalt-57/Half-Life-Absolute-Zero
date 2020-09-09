@@ -1858,6 +1858,15 @@ void CPantherEye::MonsterThink ( void )
 		//ok?
 		//return;
 
+
+
+		if(gpGlobals->time >= pissedRunTime){
+			// Not pissed?  If I don't see the enemy, drop it.
+			if(!HasConditions(bits_COND_SEE_ENEMY)){
+				ForgetEnemy();
+			}
+		}
+
 		// not working?... oops?
 		if(m_afSoundTypes & (bits_SOUND_COMBAT | bits_SOUND_PLAYER) ){
 			// Hey!
@@ -2347,7 +2356,7 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 			if(m_pSchedule == slMoveFromOrigin){
 				// That's what failed?  Try to turn and face our enemy in case jumping at them is possible.
 				if(m_hEnemy != NULL){
-					setEnemyLKP(m_hEnemy->pev->origin);
+					setEnemyLKP(m_hEnemy);
 					MakeIdealYaw(m_vecEnemyLKP);
 					SetTurnActivity();
 				}else{
@@ -2862,14 +2871,12 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 		
 	case TASK_FACE_ENEMY:
 		if(HasConditions(bits_COND_SEE_ENEMY)){
-			//m_vecEnemyLKP = ...
-			setEnemyLKP(m_hEnemy->pev->origin);
+			setEnemyLKP(m_hEnemy);
 		}else{
 
 			if(!HasConditions(bits_COND_ENEMY_OCCLUDED)){
 				//if not occluded, try to see anyways?
-				//m_vecEnemyLKP = ...
-				setEnemyLKP(m_hEnemy->pev->origin);
+				setEnemyLKP(m_hEnemy);
 			}else{
 				//can't see the enemy?  Can't face them.
 				TaskFail();

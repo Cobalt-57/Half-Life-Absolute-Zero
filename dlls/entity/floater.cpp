@@ -967,7 +967,16 @@ void CFloater::StartTask( Task_t *pTask ){
 
 
 		case TASK_RANGE_ATTACK1:
-			shootCooldown = gpGlobals->time + RANDOM_LONG(2.2, 2.6);
+
+			// be a little more forgiving than 2.2 to 2.6 seconds!
+			if(g_iSkillLevel == SKILL_HARD){
+				shootCooldown = gpGlobals->time + RANDOM_LONG(2.6, 3.1);
+			}else if(g_iSkillLevel == SKILL_MEDIUM){
+				shootCooldown = gpGlobals->time + RANDOM_LONG(3.0, 3.5);
+			}else{
+				shootCooldown = gpGlobals->time + RANDOM_LONG(3.3, 3.8);
+			}
+
 			CFlyingMonster::StartTask(pTask);
 		break;
 		case TASK_STOP_MOVING:

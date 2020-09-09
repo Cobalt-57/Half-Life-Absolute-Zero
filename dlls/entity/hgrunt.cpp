@@ -1756,7 +1756,10 @@ BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 		// mean this method ends early.
 
 		// find target
-		// vecTarget = m_hEnemy->BodyTarget( pev->origin );
+		//MODDD - NOTE.  This looks like a hacky way to tkae the enemy LKP, but add-in the difference
+		// between the enemy's BodyTarget and where it currently is (likely a Z boost upward, as pev->origin.z is its feet).
+		// Guess that works?
+		//vecTarget = m_hEnemy->BodyTarget( pev->origin );
 		vecTarget = m_vecEnemyLKP + (m_hEnemy->BodyTarget( pev->origin ) - m_hEnemy->pev->origin);
 		// estimate position
 		if (HasConditions( bits_COND_SEE_ENEMY))

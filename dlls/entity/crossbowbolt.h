@@ -22,6 +22,11 @@ class CCrossbowBolt : public CBaseEntity
 
 	//MODDD - a ... defined constructor defaults to private, but the auto-generated one didn't? I got nothing.
 public:
+
+	static CCrossbowBolt* BoltCreate(const Vector& arg_velocity, float arg_speed);
+	static CCrossbowBolt* BoltCreate(const Vector& arg_velocity, float arg_speed, BOOL useTracer, BOOL arg_noDamage);
+
+
 	CCrossbowBolt(void);
 
 	static TYPEDESCRIPTION m_SaveData[];
@@ -51,8 +56,7 @@ public:
 	BOOL noDamage;
 	BOOL hitSomething;
 
-	static CCrossbowBolt* BoltCreate(const Vector& arg_velocity, float arg_speed);
-	static CCrossbowBolt* BoltCreate(const Vector& arg_velocity, float arg_speed, BOOL useTracer, BOOL arg_noDamage);
+	void hitEffect(const TraceResult& tr);
 
 };
 

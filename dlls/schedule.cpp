@@ -1148,9 +1148,7 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 				//ALSO, if any damage has been sustained, this monster will forcibly re-route. Kind of like an "OH there you are!" moment.
 				if( (FInViewCone( m_hEnemy ) && FVisible(m_hEnemy)) || HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE) ){
 
-
-					////m_vecEnemyLKP = ...
-					//setEnemyLKP(m_hEnemy->pev->origin);
+					//setEnemyLKP(m_hEnemy);
 
 					//MODDD NOTE - should we check to see there is a clear line of sight with the enemy, regardless of facing direction, before forcing a reroute? ){
 
@@ -1519,12 +1517,18 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 			//rest: 848
 			//desired: 847 
 
-			//If we're slow enough above water, go ahead and stop.
+			
+			// If we're slow enough above water, go ahead and stop.
 			Vector adjustedOrigin = pev->origin + Vector(0, 0, -0.4);  //does this help make it visible from below and above water?
 			::UTIL_SetOrigin(pev, adjustedOrigin);
 			pev->velocity.z = 0;
-			DeathAnimationEnd();  //kill the think method. done.
-			TaskComplete();
+
+
+			// wait... water level might lower.  SIGH.
+			// Could the think-time slow down, maybe?  Seems wasteful to have 'should I still be floating' cycles
+			// for all eternity.
+			//DeathAnimationEnd();  //kill the think method. done.
+			//TaskComplete();
 		}
 
 
@@ -1547,7 +1551,7 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 		// m_fSequenceLoops || 
 
 		if (
-			pTask->iTask == TASK_MELEE_ATTACK1_NOTURN || pTask->iTask == TASK_MELEE_ATTACK2_NOTURN ||
+			( (pTask->iTask == TASK_MELEE_ATTACK1_NOTURN || pTask->iTask == TASK_MELEE_ATTACK2_NOTURN) && !m_fSequenceLoops) ||
 			(predictRangeAttackEnd() && (pTask->iTask == TASK_RANGE_ATTACK1_NOTURN || pTask->iTask == TASK_RANGE_ATTACK2_NOTURN))
 		) {
 
@@ -1628,12 +1632,14 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 	{
 		lookAtEnemyLKP();
 
-		//MODDD - BIG UGLY SECTION, make its own method if this turns out alright
+		//MODDD - BIG UGLY SECTION, make its own method if this turns out alright.
+		// Also don't try attackEnd prediction on melee if the sequence loops, it just creates a moment of glitchess
+		// on the loop
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if (
-			pTask->iTask == TASK_MELEE_ATTACK1 || pTask->iTask == TASK_MELEE_ATTACK2 || 
+			( (pTask->iTask == TASK_MELEE_ATTACK1 || pTask->iTask == TASK_MELEE_ATTACK2) && !m_fSequenceLoops) || 
 			(predictRangeAttackEnd() && (pTask->iTask == TASK_RANGE_ATTACK1 || pTask->iTask == TASK_RANGE_ATTACK2))
 		) {
 
@@ -2243,15 +2249,14 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 
 			//...we should probably still do this pathFindStumpedMode == 3 check in case something that doesn't use FACE_PREV_LKP checks for being stumped.
 			if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedMode) == 3){
-				//is this okay?
-				//m_vecEnemyLKP = ...
-				setEnemyLKP(m_hEnemy->pev->origin);
+				// Forcing the LKP to be up-to-date here.
+				//MODDD - involve the ent
+				setEnemyLKP(m_hEnemy);
 
 				//TaskFail();  //is this even necessary?
 				ChangeSchedule(GetSchedule());
 				return;
 			}
-
 
 			MakeIdealYaw(m_vecEnemyLKP_prev);
 
@@ -2360,8 +2365,8 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 
 
 				if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedMode) == 0){
-					//Forget the enemy, we lost sight. Will pick up on an old remembered enemy pushed into memory in a stack
-					//if there is one there.
+					// Forget the enemy, we lost sight. Will pick up on an old remembered enemy pushed into memory in a stack
+					// if there is one there.
 					m_hEnemy = NULL;
 					//GetEnemy();
 					TaskComplete();
@@ -2370,9 +2375,9 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 
 				//Skip to re-routing towards the enemy, most likely.
 				if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedMode) == 3){
-					//is this okay?
-					//m_vecEnemyLKP = ...
-					setEnemyLKP(m_hEnemy->pev->origin);
+					// make the LKP up to date
+					//MODDD - Invole the ent
+					setEnemyLKP(m_hEnemy);
 
 					//TaskFail();  //is this even necessary?
 					ChangeSchedule(GetSchedule());
@@ -2386,8 +2391,8 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 					// Go look at them next time to break this cycle.
 
 					// safety feature, do this all the time.
-					//m_vecEnemyLKP = ...
-					setEnemyLKP(m_hEnemy->pev->origin);
+					//MODDD - involve the ent
+					setEnemyLKP(m_hEnemy);
 					
 					//Before we resume, pause for a little.
 					//... this will suffice, just fail regardless.
@@ -2409,8 +2414,8 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		{
 		//Force me to know the enemy's location.
 		if(m_hEnemy != NULL){
-			//m_vecEnemyLKP = ...
-			setEnemyLKP( m_hEnemy->pev->origin);
+			//MODDD - involve the ent
+			setEnemyLKP( m_hEnemy);
 		}
 		TaskComplete();
 		break;
@@ -2490,7 +2495,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			break;
 		}
 
-		//MODDD - this is forced to involve the enemy LKP now instead, even at the start.
+	//MODDD - this is forced to involve the enemy LKP now instead, even at the start.
 	case TASK_MOVE_TO_ENEMY_RANGE:
 	{
 		if(m_hEnemy == NULL){
@@ -2834,8 +2839,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			}
 
 			//Clearly we want to just route to the enemy. Update the LKP to not confuse the pathfinding.
-			//m_vecEnemyLKP = ...
-			setEnemyLKP(m_hEnemy->pev->origin);
+			setEnemyLKP(m_hEnemy);
 			
 
 			if ( BuildRoute ( pEnemy->pev->origin, bits_MF_TO_ENEMY, pEnemy ) )

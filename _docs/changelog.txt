@@ -289,7 +289,7 @@ Headcrabs also turn faster, and moreso with difficulty.
 
 a1a2 hgrunt vs. gargantua sequence breaking, even in WON, fixed!   I, think?
 
-By CVAR: cl_mp5_kickbackmode, defaults to 0 (off).  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
+By CVAR: cl_mp5_viewpunch_mod, defaults to 0 (off).  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
 
 ---------------------------------------------------------------------------------------------
 
@@ -338,7 +338,7 @@ Cause of 'PF_MessageEnd_I: Unknown User Msg 119' console spam should be fixed, e
 Enemies can jump to another enemy while in a 'failed' task, such as a headcrab on a counter in a1a2.bsp.  (Always waits for a chance to attack its first enemy: the scientist further away, even thouugh this is not possible, even if the player is much closer).
 -short version: enemies more likely to re-pick enemies on failing to reach an enemy repeatedly.
 
-CVar cl_mp5_kickbackmode actually added to the game.  Whoops.
+CVar cl_mp5_viewpunch_mod actually added to the game.  Whoops.
 
 Few other revisions to the satchel for odd cases, such as changing weapons immediately after detonating deployed satchels with satchel ammo left.
 
@@ -632,8 +632,30 @@ Panthereyes have an easier time getting unstuck from odd places like after landi
 
 Zombies and some other melee monsters may be better at attacking flying targets.  Jumping will not affect a zombie's willingness to melee.
 
+Floater spit-attack cooldown more forgiving in general, and scales with difficulty slightly.
 
-TODO - general archer AI fix for tight spaces, in progress
+Archers behave properly in tight spaces (a2a1a's water near the generator to unclog).  Will run up to deal melee attacks if the player is in the water.  Will not endlessly loop the melee animation.
+Also plays death animation on water being drained.
+
+Improvements to all homing balls (used by the Archer, Kingpin, and Controller):
+* All may be shot down.
+* Amount to be shot down and speed varries with difficulty.
+* Rapid fade and decelerate effect used on losing all 'health'
+* Fades slightly on taking damage too
+* Fading slighlty reduces damage dealt on touching enemies / the player.  Taking damage greatly reduces final damage dealt.
+* Base damage increased to compensate with possible reductions.  Getting hit with undamaged, freshly-generated balls (...) gives more damage than retail.
+
+Enemy targeting on a crouched player is better centered (was a bit high)
+
+Turret family (sentries, mounted turrets) affected by 'turretBleedsOil' when hit by melee-dealing enemies.  Always drew particles before.
+
+Crossbow sniper-fire (multiplayer zoomed) has viewpunch like any other firing.  Unsure if missing this was intentional.
+
+New viewpunch behavior, from CVar cl_viewpunch_mod (defaults to on).  When on, all weapons receive higher knockback, especially the crossbow, hornetgun, and gauss.
+All weapons have a slight randomness to the viewpunch too.
+Punchback decays more smoothly and more quickly to compensate.
+
+Other new CVar: cl_gauss_viewpunch_mod, defaults to on.  When on, gauss viewpunch is scaled with charge (more charge = more kickback).  Retail treated all gauss-firing the same for kickback: as much as firing the glock.
 
 
 

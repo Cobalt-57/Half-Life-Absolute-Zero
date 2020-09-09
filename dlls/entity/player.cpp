@@ -1027,14 +1027,17 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBasePlayer)
 	// go take the damage first
 
 	
-	CBaseEntity *pAttacker = CBaseEntity::Instance(pevAttacker);
+	//MODDD - "CBaseEntity::Instance" of a NULL pev, funny enough, crashes.    Yup..
+	if(pevAttacker != NULL){
+		CBaseEntity *pAttacker = CBaseEntity::Instance(pevAttacker);
 	
-	//MODDD - is the pAttacker NULL check that forbids returning early okay here?
-	if ( pAttacker != NULL && !g_pGameRules->FPlayerCanTakeDamage( this, pAttacker ) )
-	{
-		// Refuse the damage
-		recentMajorTriggerDamage &= ~1;
-		return 0;
+		//MODDD - is the pAttacker NULL check that forbids returning early okay here?
+		if ( pAttacker != NULL && !g_pGameRules->FPlayerCanTakeDamage( this, pAttacker ) )
+		{
+			// Refuse the damage
+			recentMajorTriggerDamage &= ~1;
+			return 0;
+		}
 	}
 
 	// keep track of amount of damage last sustained

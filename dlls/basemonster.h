@@ -595,6 +595,11 @@ public:
 
 	void updateEnemyLKP(void);
 	void setEnemyLKP(const Vector& argNewVector);
+	void setEnemyLKP(const Vector& argNewVector, const Vector& extraAddIn);
+	virtual void setEnemyLKP(CBaseEntity* theEnt);
+	virtual void setEnemyLKP(CBaseEntity* theEnt, const Vector& extraAddIn);
+	void setEnemyLKP(entvars_t* theEntPEV);
+	void setEnemyLKP(entvars_t* theEntPEV, const Vector& extraAddIn);
 	void setEnemyLKP_Investigate(const Vector& argNewVector);
 
 	
@@ -1298,7 +1303,7 @@ public:
 
 	virtual float ScriptEventSoundAttn(void);
 	virtual float ScriptEventSoundVoiceAttn(void);
-
+	virtual BOOL CanMakeBloodParticles(void);
 
 };
 

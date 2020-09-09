@@ -95,6 +95,10 @@ BOOL g_cl_HUD_Frame_ran = FALSE;
 BOOL g_cl_HUD_UpdateClientData_ran = FALSE;
 BOOL g_HUD_Redraw_ran = FALSE;
 
+// go ahead and allow the very first time?
+// After this, VidInit in cdll_int.cpp has to set this (map change).
+BOOL g_cl_queueSharedPrecache = TRUE;
+
 
 
 // NOTICE!  Anything mentioning m_flAmmoStartCharge throughout here and client.cpp can be replaced, that var is no longer used.
@@ -498,6 +502,16 @@ Set up weapons, player and functions needed to run weapons code client-side.
 void HUD_InitClientWeapons( void )
 {
 	static int initialized = 0;
+
+	// WAIT!  Go ahead and precache here if the map has changed since (VidInit got called).
+	// The rest of this method gets blocked on having already run once.  As-is did it that way for 
+	// what used to be here only (weapon-related stuff), keeping that much that way.
+	if(g_cl_queueSharedPrecache){
+		g_cl_queueSharedPrecache = FALSE;
+		PrecacheShared();
+	}
+
+
 	if (initialized) {
 		return;  //right there.
 	}
@@ -541,7 +555,15 @@ void HUD_InitClientWeapons( void )
 
 
 	// MODDD - place for script similar between client and serverside.
-	PrecacheShared();
+	// NO.  Separated out into ClearWeaponInfoCache.
+	// For... 'reasons'.  Most precaches done only once ever while the game is booted get glitchy
+	// after changing the map but failing to precache again.  That's not what's weird.
+	// Thing is, weapons don't need to precache ever again, they didn't in retail.
+	// Don't question it, just move on.  PrecacheShared() will be called after VidInit() sets a flag
+	// that lets only PrecacheShared() be called on checking HUD_InitClientWeapons again
+	// (most is blocked by having ever initialized, even through maps).
+	//PrecacheShared();
+	ClearWeaponInfoCache();
 
 	// Allocate a slot for the local player
 	HUD_PrepEntity( &localPlayer	, NULL );

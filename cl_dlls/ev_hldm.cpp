@@ -98,10 +98,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteRicochetSound)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteBulletHitSounds)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaInterval)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketTrailAlphaScale)
-
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(gauss_mode)
-
-
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponSpreadMode)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
 EASY_CVAR_EXTERN_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire)
@@ -117,6 +114,12 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 EASY_CVAR_EXTERN(cl_gaussfollowattachment)
 EASY_CVAR_EXTERN_DEBUGONLY(sparksPlayerCrossbowMulti)
 EASY_CVAR_EXTERN(cl_mp5_evil_skip)
+
+EASY_CVAR_EXTERN(cl_mp5_viewpunch_mod)
+EASY_CVAR_EXTERN_CLIENTONLY(cl_viewpunch_mod)
+EASY_CVAR_EXTERN_CLIENTONLY(cl_gauss_viewpunch_mod)
+
+
 
 
 
@@ -838,8 +841,11 @@ void EV_FireGlock1(event_args_t* args)
 		//gEngfuncs.pEventAPI->EV_WeaponAnimation( empty ? GLOCK_SHOOT_EMPTY : GLOCK_SHOOT, 2 );
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(empty ? GLOCK_SHOOT_EMPTY : GLOCK_SHOOT, silencerOn);
 
-		//MODDD - why was this commented before?
-		V_PunchAxis(0, -2.0);
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-3.5, -2.8));
+		}else{
+			V_PunchAxis(0, -2);
+		}
 	}
 
 	EV_GetDefaultShellInfo(args, origin, velocity, ShellVelocity, ShellOrigin, forward, right, up, 20, -12, 4);
@@ -939,8 +945,11 @@ void EV_FireGlock2(event_args_t* args)
 		//gEngfuncs.pEventAPI->EV_WeaponAnimation( GLOCK_SHOOT, 2 );
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(GLOCK_SHOOT, silencerOn);
 
-		//MODDD - why was this commented?
-		V_PunchAxis(0, -2.0);
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-3.5, -2.8));
+		}else{
+			V_PunchAxis(0, -2);
+		}
 	}
 
 	EV_GetDefaultShellInfo(args, origin, velocity, ShellVelocity, ShellOrigin, forward, right, up, 20, -12, 4);
@@ -1010,7 +1019,12 @@ void EV_FireShotGunDouble(event_args_t* args)
 		// Add muzzle flash to current weapon model
 		EV_MuzzleFlash();
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOTGUN_FIRE2, 2);
-		V_PunchAxis(0, -10.0);
+
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-20, -15));
+		}else{
+			V_PunchAxis(0, -10);
+		}
 	}
 
 	for (j = 0; j < 2; j++)
@@ -1075,7 +1089,11 @@ void EV_FireShotGunSingle(event_args_t* args)
 		EV_MuzzleFlash();
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(SHOTGUN_FIRE, 2);
 
-		V_PunchAxis(0, -5.0);
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-7.4, -6.2));
+		}else{
+			V_PunchAxis(0, -5);
+		}
 	}
 
 	EV_GetDefaultShellInfo(args, origin, velocity, ShellVelocity, ShellOrigin, forward, right, up, 32, -12, 6);
@@ -1165,29 +1183,40 @@ void EV_FireMP5(event_args_t* args)
 		}
 
 
-
-
-
-
-		//MODDD - don't allow very low values anymore, kind of odd when the point is recoil to ever be given those.
-		// ... on CVar setting that is.
-		if (EASY_CVAR_GET(cl_mp5_kickbackmode) == 1) {
-			int ranDir = gEngfuncs.pfnRandomLong(0, 1);
-
-			if (ranDir == 0) {
-				// neg
-				V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-2.6, -1.7));
+		float theViewpunch;
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			//MODDD - don't allow very low values anymore, kind of odd when the point is recoil to ever be given those.
+			// ... on CVar setting that is.
+			if (EASY_CVAR_GET(cl_mp5_viewpunch_mod) == 1) {
+				int ranDir = gEngfuncs.pfnRandomLong(0, 1);
+				if (ranDir == 0) {
+					// neg
+					theViewpunch = gEngfuncs.pfnRandomFloat(-4.4, -3.9);
+				}else {
+					// pos
+					theViewpunch = gEngfuncs.pfnRandomFloat(3.9, 4.4);
+				}
+			}else {
+				// retail-style
+				theViewpunch = gEngfuncs.pfnRandomFloat(-3.2, 3.2);
 			}
-			else {
-				// pos
-				V_PunchAxis(0, gEngfuncs.pfnRandomFloat(1.7, 2.6));
+		}else{
+			// cl_viewpunch_mod off.
+			if (EASY_CVAR_GET(cl_mp5_viewpunch_mod) == 1) {
+				int ranDir = gEngfuncs.pfnRandomLong(0, 1);
+				if (ranDir == 0) {
+					// neg
+					theViewpunch = gEngfuncs.pfnRandomFloat(-2.6, -1.7);
+				}else {
+					// pos
+					theViewpunch = gEngfuncs.pfnRandomFloat(1.7, 2.6);
+				}
+			}else {
+				// retail
+				theViewpunch = gEngfuncs.pfnRandomFloat(-2, 2);
 			}
 		}
-		else {
-			// retail
-			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-2, 2));
-		}
-
+		V_PunchAxis(0, theViewpunch);
 	}// END OF IsLocal check
 
 	EV_GetDefaultShellInfo(args, origin, velocity, ShellVelocity, ShellOrigin, forward, right, up, 20, -12, 4);
@@ -1221,6 +1250,8 @@ void EV_FireMP5(event_args_t* args)
 
 }
 
+
+
 // We only predict the animation and sound
 // The grenade is still launched from the server.
 void EV_FireMP52(event_args_t* args)
@@ -1234,7 +1265,12 @@ void EV_FireMP52(event_args_t* args)
 	if (EV_IsLocal(idx))
 	{
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(MP5_LAUNCH, 2);
-		V_PunchAxis(0, -10);
+
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-17.0, -14.5));
+		}else{
+			V_PunchAxis(0, -10);
+		}
 	}
 
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
@@ -1293,13 +1329,11 @@ void EV_FirePython(event_args_t* args)
 		//gEngfuncs.pEventAPI->EV_WeaponAnimation( PYTHON_FIRE1, multiplayer ? 1 : 0 );
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(PYTHON_FIRE1, pythonModel);
 
-		//Nah, just disable all punches when the minimumfiredelay cheat is on (see view.cpp).
-		//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) == 0 ){
-		V_PunchAxis(0, -10.0);
-		//}else{
-		//	V_PunchAxis( 0, 0 );
-		//}
-
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-14.3, -12.7));
+		}else{
+			V_PunchAxis(0, -10);
+		}
 	}
 
 
@@ -1428,16 +1462,6 @@ void EV_FireGauss(event_args_t* args)
 
 	VectorMA(vecSrc, 8192, forward, vecDest);
 
-	if (EV_IsLocal(idx))
-	{
-		V_PunchAxis(0, -2.0);
-		gEngfuncs.pEventAPI->EV_WeaponAnimation(GAUSS_FIRE2, 2);
-
-		if (m_fPrimaryFire == FALSE) {
-			g_flApplyVel = flDamage;
-		}
-	}
-
 	float dmgFracto;
 	float sndFracto;
 	
@@ -1462,6 +1486,84 @@ void EV_FireGauss(event_args_t* args)
 			dmgFracto = min(flDamage, 600.0f) * (1.0f / 600.0f);
 		}
 	}
+
+
+
+	if (EV_IsLocal(idx))
+	{
+		//MODDD - was -2
+		gEngfuncs.pEventAPI->EV_WeaponAnimation(GAUSS_FIRE2, 2);
+
+		//MODDD - don't fully understand this, but probably not good to get values over retail's usual max.
+		// Crude idea: cut it to some percentage for gauss mode 1
+		
+		float viewPunchAmount;
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			if(EASY_CVAR_GET_CLIENTONLY(cl_gauss_viewpunch_mod) == 1){
+				// gauss_viewpunch_mod?  Go crazy
+				if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+					// retail mode
+					if (m_fPrimaryFire) {
+						viewPunchAmount = gEngfuncs.pfnRandomFloat(-4.1, -3.6);
+					}else{
+						viewPunchAmount = gEngfuncs.pfnRandomFloat(-1.0, -0.95) * 45 * dmgFracto;
+						if (viewPunchAmount > -3.9) viewPunchAmount = -3.9;
+						g_flApplyVel = flDamage;
+					}
+				}else{
+					// pre-release
+					if (m_fPrimaryFire) {
+						viewPunchAmount = gEngfuncs.pfnRandomFloat(-6.0, -5.1);
+					}else{
+						viewPunchAmount = gEngfuncs.pfnRandomFloat(-1.0, -0.95) * 28 * dmgFracto;
+						if (viewPunchAmount > -5.5) viewPunchAmount = -5.5;
+						g_flApplyVel = flDamage * 0.45;
+					}
+				}
+			}else{
+				// no gauss viewpunch mod?  Use primary's way always
+				if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+					viewPunchAmount = gEngfuncs.pfnRandomFloat(-4.1, -3.6);
+				}else{
+					viewPunchAmount = gEngfuncs.pfnRandomFloat(-6.0, -5.1);
+				}
+			}
+		}else{
+			// viewpunch mod of 0
+			if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+				// gauss_viewpunch_mod?  Go crazy
+				if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+					// retail mode
+					if (m_fPrimaryFire) {
+						viewPunchAmount = -2;
+					}else{
+						viewPunchAmount = -1 * 45 * 0.62 * dmgFracto;
+						if (viewPunchAmount > -2.0) viewPunchAmount = -2.0;
+						g_flApplyVel = flDamage;
+					}
+				}else{
+					// pre-release
+					if (m_fPrimaryFire) {
+						viewPunchAmount = -3.4;
+					}else{
+						viewPunchAmount = -1 * 28 * 0.62 * dmgFracto;
+						if (viewPunchAmount > -3.4) viewPunchAmount = -3.4;
+						g_flApplyVel = flDamage * 0.45;
+					}
+				}
+			}else{
+				// no gauss viewpunch mod?  Use primary's way always
+				if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(gauss_mode) != 1) {
+					viewPunchAmount = -2;
+				}else{
+					viewPunchAmount = -3.4;
+				}
+			}
+		}//cl_viewpunch_mod check
+
+		V_PunchAxis(0, viewPunchAmount);
+	}//EV_IsLocal
+
 
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
 		// original line
@@ -1676,6 +1778,57 @@ void EV_FireGauss(event_args_t* args)
 			break;
 		}
 
+
+
+		// !!! CLIENTSIDE TRACE ENTITY-FROM-INDEX DEBUG
+		// Lots of combinations of ways to get a cl_entity_t or a physent_t, but which is correct?
+		// Bad ways commented out.
+		
+		// Conclusion, short-version:
+		// * Best way to get the pev->solid of any entity:
+		//     physent_t* somePhysEnt = gEngfuncs.pEventAPI->EV_GetPhysent(tr.ent);
+		//     int theSolid = somePhysEnt->solid;
+		// * Best way to get the renderfx of any entity:
+		//     int hitEntIndex = gEngfuncs.pEventAPI->EV_IndexFromTrace(&tr);
+		//     cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(hitEntIndex);
+		//     int theRenderFX = cEntRef->curstate.renderfx;
+		// Also, note that GetEntityByIndex and the cl_entity* type were only used once in as-is
+		// (in the egon).
+		// Consider checking whether hitEntIndex is 0, that means the cl_entity* given is for the
+		// world.  Probably?  The blank curstate.solid for it is still weird (works for physent_t though)
+		// tr.ent would similarly be 0 in such a case.  huh.  For other things retrieved as cl_entity_t*, 
+		// the 'EV_IndexFromTrace(&tr)' approach is needed, the tr.ent is not appropriate.
+		
+
+		/*
+		// First two look to work equally well, but may as well use EV_IndexFromTrace, the EV form.
+		// It's better for prediction supposedly, and the same otherwise.
+		int hitEntIndex = gEngfuncs.pEventAPI->EV_IndexFromTrace(&tr);
+		int hitEntIndex2 = PM_GetPhysEntInfo(tr.ent);
+		int hitEntIndex3 = tr.ent;
+
+		cl_entity_t* cEntRef1 = gEngfuncs.GetEntityByIndex(hitEntIndex);
+		cl_entity_t* cEntRef2 = gEngfuncs.GetEntityByIndex(hitEntIndex2);
+		//cl_entity_t* cEntRef3 = gEngfuncs.GetEntityByIndex(hitEntIndex3);
+
+		//physent_t* pe1 = gEngfuncs.pEventAPI->EV_GetPhysent(hitEntIndex);
+		//physent_t* pe2 = gEngfuncs.pEventAPI->EV_GetPhysent(hitEntIndex2);
+		physent_t* pe3 = gEngfuncs.pEventAPI->EV_GetPhysent(hitEntIndex3);
+
+
+		// NOTICE - this correctly gets the pev->solid (as seen serverside) of any entity BUT worldspawn (the map).
+		// NOOOOoo freakin' clue.   But look at pe3->solid, that consistently works for solid.
+		int cEntRef1Solid = cEntRef1->curstate.solid;
+		int cEntRef2Solid = cEntRef2->curstate.solid;
+		//int cEntRef3Solid = cEntRef3->curstate.solid;
+		//int pe1Solid = pe1->solid;
+		//int pe2Solid = pe2->solid;
+		int pe3Solid = pe3->solid;
+
+		int cEntRef1IsMetalNPC = (cEntRef1->curstate.renderfx & ISMETALNPC) == ISMETALNPC;
+		int cEntRef2IsMetalNPC = (cEntRef2->curstate.renderfx & ISMETALNPC) == ISMETALNPC;
+		//int cEntRef3IsMetalNPC = (cEntRef3->curstate.renderfx & ISMETALNPC) == ISMETALNPC;
+		*/
 
 
 		pEntity = gEngfuncs.pEventAPI->EV_GetPhysent(tr.ent);
@@ -2074,7 +2227,15 @@ void EV_FireCrossbow2(event_args_t* args)
 			gEngfuncs.pEventAPI->EV_WeaponAnimation(CROSSBOW_FIRE1, 1);
 		else if (args->iparam2)
 			gEngfuncs.pEventAPI->EV_WeaponAnimation(CROSSBOW_FIRE3, 1);
-	}
+
+		//MODDD - why was this missing in as-is?  Hard to say if that was intentional or not of as-is.
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-7.5f, -6.0f));
+		}else{
+			// Put back in, reduced slightly
+			V_PunchAxis(0, -1.6);
+		}
+	}//EV_IsLocal
 
 	// Store off the old count
 	gEngfuncs.pEventAPI->EV_PushPMStates();
@@ -2084,22 +2245,16 @@ void EV_FireCrossbow2(event_args_t* args)
 	gEngfuncs.pEventAPI->EV_SetTraceHull(FILLIN_TRACE_HULL);
 	gEngfuncs.pEventAPI->EV_PlayerTrace(vecSrc, vecEnd, FILLIN_TRACEFLAGS_STUDIO_BOX, -1, &tr);
 
-	//We hit something
+	// We hit something
 	if (tr.fraction < 1.0)
 	{
-		//physent_t* pe = gEngfuncs.pEventAPI->EV_GetPhysent(tr.ent);
-		//cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(PM_GetPhysEntInfo(tr.ent));
-
-		// ALTERNATE WAY:  Test it out?
+		physent_t* pe = gEngfuncs.pEventAPI->EV_GetPhysent(tr.ent);
 		int hitEntIndex = gEngfuncs.pEventAPI->EV_IndexFromTrace(&tr);
 		cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(hitEntIndex);
 
-
-		// Hmm.  is that good enough?
-		// So cl_entity_t has both solid and renderfx, but physent_t only has solid.  Odd.
-		// cEntRef->curstate.solid;
-		// cEntRef->curstate.renderfx;
-
+		// ALTERNATE WAY:  Test it out?
+		//int hitEntIndex = gEngfuncs.pEventAPI->EV_IndexFromTrace(&tr);
+		//cl_entity_t* cEntRef = gEngfuncs.GetEntityByIndex(hitEntIndex);
 
 		/*
 		// break point and see all this?
@@ -2111,12 +2266,14 @@ void EV_FireCrossbow2(event_args_t* args)
 		*/
 
 
-
 		// Not the world, let's assume we hit something organic ( dog, cat, uncle joe, etc ).
-		// pe->solid
-		if (cEntRef->curstate.solid != SOLID_BSP)
-		{
 
+		//MODDD - NO, don't switch to cEntRef->curstate.solid.  It magically doesn't work if the entity is the world.
+		// pe->solid always works.  cEntRef works for getting renderflags though.  Checking for the index being 0 
+		// is good enough to tell if this is the world anyway.
+
+		//if (cEntRef->curstate.solid != SOLID_BSP){
+		if(pe->solid != SOLID_BSP){
 			//if (!(pe->info == 8)) {
 			if (cEntRef != NULL && !((cEntRef->curstate.renderfx & ISMETALNPC) == ISMETALNPC) ) {
 				switch (gEngfuncs.pfnRandomLong(0, 1))
@@ -2140,7 +2297,7 @@ void EV_FireCrossbow2(event_args_t* args)
 					// A blend of pushed away from the surface collided with, and away from the direction I was moving in.
 					// Should push the bubbles away from the wall as to not clip too much and look like it's coming
 					// from the bolt itself.
-					Vector temp1 = tr.endpos + tr.plane.normal * 2 - forward * 6 + Vector(-1.7, -1.7, -1.7);
+					Vector temp1 = tr.endpos + tr.plane.normal * 2 + -forward * 6 + Vector(-1.7, -1.7, -1.7);
 					Vector temp2 = tr.endpos + tr.plane.normal * 2 + -forward * 6 + Vector(1.7, 1.7, 1.7);
 					UTIL_Bubbles(temp1, temp2, 8);
 				}
@@ -2157,15 +2314,10 @@ void EV_FireCrossbow2(event_args_t* args)
 
 			//Not underwater, do some sparks...
 			if (gEngfuncs.PM_PointContents(tr.endpos, NULL) != CONTENTS_WATER) {
-				//MODDD - new method.
-				///	 gEngfuncs.pEfxAPI->R_SparkShower( tr.endpos );
 				UTIL_Sparks(tr.endpos);
 			}
 			else {
-				// A blend of pushed away from the surface collided with, and away from the direction I was moving in.
-				// Should push the bubbles away from the wall as to not clip too much and look like it's coming
-				// from the bolt itself.
-				Vector temp1 = tr.endpos + tr.plane.normal * 2 - forward * 6 + Vector(-1.7, -1.7, -1.7);
+				Vector temp1 = tr.endpos + tr.plane.normal * 2 + -forward * 6 + Vector(-1.7, -1.7, -1.7);
 				Vector temp2 = tr.endpos + tr.plane.normal * 2 + -forward * 6 + Vector(1.7, 1.7, 1.7);
 				UTIL_Bubbles(temp1, temp2, 8);
 			}
@@ -2175,6 +2327,7 @@ void EV_FireCrossbow2(event_args_t* args)
 			// ALSO, this gets some func_tracktrain entities: check for MOVETYPE_PUSH.  Or just require being MOVETYPE_NONE.
 			// The world does havea  pe->index of 0, but there may be other map-like entities (func_wall) that
 			// a bolt could stick out of just fine too.  I think this is the best we can do.
+			// Also, a 'hitEntIndex == 0' check would cover the world, but it is already included by these conditions.
 			//if (pe->rendermode == kRenderNormal) {
 			// pe->rendermode
 			if (cEntRef != NULL && cEntRef->curstate.rendermode == kRenderNormal && cEntRef->curstate.movetype == MOVETYPE_NONE) {
@@ -2224,12 +2377,17 @@ void EV_FireCrossbow(event_args_t* args)
 	//Only play the weapon anims if I shot it. 
 	if (EV_IsLocal(idx))
 	{
-		if (args->iparam1)
+		if (args->iparam1){
 			gEngfuncs.pEventAPI->EV_WeaponAnimation(CROSSBOW_FIRE1, 1);
-		else if (args->iparam2)
+		}else if (args->iparam2){
 			gEngfuncs.pEventAPI->EV_WeaponAnimation(CROSSBOW_FIRE3, 1);
+		}
 
-		V_PunchAxis(0, -2.0);
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-8.5f, -7.0f));
+		}else{
+			V_PunchAxis(0, -2);
+		}
 	}
 }
 //======================
@@ -2267,7 +2425,11 @@ void EV_FireRpg(event_args_t* args)
 	{
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(RPG_FIRE2, 1);
 
-		V_PunchAxis(0, -5.0);
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-15, -12));
+		}else{
+			V_PunchAxis(0, -5);
+		}
 	}
 }
 //======================
@@ -2726,7 +2888,16 @@ void EV_HornetGunFire(event_args_t* args)
 	//Only play the weapon anims if I shot it.
 	if (EV_IsLocal(idx))
 	{
-		V_PunchAxis(0, gEngfuncs.pfnRandomLong(0, 2));
+		//MODDD - was from 0 to 2.  Wait, why wasn't it negative like everything else?
+		// And a random long?  Why not decimal?
+
+		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-4.2, -3.5));
+		}else{
+			// still using gEngfuncs.pfnRandomFloat instead, still on the positive side like as-is?
+			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(0, 2));
+		}
+
 		gEngfuncs.pEventAPI->EV_WeaponAnimation(HGUN_SHOOT, 1);
 	}
 

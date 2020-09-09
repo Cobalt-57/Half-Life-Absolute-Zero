@@ -1397,21 +1397,21 @@ customLogoSprayMode (0) - MODEVAR. So far only two modes.
 
 
 monsterFadeOutRate (100) - ADJUSTABLE. How much monster opacity decreases in one second when fading out, out of 255 (opaque, starting). Players fade when sv_germancensorshipship is on or gibs are banned for any other reason.
-~For instance, set to 100, it takes a little under 3 seconds to fade out since 100 times 3 is 300, out of 255.
+~ For instance, set to 100, it takes a little under 3 seconds to fade out since 100 times 3 is 300, out of 255.
 playerFadeOutRate (120) - ADJUSTABLE. How much player opacity decreases in one second when fading out. See monsterFadeOutRate.
 
 
-monsterAIForceFindDistance (0) - ADJUSTABLE. Used to be 256 in retail, value of 0 effectively disables this feature.
-~If a monster's designated enemy is up to this close to the monster, the monster will force its LKP to match that monster, which gives at least a delayed reaction for knowing where the monster is. This is regardless of noise or inflicting damage while that close.
-~In short, if a monster's enemy is less than this distance from a given monster, the monster will immediately or soon face the enemy, even if completely silent. Call it a 6th sense.
+monsterAIForceFindDistance (0) - ADJUSTABLE. Used to be 256 in retail, value of 0 disables this feature.
+~ If a monster's designated enemy is up to this close to the monster, the monster will force its LKP to match that monster, which gives at least a delayed reaction for knowing where the monster is. This is regardless of noise or inflicting damage while that close.
+~ In short, if a monster's enemy is less than this distance from a given monster, the monster will immediately or soon face the enemy, even if completely silent. Call it a 6th sense.
 
 drawDebugEnemyLKP (0) - BOOL. If on, draws any monster's recored enemy last known position (m_vecEnemyLKP) as a blue vertical line to be noticable. The actual point is the center of this line.
-~Can be used to see where a monster last saw its enemy for debugging AI issues or understanding them in the first place, like whether the enemy is failing to update LKP in accordance with a clearly visible enemy, or updates LKP for an enemy clearly out of sight and not to get out of a stumped method (does not make sense to see the enemy this easily or out of the back of its head without any noise)
+~ Can be used to see where a monster last saw its enemy for debugging AI issues or understanding them in the first place, like whether the enemy is failing to update LKP in accordance with a clearly visible enemy, or updates LKP for an enemy clearly out of sight and not to get out of a stumped method (does not make sense to see the enemy this easily or out of the back of its head without any noise)
 
 trackchangePrintouts (0) - BOOL. See lots of printouts regarding CFuncTrackChange and its child CFuncTrackAuto.
 
 floaterDummy (0) - BOOL. Floaters lose AI. Good for watching how enemies (to this monster) behave around this.
-~use "nothingHurts 2" to disable damage from non-players, use "autoSneaky 1" to make the player invisible to the AI for decisions.
+~ use "nothingHurts 2" to disable damage from non-players, use "autoSneaky 1" to make the player invisible to the AI for decisions.
 
 barneyDummy (0) - BOOL. Barney's lose AI.
 
@@ -1427,9 +1427,21 @@ r_glowshell_debug - MODEVAR. For a rendering issue with agrunts using the glow-F
 3: do neither.  Don't call IEngineStudio.GL_StudioDrawShadow, leave StudioRenderModel unaffected.  PROBLEM IN OpenGL or D3D renderer choices in Video options.
 
 
-cl_viewpunch - BOOLEAN. Viewpunch is the slight offset from where the player is currently looking that usually happens from taking melee hits, falling to the ground, or weapon recoil.
+cl_viewpunch (1) - ADJUSTABLE. Viewpunch is the slight offset from where the player is currently looking that usually happens from taking melee hits, falling to the ground, or weapon recoil.
 If 0, viewpunch is ignored.
+~ Anywhere inbetween, less viewpunch (0.5 = half, etc.)
 If 1, works as usual (retail).
+
+cl_viewpunch_mod (1) - BOOL.  When on, viewpunch for all weapons is increased and always has a slight random-ness to it (only some did in retail).
+- The viewpunch decay is also more smooth, happening very quickly at extreme viewpunch and slowly at lesser viewpunch remaining.
+- Set to 0 for retail viewpunch amounts/decay.
+
+
+cl_gauss_viewpunch_mod (1) - BOOL.  When on, gauss kickback is much more varried between primary/secondary and different charges, instead of the same flat value the glock uses as retail does.
+
+
+
+
 
 
 m_rawinput (0) - BOOL.  Related to interpreting mouse input.
@@ -1478,7 +1490,7 @@ sv_explosionknockback (1) - FLOAT (adjustable).  1 is the default amount of knoc
 cl_gaussfollowattachment (1) - BOOL.  Retail behavior is 1.  If on, the gauss laser follows the end of the gauss as it fires.
 ~If 0, it stays at the firing origin and disappears faster to not look too weird while moving.
 
-cl_mp5_kickbackmode (0) - BOOL.  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
+cl_mp5_viewpunch_mod (0) - BOOL.  When on, mp5 random kickback no longer includes very low ranges, slightly higher on average and more consistent.
 
 
 

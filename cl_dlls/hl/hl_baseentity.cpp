@@ -452,8 +452,20 @@ int CBaseMonster::getLoopingDeathSequence(void){return 0;}
 Schedule_t* CBaseMonster::flyerDeathSchedule(void){return NULL;}
 BOOL CBaseMonster::getMovementCanAutoTurn(void){return FALSE;}
 
+
 void CBaseMonster::updateEnemyLKP(void){}
 void CBaseMonster::setEnemyLKP(const Vector& argNewVector){}
+void CBaseMonster::setEnemyLKP(const Vector& argNewVector, const Vector& extraAddIn){}
+void CBaseMonster::setEnemyLKP(CBaseEntity* theEnt){}
+void CBaseMonster::setEnemyLKP(CBaseEntity* theEnt, const Vector& extraAddIn){}
+void CBaseMonster::setEnemyLKP(entvars_t* theEntPEV){}
+void CBaseMonster::setEnemyLKP(entvars_t* theEntPEV, const Vector& extraAddIn){}
+void CBaseMonster::setEnemyLKP_Investigate(const Vector& argNewVector){}
+
+
+
+
+
 
 void CBaseMonster::setPhysicalHitboxForDeath(){return;}
 void CBaseMonster::DeathAnimationStart(){return;}
@@ -848,6 +860,7 @@ void CBaseMonster::Materialize(void) {}
 
 float CBaseMonster::ScriptEventSoundAttn(void) {return 0;}
 float CBaseMonster::ScriptEventSoundVoiceAttn(void) { return 0; }
+BOOL CBaseMonster::CanMakeBloodParticles(void) {return FALSE;}
 
 
 //removed.

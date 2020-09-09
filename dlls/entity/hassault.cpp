@@ -2152,7 +2152,7 @@ BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 	if(HasConditions(bits_COND_SEE_ENEMY) && m_hEnemy != NULL){
 		//is that ok?
 		//m_vecEnemyLKP = m_hEnemy->pev->origin + m_hEnemy->EyePosition();
-		m_vecEnemyLKP = m_hEnemy->pev->origin;
+		SetEnemyLKP(m_hEnemy);
 	}
 	*/
 
@@ -3058,7 +3058,7 @@ void CHAssault::RunTask ( Task_t *pTask )
 		if(HasConditions(bits_COND_SEE_ENEMY) && m_hEnemy != NULL){
 			//is that ok?
 			//m_vecEnemyLKP = m_hEnemy->pev->origin + m_hEnemy->EyePosition();
-			m_vecEnemyLKP = m_hEnemy->pev->origin;
+			SetEnemyLKP(m_hEnemy);
 		}
 		*/
 		EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "HASSAULT: TASK_FACE_ENEMY ??? %d %d", HasConditions(bits_COND_SEE_ENEMY), m_hEnemy!=NULL));
@@ -3358,8 +3358,7 @@ Schedule_t* CHAssault::GetSchedule(){
 
 					//MODDD - is that ok?
 					// Maybe not, kinda gives them that 'eyes in the back of the head' power.
-					//m_vecEnemyLKP = m_hEnemy->pev->origin;
-					//setEnemyLKP(m_hEnemy->pev->origin);
+					//setEnemyLKP(m_hEnemy);
 					
 					this->nonStumpableCombatLook = FALSE;
 

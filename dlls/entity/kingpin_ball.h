@@ -46,10 +46,9 @@ public:
 	
 	int CheckLocalMove( const Vector& vecStart, const Vector& vecEnd, CBaseEntity* pTarget, float* pflDist );
 	
-	//How much opacity do I lose per think cycle (0.1 seconds)?  Slow it down to last longer.
 	float getFadeOutAmount(void);
-
-
+	float StartHealth(void);
+	float GetMaxSpeed(void);
 
 	GENERATE_KILLED_PROTOTYPE
 

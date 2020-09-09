@@ -43,19 +43,35 @@ extern int iHornetPuff;
 class CHornet : public CBaseMonster
 {
 public:
-	CHornet(void);
+	float		m_flStopAttack;
+	int			m_iHornetType;
+	float		m_flFlySpeed;
+	
+	//MODDD
+	////////////////////////////////////////////////
+	float hornetPseudoNextThink;
+	float spiralStartTime;
 
+	BOOL hornetTouchedAnything;
+	//Vector vecFlightDirAlttt;
+	Vector vecFlightDirTrue;
+	//Vector vecFlightDirMem;
+	BOOL reflectedAlready;
+	///////////////////////////////////////////////
+
+public:
+	CHornet(void);
 
 	static float getDifficultyMod(void);
 	static BOOL useSpiral(void);
 
 	void Spawn( void );
 	void Precache( void );
-	int  Classify ( void );
-	int  IRelationship ( CBaseEntity *pTarget );
-	virtual int	Save( CSave &save );
-	virtual int	Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
+	int Classify ( void );
+	int IRelationship ( CBaseEntity *pTarget );
+	virtual int Save( CSave &save );
+	virtual int Restore( CRestore &restore );
+	static TYPEDESCRIPTION m_SaveData[];
 
 	void IgniteTrail( void );
 	void EXPORT StartTrack ( void );
@@ -81,22 +97,8 @@ public:
 	void SetVelocityLogical(const Vector& arg_newVelocity);
 	void OnDeflected(CBaseEntity* arg_entDeflector);
 
-	//MODDD
-	////////////////////////////////////////////////
-	float hornetPseudoNextThink;
-	float spiralStartTime;
+	void setEnemyLKP(CBaseEntity* theEnt);
 
-	BOOL hornetTouchedAnything;
-	//Vector vecFlightDirAlttt;
-	Vector vecFlightDirTrue;
-	//Vector vecFlightDirMem;
-	BOOL reflectedAlready;
-	///////////////////////////////////////////////
-
-
-	float		m_flStopAttack;
-	int			m_iHornetType;
-	float		m_flFlySpeed;
 
 };
 

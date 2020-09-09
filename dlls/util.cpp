@@ -115,6 +115,8 @@ EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_duration)
 extern DLL_GLOBAL int g_iSkillLevel;
 extern DLL_GLOBAL short g_sModelIndexLaser;// holds the index for the laser beam
 
+extern BOOL g_queueCVarHiddenSave;
+
 
 #define HUMAN_GIB_COUNT			6
 #define ALIEN_GIB_COUNT			4
@@ -263,6 +265,8 @@ void resetGlobalVars(void) {
 	CSentry::gibModelRef = NULL;
 
 	CBarnacle::s_iStandardGibID = -1;
+
+	CSquidSpit::iSquidSpitSprite = -1;
 	
 }//resetGlobalVars
 
@@ -1169,9 +1173,11 @@ void UTIL_fromToBlood(CBaseEntity* arg_entSrc, CBaseEntity* arg_entDest, const f
 
 
 //MODDD - get a straight line from some start pos related to "arg_entSrc" to an end pos, likely related ti "arg_entDest".
-//At some place in the line, draw the blood, depending on "meleeDrawBloodMode".
+// At some place in the line, draw the blood, depending on "meleeDrawBloodMode".
 void UTIL_fromToBlood(CBaseEntity* arg_entSrc, CBaseEntity* arg_entDest, const float& arg_fltDamage, const float &arg_fltdistanceHint, Vector* arg_suggestedTraceHullVecEndPos, Vector* arg_suggestedTraceHullStart, Vector* arg_suggestedTraceHullEnd){
-	
+
+	BOOL extraBlood = FALSE;
+
 	//arg_fltdistanceHint
 
 /*
@@ -1206,21 +1212,25 @@ meleeDrawBloodModeB - Mode variable, for drawing blood when "checkTraceHullAttac
 
 	//NOTE: "arg_suggestedTraceHullPosition" missing means 
 
-	BOOL checkTraceHullAttackUsed = (arg_suggestedTraceHullStart != NULL && arg_suggestedTraceHullEnd != NULL);
-
 	if(arg_entSrc==NULL || arg_entDest==NULL){
 		easyPrintLine("UTIL_fromToBlood FAILED: source or destination entity is NULL!");
 		return;
 	}
 
+	// Only point of this is to draw blood, so may as well block on censorship.
+	if( !arg_entDest->CanMakeBloodParticles() || !UTIL_ShouldShowBlood(arg_entDest->BloodColor()) ){
+		return;
+	}
 
-	BOOL extraBlood = FALSE;
+
 
 	if(FClassnameIs(arg_entSrc->pev, "monster_headcrab")){
 		extraBlood = TRUE;
 	}
 
 	
+
+	BOOL checkTraceHullAttackUsed = (arg_suggestedTraceHullStart != NULL && arg_suggestedTraceHullEnd != NULL);
 
 	TraceResult tr;
 	Vector vecStart;
@@ -4728,6 +4738,7 @@ void turnWorldLightsOn(){
 	//"hope that gets the point across"
 	//global_forceWorldLightOff = 0;
 	EASY_CVAR_SET_DEBUGONLY(forceWorldLightOff, 0);
+	g_queueCVarHiddenSave = TRUE;
 
 	/*
 	LIGHT_STYLE(0, "jklmnopqrstuvwxyzyxwvutsrqponmlkj");
@@ -4842,6 +4853,7 @@ void turnWorldLightsOff(){
 	//"hope that gets the point across"
 	//global_forceWorldLightOff = 1;
 	EASY_CVAR_SET_DEBUGONLY(forceWorldLightOff, 1);
+	g_queueCVarHiddenSave = TRUE;
 
 }
 
@@ -4905,11 +4917,7 @@ void updateCVarRefs(BOOL isEarly){
 	}//END OF barnacleCanGib CVar check
 
 
-
-
 	if(globalPSEUDO_germanCensorshipMem != EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) || globalPSEUDO_allowGermanModelsMem != EASY_CVAR_GET_DEBUGONLY(allowGermanModels)){
-
-		
 		//easyForcePrintLine("ARE YOU amazin %.2f %.2f %.2f", globalPSEUDO_canApplyGermanCensorship, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship), EASY_CVAR_GET_DEBUGONLY(allowGermanModels));
 
 		if(globalPSEUDO_canApplyGermanCensorship != 1 && (globalPSEUDO_germanCensorshipMem != -1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1) && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1){
@@ -4927,6 +4935,8 @@ void updateCVarRefs(BOOL isEarly){
 		}else{
 			globalUpdateModel();
 		}
+		// wait.  Why is sv_germanCensorship hidden again?
+		g_queueCVarHiddenSave = TRUE;
 	}//END OF german CVars update check
 
 
@@ -4937,12 +4947,11 @@ void updateCVarRefs(BOOL isEarly){
 		if(EASY_CVAR_GET(cl_bullsquidspit) == 0){
 			EASY_CVAR_SET_DEBUGONLY(bullsquidSpitUseAlphaModel, 0);
 			EASY_CVAR_SET_DEBUGONLY(bullsquidSpitUseAlphaEffect, 0);
-			saveHiddenCVars();
 		}else if(EASY_CVAR_GET(cl_bullsquidspit) == 1){
 			EASY_CVAR_SET_DEBUGONLY(bullsquidSpitUseAlphaModel, 1);
 			EASY_CVAR_SET_DEBUGONLY(bullsquidSpitUseAlphaEffect, 1);
-			saveHiddenCVars();
 		}
+		g_queueCVarHiddenSave = TRUE;
 	}
 
 	if(EASY_CVAR_GET(cl_hornetspiral) != globalPSEUDO_cl_hornetspiral){
@@ -4955,29 +4964,26 @@ void updateCVarRefs(BOOL isEarly){
 			EASY_CVAR_SET_DEBUGONLY(hornetSpeedMulti, 1);
 			EASY_CVAR_SET_DEBUGONLY(hornetSpeedDartMulti, 2);
 			EASY_CVAR_SET_DEBUGONLY(agruntHornetRandomness, 0.1);
-			saveHiddenCVars();
 		}else if(EASY_CVAR_GET(cl_hornetspiral) == 1){
 			EASY_CVAR_SET_DEBUGONLY(hornetSpiral, 1);
 			EASY_CVAR_SET_DEBUGONLY(hornetSpeedMulti, 0.6);
 			EASY_CVAR_SET_DEBUGONLY(hornetSpeedDartMulti, 2.3);
 			EASY_CVAR_SET_DEBUGONLY(agruntHornetRandomness, 0.02);
-			saveHiddenCVars();
 		}
+		g_queueCVarHiddenSave = TRUE;
 	}
 	
 	if(EASY_CVAR_GET(cl_hornettrail) != globalPSEUDO_cl_hornettrail){
 		globalPSEUDO_cl_hornettrail = EASY_CVAR_GET(cl_hornettrail);
 		
-		//commit some changes...
 		if(EASY_CVAR_GET(cl_hornettrail) == 0){
 			EASY_CVAR_SET_DEBUGONLY(hornetTrail, 0);
 			EASY_CVAR_SET_DEBUGONLY(hornetZoomPuff, 1);
-			saveHiddenCVars();
 		}else if(EASY_CVAR_GET(cl_hornettrail) == 1){
 			EASY_CVAR_SET_DEBUGONLY(hornetTrail, 1);
 			EASY_CVAR_SET_DEBUGONLY(hornetZoomPuff, 0);
-			saveHiddenCVars();
 		}
+		g_queueCVarHiddenSave = TRUE;
 	}
 	
 
@@ -4997,6 +5003,10 @@ void updateCVarRefs(BOOL isEarly){
 				EASY_CVAR_UPDATE_SERVER_DEDICATED_MASS
 			}
 #endif
+			if(g_queueCVarHiddenSave == TRUE){
+				saveHiddenCVars();
+			}
+			
 		}//g_nextCVarUpdate check
 	}//isEarly check
 
@@ -5138,6 +5148,8 @@ void W_Precache(void)
 	
 	// MODDD - place for script similar between client and serverside.
 	PrecacheShared();
+	// And since ammo/weapon registry is about to get determined:
+	ClearWeaponInfoCache();
 	
 	// custom items...
 	
@@ -5648,7 +5660,7 @@ void method_precacheAll(void){
 		// Perhaps to guarantee it is the same as the PSEUDO version as to not trigger
 		// some change the user didn't call for.
 		EASY_CVAR_SET_DEBUGONLY(allowGermanModels, EASY_CVAR_GET_DEBUGONLY(allowGermanModels))
-
+		g_queueCVarHiddenSave = TRUE;
 	}
 
 	//!!!!tryLoadGermanGibs  !!!!!
@@ -6899,6 +6911,8 @@ void OnMapLoadPreStart(){
 
 
 //MODDD - new event, called by CWorld's precache method (first thing precached since starting a map or calling changelevel, transition or not).
+// !!! IMOPORTANT !!!    For the clientside equivalent, see cl_dlls/cdll_int.cpp:  HUD_VidInit.
+// That's the source of a lot of precache calls throughout HUD classes that lets them work (not only once at game bootup).
 void OnMapLoadStart(){
 	easyForcePrintLine("!!!!!! OnMapLoadStart !!!");
 

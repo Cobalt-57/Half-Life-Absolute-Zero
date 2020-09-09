@@ -356,8 +356,6 @@ void CCrossbow::FireBolt()
 	Vector vecDir	 = gpGlobals->v_forward;
 
 
-
-
 #ifndef CLIENT_DLL
 
 	Vector arrowVelocity;
@@ -368,7 +366,6 @@ void CCrossbow::FireBolt()
 		//MODDd - SEE BELOW.
 		//pBolt->pev->velocity = vecDir * BOLT_WATER_VELOCITY;
 		arrowVelocity = vecDir * BOLT_WATER_VELOCITY + UTIL_GetProjectileVelocityExtra(m_pPlayer->pev->velocity, EASY_CVAR_GET_DEBUGONLY(crossbowInheritsPlayerVelocity) );
-
 
 		arrowSpeed = BOLT_WATER_VELOCITY;
 	}

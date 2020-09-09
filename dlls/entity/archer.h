@@ -43,6 +43,8 @@ public:
 
 	Vector preSurfaceAttackLocation;
 
+	float waterLevelMem;
+
 	
 	//save info
 	//////////////////////////////////////////////////////////////////////////////////
@@ -130,6 +132,7 @@ public:
 	BOOL usesAdvancedAnimSystem(void);
 
 	void SetActivity ( Activity NewActivity );
+	Activity GetDeathActivity(void);
 
 	int LookupActivityHard(int activity);
 	int tryActivitySubstitute(int activity);
@@ -161,6 +164,7 @@ public:
 	Vector DoVerticalProbe(float flInterval);
 	BOOL attemptBuildRandomWanderRoute(const float& argWaterLevel);
 	BOOL FCanCheckAttacks(void);
+	void setEnemyLKP(CBaseEntity* theEnt);
 
 
 	void SetObjectCollisionBox( void ){

@@ -74,9 +74,8 @@ extern float ary_g_LastEventCheck[1024];
 extern float ary_g_LastEventCheckEXACT[1024];
 
 extern BOOL g_cl_egonEffectCreatedYet;
-
-
 extern BOOL g_firstFrameSinceRestore;
+extern BOOL g_cl_queueSharedPrecache;
 
 extern CGameStudioModelRenderer g_StudioRenderer;
 extern float g_mapStartTime;
@@ -110,7 +109,7 @@ void IN_Commands( void );
 Called when the DLL is first loaded.
 ==========================
 */
-extern "C" 
+extern "C"
 {
 int	DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion );
 int	DLLEXPORT HUD_VidInit( void );
@@ -283,6 +282,13 @@ int DLLEXPORT HUD_VidInit( void )
 
 	//MODDD
 	resetNormalRefDefVars = TRUE;  //does this work
+
+	// should be fine then.
+	// NNNNNNNNNNnnnnnnnnnnnoooooooooooppppppppppppppppeeeeeeeeeee-PUH.
+	// It does appear that precaches done this early will always find a model of '0', not do anything.
+	// Let this be queued to run in 
+	//PrecacheShared();
+	g_cl_queueSharedPrecache = TRUE;
 
 
 	gHUD.VidInit();

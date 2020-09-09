@@ -338,18 +338,12 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hassassinCrossbowMode, hassassincrossbowmode)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(tripmineAnimWaitsForFinish, tripmineanimwaitsforfinish, 73)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(revolverLaserScope, revolverlaserscope, 74)\
-	DUMMY\
-	DUMMY\
-	DUMMY\
-	DUMMY\
-	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip, cheat_infiniteclip, 80)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo, cheat_infiniteammo, 81)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay, cheat_minimumfiredelay, 82)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom, cheat_minimumfiredelaycustom, 83)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil, cheat_nogaussrecoil, 84)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(autoSneaky, autosneaky)\
-	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(cheat_touchNeverExplodes, cheat_touchneverexplodes)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP, gaussrecoilsendsupinsp, 85)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(drawDebugPathfinding, drawdebugpathfinding)\
@@ -389,7 +383,6 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(apacheForceCinBounds, apacheforcecinbounds)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(apacheBottomBoundAdj, apachebottomboundadj)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(apacheInfluence, apacheinfluence)\
-	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY(allowAlphaCrosshairWithoutGuns, allowalphacrosshairwithoutguns, 89)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY(alphaCrosshairBlockedOnFrozen, alphacrosshairblockedonfrozen, 90)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hgruntRunAndGunDotMin, hgruntrunandgundotmin)\
@@ -428,13 +421,9 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(germanRobotGibsDecal, germanrobotgibsdecal)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonEffectsMode, egoneffectsmode, 94)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonHitCloud, egonhitcloud, 95)\
-	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(handGrenadePickupYieldsOne, handgrenadepickupyieldsone, 97)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(handGrenadesUseOldBounceSound, handgrenadesuseoldbouncesound)\
-	DUMMY\
-	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(timedDamageDeathRemoveMode, timeddamagedeathremovemode, 100)\
-	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(barnacleCanGib, barnaclecangib)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sentryCanGib, sentrycangib)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(miniturretCanGib, miniturretcangib)\
@@ -463,7 +452,6 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(useAlphaSparks, usealphasparks)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(emergencyFix, emergencyfix)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(timedDamageReviveRemoveMode, timeddamagereviveremovemode)\
-	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(ospreyIgnoresGruntCount, ospreyignoresgruntcount)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(mp5GrenadeInheritsPlayerVelocity, mp5grenadeinheritsplayervelocity)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(crossbowInheritsPlayerVelocity, crossbowinheritsplayervelocity)\
@@ -534,7 +522,6 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(agruntHornetRandomness, agrunthornetrandomness)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hornetSpiralPeriod, hornetspiralperiod)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(hornetSpiralAmplitude, hornetspiralamplitude)\
-	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY(painFlashDmgMin, painflashdmgmin, 134)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY(painFlashDmgExMult, painflashdmgexmult, 135)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY(painFlashCumulativeMinDrowning, painflashcumulativemindrowning, 136)\
@@ -607,7 +594,6 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(drawDebugEnemyLKP, drawdebugenemylkp)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(trackchangePrintouts, trackchangeprintouts)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(trackTrainPrintouts, tracktrainprintouts)\
-	DUMMY\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(playerWeaponTracerMode, playerweapontracermode, 164)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(monsterWeaponTracerMode, monsterweapontracermode)\
 	EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY(decalTracerExclusivity, decaltracerexclusivity, 165)\
@@ -651,6 +637,8 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sv_explosion_shake_duration, sv_explosion_shake_duration)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sv_gargantua_throwattack, sv_gargantua_throwattack)\
 	DUMMY
+
+// IMPORTANT!  Keep HIDDEN_CVAR_INFO_LENGTH (dlls/client.cpp) in check with any changes to the number of entries above
 
 
 
@@ -2081,7 +2069,7 @@
 	EASY_CVAR_DECLARATION_SERVER(cl_interp_viewmodel)\
 	EASY_CVAR_DECLARATION_SERVER(sv_explosionknockback)\
 	EASY_CVAR_DECLARATION_SERVER(cl_gaussfollowattachment)\
-	EASY_CVAR_DECLARATION_SERVER(cl_mp5_kickbackmode)\
+	EASY_CVAR_DECLARATION_SERVER(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_DECLARATION_SERVER(cl_breakholster)\
 	EASY_CVAR_DECLARATION_SERVER(pausecorrection1)\
 	EASY_CVAR_DECLARATION_SERVER(pausecorrection2)\
@@ -2103,6 +2091,8 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_DECLARATION_SERVER_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_DECLARATION_SERVER_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -2601,7 +2591,7 @@
 	EASY_CVAR_DECLARATION_CLIENT(cl_interp_viewmodel)\
 	EASY_CVAR_DECLARATION_CLIENT(sv_explosionknockback)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_gaussfollowattachment)\
-	EASY_CVAR_DECLARATION_CLIENT(cl_mp5_kickbackmode)\
+	EASY_CVAR_DECLARATION_CLIENT(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_DECLARATION_CLIENT(cl_breakholster)\
 	EASY_CVAR_DECLARATION_CLIENT(pausecorrection1)\
 	EASY_CVAR_DECLARATION_CLIENT(pausecorrection2)\
@@ -2623,6 +2613,8 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_DECLARATION_CLIENT_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_DECLARATION_CLIENT_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -3120,7 +3112,7 @@
 	EASY_CVAR_UPDATE_SERVER(cl_interp_viewmodel)\
 	EASY_CVAR_UPDATE_SERVER(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_SERVER(cl_gaussfollowattachment)\
-	EASY_CVAR_UPDATE_SERVER(cl_mp5_kickbackmode)\
+	EASY_CVAR_UPDATE_SERVER(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_UPDATE_SERVER(cl_breakholster)\
 	EASY_CVAR_UPDATE_SERVER(pausecorrection1)\
 	EASY_CVAR_UPDATE_SERVER(pausecorrection2)\
@@ -3142,6 +3134,8 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_UPDATE_SERVER_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_UPDATE_SERVER_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -3642,7 +3636,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_interp_viewmodel)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_gaussfollowattachment)\
-	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_mp5_kickbackmode)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(cl_breakholster)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(pausecorrection1)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(pausecorrection2)\
@@ -3664,6 +3658,8 @@
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -4163,7 +4159,7 @@
 	EASY_CVAR_UPDATE_CLIENT(cl_interp_viewmodel)\
 	EASY_CVAR_UPDATE_CLIENT(sv_explosionknockback)\
 	EASY_CVAR_UPDATE_CLIENT(cl_gaussfollowattachment)\
-	EASY_CVAR_UPDATE_CLIENT(cl_mp5_kickbackmode)\
+	EASY_CVAR_UPDATE_CLIENT(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_UPDATE_CLIENT(cl_breakholster)\
 	EASY_CVAR_UPDATE_CLIENT(pausecorrection1)\
 	EASY_CVAR_UPDATE_CLIENT(pausecorrection2)\
@@ -4185,6 +4181,8 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_UPDATE_CLIENT_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_UPDATE_CLIENT_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -4683,7 +4681,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_interp_viewmodel)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_gaussfollowattachment)\
-	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_mp5_kickbackmode)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_breakholster)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(pausecorrection1)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(pausecorrection2)\
@@ -4705,6 +4703,8 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -5202,7 +5202,7 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_interp_viewmodel)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_gaussfollowattachment)\
-	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_mp5_kickbackmode)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_breakholster)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(pausecorrection1)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(pausecorrection2)\
@@ -5224,6 +5224,8 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -5721,7 +5723,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_interp_viewmodel)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_explosionknockback)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_gaussfollowattachment)\
-	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_mp5_kickbackmode)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_breakholster)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(pausecorrection1)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(pausecorrection2)\
@@ -5743,6 +5745,8 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -6239,7 +6243,7 @@
 	EASY_CVAR_RESET(cl_interp_viewmodel)\
 	EASY_CVAR_RESET(sv_explosionknockback)\
 	EASY_CVAR_RESET(cl_gaussfollowattachment)\
-	EASY_CVAR_RESET(cl_mp5_kickbackmode)\
+	EASY_CVAR_RESET(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_RESET(cl_breakholster)\
 	EASY_CVAR_RESET(pausecorrection1)\
 	EASY_CVAR_RESET(pausecorrection2)\
@@ -6261,6 +6265,8 @@
 	EASY_CVAR_RESET_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_RESET_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_RESET_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_RESET_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_RESET_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -6758,7 +6764,7 @@
 	EASY_CVAR_EXTERN(cl_interp_viewmodel)\
 	EASY_CVAR_EXTERN(sv_explosionknockback)\
 	EASY_CVAR_EXTERN(cl_gaussfollowattachment)\
-	EASY_CVAR_EXTERN(cl_mp5_kickbackmode)\
+	EASY_CVAR_EXTERN(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_EXTERN(cl_breakholster)\
 	EASY_CVAR_EXTERN(pausecorrection1)\
 	EASY_CVAR_EXTERN(pausecorrection2)\
@@ -6780,6 +6786,8 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_EXTERN_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_EXTERN_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_EXTERN_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_EXTERN_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
 
 
@@ -7279,7 +7287,7 @@
 	EASY_CVAR_SYNCH_NOSAVE_SERVER(cl_interp_viewmodel)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER(sv_explosionknockback)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER(cl_gaussfollowattachment)\
-	EASY_CVAR_SYNCH_NOSAVE_SERVER(cl_mp5_kickbackmode)\
+	EASY_CVAR_SYNCH_NOSAVE_SERVER(cl_mp5_viewpunch_mod)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER(cl_breakholster)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER(pausecorrection1)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER(pausecorrection2)\
@@ -7301,7 +7309,12 @@
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_SYNCH_NOSAVE_SERVER_CLIENTONLY(cl_viewpunch_mod)\
+	EASY_CVAR_SYNCH_NOSAVE_SERVER_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	DUMMY
+
+
+
 
 
 

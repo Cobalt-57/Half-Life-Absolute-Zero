@@ -2,6 +2,9 @@
 #include "controller_head_ball.h"
 #include "weapons.h"
 
+// TODO - why bounce touch no work. Supposed to deal a zap if touched.  Did it in retail, breakpoint there.
+// Can enemy size be involved in the distance-for-zap criteria?
+
 
 
 LINK_ENTITY_TO_CLASS( controller_head_ball, CControllerHeadBall );
@@ -9,6 +12,7 @@ LINK_ENTITY_TO_CLASS( controller_head_ball, CControllerHeadBall );
 CControllerHeadBall::CControllerHeadBall(void){
 
 	nextNormalThinkTime = 0;
+	alreadyZapped = FALSE;
 }
 
 void CControllerHeadBall::Spawn( void )
@@ -24,9 +28,24 @@ void CControllerHeadBall::Spawn( void )
 	pev->rendercolor.y = 255;
 	pev->rendercolor.z = 255;
 	pev->renderamt = 255;
+	//MODDD - NEW.  timeOpacity fades at the same rate as renderamt (true render opacity) with time,
+	// but isn't affected by the opacity lost due to taking damage.
+	timeOpacity = 255;
 	pev->scale = 2.0;
 
-	UTIL_SetSize(pev, Vector( 0, 0, 0), Vector(0, 0, 0));
+	//MODDD - get a custom size to help with getting shot down.  (Although SetObjectCollisionBox 
+	// can make more of it count as 'shot' without being collidable, I think).  Or maybe not.
+	// Few other relevant settings too.
+	////////////////////////////////////////////////////////////////////////////
+	//UTIL_SetSize(pev, Vector(-4, -4, -4), Vector(4, 4, 4));
+	UTIL_SetSize(pev, Vector(-10, -10, -10), Vector(10, 10, 10));
+	pev->takedamage = DAMAGE_AIM;
+	pev->max_health = StartHealth();
+	pev->health = pev->max_health;
+	pev->deadflag = DEAD_NO;
+	////////////////////////////////////////////////////////////////////////////
+
+
 	UTIL_SetOrigin( pev, pev->origin );
 
 	SetThink( &CControllerHeadBall::HuntThink );
@@ -57,16 +76,15 @@ void CControllerHeadBall::Precache( void )
 
 void CControllerHeadBall::HuntThink( void  )
 {
-
 	//MODDD - I think twice as fast only to spawn the used-to-be-commented-out lighning effect more often.
 	//        Still do the rest of the logic at the same rate (0.1 seconds) like how Mr. friendly vomit handles it.
 	pev->nextthink = gpGlobals->time + 0.05;
 
 
-
 	if(gpGlobals->time >= nextNormalThinkTime){
-		
-		pev->renderamt -= getFadeOutAmount();
+		float theFadeOutTime = getFadeOutAmount();
+		pev->renderamt -= theFadeOutTime;
+		timeOpacity -= theFadeOutTime;
 
 		MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
 			WRITE_BYTE( TE_ELIGHT );
@@ -78,7 +96,8 @@ void CControllerHeadBall::HuntThink( void  )
 			WRITE_BYTE( 255 );	// R
 			WRITE_BYTE( 255 );	// G
 			WRITE_BYTE( 255 );	// B
-			WRITE_BYTE( 2 );	// life * 10
+			//MODDD - 'life' was 2.
+			WRITE_BYTE( 1 );	// life * 10
 			WRITE_COORD( 0 ); // decay
 		MESSAGE_END();
 
@@ -96,8 +115,13 @@ void CControllerHeadBall::HuntThink( void  )
 
 		MovetoTarget( m_hEnemy->Center( ) );
 
-		//MODDD - was a distance of 64 required, now 40~ instead
-		if ((m_hEnemy->Center() - pev->origin).Length() < 42)
+		// No need to check for 'alreadyZapped' here, any zapping ditches this think method so it won't happen again
+		// from here.
+
+		//MODDD - was a distance of 64 required
+		// TODO - affect the criteria (right-hand side) by the monster size?  Hit larger things from a further distance since otherwise
+		// you'd bump into them sooner than get within X distance of their center.
+		if ((m_hEnemy->Center() - pev->origin).Length() < 54) // 42? 50?
 		{
 			TraceResult tr;
 
@@ -106,40 +130,8 @@ void CControllerHeadBall::HuntThink( void  )
 			CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
 			if (pEntity != NULL && pEntity->pev->takedamage)
 			{
-				ClearMultiDamage( );
-				pEntity->TraceAttack( m_hOwner->pev, nearZapDamage(), pev->velocity, &tr, DMG_SHOCK );
-				ApplyMultiDamage( pev, m_hOwner->pev );
+				AdministerZap(pEntity, tr);
 			}
-
-			//MODDD - noise boost. and color cange.
-			//ALSO, this looks similar to the Crawl method's TE_BEAMENTPOINT, but this only happens if very close to the player.
-			//To look like a connection with the player alongside the shock damage likely?
-			MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-				WRITE_BYTE( TE_BEAMENTPOINT );
-				WRITE_SHORT( entindex() );
-				WRITE_COORD( tr.vecEndPos.x );
-				WRITE_COORD( tr.vecEndPos.y );
-				WRITE_COORD( tr.vecEndPos.z );
-				WRITE_SHORT( g_sModelIndexLaser );
-				WRITE_BYTE( 0 ); // frame start
-				WRITE_BYTE( 10 ); // framerate
-				WRITE_BYTE( 2 ); // life. WAS 3.
-				WRITE_BYTE( 50 );  // width  WAS 20.
-				WRITE_BYTE( 80 );   // noise. WAS 0
-				WRITE_BYTE( 255 );   // r, g, b. Were all 255 before.
-				WRITE_BYTE( 255 );   // r, g, b
-				WRITE_BYTE( 80 );   // r, g, b
-				WRITE_BYTE( 255 );	// brightness
-				WRITE_BYTE( 10 );		// speed
-			MESSAGE_END();
-			
-
-			UTIL_EmitAmbientSound( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.5, ATTN_NORM, 0, RANDOM_LONG( 140, 160 ), FALSE );
-
-			m_flNextAttack = gpGlobals->time + 3.0;
-
-			SetThink( &CControllerHeadBall::DieThink );
-			pev->nextthink = gpGlobals->time + 0.3;
 		}
 
 		nextNormalThinkTime = gpGlobals->time + 0.1;
@@ -166,7 +158,8 @@ BOOL CControllerHeadBall::usesSegmentedMove(void) {
 void CControllerHeadBall::MovetoTarget( Vector vecTarget )
 {
 	// accelerate
-	velocityCheck(400);
+	//MODDD - slow down a little, was 400
+	velocityCheck(GetMaxSpeed());
 	m_vecIdeal = m_vecIdeal + (vecTarget - pev->origin).Normalize() * 100;
 	pev->velocity = m_vecIdeal;
 }
@@ -178,7 +171,8 @@ void CControllerHeadBall::Crawl( void  )
 
 	Vector vecAim = Vector( RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ), RANDOM_FLOAT( -1, 1 ) ).Normalize( );
 	Vector anticipatedOrigin = pev->origin + pev->velocity * 0.3;
-	Vector vecPnt = anticipatedOrigin + vecAim * 64;
+	//MODDD - reduced a bit, was 64
+	Vector vecPnt = anticipatedOrigin + vecAim * 52;
 
 
 
@@ -380,6 +374,7 @@ void CControllerHeadBall::Crawl( void  )
 }
 
 
+// SOOOOOOOoooooo this just kinda decides not to work when underwater.   OOoooooookay then
 void CControllerHeadBall::BounceTouch( CBaseEntity *pOther )
 {
 	Vector vecDir = m_vecIdeal.Normalize( );
@@ -391,7 +386,26 @@ void CControllerHeadBall::BounceTouch( CBaseEntity *pOther )
 	vecDir = 2.0 * tr.vecPlaneNormal * n + vecDir;
 
 	m_vecIdeal = vecDir * m_vecIdeal.Length();
-}
+
+
+	//MODDD - check.  Did I touch my enemy?  Can happen for things with greater bounds, touch sooner than
+	// reaching the 50 to 64 distance checked
+	//UTIL_TraceLine( pev->origin, m_hEnemy->Center(), dont_ignore_monsters, ENT(pev), &tr );
+	//CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
+	if (pOther != NULL && pOther->pev->takedamage)
+	{
+		// alright, do we have an enemy?
+		if(m_hEnemy == NULL){
+			// just zap it.
+			AdministerZap(pOther, tr);
+		}else if(pOther->edict() == m_hEnemy->edict()){
+			// the thing hit is the enemy? go ahead
+			AdministerZap(pOther, tr);
+		}
+	}
+	/////////////////////////////////////////////////////////////////////////
+
+}//BounceTouch
 
 
 float CControllerHeadBall::massInfluence(void){
@@ -406,6 +420,10 @@ int CControllerHeadBall::GetProjectileType(void){
 
 // Implement to change the damage I do when close (before disappearing soon after)
 // Defaults to the controller head ball's damage.
+// NOTICE!  Can now be reduced by time to travel (fade amount at the time damage is dealt),
+// and especially by losing health compared to pev->max_health.
+// Although doing this in logic here instead (what calls 'nearZapDamage'), since this 
+// is more of a statistic per type of energy ball, not the logic to figure that out.
 float CControllerHeadBall::nearZapDamage(void){
 	return gSkillData.controllerDmgZap;
 }//END OF nearZapDamage
@@ -414,6 +432,27 @@ float CControllerHeadBall::nearZapDamage(void){
 // How much opacity do I lose per think cycle (0.1 seconds)?  Slow it down to last longer.
 float CControllerHeadBall::getFadeOutAmount(void){
 	return 5;
+}
+
+// How much health do I start with?  When it runs out I fade out fast, lose my bounds and can't do damage
+float CControllerHeadBall::StartHealth(void){
+	if(g_iSkillLevel == SKILL_HARD){
+		return 22;
+	}else if(g_iSkillLevel == SKILL_MEDIUM){
+		return 16;
+	}else{
+		return 12;
+	}
+}
+
+float CControllerHeadBall::GetMaxSpeed(void){
+	if(g_iSkillLevel == SKILL_HARD){
+		return 390;
+	}else if(g_iSkillLevel == SKILL_MEDIUM){
+		return 350;
+	}else{
+		return 310;
+	}
 }
 
 
@@ -433,3 +472,134 @@ void CControllerHeadBall::velocityCheck(const float& arg_maxSpeed){
 	}
 }//END OF velocityCheck
 
+
+
+
+GENERATE_TAKEDAMAGE_IMPLEMENTATION(CControllerHeadBall){
+
+	// no, nothing fancier needed.
+	//int res = GENERATE_TAKEDAMAGE_PARENT_CALL(CControllerHeadBall);
+
+	if(pev->deadflag == DEAD_NO){
+
+		pev->health -= flDamage;
+
+		if(pev->health <= 0){
+			pev->health = 0;
+			Killed( pevInflictor, pevAttacker, GIB_NORMAL );
+		}else{
+			// reduce the fade somewhat
+			pev->renderamt -= flDamage * 2.5;
+		}
+		return 1;
+	}else{
+		return 0;
+	}
+}//TakeDamage
+
+
+//MODDD - smart balls can now be shot down.
+GENERATE_KILLED_IMPLEMENTATION(CControllerHeadBall) {
+	pev->deadflag = DEAD_DYING;
+
+	//UTIL_Remove(this);
+	UTIL_SetSize(pev, g_vecZero, g_vecZero);
+	pev->takedamage = DAMAGE_NO;
+
+	SetThink(&CControllerHeadBall::DieFadeThink);
+	pev->nextthink = gpGlobals->time + 0.05;
+}
+
+// Lost health from getting shot down?  Fade fast and delete
+void CControllerHeadBall::DieFadeThink(void){
+	// reduce opacity
+	pev->renderamt -= 14.5f;
+
+	// decelerate
+	float velLength = pev->velocity.Length();
+
+	if(velLength > 0){
+		if(velLength > 5){
+			pev->velocity = pev->velocity * 0.90f;
+		}else{
+			// that low?  stop
+			pev->velocity = g_vecZero;
+		}
+	}
+
+
+	if(pev->renderamt <= 0){
+		// goodbye
+		pev->renderamt = 0;
+		UTIL_Remove(this);
+		return;
+	}
+
+	pev->nextthink = gpGlobals->time + 0.05;
+}
+
+void CControllerHeadBall::AdministerZap(CBaseEntity* pEntity, TraceResult& tr){
+	//MODDD - Let the amount of fade slightly reduce damage, and lost health (from getting shot at) greatly
+	// reduce daamge.  For this reason, increasing the potential a bit.
+	float damageDealt;
+	float rawDamage = nearZapDamage() * 1.13;
+
+	float healthPortion;
+	float timePortion = timeOpacity / 255;
+
+	
+	
+	// could also use 'this->m_pfnThink == CControllerHeadBall::DieThink'?  Careful, would have to check for matching each
+	// child class's ...  wait they don't change that.   There is also Killed (shot down) setting the think method though
+	alreadyZapped = TRUE;
+
+	if(pev->max_health > 0){
+		healthPortion = (pev->health / pev->max_health);
+	}else{
+		// ???
+		healthPortion = 1.0;
+	}
+
+	// 73% of damage comes from how much of the health is left, 27% from how much fade is left (due to time).
+	damageDealt = rawDamage * ((healthPortion * 0.73) + (timePortion * 0.27) );
+
+
+	ClearMultiDamage( );
+	pEntity->TraceAttack( m_hOwner->pev, damageDealt, pev->velocity, &tr, DMG_SHOCK );
+	ApplyMultiDamage( pev, m_hOwner->pev );
+
+
+	//MODDD - below used to be excluded from the 'pEntity->pev->takedamage check
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	//MODDD - noise boost. and color cange.
+	//ALSO, this looks similar to the Crawl method's TE_BEAMENTPOINT, but this only happens if very close to the player.
+	//To look like a connection with the player alongside the shock damage likely?
+	MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
+	WRITE_BYTE( TE_BEAMENTPOINT );
+	WRITE_SHORT( entindex() );
+	WRITE_COORD( tr.vecEndPos.x );
+	WRITE_COORD( tr.vecEndPos.y );
+	WRITE_COORD( tr.vecEndPos.z );
+	WRITE_SHORT( g_sModelIndexLaser );
+	WRITE_BYTE( 0 ); // frame start
+	WRITE_BYTE( 10 ); // framerate
+	WRITE_BYTE( 2 ); // life. WAS 3.
+	WRITE_BYTE( 50 );  // width  WAS 20.
+	WRITE_BYTE( 80 );   // noise. WAS 0
+	WRITE_BYTE( 255 );   // r, g, b. Were all 255 before.
+	WRITE_BYTE( 255 );   // r, g, b
+	WRITE_BYTE( 80 );   // r, g, b
+	WRITE_BYTE( 255 );	// brightness
+	WRITE_BYTE( 10 );		// speed
+	MESSAGE_END();
+
+
+	UTIL_EmitAmbientSound( ENT(pev), tr.vecEndPos, "weapons/electro4.wav", 0.5, ATTN_NORM, 0, RANDOM_LONG( 140, 160 ), FALSE );
+
+	m_flNextAttack = gpGlobals->time + 3.0;
+
+	SetThink( &CControllerHeadBall::DieThink );
+	pev->nextthink = gpGlobals->time + 0.3;
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+}//AdministerZap

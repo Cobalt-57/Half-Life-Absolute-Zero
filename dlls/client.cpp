@@ -98,6 +98,8 @@ extern DLL_GLOBAL ULONG g_ulFrameCount;
 
 extern BOOL g_firstPlayerEntered;
 
+extern BOOL g_queueCVarHiddenSave;
+
 
 extern void CopyToBodyQue(entvars_t* pev);
 
@@ -164,23 +166,64 @@ class CrashTest{
 };//END OF CrashTest class
 
 
+
+
+// Small class for recording info about each var that needs hidden access granted (from not having
+// a CVar in release mode).
+// An array of this type is made and checked against here in client.cpp for checking to see if what
+// the user typed in is a hidden CVar.  Then its value is returned (typed a name only) or the CVar's
+// value is set to the 2nd parameter.  Any broadcasting or serverside cache setting (global_...) is done.
+typedef struct HiddenCVarInfo_s{
+	const char* name;
+	const char* nameLowercase;
+	// What index is this CVar in clientside's cache?
+	int dataID;
+	// optional (can be NULL) for the CLIENTONLY_DEBUGONLY type.
+	// Pointer to the linked 'global_' version that holds this var's value serverside.
+	float* serverCacheVar;
+	// Describes some other details in how to send this to the client (broadcasted?  clientonly?).
+	int type;
+} HiddenCVarInfo_t;
+
+
+// IMPORTANT!  Keep HIDDEN_CVAR_INFO_LENGTH in check with the number of entries in it
+// (cvar_custom_list.h) change.
+#define HIDDEN_CVAR_INFO_LENGTH 447
+HiddenCVarInfo_t aryHiddenCVarInfo[HIDDEN_CVAR_INFO_LENGTH] = {
+	// example of how an entry might look (some of these are CVar constants that derive to numbers)
+	//{"someCVar", "somecvar", someCVar_ID, 0, &global_someCVar }
+	EASY_CVAR_HIDDEN_LIST
+};
+
+
+
+
+
+
+
+
+
+
 void debugNodeMode(void){
 	EASY_CVAR_SET_DEBUGONLY(drawNodeAll, 230);
 	//EASY_CVAR_SET_DEBUGONLY(drawNodeSpecial, -1);
 	EASY_CVAR_SET_DEBUGONLY(drawNodeConnections, 2);
 	//EASY_CVAR_SET_DEBUGONLY(drawNodeAlternateTime, 0);
+	g_queueCVarHiddenSave = TRUE;
 }
 void debugNodeModeWeak(void){
 	EASY_CVAR_SET_DEBUGONLY(drawNodeAll, 500);
 	//EASY_CVAR_SET_DEBUGONLY(drawNodeSpecial, -1);
 	EASY_CVAR_SET_DEBUGONLY(drawNodeConnections, 1);
 	//EASY_CVAR_SET_DEBUGONLY(drawNodeAlternateTime, 0);
+	g_queueCVarHiddenSave = TRUE;
 }
 void debugNodeModeOff(void){
 	EASY_CVAR_SET_DEBUGONLY(drawNodeAll, -1);
 	EASY_CVAR_SET_DEBUGONLY(drawNodeSpecial, -1);
 	EASY_CVAR_SET_DEBUGONLY(drawNodeConnections, 0);
 	EASY_CVAR_SET_DEBUGONLY(drawNodeAlternateTime, 0);
+	g_queueCVarHiddenSave = TRUE;
 }
 
 
@@ -716,7 +759,7 @@ void resetModCVars(CBasePlayer* arg_plyRef, BOOL isEmergency){
 			EASY_CVAR_SET_DEBUGONLY(autoSneaky, 0);
 			easyForcePrintLineClient(pEntity, "*** AI cheats (notarget / nosound) detected and turned off.  autoSneaky reset to 0.***");
 		}else{
-			easyForcePrintLineClient(pEntity, "*** AI cheats (notarget / nosound)  detected and turned off.***");
+			easyForcePrintLineClient(pEntity, "*** AI cheats (notarget / nosound) detected and turned off.***");
 		}
 	}
 
@@ -775,6 +818,8 @@ void partyStart(CBasePlayer* playerRef){
 	//global_forceWorldLightOff = 1;
 	EASY_CVAR_SET_DEBUGONLY(forceWorldLightOff, 1);
 
+	g_queueCVarHiddenSave = TRUE;
+
 	turnWorldLightsOff();
 
 	//CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
@@ -814,6 +859,8 @@ void partyOff(CBasePlayer* playerRef){
 	//Hope this gets the same point across.
 	//global_forceWorldLightOff = 0;
 	EASY_CVAR_SET_DEBUGONLY(forceWorldLightOff, 0)
+
+	g_queueCVarHiddenSave = TRUE;
 
 	turnWorldLightsOn();
 		
@@ -1429,6 +1476,7 @@ void ClientCommand( edict_t *pEntity )
 		{
 		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip, 1 );
 		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo, 1 );
+		g_queueCVarHiddenSave = TRUE;
 		}
 
 	}else if ( FStrEq(pcmdRefinedRef, "allcheats") || FStrEq(pcmdRefinedRef, "allcheat") || FStrEq(pcmdRefinedRef, "cheats") || FStrEq(pcmdRefinedRef, "cheat") || FStrEq(pcmdRefinedRef, "cheatersalwayswin") || FStrEq(pcmdRefinedRef, "fuckeverything") || FStrEq(pcmdRefinedRef, "iamshivagodofdeath")  ){
@@ -1437,6 +1485,8 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip, 1 );
 		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo, 1 );
 		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay, 1 );
+		g_queueCVarHiddenSave = TRUE;
+
 		globalPSEUDO_minimumfiredelaymem = 1;
 
 		CBasePlayer* playerRef = GetClassPtr((CBasePlayer *)pev);
@@ -1456,12 +1506,14 @@ void ClientCommand( edict_t *pEntity )
 		if ( g_flWeaponCheat != 0.0)
 		{
 		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)==0?1:0 );
+		g_queueCVarHiddenSave = TRUE;
 		}
 
 	}else if ( FStrEq(pcmdRefinedRef, "infiniteammo") ){
 		if ( g_flWeaponCheat != 0.0)
 		{
 			EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)==0?1:0 );
+			g_queueCVarHiddenSave = TRUE;
 		}
 	}else if (  FStrEq(pcmdRefinedRef, "minimumfiredelay") || FStrEq(pcmdRefinedRef, "minimumdelay") || FStrEq(pcmdRefinedRef, "firedelay") || FStrEq(pcmdRefinedRef, "dakkadakkadakka")|| FStrEq(pcmdRefinedRef, "dakka") ||FStrEq(pcmdRefinedRef, "dakadakadaka") || FStrEq(pcmdRefinedRef, "daka") || FStrEq(pcmdRefinedRef, "needsmoredaka") || FStrEq(pcmdRefinedRef, "needsmoardaka") || FStrEq(pcmdRefinedRef, "needsmoredakka") || FStrEq(pcmdRefinedRef, "needsmoardakka") || FStrEq(pcmdRefinedRef, "notenoughdaka") || FStrEq(pcmdRefinedRef, "notenoughdakka") || FStrEq(pcmdRefinedRef, "notenuffdaka") || FStrEq(pcmdRefinedRef, "notenuffdakka") || FStrEq(pcmdRefinedRef, "notenufdaka") || FStrEq(pcmdRefinedRef, "notenufdakka")   || FStrEq(pcmdRefinedRef, "neverenoughdaka") || FStrEq(pcmdRefinedRef, "neverenoughdakka") || FStrEq(pcmdRefinedRef, "neverenuffdaka") || FStrEq(pcmdRefinedRef, "neverenuffdakka") || FStrEq(pcmdRefinedRef, "neverenufdaka") || FStrEq(pcmdRefinedRef, "neverenufdakka")   || FStrEq(pcmdRefinedRef, "nevaenoughdaka") || FStrEq(pcmdRefinedRef, "nevaenoughdakka") || FStrEq(pcmdRefinedRef, "nevaenuffdaka") || FStrEq(pcmdRefinedRef, "nevaenuffdakka") || FStrEq(pcmdRefinedRef, "nevaenufdaka") || FStrEq(pcmdRefinedRef, "nevaenufdakka")          ){
 
@@ -1469,6 +1521,7 @@ void ClientCommand( edict_t *pEntity )
 		{
 			EASY_CVAR_SET_DEBUGONLY(cheat_minimumfiredelay, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)==0?1:0 );
 			globalPSEUDO_minimumfiredelaymem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay);
+			g_queueCVarHiddenSave = TRUE;
 			resetPlayerRPGRockets( GetClassPtr((CBasePlayer *)pev) );
 		}
 
@@ -1479,6 +1532,7 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY(noclipSpeedMulti, 5);
 		EASY_CVAR_SET_DEBUGONLY(jumpForceMulti, 3);
 		EASY_CVAR_SET_DEBUGONLY(ladderSpeedMulti, DEFAULT_ladderSpeedMulti*3);
+		g_queueCVarHiddenSave = TRUE;
 
 	}else if( FStrEq(pcmdRefinedRef, "normalman")){
 
@@ -1486,6 +1540,7 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY(noclipSpeedMulti, 2.5);
 		EASY_CVAR_SET_DEBUGONLY(jumpForceMulti, 1);
 		EASY_CVAR_SET_DEBUGONLY(ladderSpeedMulti, DEFAULT_ladderSpeedMulti);
+		g_queueCVarHiddenSave = TRUE;
 
 	}else if ( FStrEq(pcmdRefinedRef, "disablecheats") || FStrEq(pcmdRefinedRef, "disablecheat") || FStrEq(pcmdRefinedRef, "nocheating") || FStrEq(pcmdRefinedRef, "nocheats") || FStrEq(pcmdRefinedRef, "nocheat") || FStrEq(pcmdRefinedRef, "winnersdontdodrugs") ){
 
@@ -1497,6 +1552,7 @@ void ClientCommand( edict_t *pEntity )
 		globalPSEUDO_minimumfiredelaymem = 0;
 		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil, 0);
 		resetPlayerRPGRockets( playerRef );
+		g_queueCVarHiddenSave = TRUE;
 		
 		/*
 		EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP, 0);
@@ -1551,6 +1607,7 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY(STUExplodeTest, 0);
 		EASY_CVAR_SET_DEBUGONLY(STUYawSpeedMulti, 0.88);
 		EASY_CVAR_SET_DEBUGONLY(STUDetection, 1);
+		g_queueCVarHiddenSave = TRUE;
 		
 	}else if ( FStrEq(pcmdRefinedRef, "partyfix") || FStrEq(pcmdRefinedRef, "fixparty") || FStrEq(pcmdRefinedRef, "resetparty") || FStrEq(pcmdRefinedRef, "partyreset") ){
 
@@ -1583,6 +1640,7 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(raveLaserMultiColor, 1)
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(thatWasntGrass, 0)
 		EASY_CVAR_SET_DEBUGONLY(thatWasntPunch, 0)
+		g_queueCVarHiddenSave = TRUE;
 
 	}else if( FStrEq(pcmdRefinedRef, "resetSparks") || FStrEq(pcmdRefinedRef, "tooManySparks")   ){
 	
@@ -1600,6 +1658,7 @@ void ClientCommand( edict_t *pEntity )
 		//CVAR_SET_FLOAT("shrapRandHeightExtra", 140);
 		//CVAR_SET_FLOAT("shrapMode", 1);
 		//CVAR_SET_FLOAT("explosionShrapnelMulti", 1);
+		g_queueCVarHiddenSave = TRUE;
 
 	}else if( FStrEq(pcmdRefinedRef, "partyon") || FStrEq(pcmdRefinedRef, "party") || FStrEq(pcmdRefinedRef, "partymode") || FStrEq(pcmdRefinedRef, "whospikedthepunch") || FStrEq(pcmdRefinedRef, "clubon") ||FStrEq(pcmdRefinedRef, "rave") || FStrEq(pcmdRefinedRef, "technorave") || FStrEq(pcmdRefinedRef, "techno") || FStrEq(pcmdRefinedRef, "club") || FStrEq(pcmdRefinedRef, "clubbing") || FStrEq(pcmdRefinedRef, "breaktime") || FStrEq( pcmdRefinedRef, "ecstasy") || FStrEq(pcmdRefinedRef, "partytime") || FStrEq(pcmdRefinedRef, "indaclub") || FStrEq(pcmdRefinedRef, "intheclub") || FStrEq(pcmdRefinedRef, "whodruggedmyshit") || FStrEq(pcmdRefinedRef, "drugs") || FStrEq(pcmdRefinedRef, "thattastedfunny") || FStrEq(pcmdRefinedRef, "thattastesfunny") || FStrEq(pcmdRefinedRef, "tastesfunny") || FStrEq(pcmdRefinedRef, "krunk") || FStrEq(pcmdRefinedRef, "getfucked") || FStrEq(pcmdRefinedRef, "fuckedup") || FStrEq(pcmdRefinedRef, "getfuckedup") || FStrEq(pcmdRefinedRef, "letsgetwasted") || FStrEq(pcmdRefinedRef, "getwasted") ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
@@ -1623,6 +1682,7 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(thatWasntGrass, 1)
 		EASY_CVAR_SET_DEBUGONLY(thatWasntPunch, 1)
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(fogTest, 2)
+		g_queueCVarHiddenSave = TRUE;
 
 	}else if(  FStrEq(pcmdRefinedRef, "hyperrave") || FStrEq(pcmdRefinedRef, "hyperave") || FStrEq(pcmdRefinedRef, "hardcore")   ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
@@ -1636,6 +1696,7 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(thatWasntGrass, 1)
 		EASY_CVAR_SET_DEBUGONLY(thatWasntPunch, 1)
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(fogTest, 2)
+		g_queueCVarHiddenSave = TRUE;
 
 	}else if(  FStrEq(pcmdRefinedRef, "fixCamera") || FStrEq(pcmdRefinedRef, "camerafix") || FStrEq(pcmdRefinedRef, "cameraReset") || FStrEq(pcmdRefinedRef, "cameraReset")    ){
 	
@@ -1652,6 +1713,7 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraRotOffX, 0)
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraRotOffY, 0)
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(cameraRotOffZ, 0)
+		g_queueCVarHiddenSave = TRUE;
 
 	}else if ( FStrEq(pcmdRefinedRef, "fixprecache" ) || FStrEq(pcmdRefinedRef, "fixcache" ) || FStrEq(pcmdRefinedRef, "cachefix"   ) || FStrEq(pcmdRefinedRef, "precachefix")  ){
 
@@ -2622,13 +2684,6 @@ void ClientCommand( edict_t *pEntity )
 
 
 
-	}else if( FStrEq(pcmdRefinedRef, "pleasedontcrash") || FStrEq(pcmdRefinedRef, "pleasedonotcrash") || FStrEq(pcmdRefinedRef, "dontcrash") || FStrEq(pcmdRefinedRef, "donotcrash")){
-		
-		
-		EASY_CVAR_SET_DEBUGONLY(explosionShrapnelMulti, 0);
-		EASY_CVAR_SET_DEBUGONLY(sparksAllMulti, 0);
-
-
 	}else if( FStrEq(pcmdRefinedRef, "dividebyzero") || FStrEq(pcmdRefinedRef, "crash") || FStrEq(pcmdRefinedRef, "enditalready") || FStrEq(pcmdRefinedRef, "thissucks") || FStrEq(pcmdRefinedRef, "iwantmydesktop") || FStrEq(pcmdRefinedRef, "iwannagohome")   ){
 		
 		if(g_flWeaponCheat == 0.0){
@@ -2907,6 +2962,7 @@ void ClientCommand( edict_t *pEntity )
 				if(special){
 					EASY_CVAR_SET_DEBUGONLY(drawNodeSpecial, nodeTest);
 					EASY_CVAR_SET_DEBUGONLY(drawNodeAlternateTime, 0);
+					g_queueCVarHiddenSave = TRUE;
 				}
 			}
 		}else{
@@ -2931,6 +2987,7 @@ void ClientCommand( edict_t *pEntity )
 				if(special){
 					EASY_CVAR_SET_DEBUGONLY(drawNodeSpecial, closestNodeID);
 					EASY_CVAR_SET_DEBUGONLY(drawNodeAlternateTime, 0);
+					g_queueCVarHiddenSave = TRUE;
 				}
 			}
 		}
@@ -4005,10 +4062,12 @@ void ClientCommand( edict_t *pEntity )
 
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(drawHUD, -1);
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(drawViewModel, 0);
+		g_queueCVarHiddenSave = TRUE;
 		
 	}else if( FStrEq(pcmdRefinedRef, "showmyshit") || FStrEq(pcmdRefinedRef, "showall") || FStrEq(pcmdRefinedRef, "showfp") ){
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(drawHUD, 1);
 		EASY_CVAR_SET_CLIENTONLY_DEBUGONLY_FORCEBROADCAST(drawViewModel, 1);
+		g_queueCVarHiddenSave = TRUE;
 		
 	}else if( FStrEq(pcmdRefinedRef, "setsequence") || FStrEq(pcmdRefinedRef, "sequence") || FStrEq(pcmdRefinedRef, "setanimation") ){
 		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
@@ -4440,6 +4499,7 @@ void ClientCommand( edict_t *pEntity )
 		EASY_CVAR_SET_DEBUGONLY(blockTeleportTrigger, argValueAsFloat);
 		EASY_CVAR_SET_DEBUGONLY(blockHurtTrigger, argValueAsFloat);
 		EASY_CVAR_SET_DEBUGONLY(blockMusicTrigger, argValueAsFloat);
+		g_queueCVarHiddenSave = TRUE;
 
 		if (argValue == 0) {
 			easyForcePrintLineClient(pEntity, "All triggers unblocked.");
@@ -5168,7 +5228,100 @@ void ClientCommand( edict_t *pEntity )
 
 
 	
-	EASY_CVAR_HIDDEN_LIST
+	//EASY_CVAR_HIDDEN_LIST
+
+#ifndef _DEBUG
+	for(int i = 0; i < HIDDEN_CVAR_INFO_LENGTH; i++){
+
+		if( FStrEq(pcmdRefinedRef, aryHiddenCVarInfo[i].nameLowercase) ){
+			int theType = aryHiddenCVarInfo[i].type;
+			int argCount = CMD_ARGC();
+			if(argCount > 2){easyForcePrintLineClient(pEntity, "WARNING: only one term after a CVar allowed, further terms ignored.");}
+			if(argCount == 1){
+				// only one?  Print out its value
+				if(theType == 0){
+					//EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY
+					easyForcePrintLineClient(pEntity, "\"%s\" is %g", aryHiddenCVarInfo[i].name, *aryHiddenCVarInfo[i].serverCacheVar);
+				}else if(theType == 1){
+					//EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY
+					easyForcePrintLineClient(pEntity, "\"%s\" is %g", aryHiddenCVarInfo[i].name, *aryHiddenCVarInfo[i].serverCacheVar);
+				}else if(theType == 2){
+					//EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY
+					EASY_CVAR_PRINT_CLIENTONLY(aryHiddenCVarInfo[i].dataID)
+				}else{
+					// ?????????
+				}
+			}else{
+				// any higher than 1 (probably 2)?  Set the CVar's value to the 2nd one.
+				const char* arg1ref = CMD_ARGV(1);
+				float tempF = 0;
+
+				if(theType == 0){
+					//EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY
+					try{
+						tempF = tryStringToFloat(arg1ref);
+
+						// CLONED HERE.  Can't fudge what's used for 'global_' in that.
+						//EASY_CVAR_SET_DEBUGONLY(aryHiddenCVarInfo[i].name, tempF)
+						if(IS_DEDICATED_SERVER()){
+							CVAR_SET_FLOAT(aryHiddenCVarInfo[i].name, tempF);
+						}else{
+							*aryHiddenCVarInfo[i].serverCacheVar = tempF;
+						}
+
+						g_queueCVarHiddenSave = TRUE;
+					}catch(int){
+						easyForcePrintLineClient(pEntity, "ERROR: Bad input. No effect.");
+					}
+				}else if(theType == 1){
+					//EASY_CVAR_HIDDEN_ACCESS_CLIENTSENDOFF_BROADCAST_DEBUGONLY
+					try{
+						tempF = tryStringToFloat(arg1ref);
+
+						// CLONED HERE.  Can't fudge what's used for 'global_' in that.
+						//EASY_CVAR_SET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(aryHiddenCVarInfo[i].name, tempF)
+						if(IS_DEDICATED_SERVER()){
+							CVAR_SET_FLOAT(aryHiddenCVarInfo[i].name, tempF);
+						}
+						*aryHiddenCVarInfo[i].serverCacheVar = tempF;
+
+						// SAME
+						//CALL_EASY_CVAR_SYNCH_SERVER_TO_CLIENT_BROADCAST_DEBUGONLY(aryHiddenCVarInfo[i].name)
+						MESSAGE_BEGIN(MSG_ALL, gmsgUpdateClientCVarNoSave, NULL);
+							WRITE_SHORT(aryHiddenCVarInfo[i].dataID); 
+							WRITE_SHORT(*aryHiddenCVarInfo[i].serverCacheVar * 100);
+						MESSAGE_END();
+
+						g_queueCVarHiddenSave = TRUE;
+					}catch(int){
+						easyForcePrintLineClient(pEntity, "ERROR: Bad input. No effect.");
+					}
+				}else if(theType == 2){
+					//EASY_CVAR_HIDDEN_ACCESS_CLIENTONLY_DEBUGONLY
+					try{
+						tempF = tryStringToFloat(arg1ref);
+						CUSTOM_CLIENT_CALL(aryHiddenCVarInfo[i].dataID, tempF)
+					}catch(int){
+						easyForcePrintLineClient(pEntity, "ERROR: Bad input. No effect.");
+					}
+
+					// Nothing to save here, server can't store anything about a CLIENTONLY var.
+				}else{
+					// ?????????
+				}
+			}//argCount check
+
+			// stop going through the loop.  Or this whole message-parse method, really
+			//break;
+			return;
+		}//typed in match check
+	}//loop through hidden CVar info
+
+#endif //!_DEBUG
+
+
+
+
 
 
 	//NOTICE - so much as reaching here says that the hidden check didn't find anything. If it did, it would've
@@ -5216,6 +5369,8 @@ void ClientCommand( edict_t *pEntity )
 		ClientPrint( &pEntity->v, HUD_PRINTCONSOLE, UTIL_VarArgs( "Unknown command: %s\n", command ) );
 	}
 	*/
+
+
 }//END OF... something big.
 //!!!END OF THIS SILLY SILLY METHOD!!!
 

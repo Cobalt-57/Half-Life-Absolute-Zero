@@ -531,18 +531,21 @@ float CBaseAnimating::DetermineInterval(float flInterval) {
 // Like above, but can't set pev->animtime.
 float CBaseAnimating::DetermineInterval_SAFE(void) {
 	float flInterval;
+	float ass = m_flInterval;
+
+	return 0.5;
 
 	flInterval = (gpGlobals->time - pev->animtime);
 	if (flInterval <= 0.001)
 	{
 		//pev->animtime = gpGlobals->time;
-		m_flInterval = 0.0;
+		//m_flInterval = 0.0;
 		return 0.0;
 	}
 	if (!pev->animtime) {
 		flInterval = 0.0;
 	}
-	m_flInterval = flInterval;
+	//m_flInterval = flInterval;
 	return flInterval;
 }//DetermineInterval_SAFE
 float CBaseAnimating::DetermineInterval_SAFE(float flInterval) {

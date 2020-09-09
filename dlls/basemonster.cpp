@@ -1430,12 +1430,15 @@ void CBaseMonster::heardBulletHit(entvars_t* pevShooter){
 			{
 				if (monListener->m_hEnemy == NULL || pevShooter == monListener->m_hEnemy->pev || !monListener->HasConditions(bits_COND_SEE_ENEMY))
 				{
-					monListener->setEnemyLKP(pevShooter->origin);
+					//MODDD - sent the ent itself for custom handling
+					monListener->setEnemyLKP(pevShooter);
 				}
 			}
 			else
 			{
-				monListener->setEnemyLKP(monListener->pev->origin + ( g_vecAttackDir * 64 )); 
+				//MODDD - sent the ent itself for custom handling, and the extra offset
+				//monListener->setEnemyLKP(monListener->pev->origin + ( g_vecAttackDir * 64 )); 
+				monListener->setEnemyLKP(monListener->pev->origin, ( g_vecAttackDir * 64 )); 
 			}
 
 			//want to face your LKP, yes?
@@ -1701,11 +1704,14 @@ void CBaseMonster::parse_itbd(int i) {
 		//pev->origin + pev->view_ofs
 		//BodyTargetMod(g_vecZero)
 		// BLEEDING_DAMAGE
-		UTIL_SpawnBlood(
-			pev->origin + pev->view_ofs + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-5, 5) + gpGlobals->v_up * RANDOM_FLOAT(4, 7),
-			BloodColor(),
-			RANDOM_LONG(8, 15)
-		);
+
+		if(CanMakeBloodParticles()){
+			UTIL_SpawnBlood(
+				pev->origin + pev->view_ofs + gpGlobals->v_forward * RANDOM_FLOAT(9, 13) + gpGlobals->v_right * RANDOM_FLOAT(-5, 5) + gpGlobals->v_up * RANDOM_FLOAT(4, 7),
+				BloodColor(),
+				RANDOM_LONG(8, 15)
+			);
+		}
 	break;
 	default:
 		// ???
@@ -2624,7 +2630,7 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 			*/
 
 			////m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
-			//setEnemyLKP(m_hEnemy->pev->origin);
+			//setEnemyLKP(m_hEnemy);
 			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
 
 
@@ -2694,7 +2700,7 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 	// a standing and move animation.  If this fails, that point isn't reached.
 	// (some things don't want this check or don't have custom move script properly separated, they turn 'SegmentedMove' off
 	// to avoid this).
-	if (usesSegmentedMove() && returnCode != FALSE) {
+	if (returnCode != FALSE && usesSegmentedMove()) {
 		returnCode = CheckPreMove();
 	}
 
@@ -2758,7 +2764,7 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 			*/
 
 			////m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
-			//setEnemyLKP(m_hEnemy->pev->origin);
+			//setEnemyLKP(m_hEnemy);
 			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
 
 
@@ -2814,7 +2820,7 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 			break;
 	}
 
-	if (usesSegmentedMove() && returnCode != FALSE) {
+	if (returnCode != FALSE && usesSegmentedMove()) {
 		returnCode = CheckPreMove();
 	}
 
@@ -2881,9 +2887,8 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 	/*
 	m_vecMoveGoal = m_hEnemy->pev->origin;
 
-	//MODDD - new?
-	//m_vecEnemyLKP = m_hEnemy->pev->origin;
-	setEnemyLKP(m_hEnemy->pev->origin);
+	//MODDD - new?  No need, rely on the existing LKP for now
+	setEnemyLKP(m_hEnemy);
 	*/
 
 	m_vecMoveGoal = m_vecEnemyLKP;
@@ -2920,7 +2925,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 	// Don't keep that move activity change if trying to move a single frame on this route would fail.
 	// It might be possible to integrate this check into any "FRefreshRoute" call too, if necessary.
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (usesSegmentedMove() && returnCode != FALSE) {
+	if (returnCode != FALSE && usesSegmentedMove()) {
 		returnCode = CheckPreMove();
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3587,8 +3592,8 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 
 		iUpdatedLKP = TRUE;
 		
-		//m_vecEnemyLKP = pEnemy->pev->origin;
-		setEnemyLKP(pEnemy->pev->origin);
+		//MODDD - involve the entity.
+		setEnemyLKP(pEnemy);
 
 		pEnemyMonster = pEnemy->MyMonsterPointer();
 
@@ -3606,8 +3611,11 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 		if (pEnemy->pev->velocity != Vector( 0, 0, 0))
 		{
 			// trail the enemy a bit
-			//m_vecEnemyLKP = ...
-			setEnemyLKP(m_vecEnemyLKP - pEnemy->pev->velocity * RANDOM_FLOAT( -0.05, 0 ));
+			//MODDD - involve the entity
+			// ...WAIT.  The LKP was already set with the entity in mind above (setEnemyLKP(pEnemy)).
+			// Go ahead and shift this plainly.
+			//setEnemyLKP(m_vecEnemyLKP - pEnemy->pev->velocity * RANDOM_FLOAT( -0.05, 0 ));
+			setEnemyLKP(m_vecEnemyLKP, pEnemy->pev->velocity * RANDOM_FLOAT( -0.05, 0 ));
 		}
 		else
 		{
@@ -3626,8 +3634,8 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 		// enemy is. 
 		
 		iUpdatedLKP = TRUE;
-		//m_vecEnemyLKP = pEnemy->pev->origin;
-		setEnemyLKP(pEnemy->pev->origin);
+		//MODDD - involve the ent
+		setEnemyLKP(pEnemy);
 		
 	}
 	
@@ -8168,7 +8176,7 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 
 	if (m_hEnemy != NULL) {
 		// test.  Is the enemy too close?
-		float tempDist = Distance(pev->origin, m_hEnemy->pev->origin);
+		float tempDist = Distance(pev->origin, m_hEnemy->Center());
 		if (tempDist < 90) {
 			// don't use the pitch!  It gets odd looking trying to aim extremely close.
 			float thePitch = 0;
@@ -9275,8 +9283,8 @@ BOOL CBaseMonster::GetEnemy (BOOL arg_forceWork )
 					SetConditions(bits_COND_NEW_ENEMY);
 					m_hEnemy = pNewEnemy;
 					
-					//m_vecEnemyLKP = m_hEnemy->pev->origin;
-					setEnemyLKP(m_hEnemy->pev->origin);
+					//MODDD - involve the ent
+					setEnemyLKP(m_hEnemy);
 
 				}
 				// if the new enemy has an owner, take that one as well
@@ -10038,24 +10046,75 @@ Schedule_t* CBaseMonster::flyerDeathSchedule(void){
 BOOL CBaseMonster::getMovementCanAutoTurn(void){
 	//without a reason not to, defaults to yes all the time.
 	return TRUE;
-}//END OF getMovementCanAutoTurn
+}
 
 
+
+
+// NOTE - supporting what point to get from an enemy in general in other methods, such as
+// Cover-related tasks in schedule.cpp referring to "m_hEnemy->pev->origin" could also
+// be overridden to let a monster decide whta point to use from the entity, but that seems
+// unecessary.  Whether a point is at the feet or center of a model wouldn't really affect
+// that.  Precision, like the LKP used in pathfinding methods to get close to an enemy, could
+// be important, especially for small melee-focused things (hornets, archers).
 
 // If there is an enemy, set the m_vecEnemyLKP to the enemy's current position
+// Involve the overridable way now.
 void CBaseMonster::updateEnemyLKP(void){
 	if(m_hEnemy != NULL){
-		m_vecEnemyLKP = m_hEnemy->pev->origin;
-		investigatingAltLKP = FALSE; //this is the real deal.
+		//m_vecEnemyLKP = m_hEnemy->pev->origin;
+		//investigatingAltLKP = FALSE; //this is the real deal.
+		setEnemyLKP(m_hEnemy.GetEntity());
 	}
 }
+
+// Only given a location?  All I can use, but try to involve the monster itself if 
+// possible to let the entity setting the LKP decide what point to use (pev->origin or center).
+// Although this isn't do-able on pulling the values from some saved source like a stack, which
+// should've been retrieved with the entity's involvement to begin with so that's fine.
 void CBaseMonster::setEnemyLKP(const Vector& argNewVector){
 	m_vecEnemyLKP = argNewVector;
 	investigatingAltLKP = FALSE; //this is the real deal.
-}//END OF setEnemyLKP
+}
+// uhh.  okay?
+void CBaseMonster::setEnemyLKP(const Vector& argNewVector, const Vector& extraAddIn){
+	m_vecEnemyLKP = argNewVector + extraAddIn;
+	investigatingAltLKP = FALSE; //this is the real deal.
+}
+
+// NEW IDEA: Monsters can override this form if they prefer to treat a different point
+// of the monster as the position, like the Center() instead of the pev->origin (often
+// at the lowest point of the monster's bounding box).
+// Archers can use this to try and path to an enemy's center instead of its feet.
+void CBaseMonster::setEnemyLKP(CBaseEntity* theEnt){
+	m_vecEnemyLKP = theEnt->pev->origin;
+	investigatingAltLKP = FALSE; //this is the real deal.
+}
+
+// ALSO.  On being given an extra amount to add to that, can handle that differently too.
+// Or the default way will call plain setEnemyLKP with the entity, and then add in extraAddIn.
+// So, optional to override this, this assumption should always work fine.
+// Unless there is a time the enemy LKP setting should be denied, where adding the add-in
+// is pointless.  This assumes the vecEnemyLKP from some point of the ent was applied.
+void CBaseMonster::setEnemyLKP(CBaseEntity* theEnt, const Vector& extraAddIn){
+	setEnemyLKP(theEnt);
+	m_vecEnemyLKP = m_vecEnemyLKP + extraAddIn;
+}
+
+
+// And, given a PEV, redirect to setEnemyLKP.
+void CBaseMonster::setEnemyLKP(entvars_t* theEntPEV){
+	setEnemyLKP(CBaseEntity::Instance(theEntPEV));
+}
+void CBaseMonster::setEnemyLKP(entvars_t* theEntPEV, const Vector& extraAddIn){
+	setEnemyLKP(CBaseEntity::Instance(theEntPEV), extraAddIn);
+}
+
 
 // Push this new vector to m_vecEnemyLKP.
 // Save the old enemy LKP to another var to back up to when done with that.
+//MODDD - TODO?  Support the other overload stuff above?  Not sure if this is really used by anything
+// that treats enemy point to use for LKP differently.
 void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
 	m_vecEnemyLKP_Real = m_vecEnemyLKP;
 	m_vecEnemyLKP = argToInvestigate;
@@ -10522,5 +10581,7 @@ float CBaseMonster::ScriptEventSoundVoiceAttn(void){
 	return 1.0;
 }
 
-
+BOOL CBaseMonster::CanMakeBloodParticles(void){
+	return TRUE;
+}
 

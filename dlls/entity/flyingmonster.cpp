@@ -197,16 +197,17 @@ GENERATE_KILLED_IMPLEMENTATION(CFlyingMonster)
 	//MODDD NOTE - Dear flying monster... why MOVETYPE_STEP at killed? This freezes the monster in place instead of letting it fall to the ground.
 	//             Keeping it this way in fear of side effects of changing it, but any other custom monsters should set movetype to MOVETYPE_TOSS
 	//             to take gravity into effect.  "pev->gravity" of 0 still has gravity with the right movetype, and looks to be ignored otherwise anyways.
-	//Question: why does tis issue only happen sometimes? Why does the movetype somtimes end up TOSS anyways, and sometiems become STEP?
-	//Because "Killed" can be called if a monster runs out of health again WHILE in the DEAD_DYING pev->dead choice.
-	//And that time, it goes here but the monster's base KILLED method that would force the movetype to TOSS anyways is skipped this time.
-	//Typically, the first time a monster is killed (pev->dead of DEAD_NO becoming DEAD_DYING), the base Killed call below will
-	//force the movetype to MOVETYPE_TOSS (properly) in the BecomeDead call.
-	//When in DEAD_DYTING while this is called, that never happens. So MOVETYPE_STEP is left. Eh.
+	// Question: why does this issue only happen sometimes? Why does the movetype somtimes end up TOSS anyways, and sometiems become STEP?
+	// Because "Killed" can be called if a monster runs out of health again WHILE in the DEAD_DYING pev->dead choice.
+	// And that time, it goes here but the monster's base KILLED method that would force the movetype to TOSS anyways is skipped this time.
+	// Typically, the first time a monster is killed (pev->dead of DEAD_NO becoming DEAD_DYING), the base Killed call below will
+	// force the movetype to MOVETYPE_TOSS (properly) in the BecomeDead call.
+	// When in DEAD_DYTING while this is called, that never happens. So MOVETYPE_STEP is left. Eh.
 	pev->movetype = MOVETYPE_STEP;
 
 	//MODDD - only disable the ONGROUND bit if this is the first Killed call.
-	//Any Killed calls while dead don't need to keep resetting this.
+	// Any Killed calls while dead don't need to keep resetting this.
+	// Wait... what's the point of this?  Whatever, burnt out from touching this kind of stuff.
 	if(pev->deadflag == DEAD_NO){
 		ClearBits( pev->flags, FL_ONGROUND );
 	}

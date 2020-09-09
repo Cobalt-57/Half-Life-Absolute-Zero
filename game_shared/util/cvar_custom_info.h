@@ -172,7 +172,7 @@
 #define egonFireRateMode_ID 181
 
 
-//Please.  Update this on changing the count above.
+// Please.  Update this on changing the count above.
 // Or bad things?     They will happen.
 //  They.
 //           WilL.
@@ -698,7 +698,7 @@
 #define DEFAULT_cl_interp_viewmodel 1
 #define DEFAULT_sv_explosionknockback 1
 #define DEFAULT_cl_gaussfollowattachment 1
-#define DEFAULT_cl_mp5_kickbackmode 0
+#define DEFAULT_cl_mp5_viewpunch_mod 0
 #define DEFAULT_cl_breakholster 0
 #define DEFAULT_pausecorrection1 1
 #define DEFAULT_pausecorrection2 2
@@ -720,9 +720,8 @@
 #define DEFAULT_sv_explosion_shake_freq 1
 #define DEFAULT_sv_explosion_shake_duration 1
 #define DEFAULT_sv_gargantua_throwattack 1
-
-
-
+#define DEFAULT_cl_viewpunch_mod 1
+#define DEFAULT_cl_gauss_viewpunch_mod 1
 
 
 

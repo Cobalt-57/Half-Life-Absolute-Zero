@@ -583,16 +583,21 @@ void CHornet::TrackTarget ( void )
 			}
 			*/
 
-			//m_vecEnemyLKP = ...;
-			setEnemyLKP( m_hEnemy->BodyTarget( pev->origin ) );
+			//MODDD - seems like an ok idea?  Leaving this as it is,
+			// but a lot of places are sending the m_hEnemy to be interpreted as this.
+			// In fact...  overriding setEnemyLKP for hornets to do bodytarget instead
+			// of pev->origin for any enemyLKP setting, woohoo
+			//setEnemyLKP( m_hEnemy->BodyTarget( pev->origin ) );
+			setEnemyLKP( m_hEnemy );
 		}
 		else
 		{
 			//m_vecEnemyLKP = m_vecEnemyLKP + pev->velocity * m_flFlySpeed * 0.1;
 			
-			//m_vecEnemyLKP = ...;
-			setEnemyLKP(m_vecEnemyLKP + vecFlightDirTrue * m_flFlySpeed * 0.1);
-
+			// CBaseMonster:: in front is necessary because we overrided setEnemyLKP
+			// for taking an entity, but none of the other ways?
+			// ... what?     oooookie C++
+			CBaseMonster::setEnemyLKP(m_vecEnemyLKP, vecFlightDirTrue * m_flFlySpeed * 0.1);
 		}
 
 		vecDirToEnemy = ( m_vecEnemyLKP - pev->origin ).Normalize();
@@ -1223,4 +1228,21 @@ void CHornet::OnDeflected(CBaseEntity* arg_entDeflector){
 		this->StartDart();
 	}
 }
+
+
+// NEW!  Seems this was the intent, hornet wants to home-in on any entity's body target,
+// not the pev->origin (often the bottom of the bounding box)
+void CHornet::setEnemyLKP(CBaseEntity* theEnt){
+	m_vecEnemyLKP = theEnt->BodyTarget(pev->origin);
+	investigatingAltLKP = FALSE;
+}//
+
+
+
+
+
+
+
+
+
 

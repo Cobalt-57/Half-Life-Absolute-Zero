@@ -1,6 +1,12 @@
 
 #include "external_lib_include.h"
 //#include <stdio.h>
+//#include <string.h>
+//#include "STDIO.H"
+//#include "STDLIB.H"
+//#include "MATH.H"
+
+
 
 
 #include "custom_message.h" //what. how were we fine without this.
@@ -14,16 +20,9 @@
 // Moved to util_shared.h if anywhere even uses this.
 //#define MAX_CLIENTS 32
 
-//#include <string.h>
 
 #include "cvar_custom_info.h"
 #include "cvar_custom_list.h"
-
-/*
-#include "STDIO.H"
-#include "STDLIB.H"
-#include "MATH.H"
-*/
 
 //#include "ammohistory.h"
 //#include "vgui_TeamFortressViewport.h"
@@ -46,6 +45,7 @@ EASY_CVAR_EXTERN_MASS
 extern BEAM *pBeam;
 extern BEAM *pBeam2;
 
+extern BOOL g_queueCVarHiddenSave;
 
 
 
@@ -491,7 +491,7 @@ IMPLEMENT_MESSAGE(UpdClientC){
 	//}
 
 #else
-	//Need to update hidden CVars meant to be broadcasted to clients. Receive the new value(s) here.
+	// Need to update hidden CVars meant to be broadcasted to clients. Receive the new value(s) here.
 
 	BEGIN_READ( pbuf, iSize );
 	
@@ -513,7 +513,9 @@ IMPLEMENT_MESSAGE(UpdClientC){
 	
 
 	//Save. Is this ok?
-	::saveHiddenCVars();
+	// no, but queue it for the end of this frame to do so in case a lot of changes come through in a short time.
+	g_queueCVarHiddenSave = TRUE;
+	//saveHiddenCVars();
 
 
 
@@ -546,7 +548,7 @@ IMPLEMENT_MESSAGE(UpdClientN){
 	int argPRE = READ_SHORT();
 	float arg = ((float)(argPRE)) / 100.0f;
 
-	float* poopee = aryCVarHash[argID-1];
+	//float* testRef = aryCVarHash[argID-1];
 
 	*(aryCVarHash[argID]) = arg;
 

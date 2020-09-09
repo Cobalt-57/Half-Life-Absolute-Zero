@@ -176,6 +176,7 @@ public:
 	//Also the gibbing CVar for this class if needed.
 	virtual float getGibCVar(void){return 0;}
 
+	virtual BOOL CanMakeBloodParticles(void);
 
 };
 

@@ -113,15 +113,8 @@ static GibInfo_t* getTurretGibInfo(float cvarRef){
 
 
 static int TurretBloodColorBlackFilter(){
-	/*
-	if(EASY_CVAR_GET_DEBUGONLY(turretBleedsOil) == 1){
-		return BLOOD_COLOR_BLACK;
-	}else{
-		return DONT_BLEED;
-	}
-	*/
-
-	//Changed how this works. Always say this.
+	// Whether it bleeds in whatever way, just say the color is BLACK regardless.
+	// Other logic will handle blocking other types of effects.
 	return BLOOD_COLOR_BLACK;
 }
 
@@ -1561,7 +1554,7 @@ GENERATE_TRACEATTACK_IMPLEMENTATION(CBaseTurret)
 		return;
 
 	//MODDD NEW - can draw blood.
-	if(useBloodEffect && EASY_CVAR_GET_DEBUGONLY(turretBleedsOil) != 0 ){
+	if(useBloodEffect && CanMakeBloodParticles() ){
 		//MODDD!!!!!!
 		Vector vecBloodOrigin = ptr->vecEndPos - vecDir * 4;
 		SpawnBlood(vecBloodOrigin, flDamage);// a little surface blood.   ...  oil.  yeah.
@@ -1813,7 +1806,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 
 
 	if(pev->deadflag == DEAD_NO){
-
 		//MODDD - condition changed, go beserk at a percentage of health
 		//if (pev->health <= 10)
 		//if(pev->health < pev->max_health*0.38)
@@ -1828,7 +1820,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseTurret)
 				SetThink(&CBaseTurret::SearchThink);
 			}
 		}
-
 	}
 	
 	return 1;
@@ -2093,20 +2084,14 @@ BOOL CBaseTurret::isOrganicLogic(void){
 	return FALSE;
 }
 
-
 GENERATE_GIBMONSTER_IMPLEMENTATION(CBaseTurret){
-	//gibModelPath
-
 	TraceResult	tr;
-	BOOL		gibbed = FALSE;
+	BOOL gibbed = FALSE;
 	
-
-
 	if(getGibCVar() == 0){
 		//no behavior allowed.
 		return;
 	}
-
 
 	//MODDD - perhaps some generic mechanical crashing sound instead?
 	//UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "common/bodysplat.wav", 1, ATTN_NORM, TRUE);
@@ -2153,29 +2138,27 @@ GENERATE_GIBMONSTER_IMPLEMENTATION(CBaseTurret){
 	//if ( ShouldFadeOnDeath() && !fade )
 	//	UTIL_Remove(this);
 
-
-
-
 	//of course.
 	UTIL_playMetalGibSound(pev);
 
-	
-	if ( gibbed )
-	{
+	if ( gibbed ){
 		// don't remove players!
 		SetThink ( &CBaseEntity::SUB_Remove );
 		pev->nextthink = gpGlobals->time;
 	}
-	else
-	{
+	else{
 		FadeMonster();
 	}
 
-
-
-
-
 }//END OF GibMonster
+
+
+// Can I make blood particles?  Leaving this up to a CVar for turrets.
+BOOL CBaseTurret::CanMakeBloodParticles(void){
+	return EASY_CVAR_GET_DEBUGONLY(turretBleedsOil) != 0;
+}
+
+
 
 
 
@@ -2311,10 +2294,9 @@ void CSentry::PostInit(void) {
 }
 
 
-
-
 void CSentry::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 {
+
 	FireBullets( 1, vecSrc, vecDirToEnemy, TURRET_SPREAD, TURRET_RANGE, BULLET_MONSTER_MP5, 1 );
 	
 	switch(RANDOM_LONG(0,2))
@@ -2325,8 +2307,6 @@ void CSentry::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
 	}
 	pev->effects = pev->effects | EF_MUZZLEFLASH;
 }
-
-
 
 
 GENERATE_TRACEATTACK_IMPLEMENTATION(CSentry)

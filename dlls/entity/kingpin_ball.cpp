@@ -26,12 +26,7 @@ void CKingpinBall::Spawn( void ){
 
 	CControllerHeadBall::Spawn();
 
-
-	UTIL_SetSize(pev, Vector(-8, -8, -8), Vector(8, 8, 8));
-
-	pev->takedamage = DAMAGE_AIM;
-	pev->health = 10;
-
+	
 	//MODDD - in any case do these instead.
 	//SetThink( &CKingpinBall::HuntThink );
 	SetTouch( &CKingpinBall::BounceTouch );
@@ -45,7 +40,7 @@ void CKingpinBall::Spawn( void ){
 		//Use a different type of think to mimic 
 		if(m_hEnemy != NULL){
 			//this once.
-			m_vecEnemyLKP = m_hEnemy->pev->origin;
+			setEnemyLKP(m_hEnemy);
 		}
 
 		startSmartFollow();
@@ -64,14 +59,14 @@ void CKingpinBall::Precache( void ){
 }//END OF Precache
 
 
-//MODDD - little less reactive to following th enemy.
+//MODDD - little less reactive to following the enemy.
 void CKingpinBall::MovetoTarget( Vector vecTarget ){
 
 	float distToEnemy = 0;
 
 	if(m_hEnemy != NULL){
 		//I'm a crazy ball. I know where the enemy is.
-		m_vecEnemyLKP = m_hEnemy->pev->origin;
+		setEnemyLKP(m_hEnemy);
 	}
 	distToEnemy = (m_vecEnemyLKP - pev->origin).Length();
 
@@ -126,23 +121,23 @@ void CKingpinBall::MovetoTarget( Vector vecTarget ){
 
 
 
-
-
 	if(pathfind_onRoute){
 		//move to the next route piece.
 		pathfind_move(distToEnemy);
 
 	}else{
-		float maxSpeed = 800;
+		float maxSpeed;
 		BOOL approachingTarget;
-		if(distToEnemy <= 600){
+		if(distToEnemy <= 530){
 			approachingTarget = TRUE;
 		}else{
 			approachingTarget = FALSE;
 		}
 		
-		if(approachingTarget){
-			maxSpeed = 400; //instead, if going right towards the enemy.
+		if(!approachingTarget){
+			maxSpeed = GetMaxSpeed();
+		}else{
+			maxSpeed = GetMaxSpeed() * 0.6; //instead, if going right towards the enemy.
 		}
 
 		// accelerate
@@ -166,7 +161,7 @@ void CKingpinBall::pathfind_move(const float& arg_distToEnemy){
 
 	//m_vecIdeal = m_vecIdeal + (vecTarget - pev->origin).Normalize() * 320;
 	//pev->velocity = m_vecIdeal;
-	float maxSpeed = 800;
+	float maxSpeed;
 	BOOL approachingTarget;
 
 
@@ -179,16 +174,19 @@ void CKingpinBall::pathfind_move(const float& arg_distToEnemy){
 		//DrawMyRoute( 0, 0, 176 );
 	//}
 	
-	velocityCheck(420);
+	// what?  Was this leftover a mistake?
+	//velocityCheck(420);
 
-	if(m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL || arg_distToEnemy <= 600){
+	if(m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL || arg_distToEnemy <= 530){
 		approachingTarget = TRUE;
 	}else{
 		approachingTarget = FALSE;
 	}
-	
-	if(approachingTarget){
-		maxSpeed = 340; //instead, if going right towards the enemy.
+
+	if(!approachingTarget){
+		maxSpeed = GetMaxSpeed();
+	}else{
+		maxSpeed = GetMaxSpeed() * 0.6; //instead, if going right towards the enemy.
 	}
 
 
@@ -209,9 +207,6 @@ void CKingpinBall::pathfind_move(const float& arg_distToEnemy){
 
 
 
-
-
-
 }//END OF pathfind_think
 
 
@@ -224,18 +219,13 @@ float CKingpinBall::nearZapDamage(void){
 }
 
 
-
 void CKingpinBall::startSmartFollow(void){
 
-
-	
 	if(m_hEnemy == NULL){
 		//what??
 		//TaskFail();
 		return;
 	}
-
-
 
 	//if ( (m_hEnemy->pev->origin - pev->origin).Length() < 1 )
 	
@@ -290,12 +280,11 @@ void CKingpinBall::BounceTouch( CBaseEntity *pOther )
 
 
 
-
 void CKingpinBall::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval ){
 
-	//Copy of flymonster.cpp's MoveExecute script if anything is salvagable.
-	//Mainly we don't want any direction from the Move method call to interfere with out movement that's going fine.
-	//leaving this completely blank may be fine.
+	// Copy of flymonster.cpp's MoveExecute script if anything is salvagable.
+	// Mainly we don't want any direction from the Move method call to interfere with out movement that's going fine.
+	// leaving this completely blank may be fine.
 
 	/*
 	if ( isMovetypeFlying() )
@@ -358,7 +347,6 @@ BOOL CKingpinBall::ShouldAdvanceRoute( float flWaypointDist, float flInterval ){
 	//const float moveDistTol = max(moveDistTest, 8);  //must be at least 8.
 
 
-
 }//END OF ShouldAdvanceRoute
 
 
@@ -374,12 +362,10 @@ void CKingpinBall::Stop(void){
 
 }
 
-
 void CKingpinBall::SetActivity(Activity NewActivity){
 	//I am only a ball!
 
 }
-
 
 
 
@@ -448,17 +434,32 @@ int CKingpinBall::CheckLocalMove( const Vector& vecStart, const Vector& vecEnd, 
 }
 
 
-//How much opacity do I lose per think cycle (0.1 seconds)?  Slow it down to last longer.
 float CKingpinBall::getFadeOutAmount(void){
 	return 2.6;
 }
 
+float CKingpinBall::StartHealth(void){
+	if(g_iSkillLevel == SKILL_HARD){
+		return 20;
+	}else if(g_iSkillLevel == SKILL_MEDIUM){
+		return 14;
+	}else{
+		return 9;
+	}
+}
 
-
+// use exactly for long-distance travel, multiply by 60% or something for approaching (short dist)
+float CKingpinBall::GetMaxSpeed(void){
+	if(g_iSkillLevel == SKILL_HARD){
+		return 620;
+	}else if(g_iSkillLevel == SKILL_MEDIUM){
+		return 520;
+	}else{
+		return 440;
+	}
+}
 
 
 GENERATE_KILLED_IMPLEMENTATION(CKingpinBall) {
-
-	UTIL_Remove(this);
+	GENERATE_KILLED_PARENT_CALL(CControllerHeadBall);
 }
-

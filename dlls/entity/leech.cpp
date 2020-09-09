@@ -34,8 +34,10 @@
 // Try this on a model with hulls/tracehull?
 //
 
+//MODDD - NOTE.  Library file?    what?
+// Looks like this isn't necessary, canned.
+//#include "float.h"
 
-#include "float.h"
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -48,7 +50,6 @@
 #if DEBUG_BEAMS
 #include "effects.h"
 #endif
-
 
 
 
@@ -65,7 +66,6 @@
 #define LEECH_TURN_RATE			90
 #define LEECH_SIZEX				10
 #define LEECH_FRAMETIME			0.1
-
 
 
 
@@ -131,7 +131,7 @@ public:
 private:
 	// UNDONE: Remove unused boid vars, do group behavior
 	float m_flTurning;// is this boid turning?
-	BOOL	m_fPathBlocked;// TRUE if there is an obstacle ahead
+	BOOL m_fPathBlocked;// TRUE if there is an obstacle ahead
 	float m_flAccelerate;
 	float m_obstacle;
 	float m_top;

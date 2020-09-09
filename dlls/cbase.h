@@ -650,6 +650,14 @@ public:
 	//virtual void Killed( entvars_t *pevAttacker, int iGib );
 
 	virtual int	BloodColor( void ) { return DONT_BLEED; }
+
+	// MODDD - NEW.  Extra filter on top of BloodColor, in case it has a blood color for other purposes.
+	// Think of BloodColor as more of a statistic.  Some things may have a blood color but still not
+	// bleed in certain ways (turrets still have the black (oil) blood color, but don't bleed particles
+	// unless CVar 'turretBleedsOil' is on).  Also not for censorship, see UTIL_ShouldShowBlood and several
+	// spots in combat.cpp for that.
+	virtual BOOL CanMakeBloodParticles(void) {return FALSE;}
+
 	//MODDD - TraceBleed supports the extra damage bitmask.
 	virtual void TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType );
 	virtual void TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType, int bitsDamageTypeMod );

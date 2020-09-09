@@ -243,6 +243,13 @@ unsigned int seed_table[256] =
 };
 
 
+// When any hidden CVars are altered, don't save immediately, turn this flag on.
+// At the end of the frame or an update cycle (runs every second), all hidden CVars will be saved to
+// the usual file.  This way, editing multiple CVars while the window is open won't save multiple times,
+// only once very soon after.
+BOOL g_queueCVarHiddenSave = FALSE;
+
+
 
 
 
@@ -1649,6 +1656,8 @@ void processLoadHiddenCVarLine(const char* aryChrLineBuffer){
 void loadHiddenCVars(void){
 	
 #ifndef _DEBUG
+
+	g_queueCVarHiddenSave = FALSE;  // ???  paranoia?
 	if(globalPSEUDO_hiddenMemPath[0] == '\0'){
 		return;
 	}
@@ -1661,7 +1670,7 @@ void loadHiddenCVars(void){
 	if (myFile)
 	{
 		char c;
-		while(true){
+		while(TRUE){
 			c = fgetc(myFile);
 			//next character.
 
@@ -1688,9 +1697,11 @@ void loadHiddenCVars(void){
 			}
 		}//END OF while reading file.
 
+		easyPrintLine("***Hidden CVars Loaded***");
 		//fprintf(fp, "%s", string);
 		fclose(myFile);
 	}
+
 
 #endif
 	
@@ -1746,6 +1757,7 @@ void loadHiddenCVars(void){
 void saveHiddenCVars(void){
 	
 #ifndef _DEBUG
+	g_queueCVarHiddenSave = FALSE;  // satisifed
 	if(globalPSEUDO_hiddenMemPath[0] == '\0'){
 		return;
 	}
@@ -1759,6 +1771,8 @@ void saveHiddenCVars(void){
 		if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 			easyForcePrintLine("File generation okay?"); 
 		}
+
+		easyPrintLine("***Hidden CVars Saved***");
 	}else{
 		if(EASY_CVAR_GET_DEBUGONLY(hiddenMemPrintout) == 1){
 			easyForcePrintLine("File generation failed?"); 
@@ -2331,21 +2345,33 @@ void InitShared(void) {
 
 
 
+// Gets called every map load client and serverside for safety.
+// Even clientside, as preaches there only done once at init can randomly get glitchy.
 void PrecacheShared(void){
+	g_sModelIndexBubbles = PRECACHE_MODEL_SHARED("sprites/bubble.spr");//bubbles
 
+
+	// TEST.  See how other indexes change?  or don't?
+	// Shouldn't ever be 0, most likely? I don't know if anything ever gets 0 intentionally.
+	// Everything getting 0 one after the other though (for different files each time),
+	// that's definitely bad.
+	//int tester2 =PRECACHE_MODEL_SHARED("sprites/hotglow.spr");
+	//int tester3 =PRECACHE_MODEL_SHARED("sprites/bubble.spr");
+
+}//END OF PrecacheShared
+
+
+
+ // NOTICE - gets called at every map-load for serverside, but only on loading the first map on clientside.
+ // No idea why, been that way since retail, don't question how precache stuff works.
+ // Its inner achinations are incomprehensible to meer mortals such as we.
+void ClearWeaponInfoCache(void){
 	// each side will handle calls to "RegisterWeapon" on its own to initalize weapon info.
 	// Clientside does it through "HUD_PrepEntity" per weapon, Serverside does it through "UTIL_PrecacheOtherWeapon" per weapon.
 	memset(CBasePlayerItem::ItemInfoArray, 0, sizeof(CBasePlayerItem::ItemInfoArray));
 	memset(CBasePlayerItem::AmmoInfoArray, 0, sizeof(CBasePlayerItem::AmmoInfoArray));
 	giAmmoIndex = 0;
-
-
-	g_sModelIndexBubbles = PRECACHE_MODEL_SHARED("sprites/bubble.spr");//bubbles
-
-
-}//END OF PrecacheShared
-
-
+}
 
 
 

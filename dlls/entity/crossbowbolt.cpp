@@ -26,14 +26,6 @@ EASY_CVAR_EXTERN_DEBUGONLY(sparksPlayerCrossbowMulti)
 LINK_ENTITY_TO_CLASS( crossbow_bolt, CCrossbowBolt );
 
 
-
-CCrossbowBolt::CCrossbowBolt(void){
-	recentVelocity = Vector(0,0,0);
-	noDamage = FALSE;
-	realNextThink = 0;
-}//END OF CCrossbowBolt constructor
-
-
 CCrossbowBolt *CCrossbowBolt::BoltCreate(const Vector& arg_velocity, float arg_speed ){
 	return BoltCreate(arg_velocity, arg_speed, TRUE, FALSE);
 }
@@ -42,7 +34,7 @@ CCrossbowBolt *CCrossbowBolt::BoltCreate(const Vector& arg_velocity, float arg_s
 	CCrossbowBolt *pBolt = GetClassPtr( (CCrossbowBolt *)NULL );
 	pBolt->pev->classname = MAKE_STRING("bolt");
 
-	
+
 	pBolt->m_velocity = arg_velocity;
 	pBolt->m_speed = arg_speed;
 
@@ -55,6 +47,15 @@ CCrossbowBolt *CCrossbowBolt::BoltCreate(const Vector& arg_velocity, float arg_s
 	return pBolt;
 }
 
+
+
+
+
+CCrossbowBolt::CCrossbowBolt(void){
+	recentVelocity = Vector(0,0,0);
+	noDamage = FALSE;
+	realNextThink = 0;
+}//END OF CCrossbowBolt constructor
 
 
 
@@ -248,10 +249,10 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	entvars_t* pevOwner;
 	pevOwner = VARS(pev->owner);
 
+	TraceResult tr = UTIL_GetGlobalTrace();
+
 	if (pOther->pev->takedamage)
 	{
-		TraceResult tr = UTIL_GetGlobalTrace();
-
 		// Force pev->solid to SOLID_NOT.  Maybe that will stop a bolt from screwing with the physics of
 			// tossed corpses.
 		pev->solid = SOLID_NOT;
@@ -311,6 +312,8 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 		pev->velocity = Vector(0, 0, 0);
 		//MODDD - if it is organic.
 		if( (pOther->Classify() != CLASS_NONE && pOther->isOrganic() == TRUE) || extraPasss){
+			// May seem like a place for hitEffect, but that has sparks, don't want sparks for this.
+
 			// play body "thwack" sound
 			switch (RANDOM_LONG(0, 1))
 			{
@@ -321,12 +324,9 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 			}
 		}
 		else {
-			// not organic?  Slightly modified xbow_hit.wav
+			// not organic?  Slightly modified
 			EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.98, 1.0), ATTN_NORM - 0.1, 0, 107 + RANDOM_LONG(0, 4));
-			if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
-			{
-				UTIL_Sparks(pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksPlayerCrossbowMulti));
-			}
+			hitEffect(tr);
 		}//END OF pOther organic check
 
 		
@@ -345,7 +345,7 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 	}
 	else
 	{
-		// Didn't hit something?  Probably going to stick out of a surface and stay for a little while.
+		// Didn't hit a typical ent?  Probably going to stick out of a surface and stay for a little while.
 
 		SetThink( &CBaseEntity::SUB_Remove );
 		// this will get changed below if the bolt is allowed to stick in what it hit.
@@ -357,8 +357,6 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 			// Just end.
 			return;
 		}
-
-		EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.95, 1.0), ATTN_NORM, 0, 98 + RANDOM_LONG(0, 7));
 
 
 		//MODDD - can stick to other map-related things so long as they don't move.
@@ -375,14 +373,13 @@ void CCrossbowBolt::BoltTouch( CBaseEntity *pOther )
 			pev->movetype = MOVETYPE_FLY;
 			pev->velocity = Vector( 0, 0, 0 );
 			pev->avelocity.z = 0;
-			pev->angles.z = RANDOM_LONG(0,360);
+			// why wasn't this RANDOM_FLOAT?  coords are decimals
+			pev->angles.z = RANDOM_FLOAT(0,360);
 			pev->nextthink = gpGlobals->time + 10.0;
 		}
 
-		if (UTIL_PointContents(pev->origin) != CONTENTS_WATER)
-		{
-			UTIL_Sparks( pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksPlayerCrossbowMulti) );
-		}
+		EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, "weapons/xbow_hit1.wav", RANDOM_FLOAT(0.95, 1.0), ATTN_NORM, 0, 98 + RANDOM_LONG(0, 7));
+		hitEffect(tr);
 	}
 
 	attemptSendBulletSound(pev->origin, pevOwner);
@@ -539,4 +536,21 @@ void CCrossbowBolt::SetVelocityLogical(const Vector& arg_newVelocity){
 	pev->velocity = arg_newVelocity;
 	m_velocity = arg_newVelocity;
 }
+
+
+// Sparks not in water, bubbles underwater.
+// Any oddities when hit near the waterlevel?  EHHhhhhh.   Dunno.
+void CCrossbowBolt::hitEffect(const TraceResult& tr){
+
+	if (UTIL_PointContents(pev->origin) != CONTENTS_WATER){
+		UTIL_Sparks(pev->origin, DEFAULT_SPARK_BALLS, EASY_CVAR_GET_DEBUGONLY(sparksPlayerCrossbowMulti));
+	}else{
+		// why not generate some bubbles.
+		UTIL_MakeAimVectors(pev->angles);
+		Vector temp1 = tr.vecEndPos + tr.vecPlaneNormal * 2 + -gpGlobals->v_forward * 6 + Vector(-1.7, -1.7, -1.7);
+		Vector temp2 = tr.vecEndPos + tr.vecPlaneNormal * 2 + -gpGlobals->v_forward * 6 + Vector(1.7, 1.7, 1.7);
+		UTIL_Bubbles(temp1, temp2, 8);
+	}
+
+}//hitEffect
 
