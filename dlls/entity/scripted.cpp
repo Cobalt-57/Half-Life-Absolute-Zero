@@ -399,6 +399,10 @@ void CCineMonster::PossessEntity(void)
 	if (pEntity)
 		pTarget = pEntity->MyMonsterPointer();
 
+
+	int myCineID = this->monsterID;
+	int x = 45;
+
 	if (pTarget)
 	{
 
@@ -427,6 +431,8 @@ void CCineMonster::PossessEntity(void)
 		m_saved_effects = pTarget->pev->effects;
 		pTarget->pev->effects |= pev->effects;
 
+		//MODDD - whoops, I don't think 'm_scriptState' alone even does  anything.
+		// Wish m_fMoveTo used constants instead.  case 0, case 1, case 2?   Really guys?
 		switch (m_fMoveTo)
 		{
 		case 0:
@@ -805,8 +811,9 @@ BOOL CCineMonster::CanInterrupt(void)
 
 int CCineMonster::IgnoreConditions(void)
 {
-	if (CanInterrupt())
+	if (CanInterrupt()){
 		return 0;
+	}
 	return SCRIPT_BREAK_CONDITIONS;
 }
 
@@ -972,6 +979,22 @@ void CCineMonster::Activate(void)
 BOOL CBaseMonster::CineCleanup()
 {
 	CCineMonster* pOldCine = m_pCine;
+
+
+
+
+	int myCineID = m_pCine!=NULL?m_pCine->monsterID:-1;
+	int x = 45;
+
+	//if(m_hTargetEnt != NULL){
+		//CBaseMonster* theMon = m_hTargetEnt->GetMonsterPointer();
+		// Nope!  This is still 'me', not the cine.  MY ID!
+		//if(theMon->monsterID == 16){
+		if(this->monsterID == 16){
+			int x = 45;
+		}
+	//}
+
 
 	// am I linked to a cinematic?
 	if (m_pCine)

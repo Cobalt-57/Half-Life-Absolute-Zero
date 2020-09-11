@@ -179,6 +179,7 @@ public:
 	int m_i_monsterIDLatest;
 	int m_i_FuncTrackChangeIDLatest;
 	int m_i_PathTrackIDLatest;
+	int m_i_scriptedIDLatest;
 
 
 private:

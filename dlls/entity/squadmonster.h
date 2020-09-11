@@ -64,7 +64,6 @@ class CSquadMonster : public CBaseMonster
 {
 public:
 
-	
 	BOOL alreadyDoneNetnameLeaderCheck;
 	BOOL checkLeaderlessSquadByNetname(void);
 
@@ -78,7 +77,7 @@ public:
 	EHANDLE	m_hSquadMember[MAX_SQUAD_MEMBERS-1];	// valid only for leader
 	int	m_afSquadSlots;
 	float m_flLastEnemySightTime; // last time anyone in the squad saw the enemy
-	BOOL	m_fEnemyEluded;
+	BOOL m_fEnemyEluded;
 
 	// squad member info
 	int	m_iMySlot;// this is the behaviour slot that the monster currently holds in the squad. 
@@ -135,15 +134,15 @@ public:
 	//int IsLeader ( void ) { return TRUE; }
 	
 
-	
 	//MODDD - method never implemented.  No corresponding method (actions) body.  What's up, devs.
-	int SquadJoin ( int searchRadius );
-
+	//int SquadJoin ( int searchRadius );
 	////UPDATE: gave it an implementation, and a new prototype that is better suited to what I have in mind.  I'm guessing the intent was to seek an existing squad to join if the spawned one can't find any other unassigned to start a squad with.
 	virtual void SquadJoin ( int searchRadius, int maxMembers );
 
-	//MODDD - NOTE: MAKE THIS VIRTUAL!
+	//MODDD - virutal
 	virtual int SquadRecruit ( int searchRadius, int maxMembers );
+
+	void PrescheduleThink ( void );
 
 	int SquadCount( void );
 	void SquadRemove( CSquadMonster *pRemove );
@@ -168,6 +167,7 @@ public:
 	virtual BOOL FValidateCover ( const Vector &vecCoverLocation );
 	virtual MONSTERSTATE GetIdealState ( void );
 	virtual Schedule_t	*GetScheduleOfType ( int iType );
+	virtual void OnAlertedOfEnemy(void);
 
 
 	//MODDD - HOW WERE YOU NOT VIRTUAL??!

@@ -223,6 +223,8 @@ void CBloater::AttackSnd( void )
 */
 
 
+// PLACEHOLDER, DONT USE YET.
+// Ichy sounds pitched up seem a little cheezy, don't think this needs any 'voice' sound for now.
 const char* CArcher::pDeathSounds[] = 
 {
 	"archer/archer_death.wav",
@@ -244,17 +246,56 @@ const char* CArcher::pAttackSounds[] =
 {
 	"archer/archer_attack.wav",
 };
+
+
 const char* CArcher::pAttackHitSounds[] = 
 {
 	"zombie/claw_strike1.wav",
 	"zombie/claw_strike2.wav",
 	"zombie/claw_strike3.wav",
 };
+
+// MODDD - how about the player's water sound effects?
+// maybe not, player/pl_slosh, pl_swim, and pl_wade don't sound forceful enough.
+// 'slosh' is the best but the shallow sound isn't fitting, more of an intense wade would work.
+// Pitch-shifts?  Lower on wade?  doubt it.
+// Keeping this as it is.
 const char* CArcher::pAttackMissSounds[] = 
 {
 	"zombie/claw_miss1.wav",
 	"zombie/claw_miss2.wav",
 };
+
+
+
+
+// clone of defaultai.cpp's primary attack for now, but TASK_MELEE_ATTACK1 can be interrupted
+// by the enemy going out of range (kindof a long anim to keep playing; attacks twice throughout)
+Task_t	tlArcherMeleeAttack[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_FACE_ENEMY,			(float)0		},
+	{ TASK_MELEE_ATTACK1,		(float)0		},
+};
+
+Schedule_t	slArcherMeleeAttack[] =
+{
+	{ 
+		tlArcherMeleeAttack,
+		ARRAYSIZE ( tlArcherMeleeAttack ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_ENEMY_DEAD		|
+		
+		//MODDD - restoring heavy damage as interruptable.
+		//bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+
+		bits_COND_ENEMY_OCCLUDED,
+		0,
+		"Archer Melee Attack"
+	},
+};
+
 
 
 
@@ -285,6 +326,9 @@ Schedule_t	slArcherRangeAttack1[] =
 		"Archer Range Attack1"
 	},
 };
+
+
+
 
 // Really the ranged attack 1 surrounded by steps to ensure a random point at the water level's surface is picked that puts the enemy in a line of fire and is
 //reachable by the archer can be use to make an attack, followed by returning to the same point or maybe moving randomly a bit underwater too.
@@ -432,8 +476,10 @@ Task_t	tlArcherGenericFail[] =
 	//{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_ARCHER_GENERIC_FAIL	},
 	{ TASK_STOP_MOVING,			0				},
 	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
-	{ TASK_WAIT,				(float)0.4		},
+	{ TASK_WAIT,				(float)0.3		},
 	{ TASK_WAIT_PVS,			(float)0		},
+
+	// still need this?
 	{ TASK_UPDATE_LKP, (float)0		},
 
 	// No, only do this onfailing pathfinding methods.
@@ -457,12 +503,11 @@ Schedule_t	slArcherGenericFail[] =
 
 
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 DEFINE_CUSTOM_SCHEDULES( CArcher )
 {
+	slArcherMeleeAttack,
 	slArcherRangeAttack1,
 	slArcherSurfaceRangeAttack,
 	slArcherRetreatIntoWater,
@@ -487,6 +532,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CArcher, CFlyingMonster );
 TYPEDESCRIPTION	CArcher::m_SaveData[] = 
 {
 	DEFINE_FIELD( CArcher, preSurfaceAttackLocation, FIELD_VECTOR ),
+	DEFINE_FIELD( CArcher, lackOfWaterTimer, FIELD_TIME ),
 };
 
 //IMPLEMENT_SAVERESTORE( CArcher, CFlyingMonster );
@@ -515,6 +561,7 @@ CArcher::CArcher(void){
 	m_velocity = Vector(0,0,0);
 	lastVelocityChange = -1;
 	waterLevelMem = -1;
+	lackOfWaterTimer = -1;
 
 }//END OF CArcher constructor
 
@@ -526,28 +573,38 @@ CArcher::CArcher(void){
 
 	
 void CArcher::DeathSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
+	*/
 }
 void CArcher::AlertSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
+	*/
 }
 void CArcher::IdleSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random idle sound
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
+	*/
 }
 void CArcher::PainSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	if (RANDOM_LONG(0,5) < 2){
 		UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
 	}
+	*/
 }
 void CArcher::AttackSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random attack sound
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
+	*/
 }
 
 
@@ -575,6 +632,11 @@ void CArcher::Precache( void )
 	*/
 
 	global_useSentenceSave = FALSE;
+
+
+	UTIL_PrecacheOther( "archer_ball" );
+
+
 }//END OF Precache()
 
 
@@ -631,8 +693,6 @@ void CArcher::Spawn( void )
 
 
 
-
-
 Activity CArcher::GetStoppedActivity( void ){
 	return CFlyingMonster::GetStoppedActivity();
 }
@@ -642,8 +702,6 @@ void CArcher::Stop(){
 
 	CFlyingMonster::Stop();
 }
-
-
 
 
 
@@ -718,7 +776,6 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 	}
 
 
-
 	/*
 	//Vector goalDir = vecEndFiltered - vecStart;
 
@@ -731,9 +788,8 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 
 	
 	UTIL_MakeVectors( pev->angles );
-		
-
 	
+
 	TraceResult trTopLeft;
 	TraceResult trTopRight;
 	TraceResult trBottomLeft;
@@ -1474,6 +1530,9 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 			//return flyerDeathSchedule();
 			return slDieWaterFloat;
 		break;}
+		case SCHED_MELEE_ATTACK1: {
+			return slArcherMeleeAttack;
+		break;}
 		case SCHED_RANGE_ATTACK1:{
 
 			if(m_hEnemy == NULL || m_hEnemy->pev->waterlevel == 3){
@@ -1524,7 +1583,10 @@ void CArcher::StartTask( Task_t *pTask ){
 
 
 	switch( pTask->iTask ){
-		
+		case TASK_MELEE_ATTACK1: {
+			interruptMeleeTimer = -1;  // reset this on starting.  That's all.
+			CFlyingMonster::StartTask(pTask);
+		}break;
 		case TASK_ARCHER_SEEK_BELOW_WATER_SURFACE_ATTACK_POINT:{
 
 			if(m_hEnemy == NULL){
@@ -1815,9 +1877,25 @@ void CArcher::RunTask( Task_t *pTask ){
 	//EASY_CVAR_PRINTIF_PRE(templatePrintout, easyPrintLine("RunTask: sched:%s task:%d", this->m_pSchedule->pName, pTask->iTask) );
 	
 	switch( pTask->iTask ){
-		case TASK_RANGE_ATTACK1:{
+		case TASK_MELEE_ATTACK1:{
 
-			
+			if(!HasConditions(bits_COND_CAN_MELEE_ATTACK1)){
+				// start the timer to end early, reacting instantly can be odd
+				if(interruptMeleeTimer == -1){
+					interruptMeleeTimer = gpGlobals->time + 0.38;
+				}
+
+				if(gpGlobals->time >= interruptMeleeTimer){
+					// long enough?  end.
+					TaskComplete();
+					return;
+				}
+			}
+
+			// proceed
+			CFlyingMonster::RunTask(pTask);
+		}break;
+		case TASK_RANGE_ATTACK1:{
 			MakeIdealYaw ( m_vecEnemyLKP );
 			ChangeYaw ( pev->yaw_speed );
 
@@ -1829,7 +1907,6 @@ void CArcher::RunTask( Task_t *pTask ){
 				TaskComplete();
 			}
 		break;}
-		
 		case TASK_MOVE_TO_ENEMY_RANGE:{
 			//Should I be interrupted by noticing the enemy leaves the water?
 			
@@ -1861,10 +1938,6 @@ void CArcher::RunTask( Task_t *pTask ){
 			}
 
 		break;}
-
-
-
-	
 
 
 
@@ -1927,9 +2000,20 @@ void CArcher::CustomTouch( CBaseEntity *pOther ){
 
 	// hitting the ground without a waterlevel?  Goodbye
 	//  'pev->flags & FL_ONGROUND'  isn't set on time?  ah well.
+	// WAIT.  If knocked back into a wall, even over a pool of water, this counts as dead.  Jeez.
+	// Check the global trace, is this a floor plane?
 	if(pev->waterlevel == 0 && pev->deadflag == DEAD_NO){
-		// oh no, u ded
-		Killed(NULL, NULL, GIB_NORMAL);
+		TraceResult tr = UTIL_GetGlobalTrace();
+		if(tr.vecPlaneNormal.z > 0.7){
+			if(lackOfWaterTimer == -1){
+				// set it
+				// nah, die close to instantly, not really time to flesh this out more yet.
+				// Maybe a rotate if dying on the ground, although pointless if the floating dead form sinks to hit the ground.
+				// That would need to do the same check to start a rotate-into-place.
+				//lackOfWaterTimer = gpGlobals->time + RANDOM_FLOAT(8, 12);
+				lackOfWaterTimer = gpGlobals->time + RANDOM_FLOAT(1.1, 1.8);
+			}
+		}
 	}
 	
 }//CustomTouch
@@ -1963,10 +2047,19 @@ void CArcher::MonsterThink(){
 			pev->movetype = MOVETYPE_TOSS;
 			pev->gravity = 1.0;
 		}else{
+			// ahh, I can breathe
+			lackOfWaterTimer = -1;
+
 			pev->movetype = MOVETYPE_FLY;
 			pev->gravity = 0.0;
 		}
 	}
+
+	if(pev->deadflag == DEAD_NO && lackOfWaterTimer != -1 && gpGlobals->time >= lackOfWaterTimer){
+		// Not -1, past it?  Goodbye
+		Killed(NULL, NULL, GIB_NORMAL);
+	}
+
 
 
 
@@ -2507,13 +2600,6 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 //This handles events built into the model, not custom hard-coded ones (above).
 void CArcher::HandleAnimEvent(MonsterEvent_t *pEvent ){
 	switch( pEvent->event ){
-	/*
-	case BLOATER_AE_ATTACK_MELEE1:
-	{
-		// do stuff for this event.
-		AttackSnd();
-	}
-	*/
 	case 0:
 	{
 
@@ -3015,8 +3101,8 @@ void CArcher::onDeathAnimationEnd(){
 }//END OF onDeathAnimationEnd
 
 
-//I can goto the surface of water to do ranged attacks too. I have to know if I can by seeing where the enemy is.
-//And be able to track the enemy above water (from itself being underwater) to even begin to determine that.
+// I can goto the surface of water to do ranged attacks too. I have to know if I can by seeing where the enemy is.
+// And be able to track the enemy above water (from itself being underwater) to even begin to determine that.
 BOOL CArcher::SeeThroughWaterLine(void){
 	return TRUE;
 }//END OF SeeThroughWaterLine
@@ -3191,7 +3277,7 @@ void CArcher::setEnemyLKP(CBaseEntity* theEnt){
 	// Wait, how about like the hornet does, 'BodyTarget' for even more control from the entity?
 	//m_vecEnemyLKP = theEnt->Center();
 	m_vecEnemyLKP = theEnt->BodyTarget(pev->origin);
-
+	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = FALSE;
 }//
 

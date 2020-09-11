@@ -391,6 +391,9 @@ float CFlyingMonster::FloorZ( const Vector &position )
 }
 
 
+BOOL CFlyingMonster::AffectedByKnockback(void){
+	return TRUE;  // for now?
+}
 
 
 /*
@@ -422,3 +425,13 @@ void CFlyingMonster::RunTask( Task_t *pTask ){
 
 }//END OF RunTask
 */
+
+
+// In case a flying monster ever ends up in water, go ahead and be able to target the enemy outside of it.
+// If fliers (besides swimming ones like the archer of course) show up in maps with water and seeking targets
+// underwater is an issue, say so, that way (on the surface, prefer not to go underwater) can be sorted out.
+BOOL CFlyingMonster::SeeThroughWaterLine(void){
+	return TRUE;
+}//END OF SeeThroughWaterLine
+
+

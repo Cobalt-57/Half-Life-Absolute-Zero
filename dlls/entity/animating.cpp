@@ -140,8 +140,7 @@ void CBaseAnimating::onAnimationLoop(void){
 void CBaseAnimating::checkEndOfAnimation(void){
 
 	// by default
-	// ...  ok  but.    why?
-	//pev->renderfx &= ~STOPINTR;
+	pev->renderfx &= ~STOPINTR;
 
 
 	/*
@@ -531,9 +530,9 @@ float CBaseAnimating::DetermineInterval(float flInterval) {
 // Like above, but can't set pev->animtime.
 float CBaseAnimating::DetermineInterval_SAFE(void) {
 	float flInterval;
-	float ass = m_flInterval;
 
-	return 0.5;
+	// ???
+	//return 0.5;
 
 	flInterval = (gpGlobals->time - pev->animtime);
 	if (flInterval <= 0.001)
@@ -594,6 +593,11 @@ void CBaseAnimating::StudioFrameAdvance ( float flInterval )
 		//	easyPrintLine("DOES IT LOOP?! %d", m_fSequenceLoops);
 	}
 	*/
+
+
+	if(!FClassnameIs(pev, "player")){
+		int x = 45;  //breakpoint.
+	}
 
 	pev->frame += recentFrameAdvance;
 	pev->animtime = gpGlobals->time;

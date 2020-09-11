@@ -459,6 +459,7 @@ public:
 	float ladderCycleMultiMem;
 	float ladderSpeedMultiMem;
 	float sv_player_midair_fixMem;
+	float sv_player_midair_accelMem;
 
 	int clearWeaponFlag;
 

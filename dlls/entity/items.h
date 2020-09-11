@@ -17,11 +17,14 @@
 
 #include "cbase.h"  //MODDD - really used to depend on the caller to provide this? Why?
 
+// NOTE - every sound played here or in items.cpp send 'FALSE' to using the sound sentence save system,
+// as these sounds are all hard-precached by the player (ignores that setting).
+
 class CItem : public CBaseEntity
 {
 public:
 	void Spawn( void );
-	CBaseEntity*	Respawn( void );
+	CBaseEntity* Respawn( void );
 	void EXPORT ItemTouch( CBaseEntity *pOther );
 	void EXPORT Materialize( void );
 	virtual BOOL MyTouch( CBasePlayer *pPlayer ) { return FALSE; };

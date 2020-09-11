@@ -1234,15 +1234,9 @@ void CHornet::OnDeflected(CBaseEntity* arg_entDeflector){
 // not the pev->origin (often the bottom of the bounding box)
 void CHornet::setEnemyLKP(CBaseEntity* theEnt){
 	m_vecEnemyLKP = theEnt->BodyTarget(pev->origin);
+	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = FALSE;
 }//
-
-
-
-
-
-
-
 
 
 

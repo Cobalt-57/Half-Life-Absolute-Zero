@@ -652,9 +652,9 @@ BOOL CSqueak::Deploy( )
 
 	if(!globalflag_muteDeploySound){
 		if ( flRndSound <= 0.5 ){
-			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt2.wav", 1, ATTN_NORM, 0, 100);
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt2.wav", 1, ATTN_NORM, 0, 100);
 		}else{ 
-			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt3.wav", 1, ATTN_NORM, 0, 100);
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt3.wav", 1, ATTN_NORM, 0, 100);
 		}
 		m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 	}
@@ -880,9 +880,9 @@ void CSqueak::Throw(void) {
 		float flRndSound = RANDOM_FLOAT(0, 1);
 
 		if (flRndSound <= 0.5)
-			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt2.wav", 1, ATTN_NORM, 0, 105);
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt2.wav", 1, ATTN_NORM, 0, 105);
 		else
-			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt3.wav", 1, ATTN_NORM, 0, 105);
+			UTIL_PlaySound(ENT(pev), CHAN_VOICE, "squeek/sqk_hunt3.wav", 1, ATTN_NORM, 0, 105);
 
 		//MODDD - little more radius to alert things on a throw, it is a 'squeak' after all.
 		// Normal gun volume is 600.

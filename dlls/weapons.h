@@ -565,7 +565,7 @@ public:
 	virtual int	Save( CSave &save );
 	virtual int	Restore( CRestore &restore );
 
-	static	TYPEDESCRIPTION m_SaveData[];
+	static TYPEDESCRIPTION m_SaveData[];
 
 
 	//MODDD - constructor.

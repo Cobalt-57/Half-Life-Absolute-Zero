@@ -352,7 +352,8 @@ void CShotgun::ItemPostFrame( void )
 
 void CShotgun::ItemPostFrameThink(void) {
 
-	if (m_flReleaseThrow != -1 && gpGlobals->time > m_flReleaseThrow) {
+	//NOTICE - m_flReleaseThrow comes from loaded games as 0, check for '> 0' to avoid playing this on restored games with the shotgun out
+	if (m_flReleaseThrow > 0 && gpGlobals->time > m_flReleaseThrow) {
 		m_flReleaseThrow = -1;
 		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 0x1f));
 	}

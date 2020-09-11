@@ -62,7 +62,7 @@
 #include "player.h"      //HERESY
 	
 	
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(seeMonsterHealth)
 EASY_CVAR_EXTERN_DEBUGONLY(applyLKPPathFixToAll)
 EASY_CVAR_EXTERN_DEBUGONLY(crazyMonsterPrintouts)
@@ -103,7 +103,9 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 //#define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
 
 
-//#define USE_MOVEMENT_BOUND_FIX
+#define USE_MOVEMENT_BOUND_FIX
+
+// ok... don't know what I was smoking there.  AdvanceRoute as a respose to failing in MoveExecute?...   uhhhhhh.   wat.
 #define USE_MOVEMENT_BOUND_FIX_ALT
 
 
@@ -208,6 +210,13 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, m_iMaxHealth, FIELD_INTEGER ),
 
 	DEFINE_FIELD( CBaseMonster, m_vecEnemyLKP, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( CBaseMonster, m_fEnemyLKP_EverSet, FIELD_BOOLEAN),
+	//MODDD - new
+	DEFINE_FIELD( CBaseMonster, m_vecEnemyLKP_Real, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( CBaseMonster, m_fEnemyLKP_Real_EverSet, FIELD_BOOLEAN),
+	DEFINE_FIELD( CBaseMonster, investigatingAltLKP, FIELD_BOOLEAN),
+	
+	
 	DEFINE_FIELD( CBaseMonster, m_cAmmoLoaded, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, m_afCapability, FIELD_INTEGER ),
 
@@ -244,9 +253,11 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, monsterID, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, strictNodeTolerance, FIELD_BOOLEAN),
 
+	DEFINE_FIELD( CBaseMonster, floatSinkSpeed, FIELD_FLOAT),
+	DEFINE_FIELD( CBaseMonster, floatEndTimer, FIELD_TIME),
+
+
 };
-
-
 
 
 
@@ -2384,13 +2395,13 @@ void CBaseMonster::setModel(const char* m){
 
 
 		// NOTICE: not sure what to do if  "getGermanModelRequirement()"  fails.  Crash?  Invisible model?    For now, just relying on retail's version.
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 0 || EASY_CVAR_GET_DEBUGONLY(allowGermanModels) != 1 || globalPSEUDO_canApplyGermanCensorship == 0 || getGermanModelRequirement() == FALSE){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 0 || EASY_CVAR_GET_DEBUGONLY(allowGermanModels) != 1 || globalPSEUDO_canApplyGermanCensorship == 0 || getGermanModelRequirement() == FALSE){
 			// but we're using the german model...
 			//if(usingGermanModel){
 				SET_MODEL(ENT(pev), normalModelPath);
 			//}
 			//if german censorship is on
-		}else if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
+		}else if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 1 && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
 			// but we're not using the german model (and have one)
 			//if(hasGermanModel && !usingGermanModel){
 			//if(hasGermanModel){   //REDUNDANT.
@@ -2446,7 +2457,7 @@ void CBaseMonster::MonsterUse ( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 
 
 	if (pActivator != NULL) {
-		// If not already in view, turn to look at em'
+		// If not already in view, look startled and turn to look at em'
 		if (!FInViewCone(pActivator)){
 			int theRel = IRelationship(pActivator);
 			Schedule_t* myIdealFacingSched = GetScheduleOfType(TASK_FACE_IDEAL);
@@ -2454,7 +2465,7 @@ void CBaseMonster::MonsterUse ( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 				this->m_pSchedule != myIdealFacingSched &&
 				(theRel > R_NO || theRel == R_FR)
 			) {
-				m_vecEnemyLKP = pActivator->pev->origin;
+				setEnemyLKP(pActivator);
 				MakeIdealYaw(m_vecEnemyLKP);
 
 				//ChangeSchedule(GetScheduleOfType(TASK_FACE_IDEAL));
@@ -2477,6 +2488,12 @@ void CBaseMonster::MonsterUse ( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 int CBaseMonster::IgnoreConditions ( void )
 {
 	int iIgnoreConditions = 0;
+
+	if(monsterID == 16){
+		int cineID = -1;
+		if (m_pCine != NULL) cineID = m_pCine->monsterID;
+		int x = 45;
+	}
 
 	if ( !FShouldEat() )
 	{
@@ -2629,8 +2646,7 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 			}
 			*/
 
-			////m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
-			//setEnemyLKP(m_hEnemy);
+			setEnemyLKP(m_hEnemy);
 			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
 
 
@@ -2763,7 +2779,6 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 			}
 			*/
 
-			////m_vecEnemyLKP = m_hEnemy->pev->origin; //!!!
 			//setEnemyLKP(m_hEnemy);
 			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
 
@@ -3702,21 +3717,8 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 	easyPrintLine("CanAttack6 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
 
-
 	return iUpdatedLKP;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3757,7 +3759,7 @@ void CBaseMonster::refreshStack() {
 			//clearly, one less enemy to remember.
 			m_intOldEnemyNextIndex--;
 		}
-	}//END OF for(...)
+	}//END OF for
 
 }
 
@@ -3783,7 +3785,7 @@ void CBaseMonster::PushEnemy( CBaseEntity *pEnemy, Vector &vecLastKnownPos )
 
 
 	// UNDONE: blah, this is bad, we should use a stack but I'm too lazy to code one.
-	//MODDD - HERES JOHNNY BITCH. I'll give you a stack! Or the idea at least (pick the most recent additon, not necessarily #0 just because it's an ok option)
+	//MODDD - I'll give you a stack! Or the idea at least (pick the most recent additon, not necessarily #0 just because it's an ok option)
 	/*
 	for (i = 0; i < MAX_OLD_ENEMIES; i++)
 	{
@@ -3835,7 +3837,7 @@ void CBaseMonster::PushEnemy( CBaseEntity *pEnemy, Vector &vecLastKnownPos )
 BOOL CBaseMonster::PopEnemy()
 {
 	// UNDONE: blah, this is bad, we should use a stack but I'm too lazy to code one.
-	//MODDD - HERES JOHNNY BITCH. I'll give you a stack! Or the idea at least (pick the most recent additon, not necessarily #0 just because it's an ok option)
+	//MODDD - I'll give you a stack! Or the idea at least (pick the most recent additon, not necessarily #0 just because it's an ok option)
 	/*
 	for (int i = MAX_OLD_ENEMIES - 1; i >= 0; i--)
 	{
@@ -4463,8 +4465,15 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 				// any other info on it?
 				if (gpGlobals->trace_ent != NULL) {
 					CBaseEntity* testRef = CBaseEntity::Instance(gpGlobals->trace_ent);
+
+					int daInd = ENTINDEX(gpGlobals->trace_ent);
+
 					if(testRef != NULL){
-						const char* mahName = testRef->getClassname();
+						//const char* mahName = testRef->getClassname();
+						if( FClassnameIs(gpGlobals->trace_ent, "func_monsterclip")){
+							int x = 45;
+							//continue; // SKIIIIIIIP IT
+						}
 					}
 				}
 
@@ -4799,6 +4808,7 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 	m_iRouteLength = 1;  //so far?
 
 
+	//DebugLine_SetupPoint(0, m_Route[0].vecLocation, 255, 0, 0);
 
 	if(monsterID == 6){
 		int arrrr = 45;
@@ -6284,6 +6294,7 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		m_IdealActivity = m_movementActivity;
 
 	
+
 #ifdef USE_MOVEMENT_BOUND_FIX
 	if(needsMovementBoundFix()){
 		oldMins = pev->mins;
@@ -6323,27 +6334,27 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		//pTarget->edict() == gpGlobals->trace_ent
 		if ( !WALK_MOVE( ENT(pev), flYaw, flStep, WALKMOVE_NORMAL ) ){
 
-			/*
-			if ( pflDist != NULL )
-			{
-				*pflDist = flStep;
-			}
-			if ( pTarget && pTarget->edict() == gpGlobals->trace_ent )
-			{
-				// if this step hits target ent, the move is legal.
-				iReturn = LOCALMOVE_VALID;
-				break;
-			}
-			else
-			{
-				// If we're going toward an entity, and we're almost getting there, it's OK.
-//				if ( pTarget && fabs( flDist - iStep ) < LOCAL_STEP_SIZE )
-//					fReturn = TRUE;
-//				else
-				iReturn = LOCALMOVE_INVALID;
-				break;
-			}
-			*/
+			
+//			if ( pflDist != NULL )
+//			{
+//				*pflDist = flStep;
+//			}
+//			if ( pTarget && pTarget->edict() == gpGlobals->trace_ent )
+//			{
+//				// if this step hits target ent, the move is legal.
+//				iReturn = LOCALMOVE_VALID;
+//				break;
+//			}
+//			else
+//			{
+//				// If we're going toward an entity, and we're almost getting there, it's OK.
+////				if ( pTarget && fabs( flDist - iStep ) < LOCAL_STEP_SIZE )
+////					fReturn = TRUE;
+////				else
+//				iReturn = LOCALMOVE_INVALID;
+//				break;
+//			}
+			
 
 			//if(gpGlobals->trace_ent != NULL){
 				CBaseEntity* whut = CBaseEntity::Instance(gpGlobals->trace_ent);
@@ -6470,8 +6481,9 @@ void CBaseMonster::MonsterInit ( void )
 	SetBits (pev->flags, FL_MONSTER);
 
 
-	if (pev->spawnflags & SF_MONSTER_HITMONSTERCLIP) {
 
+	if (pev->spawnflags & SF_MONSTER_HITMONSTERCLIP) {
+		/*
 		if (FClassnameIs(pev, "monster_gargantua")) {
 			//MODDD - 
 			// haha, nope!  No MONSTERCLIP for you.
@@ -6479,6 +6491,8 @@ void CBaseMonster::MonsterInit ( void )
 		}else{
 			pev->flags |= FL_MONSTERCLIP;
 		}
+		*/
+		pev->flags |= FL_MONSTERCLIP;
 	}
 
 
@@ -8176,8 +8190,15 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 
 	if (m_hEnemy != NULL) {
 		// test.  Is the enemy too close?
-		float tempDist = Distance(pev->origin, m_hEnemy->Center());
-		if (tempDist < 90) {
+
+
+		//float tempDist = Distance(pev->origin, m_hEnemy->Center());
+		Vector pointDelta = (this->Center() - m_hEnemy->Center());
+		float tempDist = DistanceFromDelta(pointDelta);
+		float tempDistZ = Distance2DFromDelta(pointDelta);
+
+		
+		if (tempDist < 94 || tempDistZ < 60) {
 			// don't use the pitch!  It gets odd looking trying to aim extremely close.
 			float thePitch = 0;
 			SetBlending(0, thePitch);
@@ -10062,7 +10083,6 @@ BOOL CBaseMonster::getMovementCanAutoTurn(void){
 // Involve the overridable way now.
 void CBaseMonster::updateEnemyLKP(void){
 	if(m_hEnemy != NULL){
-		//m_vecEnemyLKP = m_hEnemy->pev->origin;
 		//investigatingAltLKP = FALSE; //this is the real deal.
 		setEnemyLKP(m_hEnemy.GetEntity());
 	}
@@ -10074,11 +10094,13 @@ void CBaseMonster::updateEnemyLKP(void){
 // should've been retrieved with the entity's involvement to begin with so that's fine.
 void CBaseMonster::setEnemyLKP(const Vector& argNewVector){
 	m_vecEnemyLKP = argNewVector;
+	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = FALSE; //this is the real deal.
 }
 // uhh.  okay?
 void CBaseMonster::setEnemyLKP(const Vector& argNewVector, const Vector& extraAddIn){
 	m_vecEnemyLKP = argNewVector + extraAddIn;
+	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = FALSE; //this is the real deal.
 }
 
@@ -10088,6 +10110,7 @@ void CBaseMonster::setEnemyLKP(const Vector& argNewVector, const Vector& extraAd
 // Archers can use this to try and path to an enemy's center instead of its feet.
 void CBaseMonster::setEnemyLKP(CBaseEntity* theEnt){
 	m_vecEnemyLKP = theEnt->pev->origin;
+	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = FALSE; //this is the real deal.
 }
 
@@ -10116,8 +10139,17 @@ void CBaseMonster::setEnemyLKP(entvars_t* theEntPEV, const Vector& extraAddIn){
 //MODDD - TODO?  Support the other overload stuff above?  Not sure if this is really used by anything
 // that treats enemy point to use for LKP differently.
 void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
-	m_vecEnemyLKP_Real = m_vecEnemyLKP;
+	if(m_fEnemyLKP_EverSet){
+		// I can trust it.
+		m_vecEnemyLKP_Real = m_vecEnemyLKP;
+	}else{
+		// Never was set? ok.
+	}
+	// Say whether what is now in LKP_Real can be trusted when the time comes to decide whether
+	// to set the normal LKP To that.
+	m_fEnemyLKP_Real_EverSet = m_fEnemyLKP_EverSet;
 	m_vecEnemyLKP = argToInvestigate;
+	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = TRUE;
 }
 
@@ -10584,4 +10616,10 @@ float CBaseMonster::ScriptEventSoundVoiceAttn(void){
 BOOL CBaseMonster::CanMakeBloodParticles(void){
 	return TRUE;
 }
+
+// Default:  is this movetype STEP?  Can be overridden by flying monsters that aren't giant (stukabat, archer) to still get pushed.
+BOOL CBaseMonster::AffectedByKnockback(void){
+	return (pev->movetype == MOVETYPE_STEP);
+}
+
 

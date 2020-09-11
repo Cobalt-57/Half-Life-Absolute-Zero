@@ -2608,7 +2608,11 @@ void CTriggerGravity::GravityTouch( CBaseEntity *pOther )
 	if ( !pOther->IsPlayer() )
 		return;
 
-	pOther->pev->gravity = pev->gravity;
+	//MODDD - if grabbed by the gargantua, don't apply.
+	// Wait, why wasn't gravity a map-wide setting by having a custom 'sv_gravity' anyway?
+	if(!pOther->isGrabbed){
+		pOther->pev->gravity = pev->gravity;
+	}
 }
 
 

@@ -1638,3 +1638,12 @@ emergencyFix ?   Not a whole lot of purpose anymore it seems, may as well delete
 CVar text file to get a fresh start next time.
 
 
+BIZARE... 'behavior'.  Not sure what else to call this.
+On some maps, like a1a2, do 'removeAllMonsters'.  Now the shotgun and shotgun ammo spawned before the barney vs. zombie sequence
+will be able to be shifted by moving close to it, noticeable by crouching on top of it, looking down and moving on it slowly.
+It can be pushed off the ammobox where it will fall and clip through the box a bit (centered on the origin without solid collision bounds).
+It even happens on newly spawned shotgun ammo and likely other items.  No idea what causes this behavior here.
+Even removing monsters one-at-a time is unhelpful, it's seemingly random what one removed causes the behavior to start.
+Many other maps with all monsters removed don't do this.
+
+

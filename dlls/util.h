@@ -702,6 +702,7 @@ extern void UTIL_drawBox(float x1, float y1, float z1, float x2, float y2, float
 extern void UTIL_drawLineFrame(const Vector& vec1, const Vector& vec2, int r, int g, int b);
 extern void UTIL_drawLineFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b);
 extern void UTIL_drawLineFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b);
+extern void UTIL_drawLineFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int life, int r, int g, int b);
 
 extern void UTIL_drawPointFrame(const Vector& vecPoint, int width, int r, int g, int b);
 extern void UTIL_drawPointFrame(float point_x, float point_y, float point_z, int width, int r, int g, int b);
@@ -711,7 +712,10 @@ extern void UTIL_drawRectFrame(const Vector& vec1, const Vector& vec2, int width
 extern void UTIL_drawRectFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b);
 
 extern void UTIL_drawBoxFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b);
+extern void UTIL_drawBoxFrame(const Vector& vec1, const Vector& vec2, int width, int life, int r, int g, int b);
+
 extern void UTIL_drawBoxFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b);
+extern void UTIL_drawBoxFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int life, int r, int g, int b);
 
 extern void UTIL_drawLineFrameBoxAround(const Vector& vec1, int width, int boxSize, int r, int g, int b);
 extern void UTIL_drawLineFrameBoxAround(float x1, float y1, float z1, int width, int boxSize, int r, int g, int b);

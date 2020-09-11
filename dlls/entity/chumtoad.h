@@ -92,6 +92,7 @@ class CChumToad : public CBaseMonster{
 
 
     CChumToad(void);
+	BOOL usesSoundSentenceSave(void);
 
 
 	int ObjectCaps(void) { return CBaseMonster::ObjectCaps() | FCAP_IMPULSE_USE; }

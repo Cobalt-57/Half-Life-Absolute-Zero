@@ -62,7 +62,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(noFlinchOnHard)
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntSpeedMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntForceStrafeFireAnim)
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntLockRunAndGunTime)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntAllowStrafeFire)
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntTinyClip)
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntStrafeAlwaysHasAmmo)
@@ -1188,7 +1188,12 @@ TYPEDESCRIPTION	CHGrunt::m_SaveData[] =
 {
 	DEFINE_FIELD( CHGrunt, m_flNextGrenadeCheck, FIELD_TIME ),
 	DEFINE_FIELD( CHGrunt, m_flNextPainTime, FIELD_TIME ),
-//	DEFINE_FIELD( CHGrunt, m_flLastEnemySightTime, FIELD_TIME ), // don't save, go to zero
+
+	//MODDD - Better reason not to save here:   identical var in SquadMonster
+	// that is saved already.
+
+	//DEFINE_FIELD( CHGrunt, m_flLastEnemySightTime, FIELD_TIME ), // don't save, go to zero
+
 	DEFINE_FIELD( CHGrunt, m_vecTossVelocity, FIELD_VECTOR ),
 	DEFINE_FIELD( CHGrunt, m_fThrowGrenade, FIELD_BOOLEAN ),
 	DEFINE_FIELD( CHGrunt, m_fStanding, FIELD_BOOLEAN ),
@@ -1229,8 +1234,6 @@ enum
 } HGRUNT_SENTENCE_TYPES;
 
 
-
-
 const char *CHGrunt::pAttackHitSounds[] =
 {
 	"zombie/claw_strike1.wav",
@@ -1240,16 +1243,11 @@ const char *CHGrunt::pAttackHitSounds[] =
 
 
 
-
-
-
 CHGrunt::CHGrunt(void){
-
 	hgruntMoveAndShootDotProductPass = FALSE;
 
 	strafeFailTime = -1;
 	runAndGunFailTime = -1;
-
 	runAndGunSequenceID = -1;
 
 	strafeMode = -1;
@@ -1264,11 +1262,9 @@ CHGrunt::CHGrunt(void){
 	runAndGun = FALSE;
 
 	recentChaseFailedAtDistance = FALSE;
+	shootpref_eyes = FALSE;
 
 }
-
-
-
 
 
 
@@ -1500,25 +1496,12 @@ void CHGrunt::JustSpoke( void )
 // PrescheduleThink - this function runs after conditions
 // are collected and before scheduling code is run.
 //=========================================================
+//MODDD - blank now, see in CSquadMonster now
 void CHGrunt::PrescheduleThink ( void )
 {
-	if ( InSquad() && m_hEnemy != NULL )
-	{
-		if ( HasConditions ( bits_COND_SEE_ENEMY ) )
-		{
-			// update the squad's last enemy sighting time.
-			MySquadLeader()->m_flLastEnemySightTime = gpGlobals->time;
-		}
-		else
-		{
-			if ( gpGlobals->time - MySquadLeader()->m_flLastEnemySightTime > 5 )
-			{
-				// been a while since we've seen the enemy
-				MySquadLeader()->m_fEnemyEluded = TRUE;
-			}
-		}
-	}
+	CSquadMonster::PrescheduleThink();
 }
+
 
 //=========================================================
 // FCanCheckAttacks - this is overridden for human grunts
@@ -1539,6 +1522,9 @@ void CHGrunt::PrescheduleThink ( void )
 
 BOOL CHGrunt::FCanCheckAttacks ( void )
 {
+	// reset every frame, set to 'true' if it's the only option in CheckRangeAttack1
+	shootpref_eyes = FALSE;
+
 	if ( !HasConditions( bits_COND_ENEMY_TOOFAR ) )
 	{
 		return TRUE;
@@ -1630,17 +1616,39 @@ BOOL CHGrunt::CheckRangeAttack1 ( float flDot, float flDist )
 		// verify that a bullet fired from the gun will hit the enemy before the world.
 		UTIL_TraceLine( vecSrc, m_hEnemy->BodyTargetMod(vecSrc), ignore_monsters, ignore_glass, ENT(pev), &tr);
 
+		//DebugLine_ClearAll();
 		//DebugLine_Setup(0, vecSrc, m_hEnemy->BodyTargetMod(vecSrc), tr.flFraction);
 
-		if ( tr.flFraction == 1.0 )
-		{
+		if ( tr.flFraction == 1.0 ){
+			// Clear?  That's fine.
+		}else{
+			// Wait!  Try again, higher.  Can aim for the head if that's all that's visible to me
 
-			if(flDot >= 0.5){
-				return TRUE;
+			// WAIT!  Can we aim for the head?   Yea yea... go figure
+			//DebugLine_Setup(0, vecSrc, m_hEnemy->EyePosition() + Vector(0,0,3), tr.flFraction);
+			UTIL_TraceLine( vecSrc, m_hEnemy->EyePosition() + Vector(0,0,3), ignore_monsters, ignore_glass, ENT(pev), &tr);
+
+			//DebugLine_Setup(1, vecSrc, m_hEnemy->EyePosition() + Vector(0, 0, 3), tr.flFraction);
+			if( (!tr.fStartSolid && tr.flFraction == 1.0) || (tr.pHit != NULL && tr.pHit == m_hEnemy.Get())  )
+			{
+				// ok!
+				shootpref_eyes = TRUE;
 			}else{
-				// could if facing right
-				SetConditionsMod(bits_COND_COULD_RANGE_ATTACK1);
+				// oh.
+				return FALSE;
 			}
+		}
+
+
+
+
+
+		//MODDD - tigher dot product, is that fine?  was 0.5
+		if(flDot >= 0.73){
+			return TRUE;
+		}else{
+			// could if facing right
+			SetConditionsMod(bits_COND_COULD_RANGE_ATTACK1);
 		}
 	}
 
@@ -1668,6 +1676,14 @@ BOOL CHGrunt::CheckRangeAttack2 ( float flDot, float flDist )
 
 	if(flDist > 1024.0 * 0.8){
 		// I can't throw that far!
+		return FALSE;
+	}
+
+	//MODDD
+	if(gpGlobals->time - m_flLastEnemySightTime > 50){
+		// if it's been X seconds since I've seen the enemy, stop trying to hit em' with grenades.
+		// Can seem silly to endlessly keep throwing grenades at the LKP
+		// (last known position) when the enemy has likely gone far away since then.
 		return FALSE;
 	}
 
@@ -2678,8 +2694,12 @@ void CHGrunt::Shoot ( void )
 	//	return;
 	//}
 
-	Vector vecShootOrigin = GetGunPosition();
-	Vector vecShootDir = ShootAtEnemyMod( vecShootOrigin );
+	Vector vecShootOrigin;
+	Vector vecShootDir;
+
+	//MODDD - fill these with this utility method now, can intervene on changes or be called more often if ever wanted
+	AimAtEnemy(vecShootOrigin, vecShootDir);
+
 
 	UTIL_MakeVectors ( pev->angles );
 
@@ -2818,7 +2838,6 @@ BOOL CHGrunt::getIsStrafeLocked(void){
 
 void CHGrunt::MonsterThink ( void ){
 
-	//return;  //no more DERP
 
 	/*
 	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine( "yey %d", test()) ) ;
@@ -2881,6 +2900,8 @@ void CHGrunt::MonsterThink ( void ){
 			*/
 		}
 	//MODDD - see if we can use the strafing anim.
+
+
 
 	BOOL noStrafeForYou = FALSE;
 
@@ -3211,7 +3232,10 @@ void CHGrunt::MonsterThink ( void ){
 		*/
 	}
 	CBaseMonster::MonsterThink();
-}
+
+
+
+}//END OF MonsterThink
 
 
 
@@ -3503,7 +3527,7 @@ void CHGrunt::HandleAnimEvent( MonsterEvent_t *pEvent )
 			CSquadMonster::HandleAnimEvent( pEvent );
 		break;
 	}
-}
+}//HandleAnimEvent
 
 
 //MODDD - new.  Copy of SquadMonster's StartMonster to have a huge custom section that had to be nested in there.
@@ -5423,7 +5447,8 @@ Schedule_t* CHGrunt::GetScheduleOfType ( int Type )
 					// Just trust that GetSchedule can't call SCHED_GRUNT_SWEEP, it's not in there.
 					// Make a separate version that can't be replaced by a GetSchedule call if that's ever needed.
 
-					if(HasConditions(bits_COND_SEE_ENEMY)){
+					if(HasConditions(bits_COND_SEE_ENEMY) || (gpGlobals->time - m_flLastEnemySightTime < 4.5 && Distance(this->pev->origin,m_vecEnemyLKP) > 240) ){
+						// See the enemy now, or saw the enemy a short while ago while at a distance?
 						// don't use the sweep then.
 						Schedule_t* theSched = GetSchedule();
 						return theSched;
@@ -5824,6 +5849,48 @@ BOOL CHGrunt::onResetBlend0(void){
 }
 
 
+void CHGrunt::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
+	//DebugLine_ClearAll();
+
+	refVecShootOrigin = GetGunPosition();
+
+	if(!shootpref_eyes){
+		// Unless eyes are the only option, fire at the general body as usual
+		refVecShootDir = ShootAtEnemyMod( refVecShootOrigin );
+	}else{
+		// custom one, aim a little higher
+		refVecShootDir = HGRUNT_ShootAtEnemyEyes(refVecShootOrigin);
+	}
+
+}
+
+
+// clone of hassaults for now.  Make a more general utility for all monsters maybe?
+Vector CHGrunt::HGRUNT_ShootAtEnemyEyes( const Vector &shootOrigin )
+{
+	CBaseEntity *pEnemy = m_hEnemy;
+
+	if ( pEnemy )
+	{
+		//MODDD NOTE ........ what is this formula?
+		//    I'm guessing that the BodyTarget includes the enemy's pev->origin, but we subtract it out so we can substitute it with m_vecEnemyLKP.
+		//    So why not make a separate BodyTarget method that never added pev->origin in the first place? Who knows.
+		return ( (pEnemy->EyePosition() + Vector(0,0,3) - pEnemy->pev->origin) + m_vecEnemyLKP - shootOrigin ).Normalize();
+	}
+	else
+		return gpGlobals->v_forward;
+	//MODDD NOTICE - isn't trusting "gpGlobals->v_forward" kinda dangerous? This assumes we recently called MakeVectors and not privately for v_forward to be relevant
+	//               to this monster.
+}
+
+
+
+
+
+
+
+
+
 void CHGrunt::checkHeadGore( ){
 	CHGrunt::checkHeadGore(GIB_ALWAYS);  //just a cheap way to make it draw decal blood on impact (at least not block it).
 }
@@ -5833,7 +5900,7 @@ void CHGrunt::checkHeadGore(int iGib ){
 
 	if(m_LastHitGroup == HITGROUP_HEAD || m_LastHitGroup == HITGROUP_HGRUNT_HELMET){
 		//Took enough damage on last trace-hit?
-		if(missingHeadPossible && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1 && GetBodygroup(BODYGROUP_HEAD) != HEAD_GORE){
+		if(missingHeadPossible && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) != 1 && GetBodygroup(BODYGROUP_HEAD) != HEAD_GORE){
 			//missing head!... if german censorship isn't on.
 			//that is, heads --> Headless
 			SetBodygroup( BODYGROUP_HEAD, HEAD_GORE );
@@ -5881,6 +5948,16 @@ float CHGrunt::getDistTooFar(void){
 	return 1024.0 * 2;
 }
 
+// Same way of getting the LKP as CBaseMonster, but also counts as seeing the enemy.
+// This let squadies alerting me of an enemy position also re-allowing grenades.
+// WAIT, this is kind of a bad idea.  Could be granted the m_hEnemy out of nowhere from failing to pathfind
+// to the enemy, which really shouldn't count for that.
+// 'm_flLastEnemySightTime' is part of CSquadMonster, so leave it up to there anyway for squadie-to-squadie
+// updates.
+void CHGrunt::setEnemyLKP(CBaseEntity* theEnt){
+	m_vecEnemyLKP = theEnt->pev->origin;
+	m_fEnemyLKP_EverSet = TRUE;
+	investigatingAltLKP = FALSE; //this is the real deal.
 
-
-
+	//m_flLastEnemySightTime = gpGlobals->time;
+}

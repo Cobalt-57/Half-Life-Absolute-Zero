@@ -33,7 +33,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(squadmonsterPrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(leaderlessSquadAllowed)
 
 
-extern Schedule_t	slChaseEnemyFailed[];
+extern Schedule_t slChaseEnemyFailed[];
 
 
 
@@ -258,8 +258,10 @@ BOOL CSquadMonster::SquadAdd( CSquadMonster *pAdd )
 void CSquadMonster::SquadPasteEnemyInfo ( void )
 {
 	CSquadMonster *pSquadLeader = MySquadLeader( );
-	if (pSquadLeader)
+	if (pSquadLeader){
 		pSquadLeader->setEnemyLKP(m_vecEnemyLKP);
+		pSquadLeader->OnAlertedOfEnemy();
+	}
 }
 
 //=========================================================
@@ -273,8 +275,10 @@ void CSquadMonster::SquadPasteEnemyInfo ( void )
 void CSquadMonster::SquadCopyEnemyInfo ( void )
 {
 	CSquadMonster *pSquadLeader = MySquadLeader( );
-	if (pSquadLeader)
+	if (pSquadLeader){
 		setEnemyLKP(pSquadLeader->m_vecEnemyLKP);
+		OnAlertedOfEnemy();
+	}
 }
 
 //=========================================================
@@ -313,10 +317,12 @@ void CSquadMonster::SquadMakeEnemy ( CBaseEntity *pEnemy )
 				// give them a new enemy
 				pMember->m_hEnemy = pEnemy;
 				
-				
 				//MODDD - involve the ent
 				pMember->setEnemyLKP(pEnemy);
 				
+				// Let them know.
+				pMember->OnAlertedOfEnemy();
+
 				//MODDD NOTICE - need a special marker to keep the condition from getting
 				// forgotten between frames.  At the start of the next frame the other monster
 				// will see this condition and be able to act on it.
@@ -563,6 +569,48 @@ int CSquadMonster::SquadRecruit( int searchRadius, int maxMembers )
 }
 
 
+
+
+//MODDD - moved here from CHGrunt.
+// Don't really see why any squadmonster wouldn't work the same way here, and this didn't involve anyting specific
+// to CHGrunts only.  May as well be for all squadmonsters.
+void CSquadMonster::PrescheduleThink ( void )
+{
+	BOOL seenEnemy = FALSE;
+	if ( HasConditions ( bits_COND_SEE_ENEMY ) )
+	{
+		seenEnemy = TRUE;
+		m_flLastEnemySightTime = gpGlobals->time;
+	}
+
+	//MODDD - bits_COND_SEE_ENEMY check here.
+
+	if ( InSquad() && m_hEnemy != NULL )
+	{
+		//MODDD - each squad member giving updating its squad leader's 'm_flLastEnemySightTime' makes sense,
+		// but why do the '5 seconds passed since seeing enemy' check for the squad leader?
+		// That's potentially 4 squad members (including the leader itself) doing checks for whether to
+		// set 'm_fEnemeyEluded' to FALSE.
+		// And why not use this for other logic too?  Why only for the squad leader when this monster
+		// saw the enemy too?
+		// (see PrescheduleThink in as-is for what this is describing, this method has been shifted around since)
+		
+		if ( seenEnemy && !IsLeader() )
+		{
+			// update the squad's last enemy sighting time.
+			MySquadLeader()->m_flLastEnemySightTime = this->m_flLastEnemySightTime;
+		}
+
+		// Leader only now
+		if ( this->IsLeader() && gpGlobals->time - m_flLastEnemySightTime > 5 )
+		{
+			// been a while since we've seen the enemy
+			m_fEnemyEluded = TRUE;
+		}
+	}
+}
+
+
 //=========================================================
 // CheckEnemy
 //=========================================================
@@ -570,12 +618,9 @@ int CSquadMonster::CheckEnemy ( CBaseEntity *pEnemy )
 {
 	int iUpdatedLKP;
 
-
-
 	//MODDD - m_hEnemy -> pEnemy replacement.
 	// ALSO, moved above the "SquadLeader->enemy == NULL" check below, so that 'return 0' doesn't skip this.
 	iUpdatedLKP = CBaseMonster::CheckEnemy ( pEnemy );
-
 
 	if (MySquadLeader()->m_hEnemy == NULL) {
 		//MODDD - WAIT!  Don't only 'return 0'.  Still check the enemy through CBaseMonster in case its deadflag changed
@@ -583,7 +628,6 @@ int CSquadMonster::CheckEnemy ( CBaseEntity *pEnemy )
 		// Actually doing this by moving the BaseMonster CheckEnemy call above this section.
 		return 0;  //don't proceed
 	}
-
 
 	// communicate with squad members about the enemy IF this individual has the same enemy as the squad leader.
 	//MODDD - use the parameter you got, dangit!
@@ -610,6 +654,7 @@ CSquadMonster::CSquadMonster(void){
 	skipSquadStartup = FALSE;
 	disableLeaderChange = FALSE;
 	alreadyDoneNetnameLeaderCheck = FALSE;
+	m_flLastEnemySightTime = -1;
 }
 
 void CSquadMonster::ChangeLeader(CSquadMonster* oldLeader, CSquadMonster* newLeader){
@@ -924,6 +969,14 @@ Schedule_t *CSquadMonster::GetScheduleOfType( int iType )
 		return CBaseMonster::GetScheduleOfType( iType );
 	}
 }
+
+//MODDD - overridable event for subclasses, for anything else to happen alongside being given
+// new info about the enemy (setting m_hEnemy or the LKP).
+// Best to call this parent method from those (sets m_flLastEnemySightTime).
+void CSquadMonster::OnAlertedOfEnemy(void){
+	m_flLastEnemySightTime = gpGlobals->time;
+}
+
 
 GENERATE_TRACEATTACK_IMPLEMENTATION_ROUTETOPARENT(CSquadMonster, CBaseMonster)
 GENERATE_TAKEDAMAGE_IMPLEMENTATION_ROUTETOPARENT(CSquadMonster, CBaseMonster)

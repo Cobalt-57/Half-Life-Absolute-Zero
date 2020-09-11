@@ -861,6 +861,7 @@ void CBaseMonster::Materialize(void) {}
 float CBaseMonster::ScriptEventSoundAttn(void) {return 0;}
 float CBaseMonster::ScriptEventSoundVoiceAttn(void) { return 0; }
 BOOL CBaseMonster::CanMakeBloodParticles(void) {return FALSE;}
+BOOL CBaseMonster::AffectedByKnockback(void) {return FALSE;}
 
 
 //removed.

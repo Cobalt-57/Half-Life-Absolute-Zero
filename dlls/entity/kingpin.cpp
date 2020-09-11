@@ -993,19 +993,16 @@ void CKingpin::Precache( void )
 
 	/////////////////////////////////////////////////////////
 
-	global_useSentenceSave = TRUE;
-
 	UTIL_PrecacheOther( "hornet_kingpin" );
+	UTIL_PrecacheOther( "kingpin_ball" );
 
-	global_useSentenceSave = FALSE;
-	
+
+	// precaching the hornet or a subclass of it grabs these
 	/*
 	PRECACHE_SOUND( "agrunt/ag_fire1.wav" );
 	PRECACHE_SOUND( "agrunt/ag_fire2.wav" );
 	PRECACHE_SOUND( "agrunt/ag_fire3.wav" );
 	*/
-
-	global_useSentenceSave = FALSE;
 }//END OF Precache()
 
 

@@ -9,7 +9,7 @@
 #include "basemonster.h"
 
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 
 
 class CZombie : public CBaseMonster
@@ -115,7 +115,7 @@ public:
 	virtual int BloodColor(void) {
 		// if german censorship, all of the body has green blood.  
 		// Otherwise, only the head(crab) does.
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 || m_LastHitGroup == HITGROUP_HEAD) {
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 1 || m_LastHitGroup == HITGROUP_HEAD) {
 			// standard
 			return BLOOD_COLOR_GREEN;
 		}

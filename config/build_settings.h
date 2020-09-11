@@ -72,6 +72,16 @@
 #define GAME_TEAMPLAY_DESCRIPTION "HL:AZ Teamplay"
 
 
+
+//#define BUILD_INFO_TITLE "Half-Life: Absolute Zero Development Build"
+// shortened?
+#define BUILD_INFO_TITLE "Half-Life: AZ - Dev Build"
+
+// was DEBUG and RELEASE, shortened
+#define BUILD_INFO_DEBUG "DE"
+#define BUILD_INFO_RELEASE "RE"
+
+
 // .............. nothing
 #define secret_ymg 0
 

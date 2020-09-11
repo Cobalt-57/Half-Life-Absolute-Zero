@@ -161,6 +161,8 @@ public:
 	void RunTask ( Task_t *pTask );
 
 	int getHullIndexForNodes(void);
+	BOOL SeeThroughWaterLine(void);
+
 
 	//originally 784.
 	float CoverRadius( void ) { return DEFAULT_COVER_SEEK_DISTANCE * 1.8; }

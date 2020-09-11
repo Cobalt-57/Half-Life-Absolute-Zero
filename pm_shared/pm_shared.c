@@ -46,6 +46,9 @@
 
 
 
+// IDEA: slightly more midair-movement for unstuck jumps?
+// Better detection for false positives (don't allow if a tall wall is a huge factor in getting midair movement blocked, an extra linetrace from the model center to the velocity's floor-wise (2D) direction finding something or not might do the trick)?
+
 // Note about pmove->multiplayer.  It looks like it stays on (1) after running multiplayer,
 // even after disconnecting and running/loading a singleplayer game.  Odd.
 // Unsure but it looks like it's forced to 0 or 1 in some areas, unsure.
@@ -151,8 +154,9 @@ static int ary_iJumpOffDenyLadderFrames[MAX_CLIENTS];
 static int ary_iDenyLadderFrames[MAX_CLIENTS];
 static float ary_flGravityModMulti[MAX_CLIENTS];
 
-
-
+static int ary_iMidAirMoveBlocked[MAX_CLIENTS];
+static int ary_iTallSlopeBelow[MAX_CLIENTS];
+//static float ary_flUnstuckJumpTimer[MAX_CLIENTS];
 
 
 
@@ -2022,21 +2026,59 @@ void PM_Friction (void)
 
 void PM_AirAccelerate (vec3_t wishdir, float wishspeed, float accel)
 {
-	int		i;
-	float	addspeed, accelspeed, currentspeed, wishspd = wishspeed;
-		
+	int i;
+	float addspeed, accelspeed, currentspeed, wishspd = wishspeed;
+	
+	int sv_player_midair_accel_val = 1;
+	sv_player_midair_accel_val = atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, "maa"));
+
+
 	if (pmove->dead)
 		return;
 	if (pmove->waterjumptime)
 		return;
 
-	// Cap speed
+	// Cap speed     - this was found commented out as-is
 	//wishspd = VectorNormalize (pmove->wishveloc);
 	
-	if (wishspd > 30)
-		wishspd = 30;
+
+
 	// Determine veer amount
 	currentspeed = DotProduct_f (pmove->velocity, wishdir);
+
+
+	if(sv_player_midair_accel_val != 1){
+		// retail cap
+		if (wishspd > 30){
+			wishspd = 30;
+		}
+		
+	}else{
+		for(i = 0; i < 2; i++){
+			// how about some air resistance?  (apply even if not holding down any move keys)
+			// Also only for moving faster than a typical jump allows (full speed + jump).
+			// That way normal platforming can't be made at all harder by this.
+			if(pmove->gravity > 0 && currentspeed > pmove->maxspeed){
+				// less gravity = less air resistance (let's assume that means space or something).
+				// (effect here is, half gravity = half air resistance.
+				// Stopping faster while having more slowly descending jumps is kinda odd to notice.)
+				pmove->velocity[i] = pmove->velocity[i] * 0.994 * pmove->gravity;
+			}else{
+				// no gravity, no effect.
+				// "what?  Air resistance in space?"  Well there's non-negligible amounts of gravity in xen
+				// to begin with so there.
+			}
+		}
+
+		// greater cap, unrealistic to reach in the opposite direction in typical jumps though
+		if (wishspd > 160){
+			wishspd = 160;
+		}
+
+	}
+
+
+
 	// See how much to add
 	addspeed = wishspd - currentspeed;
 	// If not adding any, done.
@@ -2044,16 +2086,155 @@ void PM_AirAccelerate (vec3_t wishdir, float wishspeed, float accel)
 		return;
 	// Determine acceleration speed after acceleration
 
-	accelspeed = accel * wishspeed * pmove->frametime * pmove->friction;
+
+	if(sv_player_midair_accel_val != 1){
+		// retail way
+		accelspeed = accel * wishspeed * pmove->frametime * pmove->friction;
+	}else{
+		// less impact per frame
+		// Could make depend on gravity, buuuut at 0 gravity that would mean, no influence from the player.
+		// Which kinda makes sense?   ehhhh keep the same influence always.
+		accelspeed = accel * wishspeed * pmove->frametime * pmove->friction * 0.28;
+	}
+
 	// Cap it
-	if (accelspeed > addspeed)
+	if (accelspeed > addspeed){
 		accelspeed = addspeed;
+	}
 	
 	// Adjust pmove vel.
 	for (i=0 ; i<3 ; i++)
 	{
 		pmove->velocity[i] += accelspeed*wishdir[i];	
 	}
+
+
+	
+
+
+	/*
+	// Nevermind this too, still some oddities.
+
+	float maxInfluence;
+	float wishVelChange[2];
+
+	float wishVelTarget[2];
+
+	if (pmove->dead)
+		return;
+	if (pmove->waterjumptime)
+		return;
+
+
+	if (wishspd > 90)
+		wishspd = 90;
+
+
+
+	for(i = 0; i < 2; i++){
+		// how about some air resistance?  (apply even if not holding down any move keys)
+		pmove->velocity[i] = pmove->velocity[i] * 0.97;
+	}
+
+
+	// Determine veer amount
+	currentspeed = DotProduct_f (pmove->velocity, wishdir);
+	// See how much to add
+	addspeed = wishspd - currentspeed;
+	// If not adding any, done.
+	if (addspeed <= 0)return;
+
+
+	for(i = 0; i < 2; i++){
+		// What speed am I suggesting I want?
+		wishVelTarget[i] = wishdir[i] * wishspeed;
+		// How much can I change towards that in this frame?
+		wishVelChange[i] = wishdir[i] * wishspeed * accel * pmove->frametime * pmove->friction;
+
+		// And, am I already going in that direction in this coord?  If so, no change.
+		// Otherwise change up to that coord in that direction, but don't exceed the VelTarget.
+		// (holding forward while moving faster than the target speed won't decelerate or snap to the then-slower target)
+		if(wishVelChange[i] > 0){
+			if(pmove->velocity[i] >= wishVelTarget[i]){
+				// don't do anything, already greatr in this coord
+			}else{
+				// How much can be changed?
+				float changeTest = pmove->velocity[i] + wishVelChange[i];
+				if (changeTest < wishVelTarget[i]) {
+					// Haven't reached the target yet? accept
+					pmove->velocity[i] = changeTest;
+				}else{
+					// snap to it
+					pmove->velocity[i] = wishVelChange[i];
+				}
+			}
+		}else if(wishVelChange[i] < 0){
+			if(pmove->velocity[i] <= wishVelTarget[i]){
+				// don't do anything, already greatr in this coord
+			}else{
+				// How much can be changed?
+				float changeTest = pmove->velocity[i] + wishVelChange[i];
+				if (changeTest > wishVelTarget[i]) {
+					// Haven't reached the target yet? accept
+					pmove->velocity[i] = changeTest;
+				}else{
+					// snap to it
+					pmove->velocity[i] = wishVelChange[i];
+				}
+			}
+		}
+	}//for(i...)
+	*/
+
+
+
+
+
+	// Nevermind this.
+	/*
+	// if going faster than this in the direciton I want to go, no influence.
+	maxInfluence = 150;
+
+	wishVel[0] = wishdir[0] * wishspeed * accel * pmove->frametime * pmove->friction;
+	wishVel[1] = wishdir[1] * wishspeed * accel * pmove->frametime * pmove->friction;
+
+	//wishVel[0] = accelspeed*wishdir[0];
+	//wishVel[1] = accelspeed*wishdir[1];
+	
+
+
+	for (i=0 ; i<2 ; i++){
+		if(wishVel[i] > 0){
+			if(pmove->velocity[i] + wishVel[i] < maxInfluence){
+				// safe
+			}else{
+				wishVel[i] = maxInfluence - pmove->velocity[i];
+				if(wishVel[i] < 0){
+					// don't slow down from being over the max, don't do anything
+					wishVel[i] = 0;
+				}
+			}
+		}else if(wishVel[i] < 0){
+			if(pmove->velocity[i] + wishVel[i] > maxInfluence){
+				// safe
+			}else{
+				wishVel[i] = -maxInfluence - pmove->velocity[i];
+				if(wishVel[i] > 0){
+					// don't slow down from being over the max, don't do anything
+					wishVel[i] = 0;
+				}
+			}
+		}
+	}
+
+	// Adjust pmove vel.
+	for (i=0 ; i<2 ; i++)
+	{
+		//pmove->velocity[i] += accelspeed*wishdir[i];	
+		pmove->velocity[i] += wishVel[i];	
+	}
+	*/
+	
 }
 
 /*
@@ -2177,6 +2358,9 @@ void PM_AirMove (void)
 	vec3_t vecOldVel;
 	int sv_player_midair_fix_val;
 
+	//MODDD - reset before proceeding
+	ary_iMidAirMoveBlocked[pmove->player_index] = FALSE;
+
 	// Copy movement amounts
 	fmove = pmove->cmd.forwardmove;
 	smove = pmove->cmd.sidemove;
@@ -2207,13 +2391,28 @@ void PM_AirMove (void)
 	wishspeed = VectorNormalize(wishdir);
 
 	// Clamp to server defined max speed
-	//MODDD
+	//MODDD - if playing with cheats (normalSpeedMult other than 1), ignore the max.
 	if (normalSpeedMult == 1 && wishspeed > pmove->maxspeed)
 	{
 		VectorScale (wishvel, pmove->maxspeed/wishspeed, wishvel);
 		wishspeed = pmove->maxspeed;
 	}
 	
+	//MODDD - NOTE.
+	// ok.  Don't fully understand how air acceleration works, so no mods for it, at least not yet.
+	// It would be a CVar 'sv_player_midair_accelerate_mode', something like that.
+	// 0 for retail, 1 for more mid-air control (disable the '30' cap in there).
+	// There is a little oddity with acceleration that get epsecially noticeable with the cap removed though,
+	// but it's easier to prove with the cap on in a large open space without gravity.
+	// Example:
+	//   console,    map crossfire
+	//               sv_gravity 0
+	//               setmyorigin 870 -1080 -1520
+	// Now, without touching any walls, hold forward the hole time and rotate the camera in the same direction somewhat slowly,
+	// just not too fast.  The speed will pick up over time and exceed the usual '30' cap, and even exceed the player's
+	// own walk movement speed (possible to go over the longways portion in a second afte doing this a while).
+	// It's as though this 'sideways' velocity isn't getting limited like it's supposed to.
+	// Again, small, but this flaw really shows up if the midair cap were completley lifted.
 	PM_AirAccelerate (wishdir, wishspeed, pmove->movevars->airaccelerate);
 
 	// Add in any base velocity to the current velocity.
@@ -2223,7 +2422,7 @@ void PM_AirMove (void)
 
 	sv_player_midair_fix_val = atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, "maf"));
 
-	if (sv_player_midair_fix_val != 0) {
+	if (sv_player_midair_fix_val == 2) {
 		VectorCopy_f(pmove->velocity, vecOldVel);
 		//MODDD - Strangely, the PM_InclineAirCheck can completely replace the as-is plain PM_FlyMove check now.
 		//clip = PM_FlyMove ();
@@ -2232,7 +2431,8 @@ void PM_AirMove (void)
 	}
 	else {
 		// retail
-		PM_FlyMove();
+		//MODDD - save the result of this to ary_iMidAirMoveBlocked.  Wasn't saved before.
+		ary_iMidAirMoveBlocked[pmove->player_index] = (PM_FlyMove() == 2);
 	}
 
 }
@@ -2392,10 +2592,30 @@ void PM_CatagorizePosition (physent_t *pLadder)
 		// Try and move down.
 		tr = pmove->PM_PlayerTrace (pmove->origin, point, PM_NORMAL, -1 );
 		// If we hit a steep plane, we are not on ground
-		if ( tr.plane.normal[2] < 0.7)
+		if ( tr.plane.normal[2] < 0.7){
+			//MODDD - NOTE.  Beware!  It is possible to land on a sloped surface that cannot be jumped out of and remain stuck,
+			// like spots in the rails in a2a1.
+			// Idea:  Mark it here, and if the Z velocity remains 0 or below 0 but not by much and stays that way for 0.2 seconds,
+			// allow a jump out.
+			// OTHER IDEA: is there a place that bounces the player off an incline on contact?  If so, noticing no 'bounce' movement
+			// (something in the way) means jumping to get out should be allowed.
+			///////////////////////////////////////////////////////////////////////////////////////////////////
+			if(tr.fraction < 1.0){
+				// actually hit something?  ok.
+				//if(ary_flUnstuckJumpTimer[pmove->player_index] == 0){
+				//	ary_flUnstuckJumpTimer[pmove->player_index] = pmove->Sys_FloatTime() + 0.3;
+				//}
+
+				ary_iTallSlopeBelow[pmove->player_index] = TRUE;
+			}
+
+
+			///////////////////////////////////////////////////////////////////////////////////////////////////
+
 			pmove->onground = -1;	// too steep
-		else
+		}else{
 			pmove->onground = tr.ent;  // Otherwise, point to index of ent under us.
+		}
 
 		// If we are on something...
 		if (pmove->onground != -1)
@@ -3641,6 +3861,7 @@ void PM_Jump (void)
 	//MODDD
 	float jumpForceMulti = 1;
 	qboolean cansuperjump = false;
+	int sv_player_midair_fix_val;
 
 	//MODDD - new temp var.
 	long random;
@@ -3701,15 +3922,37 @@ void PM_Jump (void)
 		return;
 	}
 
-	// No more effect
- 	if ( pmove->onground == -1 )
-	{
-		// Flag that we jumped.
-		// HACK HACK HACK
-		// Remove this when the game .dll no longer does physics code!!!!
-		pmove->oldbuttons |= IN_JUMP;	// don't jump again until released
-		return;		// in air, so no effect
+
+
+
+
+	//MODDD - exception granted?
+	//if(ary_flUnstuckJumpTimer[pmove->player_index] > 0 && pmove->Sys_FloatTime() >= ary_flUnstuckJumpTimer[pmove->player_index]){
+
+
+
+	sv_player_midair_fix_val = atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, "maf"));
+
+	if(sv_player_midair_fix_val == 1 && pmove->velocity[2] < 0 && pmove->velocity[2] > -60 && ary_iMidAirMoveBlocked[pmove->player_index] == TRUE && ary_iTallSlopeBelow[pmove->player_index] == TRUE){
+		// allow the jump anyway to get unstuck!
+	}else{
+
+		// No more effect
+		if ( pmove->onground == -1 )
+		{
+			// Flag that we jumped.
+			// HACK HACK HACK
+			// Remove this when the game .dll no longer does physics code!!!!
+			pmove->oldbuttons |= IN_JUMP;	// don't jump again until released
+			return;		// in air, so no effect
+		}
+
 	}
+
+
+
+
+
 
 	if ( pmove->oldbuttons & IN_JUMP )
 		return;		// don't pogo stick
@@ -4779,6 +5022,23 @@ void PM_Move ( struct playermove_s *ppmove, int server )
 
 	// keep up to date?
 	ary_flGravityModMulti[pmove->player_index] = atof( pmove->PM_Info_ValueForKey( pmove->physinfo, "gmm" ) );
+
+
+	// must be set TRUE throughout the frame to count
+	//ary_iMidAirMoveBlocked[pmove->player_index] = FALSE;
+	ary_iTallSlopeBelow[pmove->player_index] = FALSE;
+	/*
+	if(ary_flUnstuckJumpTimer[pmove->player_index] > 0){
+		if(pmove->velocity[2] > 0 || pmove->velocity[2] < -20){
+			// significant change in Z vel?  Stop the timer
+			ary_flUnstuckJumpTimer[pmove->player_index] = 0;
+		}
+	}
+	*/
+
+
+
+
 
 
 	//MODDD - do a check. If the "res" physics flag is on ("1"), reset fall velocity and set that flag back to "0".

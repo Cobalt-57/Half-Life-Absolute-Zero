@@ -57,7 +57,7 @@ SC_HEAR2 scientist/whatissound
 
 //MODDD
 EASY_CVAR_EXTERN_DEBUGONLY(wildHeads)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 EASY_CVAR_EXTERN_DEBUGONLY(scientistHealNPCDebug)
 EASY_CVAR_EXTERN_DEBUGONLY(scientistHealNPC)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch)
@@ -1931,8 +1931,8 @@ void CScientist::Spawn( void )
 
 	pev->skin = 0; //default.
 
-	//if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
-	if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1){
+	//if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
+	if( (pev->spawnflags & SF_MONSTER_TALKMONSTER_BLOODY) && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) != 1){
 		pev->skin = 1;
 		
 		if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout) == 1){
@@ -2181,17 +2181,22 @@ void CScientist::TalkInit()
 
 
 
-
 void CScientist::AlertSound(void) {
 
 	if (m_hEnemy != NULL) {
 		if (FClassnameIs(m_hEnemy->pev, "monster_headcrab")) {
-			if (
+			if(
+				// ALSO, don't say this while running or recently taking damage, the tone of 'why look, another headcrab' isn't
+				// really fitting for panic.
+				((m_IdealActivity != ACT_RUN && m_IdealActivity != ACT_RUN_SCARED) && m_painTime < gpGlobals->time)
+				&&
 				(
-				(g_scientist_HeadcrabMentionAllowedTime == -1 && FOkToSpeakAllowCombat(CTalkMonster::g_talkWaitTime)) ||
+					(g_scientist_HeadcrabMentionAllowedTime == -1 && FOkToSpeakAllowCombat(CTalkMonster::g_talkWaitTime)) ||
 					(FOkToSpeakAllowCombat(g_scientist_HeadcrabMentionAllowedTime) && RANDOM_FLOAT(0, 1) <= 0.87)
-					)
-				) {
+				)
+			)
+			{
+				// Why look.  Another headcrab.
 				PlaySentenceSingular("SC_MONST0", 4, VOL_NORM, ATTN_NORM);
 				g_scientist_HeadcrabMentionAllowedTime = gpGlobals->time + 40;
 				return;
@@ -2203,7 +2208,6 @@ void CScientist::AlertSound(void) {
 		
 
 		// not a headcrab or was, but blocked by the headcrab mention allowed time cooldown?  Proceed.
-		
 		// any other enemy? check size
 		if (FOkToSpeakAllowCombat(CTalkMonster::g_talkWaitTime)) {
 			SayAlert();
@@ -3161,6 +3165,15 @@ void CScientist::MonsterThink(void){
 
 
 
+	if(monsterID == 16){
+		BOOL what = FALSE;
+		if(m_pCine != NULL){
+			what = m_pCine->CanInterrupt();
+		}
+		int x = 666;
+	}
+
+
 
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && (this->m_fSequenceFinished || pev->frame >= 245)) {
 
@@ -3605,7 +3618,7 @@ void CDeadScientist::Spawn( )
 
 	//MOVED TO "setModelCustom" for the dead scientist.
 	/*
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) > 0){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) > 0){
 		//MODDD - uncommented out, used to be commented out.
 		//pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 		pev->skin = 2;
@@ -3619,8 +3632,8 @@ void CDeadScientist::Spawn( )
 
 
 	pev->skin = 0; //default
-	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1){
+	//if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) != 1 && EASY_CVAR_GET(scientistModel) < 2){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) != 1){
 		//MODDD - uncommented out, used to be commented out.
 		//pev->skin += 2; // use bloody skin -- UNDONE: Turn this back on when we have a bloody skin again!
 		pev->skin = 2;

@@ -2918,7 +2918,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		m_nCachedFrameCount = m_nFrameCount;
 
 
-		if(m_nFrameCount < 2){
+		if(m_nFrameCount < 5){
 			// Mark the start time to know to handle some logic differently (no smoothing model blending like torso pitch, causes
 			// some things on the instant of a load-game to appear facing downward and quickly warp into their normal place)
 			// See 'disallowSmoothBlendTime' in the comments elsewhere for what does the smooth blocking

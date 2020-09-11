@@ -65,6 +65,8 @@ void CControllerHeadBall::Precache( void )
 {
 
 	PRECACHE_MODEL("sprites/xspark1.spr");
+	// MODDD - didn't precache this one, becaaaaaauuuuuusssssseeeeeee?
+	PRECACHE_MODEL("sprites/xspark4.spr");
 	
 	global_useSentenceSave = TRUE;
 	PRECACHE_SOUND("weapons/electro4.wav", TRUE);//don't skip. This is precached by the player gauss, just keep it.
@@ -218,9 +220,6 @@ void CControllerHeadBall::Crawl( void  )
 			}
 
 			drawFlat_Z -= 5;
-
-
-
 		}
 	}else if(pev->waterlevel == 3){
 		//only pass normally if in the water
@@ -392,7 +391,7 @@ void CControllerHeadBall::BounceTouch( CBaseEntity *pOther )
 	// reaching the 50 to 64 distance checked
 	//UTIL_TraceLine( pev->origin, m_hEnemy->Center(), dont_ignore_monsters, ENT(pev), &tr );
 	//CBaseEntity *pEntity = CBaseEntity::Instance(tr.pHit);
-	if (pOther != NULL && pOther->pev->takedamage)
+	if (!alreadyZapped && pOther != NULL && pOther->pev->takedamage)
 	{
 		// alright, do we have an enemy?
 		if(m_hEnemy == NULL){

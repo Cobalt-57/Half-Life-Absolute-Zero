@@ -50,7 +50,7 @@ EASY_CVAR_EXTERN_MASS
 
 EASY_CVAR_EXTERN_DEBUGONLY(myStrobe)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(raveEffectSpawnInterval)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 EASY_CVAR_EXTERN_DEBUGONLY(mutePlayerPainSounds)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(geigerChannel)
 EASY_CVAR_EXTERN_DEBUGONLY(drawDebugBloodTrace)
@@ -105,7 +105,9 @@ EASY_CVAR_EXTERN_DEBUGONLY(minimumRespawnDelay)
 EASY_CVAR_EXTERN_DEBUGONLY(monsterToPlayerHitgroupSpecial)
 EASY_CVAR_EXTERN(precacheAll)
 EASY_CVAR_EXTERN(blastExtraArmorDamageMode)
-EASY_CVAR_EXTERN(sv_player_midair_fixMem)
+EASY_CVAR_EXTERN(sv_player_midair_fix)
+EASY_CVAR_EXTERN(sv_player_midair_accel)
+
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
@@ -3132,6 +3134,13 @@ void CBasePlayer::PlayerUse ( void )
 	while ((pObject = UTIL_FindEntityInSphere( pObject, pev->origin, PLAYER_USE_SEARCH_RADIUS )) != NULL)
 	//while ((pObject = UTIL_FindEntityInSphere( pObject, pev->origin + gpGlobals->v_forward * 64, PLAYER_USE_SEARCH_RADIUS )) != NULL)
 	{
+		//MODDD - no check for self?  what?
+		if(pObject == this){
+			continue;
+		}
+
+		const char* theClassname = pObject->getClassname();
+
 
 		//MODDD - distance check... UNDONE.
 		if (pObject->ObjectCaps() & (FCAP_IMPULSE_USE | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE))
@@ -3338,8 +3347,6 @@ void CBasePlayer::PlayerUse ( void )
 
 
 
-
-
 	//DEBUG.
 	/*
 	if(pToUseOn){
@@ -3348,7 +3355,6 @@ void CBasePlayer::PlayerUse ( void )
 		easyForcePrintLine("PLAYER USE: nothing.");
 	}
 	*/
-
 
 	BOOL flUseSuccess = FALSE;
 	
@@ -3374,7 +3380,6 @@ void CBasePlayer::PlayerUse ( void )
 		//(vecDirTowardsClosest - this->pev->origin).Length(); 
 		//float distToClosest = (pToUseOn->pev->origin - this->pev->origin).Length();
 		float distToClosest = vecDirTowardsClosest.Length();
-		
 
 		//notice: NOT "gpGlobals->v_forward", which is just what direction the player happens to be facing. We want a straight line to the object we are trying to touch.
 		Vector vecSrc = pev->origin + pev->view_ofs + vecDirTowardsClosest * 0;
@@ -3391,10 +3396,7 @@ void CBasePlayer::PlayerUse ( void )
 		}
 		
 
-		
-	
 		//easyForcePrintLine("?????????????????????????????????");
-
 
 		// Do we have an unobstructed line to the thing we want to "use"?
 		UTIL_TraceLine( vecSrc, vecDest, dont_ignore_monsters, pentIgnore, &tr );
@@ -6347,6 +6349,7 @@ void CBasePlayer::commonReset(void){
 	ladderCycleMultiMem = -1;
 	ladderSpeedMultiMem = -1;
 	sv_player_midair_fixMem = -1;
+	sv_player_midair_accelMem = -1;
 
 	//not for a CVar.
 	clearWeaponFlag = -1;
@@ -8807,15 +8810,24 @@ void CBasePlayer::UpdateClientData( void )
 	}
 	if (sv_player_midair_fixMem != EASY_CVAR_GET(sv_player_midair_fix)) {
 		sv_player_midair_fixMem = EASY_CVAR_GET(sv_player_midair_fix);
-		//keep this CVar in sync with pm_shared...
-		if (sv_player_midair_fixMem != 0) {
-			// nope, this is just a 'yes-or-no' thing.  Imply "1".
+		// keep this CVar in sync with pm_shared
+		if (sv_player_midair_fixMem == 2) {
 			//char buffer[13];
 			//tryFloatToStringBuffer(buffer, EASY_CVAR_GET(sv_player_midair_fix));
+			g_engfuncs.pfnSetPhysicsKeyValue(edict(), "maf", "2");
+		}else if(sv_player_midair_fixMem == 1){
 			g_engfuncs.pfnSetPhysicsKeyValue(edict(), "maf", "1");
-		}
-		else {
+		}else {
 			g_engfuncs.pfnSetPhysicsKeyValue(edict(), "maf", "0");
+		}
+	}
+	if (sv_player_midair_accelMem != EASY_CVAR_GET(sv_player_midair_accel)) {
+		sv_player_midair_accelMem = EASY_CVAR_GET(sv_player_midair_accel);
+		// keep this CVar in sync with pm_shared
+		if(sv_player_midair_accelMem == 1){
+			g_engfuncs.pfnSetPhysicsKeyValue(edict(), "maa", "1");
+		}else {
+			g_engfuncs.pfnSetPhysicsKeyValue(edict(), "maa", "0");
 		}
 	}
 	

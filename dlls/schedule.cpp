@@ -27,6 +27,10 @@
 #include "soundent.h"
 #include "util_debugdraw.h"
 
+//#include "hassault.h"  //breakpoint test
+// no just do this
+extern Schedule_t slHAssault_residualFire[];
+
 EASY_CVAR_EXTERN_DEBUGONLY(sparksAIFailMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(crazyMonsterPrintouts)
 EASY_CVAR_EXTERN_DEBUGONLY(movementIsCompletePrintout)
@@ -438,7 +442,8 @@ void CBaseMonster::MaintainSchedule ( void )
 {
 	Schedule_t* pNewSchedule;
 	Schedule_t* pPrevSchedule;
-	int		i;
+	int i;
+	BOOL pickedScheduleThisCall = FALSE;
 	
 	/*
 	if(m_iTaskStatus == TASKSTATUS_RUNNING){
@@ -452,8 +457,9 @@ void CBaseMonster::MaintainSchedule ( void )
 
 	// UNDONE: Tune/fix this 10... This is just here so infinite loops are impossible
 	// MODDD - let's do more!  Upped to 25.    ...nah.  6 is plenty.
+	// Nope, gimmie those smarts.
 	//for ( i = 0; i < 10; i++ )
-	for (i = 0; i < 6; i++)
+	for (i = 0; i < 20; i++)
 	{
 
 		if ( m_pSchedule != NULL && TaskIsComplete() )
@@ -553,10 +559,19 @@ void CBaseMonster::MaintainSchedule ( void )
 
 				//MODDD - same schedule as the current one?  No more iterations for this loop,
 				// but still continue this one until the end.
-				if(pNewSchedule == pPrevSchedule){
+				// But wait! It is possible to pick the exact same schedule after another one has finished.
+				// The point of this is to disallow doing more iterations if it's likely to stagnate (looped around to pick the same
+				// schedule between two iterations), NOT disallow say, picking the melee schedule again because the enemy is still in
+				// front of me.
+				// But careful with even a 'i > 0' check.  Should be fine most of the time, but what if something finishes in this frame and
+				// goes on to then pick the same schedule as the last run?  'i' would be above 0 and have to stop at the first task in the
+				// new schedule.  Record whether this call of the method (MaintainSchedule) has ever fetched a method before intead.
+				if(pickedScheduleThisCall && pNewSchedule == pPrevSchedule){
 					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! %s:%d Same schedule (%s) picked in the same frame, BLOCKED. <fail>", getClassname(), monsterID, m_pSchedule->pName);}
 					i = 999;
 				}
+
+				pickedScheduleThisCall = TRUE;  // have now
 
 				// schedule was invalid because the current task failed to start or complete
 				ALERT ( at_aiconsole, "Schedule Failed at %d!\n", m_iScheduleIndex );
@@ -604,11 +619,12 @@ void CBaseMonster::MaintainSchedule ( void )
 				}
 
 				//MODDD - yea.
-				if(pNewSchedule == pPrevSchedule){
+				if(pickedScheduleThisCall && pNewSchedule == pPrevSchedule){
 					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! %s:%d Same schedule (%s) picked in the same frame, BLOCKED. <normal>", getClassname(), monsterID, m_pSchedule->pName);}
 					i = 999;
 				}
 
+				pickedScheduleThisCall = TRUE;  // have now
 
 				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 9 %d:::new sched: %s", HasConditions(bits_COND_CAN_MELEE_ATTACK1), pNewSchedule->pName);
@@ -624,9 +640,9 @@ void CBaseMonster::MaintainSchedule ( void )
 				}
 			}
 
-		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
-			easyPrintLine("OOPS A PLENTY 11 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
-		}
+			if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
+				easyPrintLine("OOPS A PLENTY 11 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
+			}
 		}//END OF valid check
 
 
@@ -697,14 +713,13 @@ void CBaseMonster::MaintainSchedule ( void )
 			//break;
 
 
-
-
 	//MODDD - IMPORTANT SECTION.
 	//////////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////
 
-			if (TaskIsRunning())
+			// that does 'm_iTaskStatus != TASKSTATUS_COMPLETE', redundant with being TASKSTATUS_RUNNING as above wants
+			//if (TaskIsRunning())
 			{
 				Task_t* pTask = GetTask();
 				ASSERT(pTask != NULL);
@@ -1475,12 +1490,13 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 	//MODDD - MOVED FROM ichthyosaur.cpp, renamed from TASK_ICHTHYOSAUR_FLOAT
 	case TASK_WATER_DEAD_FLOAT:{
 
-		//yea this is pointless to anticipate, but whatever.
-		if(pev->waterlevel == 0 && pev->velocity.Length() < 0.001){
+		// If not in water and there is no velocity, assume the reason is from having landed.  Adding that flag check to be safe.
+		if(pev->waterlevel == 0 && pev->velocity.Length() < 0.001 && pev->flags & FL_ONGROUND){
 			//on land and stopped moving? stop.
 			DeathAnimationEnd();
-			pev->movetype = MOVETYPE_TOSS; //fall if whatever this is on top of stops?
-			//can't float again without think logic though.
+			pev->movetype = MOVETYPE_TOSS; //fall if whatever this is on top of stops?  Or after this, as it should be on the ground?
+			// can't float again without think logic though but that doesn't need to happen anyway, expecte to sink after so long so
+			// it will just stay that way once it does.
 			TaskComplete();
 			return;
 		}
@@ -1513,11 +1529,9 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 
 		oldWaterLevel = pev->waterlevel;
 
-		if(floatSinkSpeed < 0.4){
-			//rest: 848
-			//desired: 847 
+		if(floatSinkSpeed < 0.4 && floatSinkSpeed != 0){
+			floatSinkSpeed = 0;
 
-			
 			// If we're slow enough above water, go ahead and stop.
 			Vector adjustedOrigin = pev->origin + Vector(0, 0, -0.4);  //does this help make it visible from below and above water?
 			::UTIL_SetOrigin(pev, adjustedOrigin);
@@ -1527,10 +1541,26 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 			// wait... water level might lower.  SIGH.
 			// Could the think-time slow down, maybe?  Seems wasteful to have 'should I still be floating' cycles
 			// for all eternity.
-			//DeathAnimationEnd();  //kill the think method. done.
-			//TaskComplete();
-		}
+			// IDEA:  have a timer, when this expires, then sink.
+			// the initial.  But don't depend on floatSinkSpeed being small, let it apply anytime.
+			// It's long enough to not interrupt this anyway.
 
+		}//floatSinkSpeed check
+
+
+		if(gpGlobals->time >= floatEndTimer){
+			DeathAnimationEnd();  //kill the think method. done.
+			pev->movetype = MOVETYPE_TOSS; // fall if whatever this is on top of stops?
+
+			if(pev->waterlevel == 0){
+				// nothing special
+			}else{
+				// float more slowly to the bottom
+				pev->gravity = 0.2;
+			}
+
+			TaskComplete();
+		}
 
 		// ALERT( at_console, "%f\n", pev->velocity.z );
 	break;}
@@ -1542,7 +1572,6 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 	case TASK_MELEE_ATTACK2_NOTURN:
 	case TASK_RELOAD_NOTURN:
 	{
-
 		//MODDD - BIG UGLY SECTION, make its own method if this turns out alright
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1921,8 +1950,19 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		}
 	case TASK_STOP_MOVING:
 		{
+
+			if(FClassnameIs(pev, "monster_panthereye")){
+				int x = 45;
+			}
+
+
 			//easyForcePrintLine("WEEEEEEEEEEEEEEEEEEELLLLLLLLLLLLLLLLLLLLLLLLA %d %d %d", m_IdealActivity, m_movementActivity, this->usingCustomSequence);
 
+
+
+
+
+			/*
 			//MODDD - but isn't it also possible for our m_movementActivity to be set to ACT_IDLE by basemonster.cpp's RouteClear method?
 			//Extra check:
 			//if ( m_IdealActivity == m_movementActivity )
@@ -1936,15 +1976,25 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			//if (m_IdealActivity != myStoppedActivity && m_IdealActivity == m_movementActivity
 			//	|| m_Activity == ACT_TURN_LEFT || m_Activity == ACT_TURN_RIGHT)
 
+			//MODDD - nevermind, this idea sucks.
 			if( (m_IdealActivity != myStoppedActivity || m_Activity == ACT_TURN_LEFT || m_Activity == ACT_TURN_RIGHT)
-				&& m_IdealActivity == m_movementActivity
+
+				//MODDD - what happens if we remove this requirement?
+				//&& m_IdealActivity == m_movementActivity
 				)
 			{
 
 				m_IdealActivity = myStoppedActivity;
 			}
-			//easyForcePrintLine("WEEEEEEEEEEEEEEEEEEELLLLLLLLLLLLLLLLLLLLLLLLB %d %d %d", m_IdealActivity, m_movementActivity, this->usingCustomSequence);
+			*/
 
+			// well golly gee, wouldja look at that
+			// Could also check for the usual move activities (ACT_RUN, ACT_WALK, ACT_FLY, ACT_HOVER, ACT_SWIM, etc.?).
+			if(IsMoving()){
+				Activity myStoppedActivity = GetStoppedActivity();
+				m_IdealActivity = myStoppedActivity;
+			}
+			//easyForcePrintLine("WEEEEEEEEEEEEEEEEEEELLLLLLLLLLLLLLLLLLLLLLLLB %d %d %d", m_IdealActivity, m_movementActivity, this->usingCustomSequence);
 
 			RouteClear();
 			TaskComplete();
@@ -1967,7 +2017,6 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 	case TASK_SET_SCHEDULE:
 		{
 			Schedule_t *pNewSchedule;
-
 			pNewSchedule = GetScheduleOfType( (int)pTask->flData );
 			
 			if ( pNewSchedule )
@@ -2335,32 +2384,45 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		}
 	case TASK_CHECK_STUMPED:
 		{
-			//Completeing this task will let the monster pick a different schedule as usual.
-			//Set the fail schedule to something desired and call "TaskFail" to do that instead, like staring for 15 seconds when stumped before re-getting the enemy's location from the engine.
-			//You cheater!
+			// Completeing this task will let the monster pick a different schedule as usual.
+			// Set the fail schedule to something desired and call "TaskFail" to do that instead, like staring for 15 seconds when stumped before re-getting the enemy's location from the engine.
+			// You cheater!
 
 			//easyForcePrintLine("I MUST SAY, I AM STUMPED.");
 
 			//TaskComplete();
 			//return;
-			//no dont do it!!!!
+			// no dont do it!
 
 
-			//It is possible we're facing our last known position, but just repeatedly getting satisifed with that.
-			//Do a check. Are we looking at the enemy right now? If not, we need to force the LKP to the player to seek them.
+			// It is possible we're facing our last known position, but just repeatedly getting satisifed with that.
+			// Do a check. Are we looking at the enemy right now? If not, we need to force the LKP to the player to seek them.
 
 			if(!HasConditions(bits_COND_SEE_ENEMY)){
-				//Not looking at the enemy, but looking at LKP (presumably)?
+				// Not looking at the enemy, but looking at LKP (presumably)?
 
-				//If I was checking out a place I took damage at instead of chasing the enemy directly and I fail to see the enem
+				// If I was checking out a place I took damage at instead of chasing the enemy directly and I fail to see the enem
 				if(investigatingAltLKP){
 					//no longer!  Restore the LKP to the "real" one where the enemy was last sighted. If it hasn't been updated since that is.
 					//Any changes to LKP since will change "investigatingAltLKP" to false that put it at the enemy's real location again of course.
-					investigatingAltLKP = FALSE;
-					m_vecEnemyLKP = m_vecEnemyLKP_Real;
-					//TaskFail();
-					TaskComplete();
-					return;
+					
+					// already done by setEnemyLKP now
+					//investigatingAltLKP = FALSE;
+					//m_vecEnemyLKP = m_vecEnemyLKP_Real;
+
+					// Only if this was 'something' at the time we invesgiated, it might still be the default (0,0,0).
+					// Also, set the EverSet to Real_EverSet.
+					// This way, if there isn't an LKP to backup to after this invesgiated one has been reach,
+					// the normal EverSet knows that (gets Real_EverSet being FALSE).
+					m_fEnemyLKP_EverSet = m_fEnemyLKP_Real_EverSet;
+					if(m_fEnemyLKP_Real_EverSet == TRUE){
+						setEnemyLKP(m_vecEnemyLKP_Real);
+
+						// Is including 'ending the task early' in this Real_EverSet requirement ok?
+						//TaskFail();
+						TaskComplete();
+						return;
+					}
 				}
 
 
@@ -2373,7 +2435,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 					return;
 				}
 
-				//Skip to re-routing towards the enemy, most likely.
+				// Skip to re-routing towards the enemy, most likely.
 				if(EASY_CVAR_GET_DEBUGONLY(pathfindStumpedMode) == 3){
 					// make the LKP up to date
 					//MODDD - Invole the ent
@@ -2770,6 +2832,9 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		{
 			m_IdealActivity = (Activity)(int)pTask->flData;
 
+			if(m_pSchedule == slHAssault_residualFire){
+				int x = 45;
+			}
 
 			//HACK HACK - what if you do this
 			//SetActivity(m_IdealActivity);
@@ -3147,6 +3212,8 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 	break;}
 	//MODDD - also new
 	case TASK_WATER_DEAD_FLOAT:
+		// between 30 and 50 seconds, sink anyway
+		floatEndTimer = gpGlobals->time + RANDOM_FLOAT(30, 50);
 		floatSinkSpeed = WATER_DEAD_SINKSPEED_INITIAL;
 	break;
 

@@ -183,6 +183,8 @@ public:
 	//int*				madInterSentencesMaxLocation;
 	const char** madInterSentencesLocation;
 
+	float scriptedUninterruptableConditionsTime;
+
 
 
 

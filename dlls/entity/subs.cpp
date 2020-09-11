@@ -132,6 +132,9 @@ void CBaseEntity::UpdateOnRemove( void )
 // Convenient way to delay removing oneself
 void CBaseEntity::SUB_Remove( void )
 {
+
+	const char* daClassname = this->getClassname();
+
 	UpdateOnRemove();
 	if (pev->health > 0)
 	{

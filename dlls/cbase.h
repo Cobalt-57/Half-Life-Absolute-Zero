@@ -426,6 +426,7 @@ public:
 	BOOL isGrabbed;
 	Vector m_vecOldBoundsMins;
 	Vector m_vecOldBoundsMaxs;
+	float m_fOldGravity;
 
 
 

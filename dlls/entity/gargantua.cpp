@@ -3584,6 +3584,7 @@ void CGargantua::grabEnt(CBaseEntity* toGrab){
 	grabbedEnt->isGrabbed = TRUE;
 	grabbedEnt->m_vecOldBoundsMins = grabbedEnt->pev->mins;
 	grabbedEnt->m_vecOldBoundsMaxs = grabbedEnt->pev->maxs;
+	grabbedEnt->m_fOldGravity = grabbedEnt->pev->gravity;
 
 	grabbedEntOldMins = pev->mins;
 	grabbedEntOldMaxs = pev->maxs;
@@ -3604,8 +3605,8 @@ void CGargantua::grabEnt(CBaseEntity* toGrab){
 void CGargantua::releaseGrabbedEnt(void){
 	// Special call that sets 'pev->gravity' for most entities, does some extra steps
 	// needed for the player here.
-	grabbedEnt->SetGravity(1.0f);
 	UTIL_SetSize(grabbedEnt->pev, grabbedEntOldMins, grabbedEntOldMaxs);
+	grabbedEnt->SetGravity(grabbedEnt->m_fOldGravity);
 	
 	//grabbedEnt->grabbedByGargantua = NULL;
 	// no need?

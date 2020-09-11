@@ -248,7 +248,7 @@ void CChumToadWeapon::FallThinkCustom ( void )
 		if ( !FNullEnt( pev->owner ) )
 		{
 			//int pitch = 95 + RANDOM_LONG(0,29);
-			//EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "items/weapondrop1.wav", 1, ATTN_NORM, 0, pitch);
+			//UTIL_PlaySound(ENT(pev), CHAN_VOICE, "items/weapondrop1.wav", 1, ATTN_NORM, 0, pitch);
 			//A toad is definitely not making that noise when it hits the ground.
 		}
 
@@ -393,12 +393,12 @@ BOOL CChumToadWeapon::Deploy( )
 		//MODDD TODO: CHANGE SOUNDS!!!    Roger roger.
 		/*
 		if ( flRndSound <= 0.5 ){
-			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/cht_throw1.wav", 1, ATTN_NORM, 0, 100);
+			UTIL_PlaySound(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/cht_throw1.wav", 1, ATTN_NORM, 0, 100);
 		}else{
-			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/cht_throw2.wav", 1, ATTN_NORM, 0, 100);
+			UTIL_PlaySound(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/cht_throw2.wav", 1, ATTN_NORM, 0, 100);
 		}
 		*/
-		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/chub_draw.wav", 1, ATTN_NORM, 0, 100);
+		UTIL_PlaySound(ENT(m_pPlayer->pev), CHAN_WEAPON, "chumtoad/chub_draw.wav", 1, ATTN_NORM, 0, 100);
 		m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME;
 	}
 	
@@ -654,7 +654,7 @@ void CChumToadWeapon::ThrowChumtoad(Vector vecSpawnPoint){
 	//only send YAW. angle.y.
 	
 	//MODDD TODO - throw sound (creature noise)?
-	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "chumtoad/cht_croak_short.wav", 1, ATTN_NORM, 0, RANDOM_LONG(98, 106));
+	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "chumtoad/cht_croak_short.wav", 1, ATTN_NORM, 0, RANDOM_LONG(98, 106));
 
 	// Little range boost, but not much.  Point is to be stealthy with this.
 	m_pPlayer->m_iWeaponVolume = QUIET_GUN_VOLUME + 80;

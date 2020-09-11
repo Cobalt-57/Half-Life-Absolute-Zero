@@ -305,12 +305,17 @@ MONSTERSTATE CBaseMonster::GetIdealState ( void )
 			//MODDD - BUG NOTE.   On never seeing the enemy that dealt the damage, this leaves m_vecEnemyLKP at the
 			// default 0,0,0, so the monster wants to face the origin of the map in any flinch method that assumes
 			// the ideal_yaw had a point.   OOOooooops..?
-			MakeIdealYaw ( m_vecEnemyLKP );
+			// IDEA: Only involve this if m_vecEnemyLKP was ever set before, new var:
+			if(m_fEnemyLKP_EverSet){
+				MakeIdealYaw ( m_vecEnemyLKP );
+			}
 			return MONSTERSTATE_ALERT;
 		}
 		else if ( iConditions & bits_COND_HEAVY_DAMAGE )
 		{
-			MakeIdealYaw ( m_vecEnemyLKP );
+			if(m_fEnemyLKP_EverSet){
+				MakeIdealYaw ( m_vecEnemyLKP );
+			}
 			return MONSTERSTATE_ALERT;
 		}
 		else if ( iConditions & bits_COND_HEAR_SOUND )

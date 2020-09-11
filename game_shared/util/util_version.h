@@ -9,6 +9,7 @@ void writeVersionInfo(char* aryChr, int maxLength);
 void writeDateInfo(char* aryChr, int maxLength);
 //const char* getDate(void);
 void getDate(char* aryChr);
+void getDateALT(char* aryChr, char* aryDateSrc);
 const char* determineVisualStudioVersion(void);
 
 #endif //UTIL_VERSION_H

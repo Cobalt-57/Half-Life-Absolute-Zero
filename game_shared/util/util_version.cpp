@@ -1,7 +1,9 @@
 
 #include "util_version.h"
 #include "version.h"
+#include "build_settings.h"
 #include "external_lib_include.h"
+
 
 
 //write the constants from "version.h" to whatever buffer for display.
@@ -10,9 +12,9 @@ void writeVersionInfo(char* aryChr, int maxLength) {
 	aryChr[0] = '\0';   //safety.
 	int mode = 0;
 #ifdef _DEBUG
-	const char* addon = "DEBUG";
+	const char* addon = BUILD_INFO_DEBUG;
 #else
-	const char* addon = "RELEASE";
+	const char* addon = BUILD_INFO_RELEASE;
 #endif
 
 
@@ -86,7 +88,15 @@ void writeDateInfo(char* aryChr, int maxLength) {
 	//const char* toWrite = getDate();
 	getDate(aryChrDATE);
 #else
-	const char* toWrite = MODINFO_Date;
+	//const char* toWrite = MODINFO_Date;
+	// !!! Not so fast!  Want a filler 0 digit for the 'day' portion on days under 10, not
+	// the space.  Parse it.
+	char aryChrDATE[128];
+	const char* toWrite = aryChrDATE;
+	// Test?
+	//getDateALT(aryChrDATE, "Ass 25 1999");
+	getDateALT(aryChrDATE, MODINFO_Date);
+
 #endif
 
 	int mode = 0;
@@ -114,12 +124,66 @@ void getDate(char* aryChr) {
 	time_t currentTime = time(0);
 	struct tm* currentTimeData = localtime(&currentTime);
 
+	const char* monthString;
+
+	switch(currentTimeData->tm_mon){
+	case  0:monthString = "Jan"; break;
+	case  1:monthString = "Feb"; break;
+	case  2:monthString = "Mar"; break;
+	case  3:monthString = "Apr"; break;
+	case  4:monthString = "May"; break;
+	case  5:monthString = "Jun"; break;
+	case  6:monthString = "Jul"; break;
+	case  7:monthString = "Aug"; break;
+	case  8:monthString = "Sep"; break;
+	case  9:monthString = "Oct"; break;
+	case 10:monthString = "Nov"; break;
+	case 11:monthString = "Dec"; break;
+	default:monthString = "???"; break; // whut
+	}
+
 	//char  aryChr[128];
-	sprintf(aryChr, "M:%d D:%d Y:%d", currentTimeData->tm_mon + 1, currentTimeData->tm_mday, currentTimeData->tm_year + 1900);
+	//sprintf(aryChr, "M:%d D:%d Y:%d", currentTimeData->tm_mon + 1, currentTimeData->tm_mday, currentTimeData->tm_year + 1900);
+	sprintf(aryChr, "%s %02d %d", monthString, currentTimeData->tm_mday, currentTimeData->tm_year + 1900);
 	//aryChr[127] = '\0';
 
 	//return aryChr;
 }
+
+
+// Given the provided build date (aryDateSrc), parse it and get the days with a 0 filler digit (for days under 10).
+// The date comes with filler spaces used instead.
+void getDateALT(char* aryChr, char* aryDateSrc) {
+	time_t currentTime = time(0);
+	struct tm* currentTimeData = localtime(&currentTime);
+
+	const char* monthString = &aryDateSrc[0];
+	const char* dayString = &aryDateSrc[4];
+	const char* yearString = &aryDateSrc[7];
+
+	// Mmm dd yyyy
+	strncpy(&aryChr[0], &monthString[0], 3);
+	aryChr[3] = ' ';
+	
+	// INTERVENTION
+	//strncpy(&aryChr[4], dayString, 2);
+	if(dayString[0] >= '0' && dayString[0] <= '9' ){
+		// numeric? ok, take it.
+		aryChr[4] = dayString[0];
+	}else{
+		// Anything else (space)?  Filler 0
+		aryChr[4] = '0';
+	}
+	// no interpretation needed for the one's place
+	aryChr[5] = dayString[1];
+
+	// Does the year end in a null-terminating character?  No idea
+	aryChr[6] = ' ';
+	strncpy(&aryChr[7], &yearString[0], 4);
+
+}//getDateALT
+
+
 
 
 //THANK YOU,

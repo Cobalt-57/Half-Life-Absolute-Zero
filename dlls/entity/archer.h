@@ -44,6 +44,8 @@ public:
 	Vector preSurfaceAttackLocation;
 
 	float waterLevelMem;
+	float lackOfWaterTimer;
+	float interruptMeleeTimer;
 
 	
 	//save info

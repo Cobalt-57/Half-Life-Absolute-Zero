@@ -571,7 +571,6 @@ void CTalkMonster::StartTask( Task_t *pTask )
 	switch ( pTask->iTask )
 	{
 
-
 	case TASK_GATE_ORGANICLOGIC_NEAR_LKP: {
 		int x = 4;
 		TaskComplete();
@@ -811,8 +810,6 @@ void CTalkMonster::RunTask( Task_t *pTask )
 {
 	switch( pTask->iTask )
 	{
-
-		
 
 	case TASK_CANT_FOLLOW:
 		{
@@ -1884,14 +1881,25 @@ int CTalkMonster::IgnoreConditions(void) {
 	int baseCond = CBaseMonster::IgnoreConditions();
 
 
+
+
 	if (HasMemory(bits_COND_PROVOKED) || recentDeclines >= 30) {
 		// I don't really care if the player tries to push me now.
-		return baseCond | bits_COND_CLIENT_PUSH;
+		baseCond |= bits_COND_CLIENT_PUSH;
 	}
 	else {
 		// nothing special
-		return baseCond;
+		//return baseCond;
 	}
+
+
+	if(m_MonsterState == MONSTERSTATE_SCRIPT && gpGlobals->time < scriptedUninterruptableConditionsTime){
+		// HACK - force back in the conditions for being uninterruptable if it hasn't been long since being
+		// released from a scripted.
+		baseCond |= SCRIPT_BREAK_CONDITIONS;
+	}
+
+	return baseCond;
 }
 
 
@@ -2644,6 +2652,7 @@ CTalkMonster::CTalkMonster(void){
 
 	nextUseSentenceAllowed = -1;
 	nextIdleFidgetAllowedTime = -1;
+	scriptedUninterruptableConditionsTime = -1;
 
 }//CTalkMonster constructor
 
@@ -3243,11 +3252,36 @@ void CTalkMonster::OnCineCleanup(CCineMonster* pOldCine){
 	
 	//CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(16, 22);
 
-	// Only do this if we're not already waiting for a longer amount of time.
-	if (CTalkMonster::g_talkWaitTime < gpGlobals->time + 1.7){
-		CTalkMonster::g_talkWaitTime = gpGlobals->time + 1.7;
-		m_flStopTalkTime = gpGlobals->time + 1.7;
+
+	// Wait, idea.  If coming from a walking/running order, give more time to wait.  Just an idea.
+	float enforcedTalkDelay;
+	if(pOldCine->m_fMoveTo == 1){
+		// the WALK one.  Give a little more time.
+		enforcedTalkDelay = gpGlobals->time + 2.3;
+	}else if(pOldCine->m_fMoveTo == 2){
+		// the RUN one, more.
+		enforcedTalkDelay = gpGlobals->time + 3.5;
+	}else if(pOldCine->m_fMoveTo == 4){
+		// Teleport one?
+		enforcedTalkDelay = gpGlobals->time + 2.7;
+	}else{
+		// Remaining (0 and 5 are 'wait' don't know what 3 is)?
+		enforcedTalkDelay = gpGlobals->time + 1.6;
 	}
+
+	// Only do this if we're not already waiting for a longer amount of time.
+	if (CTalkMonster::g_talkWaitTime < enforcedTalkDelay){
+		CTalkMonster::g_talkWaitTime = enforcedTalkDelay;
+		m_flStopTalkTime = enforcedTalkDelay;
+	}
+
+	if(!pOldCine->CanInterrupt()){
+		// A cine that was not interruptable is ending?
+		// For 2.5 seconds, any conditions that would've interrupted whatever subsequent non-interruptable cines will not interrupt.
+		// This stops the scientist running into turret fire from stopping to attack the headcrab that attacks it from breaking script.
+		scriptedUninterruptableConditionsTime = gpGlobals->time + 2.5;
+	}
+
 
 	CBaseMonster::OnCineCleanup(pOldCine);
 

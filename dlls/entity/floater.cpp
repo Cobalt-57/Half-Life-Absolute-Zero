@@ -200,6 +200,8 @@ const char* CFloater::pAttackSounds[] =
 {
 	"floater/floater_attack.wav",
 };
+
+
 const char* CFloater::pAttackHitSounds[] = 
 {
 	"zombie/claw_strike1.wav",
@@ -297,28 +299,38 @@ IMPLEMENT_CUSTOM_SCHEDULES( CFloater, CFlyingMonster );
 
 	
 void CFloater::DeathSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pDeathSounds), 1.0, ATTN_IDLE, 0, pitch );
+	*/
 }
 void CFloater::AlertSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAlertSounds), 1.0, ATTN_NORM, 0, pitch );
+	*/
 }
 void CFloater::IdleSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random idle sound
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pIdleSounds), 1.0, ATTN_NORM, 0, pitch );
+	*/
 }
 void CFloater::PainSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	if (RANDOM_LONG(0,5) < 2){
 		UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pPainSounds), 1.0, ATTN_NORM, 0, pitch );
 	}
+	*/
 }
 void CFloater::AttackSound( void ){
+	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random attack sound
 	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
+	*/
 }
 
 
@@ -341,9 +353,10 @@ void CFloater::Precache( void )
 	PRECACHE_SOUND_ARRAY(pIdleSounds);
 	PRECACHE_SOUND_ARRAY(pPainSounds);
 	PRECACHE_SOUND_ARRAY(pAttackSounds);
+	*/
 	PRECACHE_SOUND_ARRAY(pAttackHitSounds);
 	PRECACHE_SOUND_ARRAY(pAttackMissSounds);
-	*/
+
 	global_useSentenceSave = FALSE;
 }//END OF Precache()
 

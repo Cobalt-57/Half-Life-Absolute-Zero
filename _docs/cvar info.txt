@@ -1555,10 +1555,21 @@ cl_viewmodel_fidget (2) - MODEVAR.  Affects how/when fidget animations for certa
 1: Randomly while idle (retail).  Does not block firing.
 2: Right-click to trigger them, blocks firing.
 
-sv_player_midair_fix (0) - BOOL.  When on, support for an extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
--As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
--This may also stop getting stuck in certain terrain, such as tracks in a2a1.
--Slight jumpiness one frame (very fast) when crouch-jumping against something, helped by cl_interp_view_extra set to 2.  NEW: fixed for cl_interp_view_extra set to 1 too.
+sv_player_midair_fix (0) - MODEVAR.  When on, gives a fix related to detecting slopes while mid-air.
+0: No change (retail)
+1: Minimal: can detect standing on a slope to allow a jump to get unstuck.
+- Small side-effect: jumping up some previously un-jumpable slopes while leaning against a wall at the same time may be possible.
+2: Extension of midair logic that does similar slope-checks as walking.  That is, jumping 'up' stairs is possible without losing momentum.
+- As a side-effect, reaching the top of several objects that were difficult to reach through even crouch-jumping (often some barrels and boxes) is much easier; reach of jumps slightly improved.
+- This may also stop getting stuck in certain terrain, such as tracks in a2a1.
+- Slight jumpiness one frame (very fast) when crouch-jumping against something, helped by cl_interp_view_extra set to 2.  NEW: fixed for cl_interp_view_extra set to 1 too.
+
+sv_player_midair_accel (0) - BOOL.  When on, uses some alternate logic for mid-air acceleration (intependent of sv_player_midair_fix above)
+0: No change (Retail)
+1: Modded logic:
+   - Slight air-resistance at higher-than-running-jump speeds.  Applies to velocities caused by getting flung from other sources, such as long jump or extreme gauss knockback.
+   - Max speed while mid-air from changing directions (seen by jumping while standing still and moving mid-air) increased greatly but still less than ground max speed.
+   - Less influence on mid-air speed per frame (takes longer to cancel the floor-wise momentum of a forward running jump by moving backward).
 
 
 pathfindForcePointHull (0) - BOOL.  When on, pathfinding always uses the 'point' hull (no size) for checking whether a path between nodes is valid for a monster.
@@ -1576,7 +1587,7 @@ pathfindNearestNodeExtra (0) - BOOL.  When on, pathfinding will use better check
 - Improved way (1): will use the same AI (CheckLocalMove) for telling whether there is a valid straight-line path between two places for more accuracy.
 - NOTICE: Forces the nearest node cache to be ignored regardless of pathfindIgnoreNearestNodeCache.  It does not support remembering nodes for different entity or hull sizes.
 
-sv_turret_postdeath (1) - MODEVAR.  Affects what happens when a mounted turret (not a sentry, the ones on stands) runs out of health.
+sv_turret_postdeath (0) - MODEVAR.  Affects what happens when a mounted turret (not a sentry, the ones on stands) runs out of health.
 0: no change from retail.
 1: More sparks during the death sequence, ends on an explosion effect.
 2: New post-beserk sequence that lasts 6 to 8 seconds.  Turret beeps more, fires in all directions more quickly, and make explosion effects.  Mode #1 applies when post-beserk stops and plays the last animation. Can end early by taking half its original health in damage.

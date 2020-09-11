@@ -35,7 +35,7 @@
 #include "gamerules_teamplay.h"
 
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerBulletHitEffectForceServer)
 EASY_CVAR_EXTERN_DEBUGONLY(forceWorldLightOff)
 
@@ -163,7 +163,7 @@ void CDecal::StaticDecal( void )
 
 //DOOMMARINE23 If we're in censorship mode, replace all dynamic blood placed by the level designer with censored versions.
 //WELCOME TO IF/ELSE HELL
-		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship))
+		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship))
 		{	
 			if ((int)pev->skin >= 230 && (int)pev->skin <= 237)	//Dynamic Human Blood {blood1 through {blood 8
 				{
@@ -285,6 +285,7 @@ CGlobalState::CGlobalState( void )
 	m_i_monsterIDLatest = 0;
 	m_i_FuncTrackChangeIDLatest = 0;
 	m_i_PathTrackIDLatest = 0;
+	m_i_scriptedIDLatest = 0;
 }
 
 void CGlobalState::Reset( void )
@@ -384,6 +385,7 @@ TYPEDESCRIPTION	CGlobalState::m_SaveData[] =
 	DEFINE_FIELD( CGlobalState, m_i_monsterIDLatest, FIELD_INTEGER ),
 	DEFINE_FIELD( CGlobalState, m_i_FuncTrackChangeIDLatest, FIELD_INTEGER ),
 	DEFINE_FIELD( CGlobalState, m_i_PathTrackIDLatest, FIELD_INTEGER ),
+	DEFINE_FIELD( CGlobalState, m_i_scriptedIDLatest, FIELD_INTEGER ),
 };
 
 // Global Savedata for Delay

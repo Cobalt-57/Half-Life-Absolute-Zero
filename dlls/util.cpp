@@ -20,11 +20,13 @@
 
 */
 
+// ?
+//#include <time.h>
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
 #include "saverestore.h"
-#include <time.h>
 #include "shake.h"
 #include "decals.h"
 #include "player.h"
@@ -42,7 +44,7 @@
 #include "util_debugdraw.h"
 #include "nodes.h"
 #include "lights.h"
-
+#include "scripted.h"
 
 #include "cvar_custom_info.h"
 #include "cvar_custom_list.h"
@@ -58,7 +60,7 @@ EASY_CVAR_EXTERN(flashLightSpawnDistVertMin)
 EASY_CVAR_EXTERN(flashLightSpawnDistVertMax)
 EASY_CVAR_EXTERN(flashLightMultiColor)
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 
 EASY_CVAR_EXTERN_DEBUGONLY(sparksEnvMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(shrapRand)
@@ -1740,7 +1742,7 @@ BOOL UTIL_ShouldShowBlood( int color )
 		return FALSE;
 	}else if (color == BLOOD_COLOR_RED){
 		// hblood CVar allows it and germancensorship is off?  Proceed.
-		if (CVAR_GET_FLOAT("violence_hblood") != 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1) {
+		if (CVAR_GET_FLOAT("violence_hblood") != 0 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) != 1) {
 			return TRUE;
 		}
 	}
@@ -1748,7 +1750,7 @@ BOOL UTIL_ShouldShowBlood( int color )
 		// oil from robots? never censored.
 		return TRUE;
 	}
-	else if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1)
+	else if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) != 1)
 	{
 		// even alien blood is restricted by sv_germancensorship, but not gibs? Keep it this way?
 		if (CVAR_GET_FLOAT("violence_ablood") != 0) {
@@ -4195,6 +4197,17 @@ void UTIL_drawLineFrame(float x1, float y1, float z1, float x2, float y2, float 
 }//END OF UTIL_drawLineFrame
 
 
+void UTIL_drawLineFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int life, int r, int g, int b){
+	// Fill in defaults. No one wants to specify all that other stuff.
+	// And a speed of 0 is ok.
+	const int frameStart = 0;
+	const int frameRate = 0;
+	//const int life = 1;
+	const int speed = 0;
+	const int noise = 0;
+	UTIL_TE_BeamPoints(x1, y1, z1, x2, y2, z2, frameStart, frameRate, life, width, noise, r, g, b, 255, speed);
+}//END OF UTIL_drawLineFrame
+
 
 
 //Draw a vertical line going through this point, with the point as the center of the line. This makes it easier to see the point than drawing at one X, Y, Z coordinate (nearly impossible to see sometimes)
@@ -4226,6 +4239,9 @@ void UTIL_drawRectFrame(float x1, float y1, float z1, float x2, float y2, float 
 void UTIL_drawBoxFrame(const Vector& vec1, const Vector& vec2, int width, int r, int g, int b){
 	UTIL_drawBoxFrame(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, width, r, g, b);
 }
+void UTIL_drawBoxFrame(const Vector& vec1, const Vector& vec2, int width, int life, int r, int g, int b){
+	UTIL_drawBoxFrame(vec1.x, vec1.y, vec1.z, vec2.x, vec2.y, vec2.z, width, life, r, g, b);
+}
 	
 
 void UTIL_drawBoxFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int r, int g, int b){
@@ -4233,25 +4249,35 @@ void UTIL_drawBoxFrame(float x1, float y1, float z1, float x2, float y2, float z
 	UTIL_drawLineFrame(x1, y1, z1, x1, y2, z1, width, r, g, b);
 	UTIL_drawLineFrame(x1, y1, z1, x2, y1, z1, width, r, g, b);
 	UTIL_drawLineFrame(x1, y1, z1, x1, y1, z2, width, r, g, b);
-	
 	UTIL_drawLineFrame(x2, y1, z1, x2, y2, z1, width, r, g, b);
 	UTIL_drawLineFrame(x2, y1, z1, x2, y1, z2, width, r, g, b);
-	
 	UTIL_drawLineFrame(x1, y2, z1, x2, y2, z1, width, r, g, b);
 	UTIL_drawLineFrame(x1, y2, z1, x1, y2, z2, width, r, g, b);
-
 	UTIL_drawLineFrame(x2, y2, z1, x2, y2, z2, width, r, g, b);
-
 	UTIL_drawLineFrame(x1, y1, z2, x1, y2, z2, width, r, g, b);
 	UTIL_drawLineFrame(x1, y1, z2, x2, y1, z2, width, r, g, b);
-	
 	UTIL_drawLineFrame(x2, y1, z2, x2, y2, z2, width, r, g, b);
-	
 	UTIL_drawLineFrame(x1, y2, z2, x2, y2, z2, width, r, g, b);
 
 }//END OF UTIL_drawBoxFrame
 
 
+void UTIL_drawBoxFrame(float x1, float y1, float z1, float x2, float y2, float z2, int width, int life, int r, int g, int b){
+
+	UTIL_drawLineFrame(x1, y1, z1, x1, y2, z1, width, life, r, g, b);
+	UTIL_drawLineFrame(x1, y1, z1, x2, y1, z1, width, life,r, g, b);
+	UTIL_drawLineFrame(x1, y1, z1, x1, y1, z2, width, life,r, g, b);
+	UTIL_drawLineFrame(x2, y1, z1, x2, y2, z1, width, life,r, g, b);
+	UTIL_drawLineFrame(x2, y1, z1, x2, y1, z2, width, life,r, g, b);
+	UTIL_drawLineFrame(x1, y2, z1, x2, y2, z1, width, life,r, g, b);
+	UTIL_drawLineFrame(x1, y2, z1, x1, y2, z2, width, life,r, g, b);
+	UTIL_drawLineFrame(x2, y2, z1, x2, y2, z2, width, life,r, g, b);
+	UTIL_drawLineFrame(x1, y1, z2, x1, y2, z2, width, life,r, g, b);
+	UTIL_drawLineFrame(x1, y1, z2, x2, y1, z2, width, life,r, g, b);
+	UTIL_drawLineFrame(x2, y1, z2, x2, y2, z2, width, life,r, g, b);
+	UTIL_drawLineFrame(x1, y2, z2, x2, y2, z2, width, life,r, g, b);
+
+}//END OF UTIL_drawBoxFrame
 
 
 //draw a box centered around a point for emphasis, and a 3D cross through the point itself.
@@ -4917,17 +4943,17 @@ void updateCVarRefs(BOOL isEarly){
 	}//END OF barnacleCanGib CVar check
 
 
-	if(globalPSEUDO_germanCensorshipMem != EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) || globalPSEUDO_allowGermanModelsMem != EASY_CVAR_GET_DEBUGONLY(allowGermanModels)){
-		//easyForcePrintLine("ARE YOU amazin %.2f %.2f %.2f", globalPSEUDO_canApplyGermanCensorship, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship), EASY_CVAR_GET_DEBUGONLY(allowGermanModels));
+	if(globalPSEUDO_germanCensorshipMem != EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) || globalPSEUDO_allowGermanModelsMem != EASY_CVAR_GET_DEBUGONLY(allowGermanModels)){
+		//easyForcePrintLine("ARE YOU amazin %.2f %.2f %.2f", globalPSEUDO_canApplyGermanCensorship, EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship), EASY_CVAR_GET_DEBUGONLY(allowGermanModels));
 
-		if(globalPSEUDO_canApplyGermanCensorship != 1 && (globalPSEUDO_germanCensorshipMem != -1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1) && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1){
-		//if(globalPSEUDO_canApplyGermanCensorship != 1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1){
-			//note: "EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)" being -1 means this is the first time it has been set.  Trust this is not the doing of the user.
+		if(globalPSEUDO_canApplyGermanCensorship != 1 && (globalPSEUDO_germanCensorshipMem != -1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 1) && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1){
+		//if(globalPSEUDO_canApplyGermanCensorship != 1 && EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 1 && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1){
+			//note: "EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship)" being -1 means this is the first time it has been set.  Trust this is not the doing of the user.
 			easyForcePrintLine("***Change map, restart, or load to update models.  Must have german models.");
 			//  ...CVars are \"sv_germancensorship\" & \"allowGermanModels\"***"
 		}
 
-		globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship);
+		globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship);
 		globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET_DEBUGONLY(allowGermanModels);
 
 		if(globalPSEUDO_canApplyGermanCensorship != 1){
@@ -5651,8 +5677,8 @@ void method_precacheAll(void){
 	globalPSEUDO_germanModel_hassaultFound = FALSE;
 
 
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == -1){
-		//global_germanCensorship = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship);
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == -1){
+		//global_germanCensorship = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship);
 
 		//"gets the point across"
 		//global_allowGermanModels = EASY_CVAR_GET_DEBUGONLY(allowGermanModels);
@@ -5665,8 +5691,8 @@ void method_precacheAll(void){
 
 	//!!!!tryLoadGermanGibs  !!!!!
 
-	//easyForcePrintLine("ARE YOU flaming %.2f %.2f", EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship), EASY_CVAR_GET_DEBUGONLY(allowGermanModels));
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1){
+	//easyForcePrintLine("ARE YOU flaming %.2f %.2f", EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship), EASY_CVAR_GET_DEBUGONLY(allowGermanModels));
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 1 && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1){
 		
 		if( !(globalPSEUDO_germanModel_hgibFound = verifyModelExists(GERMAN_GIB_PATH)) ){
 			easyForcePrintLine("***NOTICE: model \"%s\" missing.  Gibs will not spawn.***", GERMAN_GIB_PATH);
@@ -5718,7 +5744,7 @@ void method_precacheAll(void){
 		
 
 	globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET_DEBUGONLY(allowGermanModels);
-	//globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship);
+	//globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship);
 	
 
 
@@ -6754,7 +6780,7 @@ void PRINTQUEUE_STUKA_SEND(PrintQueue& toPrint, const char* src, ...){
 }
 
 BOOL getGermanModelsAllowed(void){
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 1 && EASY_CVAR_GET_DEBUGONLY(allowGermanModels) == 1 && globalPSEUDO_canApplyGermanCensorship == 1){
 		return TRUE;
 	}else{
 		return FALSE;
@@ -6975,13 +7001,14 @@ void ResetDynamicStaticIDs(){
 	CBaseMonster::monsterIDLatest = 0;
 	CFuncTrackChange::FuncTrackChangeIDLatest = 0;
 	CPathTrack::PathTrackIDLatest = 0;
-
+	CCineMonster::scriptedIDLatest = 0;
 }
 
 void SaveDynamicIDs(CGlobalState* argGS){
 	argGS->m_i_monsterIDLatest = CBaseMonster::monsterIDLatest;
 	argGS->m_i_FuncTrackChangeIDLatest = CFuncTrackChange::FuncTrackChangeIDLatest;
 	argGS->m_i_PathTrackIDLatest = CPathTrack::PathTrackIDLatest;
+	argGS->m_i_scriptedIDLatest = CCineMonster::scriptedIDLatest;
 
 }
 
@@ -6991,6 +7018,7 @@ void RestoreDynamicIDs(CGlobalState* argGS){
 	CBaseMonster::monsterIDLatest = argGS->m_i_monsterIDLatest;
 	CFuncTrackChange::FuncTrackChangeIDLatest = argGS->m_i_FuncTrackChangeIDLatest;
 	CPathTrack::PathTrackIDLatest = argGS->m_i_PathTrackIDLatest;
+	CCineMonster::scriptedIDLatest = argGS->m_i_scriptedIDLatest;
 	
 	// Make sure these are not overwritten by World's precache calling OnMapLoadStart.
 	g_mapLoaded = TRUE;

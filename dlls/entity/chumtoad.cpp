@@ -577,7 +577,6 @@ const char* CChumToad::pIdleSounds[] =
 {
 	"chumtoad/cht_croak_medium.wav",
 	"chumtoad/cht_croak_long.wav",
-
 };
 
 
@@ -608,6 +607,13 @@ CChumToad::CChumToad(void){
 	playerAllyFriend = FALSE;
 
 }//END OF CChumToad constructor
+
+
+BOOL CChumToad::usesSoundSentenceSave(void){
+	return FALSE;
+}
+
+
 
 
 TYPEDESCRIPTION	CChumToad::m_SaveData[] = 
@@ -692,8 +698,8 @@ void CChumToad::Precache( void )
 	PRECACHE_SOUND("chumtoad/cht_croak_long.wav");
 	
 	//global_useSentenceSave = FALSE;
-
 }
+
 
 void CChumToad::setModel(void){
 	CChumToad::setModel(NULL);
@@ -1021,10 +1027,8 @@ void CChumToad::PickupUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYP
 void CChumToad::SetActivity ( Activity NewActivity )
 {
 
-
-	
 	CBaseMonster::SetActivity(NewActivity);
-}//END OF SetActivity(...)
+}//END OF SetActivity
 
 
 
@@ -2209,7 +2213,7 @@ void CChumToad::Land(){
 	//if ( !FNullEnt( pev->owner ) )
 	{
 		int pitch = 95 + RANDOM_LONG(0,29);
-		EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, "chumtoad/cht_croak_short.wav", 1, ATTN_NORM, 0, pitch);	
+		UTIL_PlaySound(ENT(pev), CHAN_VOICE, "chumtoad/cht_croak_short.wav", 1, ATTN_NORM, 0, pitch);	
 	}
 
 	// lie flat

@@ -35,7 +35,7 @@
 // Lightning target, just alias landmark
 LINK_ENTITY_TO_CLASS( info_target, CPointEntity );
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 EASY_CVAR_EXTERN_DEBUGONLY(sparksBeamMulti)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(mirrorsDoNotReflectPlayer)
 

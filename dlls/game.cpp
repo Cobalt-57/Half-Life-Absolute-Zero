@@ -31,7 +31,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(hiddenMemPrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(emergencyFix)
 EASY_CVAR_EXTERN(soundSentenceSave)
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 EASY_CVAR_EXTERN_DEBUGONLY(allowGermanModels)
 EASY_CVAR_EXTERN_DEBUGONLY(forceWorldLightOff)
 
@@ -860,7 +860,7 @@ void GameDLLInit( void )
 	globalPSEUDO_cl_hornettrail = EASY_CVAR_GET(cl_hornettrail);
 	globalPSEUDO_cl_hornetspiral = EASY_CVAR_GET(cl_hornetspiral);
 	
-	globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship);
+	globalPSEUDO_germanCensorshipMem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship);
 	globalPSEUDO_allowGermanModelsMem = EASY_CVAR_GET_DEBUGONLY(allowGermanModels);
 	forceWorldLightOffMem = EASY_CVAR_GET_DEBUGONLY(forceWorldLightOff);
 

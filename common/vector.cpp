@@ -53,6 +53,21 @@ float Distance2D(const vec3_t v1, const vec3_t v2)
 }
 
 
+// NEW!  Given a delta vector (point2 minus point 1 already done), get the distance from it.
+float DistanceFromDelta(const vec3_t vDelta)
+{
+	return Length(vDelta);
+}
+float Distance2DFromDelta(const vec3_t vDelta)
+{
+	float theDist;
+	theDist = 0.0f;
+	theDist += vDelta[0] * vDelta[0];
+	theDist += vDelta[1] * vDelta[1];
+	theDist = sqrt(theDist);		// FIXME
+	return theDist;
+}
+
 
 void VectorAngles(const float* forward, float* angles)
 {

@@ -16,9 +16,12 @@
 // hud_redraw.cpp
 //
 #include <math.h>
+
 #include "hud.h"
 #include "cl_util.h"
 #include "vgui_TeamFortressViewport.h"
+#include "build_settings.h"
+
 
 //MODDD - nice
 //EASY_CVAR_EXTERN_CLIENT_MASS
@@ -339,7 +342,7 @@ int CHud::Redraw(float flTime, int intermission)
 		if (!gHUD.m_Ammo.gWR.gpActiveSel) {
 			// this gives the default color.
 			gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
-			DrawConsoleString(16, buildInfoY, "Half-Life: Absolute Zero Development Build");
+			DrawConsoleString(16, buildInfoY, BUILD_INFO_TITLE);
 			gEngfuncs.pfnDrawSetTextColor(1.00, 0.63, 0);
 			DrawConsoleString(16, buildInfoY + 20, globalbuffer_cl_mod_display);
 			if (globalbuffer_sv_mod_display[0] != '\0') {

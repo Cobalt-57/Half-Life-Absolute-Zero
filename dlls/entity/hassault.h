@@ -84,7 +84,6 @@ public:
 
 
 
-
 	CHAssault(void);
 
 	float SafeSetBlending ( int iBlender, float flValue );
@@ -204,7 +203,7 @@ public:
 	BOOL onResetBlend0(void);
 
 	float getDistTooFar(void);
-
+	void setEnemyLKP(CBaseEntity* theEnt);
 
 	CUSTOM_SCHEDULES;
 	

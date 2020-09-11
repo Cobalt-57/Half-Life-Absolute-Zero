@@ -56,7 +56,8 @@ public:
 	// not every server frame.
 	float m_flNextGrenadeCheck;
 	float m_flNextPainTime;
-	float m_flLastEnemySightTime;
+	// what.  SquadMonster already has this var you goon
+	//float m_flLastEnemySightTime;
 
 	Vector m_vecTossVelocity;
 	BOOL m_fThrowGrenade;
@@ -99,6 +100,7 @@ public:
 	BOOL strafeCanFire;
 
 	BOOL recentChaseFailedAtDistance;
+	BOOL shootpref_eyes;
 
 
 	CHGrunt(void);
@@ -225,16 +227,22 @@ public:
 	//MODDD - see comments below at implementation.
 	//int SquadRecruit( int searchRadius, int maxMembers );
 
-	// OH YOU GREASY LITTLE.  (PlayerUse  uses this to judge whether or not this is worth sending a "touch" to).
+	// PlayerUse  uses this to judge whether or not this is worth sending a "touch" to.
 	int ObjectCaps( void ) { return CSquadMonster::ObjectCaps() | FCAP_IMPULSE_USE; }
 
 	BOOL canResetBlend0(void);
 	BOOL onResetBlend0(void);
+
+
+	void AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir);
+	Vector HGRUNT_ShootAtEnemyEyes(const Vector& shootOrigin);
+
 	void checkHeadGore(void);
 	void checkHeadGore(int iGib );
 	void SayGrenadeThrow(void);
 
 	float getDistTooFar(void);
+	void setEnemyLKP(CBaseEntity* theEnt);
 
 };
 

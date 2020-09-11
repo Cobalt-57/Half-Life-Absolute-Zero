@@ -1024,6 +1024,9 @@ Schedule_t	slSecondaryMeleeAttack[] =
 	},
 };
 
+
+
+
 // special attack1
 Task_t	tlSpecialAttack1[] =
 {
@@ -2068,6 +2071,14 @@ Schedule_t* CBaseMonster::GetScheduleOfType ( int Type )
 			//YOU ARE 1
 			//easyForcePrintLine("what %d :::%d", monsterID, m_pCine->m_fMoveTo);
 			//return GetScheduleOfType( SCHED_IDLE_STAND );
+
+			if(monsterID == 16){
+				int x = 45;
+			}
+
+
+			BOOL what = m_pCine->CanInterrupt();
+			//m_pCine->AllowInterrupt();
 
 			switch ( m_pCine->m_fMoveTo )
 			{

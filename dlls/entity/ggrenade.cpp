@@ -356,7 +356,7 @@ GENERATE_KILLED_IMPLEMENTATION(CGrenade)
 }
 
 BOOL CGrenade::isOrganic(void){
-	//typically not.
+	// typically not.
 	return FALSE;
 }
 

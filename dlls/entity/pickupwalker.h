@@ -51,6 +51,9 @@ extern int gEvilImpulse101;
 class CPickupWalker : public CBaseMonster
 {
 public:
+	CPickupWalker(void);
+	BOOL usesSoundSentenceSave(void);
+
 	void IdleSound( void );
 	
 	void Precache(void);

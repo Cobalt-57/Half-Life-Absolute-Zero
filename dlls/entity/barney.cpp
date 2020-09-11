@@ -30,7 +30,7 @@
 #include "defaultai.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 extern BOOL globalPSEUDO_germanModel_barneyFound;
 extern BOOL globalPSEUDO_iCanHazMemez;
 EASY_CVAR_EXTERN_DEBUGONLY(barneyDummy)

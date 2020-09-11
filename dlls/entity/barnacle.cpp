@@ -31,7 +31,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(drawBarnacleDebug)
 EASY_CVAR_EXTERN_DEBUGONLY(barnacleCanGib)
 EASY_CVAR_EXTERN_DEBUGONLY(barnaclePrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(barnacleTongueRetractDelay)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 EASY_CVAR_EXTERN_DEBUGONLY(allowGermanModels)
 EASY_CVAR_EXTERN_DEBUGONLY(germanRobotGibs)
 EASY_CVAR_EXTERN_DEBUGONLY(germanRobotGibsDecal)
@@ -169,7 +169,7 @@ int CBarnacle::BarnacleGetStandardGibSpawnID(){
 		return GIB_DUMMY_ID;
 	}
 
-	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) != 1){
+	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) != 1){
 		// german censorship is off? this will depend on this CVar.
 		if(CVAR_GET_FLOAT("violence_hgibs") != 0){
 			return GIB_HUMAN_ID;

@@ -41,7 +41,7 @@
 #include "scripted.h"
 #include "util_debugdraw.h"
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(muteRicochetSound)
 EASY_CVAR_EXTERN_DEBUGONLY(bulletholeAlertRange)
 EASY_CVAR_EXTERN_DEBUGONLY(nothingHurts)
@@ -211,12 +211,12 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	{
 		
 		//Old check... mostly.
-		//if ( EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_hgibs") != 0 )	// Only the player will ever get here   ...Why was this comment here as-is? only the player? what?
+		//if ( EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_hgibs") != 0 )	// Only the player will ever get here   ...Why was this comment here as-is? only the player? what?
 		
 		
 		//MODDD - Little intervention here when spawning human gibs. Check to see if german censorship is on.
 
-		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)==0){
+		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship)==0){
 			//turned off? usual behavior, only require violence_hgibs to be off.
 			if(CVAR_GET_FLOAT("violence_hgibs") != 0){
 				BOOL spawnHeadBlock = this->DetermineGibHeadBlock();
@@ -251,7 +251,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 	else if ( HasAlienGibs() )
 	{
 		//NOTE: using real alien gibs.  If "agibs" are banned, then don't show.
-		//if ( EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_agibs") != 0 )	// Should never get here, but someone might call it directly
+		//if ( EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 1 || CVAR_GET_FLOAT("violence_agibs") != 0 )	// Should never get here, but someone might call it directly
 
 		//MODDD - no involvement from germancensorship, keep to using violence_agibs.
 		if(CVAR_GET_FLOAT("violence_agibs") != 0)
@@ -282,7 +282,7 @@ GENERATE_GIBMONSTERGIB_IMPLEMENTATION(CBaseMonster){
 				
 
 				// MODDD - don't know how german censorship will handle zombies, not doing anything for the human-gib portion for now
-				if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 0) {
+				if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 0) {
 					if (CVAR_GET_FLOAT("violence_hgibs") != 0) {
 						CGib::SpawnRandomGibs(pev, 3, GIB_HUMAN_ID, fGibSpawnsDecal);	// Throw human gibs
 					}
@@ -604,6 +604,8 @@ Activity CBaseMonster::GetBigFlinchActivity(void){
 
 
 
+
+// Is there any conflict with this if archers allow knockback?
 
 //MODDD - NOTE
 // For intensity of the most recent attack, check pev->health to see how far into the negatives it is.
@@ -990,17 +992,16 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, fl
 			//TEXTURETYPE_PlaySound(&tr, vecStart, vecEnd, 0);
 		}
 
-			/*
-			CBaseEntity* pPlayerEntityScan = NULL;
-			while( (pPlayerEntityScan = UTIL_FindEntityByClassname(pPlayerEntityScan, "player")) != NULL){
-				CBasePlayer* tempPlayer = static_cast<CBasePlayer*>(pPlayerEntityScan);
-				tempPlayer->debugVect1Draw = TRUE;
-				tempPlayer->debugVect1Start = vecStartB;
-				tempPlayer->debugVect1End = vecEndB + (vecEndB - vecStartB)*trB.flFraction;
-				tempPlayer->debugVect1Success = (trB.flFraction < 1.0);
-		
-			}
-			*/
+		/*
+		CBaseEntity* pPlayerEntityScan = NULL;
+		while( (pPlayerEntityScan = UTIL_FindEntityByClassname(pPlayerEntityScan, "player")) != NULL){
+			CBasePlayer* tempPlayer = static_cast<CBasePlayer*>(pPlayerEntityScan);
+			tempPlayer->debugVect1Draw = TRUE;
+			tempPlayer->debugVect1Start = vecStartB;
+			tempPlayer->debugVect1End = vecEndB + (vecEndB - vecStartB)*trB.flFraction;
+			tempPlayer->debugVect1Success = (trB.flFraction < 1.0);
+		}
+		*/
 	}else if(tr.pHit != NULL && strcmp(STRING(tr.pHit->v.classname), "worldspawn") == 0){
 		//hit the world? is it possible we're swinging at something above us from an incline? Do a re-check for slightly higher.
 		TraceResult trB;
@@ -1992,7 +1993,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 				//(pev->movetype != MOVETYPE_NONE && pev->movetype != MOVETYPE_FLY && pev->movetype != MOVETYPE_FLYMISSILE)
 				// ...nevermind, only affect MOVETYPE_STEP to be safe.  Players (MOVETYPE_WALK) are already affected separately,
 				// and exempt from reaching this point anyway (this is in the 'else', of a 'IsPlayer' check).
-				(pev->movetype == MOVETYPE_STEP)
+				// Now up to the monster!  Overridable.
+				//(pev->movetype == MOVETYPE_STEP)
+				(AffectedByKnockback())
 			){
 				if (bitsDamageType & DMG_BLAST) {
 					Knockback(g_rawDamageCumula * 0.28 * EASY_CVAR_GET(sv_explosionknockback), -g_vecAttackDir);
@@ -2018,11 +2021,31 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 	{
 		if(  (!m_pCine || m_pCine->CanInterrupt())  ) {
 
-			if (monsterID == 0 || monsterID == 1) {
+			if (monsterID == 3) {
 				int x = 45;
 			}
 
 			SetConditions( bits_COND_LIGHT_DAMAGE );
+
+			/*
+			//MODDD
+			// BEWARE!  Setting _DAMAGE conditions without setting m_vecEnemyLKP is a no-no!
+			//setEnemyLKP()  ???
+
+			//////////////////////////////////////////////////////////////////////////////////////
+			// shorter verison of script further below
+			if (pevInflictor)
+			{
+				if (m_hEnemy == NULL || pevInflictor == m_hEnemy->pev || !HasConditions(bits_COND_SEE_ENEMY)){
+					setEnemyLKP_Investigate(pevInflictor->origin);
+				}
+			}else{
+				setEnemyLKP_Investigate(pev->origin + ( g_vecAttackDir * 64 ));
+			}
+			MakeIdealYaw( m_vecEnemyLKP );
+			//////////////////////////////////////////////////////////////////////////////////////
+			*/
+
 		}
 		g_rawDamageCumula = 0;  //whoopsie
 		return 0;

@@ -40,28 +40,30 @@ public:
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
 	//MODDD - you too?!
-	virtual int		CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space
-	BOOL		FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex );
-	Activity	GetStoppedActivity( void );
+	virtual int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space
+	BOOL FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex );
+	Activity GetStoppedActivity( void );
 
 	GENERATE_KILLED_PROTOTYPE_VIRTUAL
 
-	void	Stop( void );
-	float	ChangeYaw( int speed );
-	void	HandleAnimEvent( MonsterEvent_t *pEvent );
+	void Stop( void );
+	float ChangeYaw( int speed );
+	void HandleAnimEvent( MonsterEvent_t *pEvent );
 
 	//MODDD - not virtual. Why the HELL not.
-	virtual void	MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
-	virtual void	Move( float flInterval = 0.1 );
-	virtual BOOL		ShouldAdvanceRoute( float flWaypointDist, float flInterval );
+	virtual void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
+	virtual void Move( float flInterval = 0.1 );
+	virtual BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
 
-	inline void SetFlyingMomentum( float momentum ) { m_momentum = momentum; }
-	inline void SetFlyingFlapSound( const char *pFlapSound ) { m_pFlapSound = pFlapSound; }
-	inline void SetFlyingSpeed( float speed ) { m_flightSpeed = speed; }
-	float	CeilingZ( const Vector &position );
-	float	FloorZ( const Vector &position );
-	BOOL		ProbeZ( const Vector &position, const Vector &probe, float *pFraction );
+	inline void SetFlyingMomentum( float momentum ) {m_momentum = momentum;}
+	inline void SetFlyingFlapSound( const char *pFlapSound ) {m_pFlapSound = pFlapSound;}
+	inline void SetFlyingSpeed( float speed ) {m_flightSpeed = speed;}
+	float CeilingZ( const Vector &position );
+	float FloorZ( const Vector &position );
+	BOOL ProbeZ( const Vector &position, const Vector &probe, float *pFraction );
 	
+	virtual BOOL AffectedByKnockback(void);
+	virtual BOOL SeeThroughWaterLine(void);
 
 	/*
 	virtual void StartTask( Task_t *pTask );
@@ -70,11 +72,11 @@ public:
 
 
 protected:
-	Vector		m_vecTravel;		// Current direction
-	float	m_flightSpeed;		// Current flight speed (decays when not flapping or gliding)
-	float	m_stopTime;			// Last time we stopped (to avoid switching states too soon)
-	float	m_momentum;			// Weight for desired vs. momentum velocity
-	const char	*m_pFlapSound;
+	Vector m_vecTravel;		// Current direction
+	float m_flightSpeed;		// Current flight speed (decays when not flapping or gliding)
+	float m_stopTime;			// Last time we stopped (to avoid switching states too soon)
+	float m_momentum;			// Weight for desired vs. momentum velocity
+	const char *m_pFlapSound;
 };
 
 

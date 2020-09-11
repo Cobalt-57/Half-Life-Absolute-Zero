@@ -706,11 +706,12 @@
 #define DEFAULT_sv_rpg_clipless 1
 #define DEFAULT_cl_viewmodel_fidget 2
 #define DEFAULT_sv_player_midair_fix 0
+#define DEFAULT_sv_player_midair_accel 0
 #define DEFAULT_pathfindIgnoreNearestNodeCache 0
 #define DEFAULT_pathfindIgnoreStaticRoutes 0
 #define DEFAULT_pathfindForcePointHull 0
 #define DEFAULT_pathfindNearestNodeExtra 0
-#define DEFAULT_sv_turret_postdeath 1
+#define DEFAULT_sv_turret_postdeath 0
 #define DEFAULT_cl_mp5_evil_skip 0
 #define DEFAULT_egonRadiusDamageMode 0
 #define DEFAULT_egonFireRateMode 0

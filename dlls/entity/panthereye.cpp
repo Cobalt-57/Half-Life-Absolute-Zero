@@ -549,12 +549,11 @@ const char *CPantherEye::pDeathSounds[] =
 };
 
 
-
 TYPEDESCRIPTION	CPantherEye::m_SaveData[] = 
 {
 	DEFINE_FIELD(CPantherEye, sneakMode, FIELD_INTEGER),
 	DEFINE_FIELD(CPantherEye, pissedRunTime, FIELD_TIME)
-//	*m_pfnThink
+
 };
 //IMPLEMENT_SAVERESTORE( CPantherEye, CBaseMonster );
 int CPantherEye::Save( CSave &save )
@@ -1231,6 +1230,9 @@ void CPantherEye::HandleEventQueueEvent(int arg_eventID){
 
 				//half-damage, the second swipe is a less pronounced claw swipe.
 			CBaseEntity *pHurt = CheckTraceHullAttack( 84*1.2, gSkillData.panthereyeDmgClaw/2, DMG_BLEEDING );
+
+			// hold on.  Is the thing I intended to hit close?  Go ahead and hit that anyway, that was the intent.
+
 			if ( pHurt )
 			{
 				if ( (pHurt->pev->flags & (FL_MONSTER|FL_CLIENT)) && !pHurt->blocksImpact() )
@@ -1704,11 +1706,48 @@ BOOL CPantherEye::CheckMeleeAttack1 ( float flDot, float flDist )
 		EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("NO ENEMY"));
 	}
 	*/
-	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 90 	&& 
+
+	if(m_hEnemy == NULL){
+		return FALSE;  // ???
+	}
+
+
+	float zDist;
+	//zDist = (m_hEnemy->Center().z - this->Center().z);
+	if(m_hEnemy->pev->origin.z > this->pev->absmax.z){
+		// If the other monster's z is above the top of my bounding box, the z dist will be from the top of my bounds to there
+		zDist = fabs(m_hEnemy->pev->origin.z - this->pev->absmax.z);
+	}else if(m_hEnemy->pev->origin.z < this->pev->absmin.z){
+		// If it is under the absmin, take that difference instead
+		zDist = fabs(this->pev->absmin.z - m_hEnemy->pev->origin.z);
+	}else{
+		// the enemy origin isn't outside the bounds?  ok, a 'pass' all the same
+		zDist = 0;
+	}
+
+
+	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 90 && zDist < 40 && 
 	 m_hEnemy != NULL &&
 	 m_hEnemy ->Classify() != CLASS_ALIEN_BIOWEAPON &&
 	 m_hEnemy ->Classify() != CLASS_PLAYER_BIOWEAPON   )
 	{
+		TraceResult tr;
+		Vector vecStart = Center();
+		// One more check, is there a straight line from me to them?
+		UTIL_TraceLine(vecStart, m_hEnemy->BodyTargetMod(vecStart), dont_ignore_monsters, edict(), &tr);
+
+		if(tr.pHit == NULL){
+			// ok?
+		}else{
+			CBaseEntity* theHit = CBaseEntity::Instance(tr.pHit);
+			if(tr.pHit == m_hEnemy->edict() || IRelationship(theHit) < R_NO){
+				// if whatever I hit is the enemy, or I hate it anyway, proceed
+			}else{
+				// hmm.
+				easyForcePrintLine("BLOCKED LIKE HOW");
+				return FALSE;
+			}
+		}
 
 		//also need to be looking closely enough.
 		if(flDot >= 0.7 && HasConditions(bits_COND_SEE_ENEMY)){
@@ -3117,4 +3156,11 @@ void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *
 int CPantherEye::getHullIndexForNodes(void){
     return NODE_LARGE_HULL;  //safe?
 }
+
+// Only to get out of the water in case it ever jumps in, no swimming animations so it just runs along the floor underwater.
+// Will work out something if there's ever an issue here.
+BOOL CPantherEye::SeeThroughWaterLine(void){
+	return TRUE;
+}//END OF SeeThroughWaterLine
+
 

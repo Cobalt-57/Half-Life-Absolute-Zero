@@ -14,7 +14,7 @@
 #include "player.h"
 
 EASY_CVAR_EXTERN_DEBUGONLY(cheat_iwantguts)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 
 extern float globalPSEUDO_canApplyGermanCensorship;
 extern BOOL globalPSEUDO_germanModel_hgibFound;
@@ -168,7 +168,7 @@ void CGib::SpawnStickyGibs(entvars_t* pevVictim, Vector vecOrigin, int cGibs, BO
 	int i;
 
 	//if ( g_Language == LANGUAGE_GERMAN )
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == 1)
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == 1)
 	{
 		// no sticky gibs in germany right now!
 		//MODDD TODO - above comment found as-is.  Can re-enable and just use german gibs instead.
@@ -278,7 +278,7 @@ void CGib::SpawnHeadGib(entvars_t* pevVictim, const Vector gibSpawnOrigin, BOOL 
 	CGib* pGib = GetClassPtr((CGib*)NULL);
 
 	//if ( g_Language == LANGUAGE_GERMAN )
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship) == FALSE) {
+	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(sv_germancensorship) == FALSE) {
 		pGib->Spawn("models/hgibs.mdl", spawnDecals);// throw one head
 		pGib->pev->body = 0;
 	}

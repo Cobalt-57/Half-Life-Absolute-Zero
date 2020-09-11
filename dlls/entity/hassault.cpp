@@ -75,7 +75,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(hassaultMeleeAnimSpeedMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(hassaultMeleeAttackEnabled)
 EASY_CVAR_EXTERN_DEBUGONLY(hassaultAllowGrenades)
 
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(sv_germancensorship)
+EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 extern BOOL globalPSEUDO_germanModel_hassaultFound;
 
 
@@ -199,6 +199,7 @@ enum
 	TASK_HASSAULT_WAIT_FOR_SPIN_FINISH,
 	TASK_HASSAULT_FACE_TOSS_DIR,
 	TASK_STOP_MOVING_DONT_BLOCK_FIRING,
+	TASK_HASSAULT_DECIDE_RESIDUAL_FIRE,
 };
 
 
@@ -235,7 +236,16 @@ Schedule_t	slHAssaultFail[] =
 Task_t	tlHAssaultFireOver[] =
 {
 	{ TASK_STOP_MOVING_DONT_BLOCK_FIRING,			0				},
-	{ TASK_SET_SCHEDULE,		(float)SCHED_HASSAULT_RESIDUAL_FIRE	},
+	
+	// !!!
+	// no, leave it up to being in the fire state at the time this happens.
+	// If that check isn't done, always ending on residual fire will fire even though
+	// the hassault wasn't in the middle of firing at the time it decided this wasn't a good idea.
+	// Although it also shouldn't have assumed firing would begin right after spinup?  Might still be ok.
+	//{ TASK_SET_SCHEDULE,		(float)SCHED_HASSAULT_RESIDUAL_FIRE	},
+	{ TASK_HASSAULT_DECIDE_RESIDUAL_FIRE,		0	},
+
+
 	/*
 	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
 	{ TASK_WAIT,				(float)0.2		},
@@ -311,7 +321,9 @@ Task_t	tlHAssault_spin[] =
 	{ TASK_RANGE_ATTACK1,		(float)0		},
 	
 	*/
-	{ TASK_SET_SCHEDULE,			(float)SCHED_HASSAULT_FIRE	},
+	
+	// Woa, there!  Let this get picked naturally if the enemy is attackable.
+	//{ TASK_SET_SCHEDULE,			(float)SCHED_HASSAULT_FIRE	},
 };
 
 
@@ -376,7 +388,9 @@ Task_t	tlHAssault_suppress[] =
 	{ TASK_HASSAULT_START_SPIN,				(float)0					},
 	{ TASK_PLAY_SEQUENCE_FACE_ENEMY,(float)ACT_SIGNAL2			},
 	{ TASK_HASSAULT_WAIT_FOR_SPIN_FINISH,		(float)0				},
-	{ TASK_SET_SCHEDULE,			(float)SCHED_HASSAULT_FIRE	},
+	
+	// NNNNNNNNnnnnnnnnnooooooooooooooooooOOOOOOOOOOOOOOOOooooooooooooooooo
+	//{ TASK_SET_SCHEDULE,			(float)SCHED_HASSAULT_FIRE	},
 };
 
 Schedule_t	slHAssault_suppress[] =
@@ -1038,8 +1052,6 @@ CHAssault::CHAssault(void){
 
 
 
-
-
 float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
 	
 	//SEQ_HASSAULT_ATTACK
@@ -1048,12 +1060,11 @@ float CHAssault::SafeSetBlending ( int iBlender, float flValue ){
 		flValue *= -1;
 	}
 
-
 	return CBaseAnimating::SetBlending(iBlender, flValue);
 }//END OF SafeSetBlending
 
 
-// Some commonly used script for aiminat at the enemy consistently (no jitter).
+// Some commonly used script for aiming at at the enemy consistently (no jitter).
 // Also doesn't aim ridiculously high if the enemy gets close like it usually would.
 void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 	//DebugLine_ClearAll();
@@ -1131,7 +1142,7 @@ void CHAssault::AimAtEnemy(Vector& refVecShootOrigin, Vector& refVecShootDir ){
 
 		if(!shootpref_eyes){
 			// Unless eyes are the only option, fire at the general body as usual
-			refVecShootDir = ShootAtEnemy(refVecShootOrigin);
+			refVecShootDir = ShootAtEnemyMod(refVecShootOrigin);
 		}else{
 			// custom one, aim a little higher
 			refVecShootDir = HASSAULT_ShootAtEnemyEyes(refVecShootOrigin);
@@ -1199,31 +1210,11 @@ const char* CHAssault::getNormalModel(void){
 }
 
 
-//copied from hgrunt.
-//=========================================================
-// PrescheduleThink - this function runs after conditions
-// are collected and before scheduling code is run.
-//=========================================================
+//copied from hgrunt.  Whoops, shrunk there.
 void CHAssault::PrescheduleThink ( void )
 {
-	if ( InSquad() && m_hEnemy != NULL )
-	{
-		if ( HasConditions ( bits_COND_SEE_ENEMY ) )
-		{
-			// update the squad's last enemy sighting time.
-			MySquadLeader()->m_flLastEnemySightTime = gpGlobals->time;
-		}
-		else
-		{
-			if ( gpGlobals->time - MySquadLeader()->m_flLastEnemySightTime > 5 )
-			{
-				// been a while since we've seen the enemy
-				MySquadLeader()->m_fEnemyEluded = TRUE;
-			}
-		}
-	}
-}//END OF PrescheduleThink
-
+	CSquadMonster::PrescheduleThink();
+}
 
 //=========================================================
 // SetYawSpeed - allows each sequence to have a different
@@ -1452,7 +1443,6 @@ void CHAssault::HandleEventQueueEvent(int arg_eventID){
 void CHAssault::HandleAnimEvent( MonsterEvent_t *pEvent )
 {
 
-
 	if(pev->sequence == SEQ_HASSAULT_THROWGRENADE){
 		// Don't play events for this!  Tries to fire bullets while playing and the original event time doesn't even 
 		// make sense for launching a grenade (too late after the hand's been away from the throw),
@@ -1502,9 +1492,7 @@ void CHAssault::HandleAnimEvent( MonsterEvent_t *pEvent )
 	}
 	
 	
-	//is that okay (to be commented out)?
-	//CSquadMonster::HandleAnimEvent( pEvent );
-}
+}//HandleAnimEvent
 
 
 
@@ -2241,7 +2229,7 @@ BOOL CHAssault::CheckRangeAttack1 ( float flDot, float flDist )
 		}
 
 		
-		if(HasConditions(bits_COND_SEE_ENEMY) && flDot >= 0.5){
+		if(HasConditions(bits_COND_SEE_ENEMY) && flDot >= 0.7){
 			// proceed, nothing to see here.
 			return TRUE;
 		}else{
@@ -2277,6 +2265,13 @@ BOOL CHAssault::CheckRangeAttack2 ( float flDot, float flDist )
 
 	if(flDist > 1024.0 * 0.8){
 		// I can't throw that far!
+		return FALSE;
+	}
+
+	if(gpGlobals->time - m_flLastEnemySightTime > 50){
+		// if it's been X seconds since I've seen the enemy, stop trying to hit em' with grenades.
+		// Can seem silly to endlessly keep throwing grenades at the LKP
+		// (last known position) when the enemy has likely gone far away since then.
 		return FALSE;
 	}
 
@@ -2483,7 +2478,23 @@ void CHAssault::StartTask ( Task_t *pTask ){
 	
 	switch ( pTask->iTask )
 	{
+	case TASK_HASSAULT_DECIDE_RESIDUAL_FIRE: {
 
+		//TaskComplete();
+		//return;
+
+		if(pev->sequence == SEQ_HASSAULT_ATTACK){
+			// ok, go ahead.  Pretend this were TASK_SET_SCHEDULE with SCHED_HASSAULT_RESIDUAL_FIRE.
+
+			pTask->iTask = TASK_SET_SCHEDULE;
+			pTask->flData = (float)SCHED_HASSAULT_RESIDUAL_FIRE;
+			StartTask(pTask);
+		}else{
+			// what.  Just pick another schedule after this.
+			TaskComplete();
+		}
+
+	}break;
 	// Plain clone of TASK_STOP_MOVING then.
 	case TASK_STOP_MOVING_DONT_BLOCK_FIRING:
 	{
@@ -3138,7 +3149,7 @@ Schedule_t* CHAssault::GetSchedule(){
 		return GetScheduleOfType ( baitSched );
 	}
 
-	if(recentSchedule == slHAssault_fire && forceBlockResidual == FALSE){
+	if(recentSchedule == slHAssault_fire && forceBlockResidual == FALSE && pev->sequence == SEQ_HASSAULT_ATTACK){
 		recentSchedule = NULL;
 		//never twice.
 		forceBlockResidual = TRUE;
@@ -3578,7 +3589,10 @@ Schedule_t* CHAssault::GetScheduleOfType(int Type){
 					CheckRangeAttack1(flDot, flDistToEnemy);
 					if(HasConditions(bits_COND_CAN_RANGE_ATTACK1)){
 						// do it!
-						return GetScheduleOfType(SCHED_RANGE_ATTACK1);
+						// what?  we don't use RANGE_ATTACK1, do SCHED_HASSAULT_SPIN.  It fires if already spinning.
+						//return GetScheduleOfType(SCHED_RANGE_ATTACK1);
+						
+						return GetScheduleOfType(SCHED_HASSAULT_SPIN);
 					}
 				}
 			}// m_hEnemy null check
@@ -3965,7 +3979,15 @@ void CHAssault::MonsterThink ( void )
 
 	CSquadMonster::MonsterThink();
 	//easyForcePrintLine("HASSAULT%d seq:%d fra:%.2f", monsterID, pev->sequence, pev->frame);
-}
+
+
+	if(m_pSchedule == slHAssault_residualFire && m_iScheduleIndex < 4){
+		// HOW CAN THIS BE.
+		int x = 45;
+	}
+
+
+}//MonsterThink
 
 
 int CHAssault::SquadRecruit( int searchRadius, int maxMembers ){
@@ -4306,4 +4328,12 @@ float CHAssault::getDistTooFar(void){
 	return 1024.0 * 2;
 }
 
+// See comments in hgrunt.cpp
+void CHAssault::setEnemyLKP(CBaseEntity* theEnt){
+	m_vecEnemyLKP = theEnt->pev->origin;
+	m_fEnemyLKP_EverSet = TRUE;
+	investigatingAltLKP = FALSE; //this is the real deal.
+
+	//m_flLastEnemySightTime = gpGlobals->time;
+}
 

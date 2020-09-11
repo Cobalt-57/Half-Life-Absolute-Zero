@@ -168,6 +168,9 @@ class CrashTest{
 
 
 
+// (RELEASE ONLY.  No need for recording info about hidden CVars when nothing is hidden)
+#ifndef _DEBUG
+
 // Small class for recording info about each var that needs hidden access granted (from not having
 // a CVar in release mode).
 // An array of this type is made and checked against here in client.cpp for checking to see if what
@@ -185,17 +188,18 @@ typedef struct HiddenCVarInfo_s{
 	int type;
 } HiddenCVarInfo_t;
 
+//typedef HiddenCVarInfo_t;
 
 // IMPORTANT!  Keep HIDDEN_CVAR_INFO_LENGTH in check with the number of entries in it
 // (cvar_custom_list.h) change.
-#define HIDDEN_CVAR_INFO_LENGTH 447
+#define HIDDEN_CVAR_INFO_LENGTH 446
 HiddenCVarInfo_t aryHiddenCVarInfo[HIDDEN_CVAR_INFO_LENGTH] = {
 	// example of how an entry might look (some of these are CVar constants that derive to numbers)
 	//{"someCVar", "somecvar", someCVar_ID, 0, &global_someCVar }
 	EASY_CVAR_HIDDEN_LIST
 };
 
-
+#endif//_!DEBUG
 
 
 
@@ -290,12 +294,28 @@ CFuncTrackChange* getTrackChangeWithID(edict_t* pEntity, int argID){
 
 
 
+
+CBaseEntity* getEntityWithID(int argSeekID){
+	edict_t* pEdict = g_engfuncs.pfnPEntityOfEntIndex(argSeekID);
+	if(pEdict != NULL && !pEdict->free){
+		CBaseEntity* theInst = CBaseEntity::Instance(pEdict);
+		//BOOL hasMonsterClip = ((theInst->pev->flags & FL_MONSTERCLIP) != 0);
+		return theInst;
+	}else{
+		// nothing or invalid.
+		return NULL;
+	}
+}
+
+
 CBaseMonster* getMonsterWithID(int argSeekID){
 	//find monster ID of argSeekID.
 	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 	CBaseEntity *pEntity;
-	if ( !pEdict )
+	if ( !pEdict ){
 		return NULL;
+	}
+
 	for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ )
 	{
 		if ( pEdict->free )	// Not in use
@@ -304,8 +324,11 @@ CBaseMonster* getMonsterWithID(int argSeekID){
 			continue;
 
 		pEntity = CBaseEntity::Instance(pEdict);
-		if ( !pEntity )
+		if ( !pEntity ){
 			continue;
+		}
+
+		const char* theClassname = pEntity->getClassname();
 
 		CBaseMonster* tempMonster = pEntity->MyMonsterPointer();
 		if(tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")){
@@ -313,7 +336,7 @@ CBaseMonster* getMonsterWithID(int argSeekID){
 		}
 
 		if(tempMonster->monsterID == argSeekID){
-			//go!
+			// go!
 			return tempMonster;
 			//break;  redundant, "return" already interrupts.
 		}
@@ -822,14 +845,13 @@ void partyStart(CBasePlayer* playerRef){
 
 	turnWorldLightsOff();
 
-	//CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 	if ( playerRef){
 		edict_t* tempEd = ENT(playerRef->pev);
 
 		// pick some music.
-		char* eh[] = {"Half-Life01", "Half-Life02", "Half-Life12", "Half-Life16", "Half-Life17",   };
-		int choice = RANDOM_LONG(0, 4);
-
+		char* eh[] = {"Half-Life01", "Half-Life02", "Half-Life08", "Half-Life12", "Half-Life16", "Half-Life17"  };
+		int choice = RANDOM_LONG(0, 5);
+		
 		char* cmdStringSend = UTIL_VarArgs("mp3 play media/%s.mp3", eh[choice]);
 		//CLIENT_COMMAND(tempEd, cmdStringSend);
 
@@ -864,7 +886,6 @@ void partyOff(CBasePlayer* playerRef){
 
 	turnWorldLightsOn();
 		
-	//CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 	if ( playerRef){
 		edict_t* tempEd = ENT(playerRef->pev);
 		submitJukeboxOff(tempEd);
@@ -1248,6 +1269,9 @@ void ClientCommand( edict_t *pEntity )
 
 	entvars_t *pev = &pEntity->v;
 
+	//MODDD - just go ahead and do this now, almost every client call needs this anyway.
+	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
+
 	//MODDD
 	//If the minimumfiredelay mem's  value does NOT match minimumfiredelay, it must have been changed.
 	//Force an RPG re-update to be safe.
@@ -1311,10 +1335,6 @@ void ClientCommand( edict_t *pEntity )
 	//MODDD TODO - all givedist commands should spawn something facing whoever spawned it?  or maybe the default angles of 0,0,0 are fine?
 	else if ( FStrEq(pcmdRefinedRef, "givedist" ) )
 	{
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-
-
 		if ( tempplayer && g_flWeaponCheat != 0.0)
 		{
 			UTIL_MakeVectors(pev->v_angle + pev->punchangle);
@@ -1343,12 +1363,8 @@ void ClientCommand( edict_t *pEntity )
 	//Also, "ent_create" does this since this seems to be the intention.
 	else if( FStrEq(pcmdRefinedRef, "givelook" ) || FStrEq(pcmdRefinedRef, "ent_create" ) ){
 		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-			
-		if ( tempplayer && g_flWeaponCheat != 0.0)
-		{
-
-			edict_t		*pentIgnore;
+		if ( tempplayer && g_flWeaponCheat != 0.0){
+			edict_t *pentIgnore;
 			TraceResult tr;
 
 			pentIgnore = tempplayer->edict();
@@ -1661,16 +1677,12 @@ void ClientCommand( edict_t *pEntity )
 		g_queueCVarHiddenSave = TRUE;
 
 	}else if( FStrEq(pcmdRefinedRef, "partyon") || FStrEq(pcmdRefinedRef, "party") || FStrEq(pcmdRefinedRef, "partymode") || FStrEq(pcmdRefinedRef, "whospikedthepunch") || FStrEq(pcmdRefinedRef, "clubon") ||FStrEq(pcmdRefinedRef, "rave") || FStrEq(pcmdRefinedRef, "technorave") || FStrEq(pcmdRefinedRef, "techno") || FStrEq(pcmdRefinedRef, "club") || FStrEq(pcmdRefinedRef, "clubbing") || FStrEq(pcmdRefinedRef, "breaktime") || FStrEq( pcmdRefinedRef, "ecstasy") || FStrEq(pcmdRefinedRef, "partytime") || FStrEq(pcmdRefinedRef, "indaclub") || FStrEq(pcmdRefinedRef, "intheclub") || FStrEq(pcmdRefinedRef, "whodruggedmyshit") || FStrEq(pcmdRefinedRef, "drugs") || FStrEq(pcmdRefinedRef, "thattastedfunny") || FStrEq(pcmdRefinedRef, "thattastesfunny") || FStrEq(pcmdRefinedRef, "tastesfunny") || FStrEq(pcmdRefinedRef, "krunk") || FStrEq(pcmdRefinedRef, "getfucked") || FStrEq(pcmdRefinedRef, "fuckedup") || FStrEq(pcmdRefinedRef, "getfuckedup") || FStrEq(pcmdRefinedRef, "letsgetwasted") || FStrEq(pcmdRefinedRef, "getwasted") ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		partyStart(tempplayer);
 
 	}else if(  FStrEq(pcmdRefinedRef, "partyoff") || FStrEq(pcmdRefinedRef, "cluboff") ||FStrEq(pcmdRefinedRef, "icantseeshit") || FStrEq(pcmdRefinedRef, "kidsthesedays") || FStrEq(pcmdRefinedRef, "nomoreclubbing") || FStrEq(pcmdRefinedRef, "fucktheclub") || FStrEq(pcmdRefinedRef, "fuckdaclub") || FStrEq(pcmdRefinedRef, "breaktimeisover") || FStrEq(pcmdRefinedRef, "breaktimesover") || FStrEq(pcmdRefinedRef, "breaktimesup") || FStrEq(pcmdRefinedRef, "backtowork") || FStrEq(pcmdRefinedRef, "getbacktowork") || FStrEq(pcmdRefinedRef, "drugfree") || FStrEq(pcmdRefinedRef, "outtheclub") || FStrEq(pcmdRefinedRef, "outoftheclub") || FStrEq(pcmdRefinedRef, "dapopo") || FStrEq(pcmdRefinedRef, "popo") || FStrEq(pcmdRefinedRef, "police") || FStrEq(pcmdRefinedRef, "callthepolice") || FStrEq(pcmdRefinedRef, "thispartysucks") ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		partyOff(tempplayer);
 
 	}else if(  FStrEq(pcmdRefinedRef, "hyperravebutnotext") || FStrEq(pcmdRefinedRef, "hyperavebutnotext") || FStrEq(pcmdRefinedRef, "hardcorebutnotext") || FStrEq(pcmdRefinedRef, "hyperravenotext") || FStrEq(pcmdRefinedRef, "hyperavenotext") || FStrEq(pcmdRefinedRef, "hardcorenotext")   ){
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		partyStart(tempplayer);
 
 		EASY_CVAR_SET_DEBUGONLY(raveEffectSpawnInterval, 0.1)
@@ -1685,7 +1697,6 @@ void ClientCommand( edict_t *pEntity )
 		g_queueCVarHiddenSave = TRUE;
 
 	}else if(  FStrEq(pcmdRefinedRef, "hyperrave") || FStrEq(pcmdRefinedRef, "hyperave") || FStrEq(pcmdRefinedRef, "hardcore")   ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		partyStart(tempplayer);
 
 		EASY_CVAR_SET_DEBUGONLY(raveEffectSpawnInterval, 0.1)
@@ -1746,8 +1757,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "That isn\'t a number, dillweed!");
 		}else{
 
-			CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-			
 			if ( tempplayer)
 			{
 				//tempplayer->SetSuitUpdateNumber(tempplayer->pev->armorvalue, 0);
@@ -1788,11 +1797,10 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "That isn\'t a number, dillweed!");
 		}else{
 			
-			CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-			
 			if ( tempplayer){
-
-				edict_t* tempEd = ENT(tempplayer->pev);
+				// why
+				//edict_t* tempEd = ENT(tempplayer->pev);
+				edict_t* tempEd = pEntity;
 
 				switch(result){
 				case 0:  //ENT(pev)???
@@ -1840,10 +1848,8 @@ void ClientCommand( edict_t *pEntity )
 
 	}else if ( FStrEq(pcmdRefinedRef, "soundtest" ) || FStrEq(pcmdRefinedRef, "playsound")){
 
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-			
 		if ( tempplayer){
-			edict_t* tempEd = ENT(tempplayer->pev);
+			edict_t* tempEd = pEntity;
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );
 			const char* argPitch = CMD_ARGV(2);
 			const char* pszName = STRING(iszItem);
@@ -1875,10 +1881,9 @@ void ClientCommand( edict_t *pEntity )
 		}
 		
 	}else if ( FStrEq(pcmdRefinedRef, "sentencetest" ) || FStrEq(pcmdRefinedRef, "playsentence")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 			
 		if ( tempplayer){
-			edict_t* tempEd = ENT(tempplayer->pev);
+			edict_t* tempEd = pEntity;
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );
 			const char* argPitch = CMD_ARGV(2);
 			const char* pszName = STRING(iszItem);
@@ -1918,9 +1923,8 @@ void ClientCommand( edict_t *pEntity )
 		}
 		
 	}else if ( FStrEq(pcmdRefinedRef, "stopsoundtest" ) ){   // 'stopsound' is already occupied, funny enough
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		if ( tempplayer){
-			edict_t* tempEd = ENT(tempplayer->pev);
+			edict_t* tempEd = pEntity;
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );
 			const char* pszName = STRING(iszItem);
 
@@ -1938,9 +1942,8 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}else if ( FStrEq(pcmdRefinedRef, "stopsentencetest" ) || FStrEq(pcmdRefinedRef, "stopsentence")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		if ( tempplayer){
-			edict_t* tempEd = ENT(tempplayer->pev);
+			edict_t* tempEd = pEntity;
 			int iszItem = ALLOC_STRING( CMD_ARGV(1) );
 			const char* pszName = STRING(iszItem);
 
@@ -1965,7 +1968,6 @@ void ClientCommand( edict_t *pEntity )
 		}//END OF if(tempplayer)
 
 	}else if(FStrEq(pcmdRefinedRef, "origin") || FStrEq(pcmdRefinedRef, "coords")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		if(tempplayer){
 			CBaseEntity* pEntityForward = FindEntityForward( tempplayer);
 			if(pEntityForward == NULL){
@@ -1977,14 +1979,12 @@ void ClientCommand( edict_t *pEntity )
 		}
 		
 	}else if( FStrEq(pcmdRefinedRef, "myorigin") || FStrEq(pcmdRefinedRef, "getmyorigin") || FStrEq(pcmdRefinedRef, "playerorigin") || FStrEq(pcmdRefinedRef, "mycoords") || FStrEq(pcmdRefinedRef, "getmycoords") || FStrEq(pcmdRefinedRef, "playercoords")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		
 		if(tempplayer){
 			interpretAsCoords(pEntity, tempplayer, "Client");
 		}
 
 	}else if(FStrEq(pcmdRefinedRef, "entorigin") || FStrEq(pcmdRefinedRef, "entityorigin") || FStrEq(pcmdRefinedRef, "monsterorigin") || FStrEq(pcmdRefinedRef, "entcoords") || FStrEq(pcmdRefinedRef, "entitycoords") || FStrEq(pcmdRefinedRef, "monstercoords") ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		
 		CBaseEntity* pEntityForward = FindEntityForward( tempplayer );
 		if(pEntityForward){
@@ -1996,10 +1996,9 @@ void ClientCommand( edict_t *pEntity )
 		//this OK?
 		//char* cmdStringSend;
 		//edict_t* tempEd = ENT(pev);
-		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
-		edict_t* tempEd = ENT(tempplayer->pev);
-		//Not even this works?  Why?!
+
+		//edict_t* tempEd = ENT(tempplayer->pev);
+		edict_t* tempEd = pEntity; // we already started with this, use it dangit
 
 		//SERVER_COMMAND
 		const char* arg1ref = CMD_ARGV(1);
@@ -2060,8 +2059,7 @@ void ClientCommand( edict_t *pEntity )
 
 
 	}else if( FStrEq(pcmdRefinedRef, "lazy") || FStrEq(pcmdRefinedRef, "lazyass") || FStrEq(pcmdRefinedRef, "wakeup") || FStrEq(pcmdRefinedRef, "wakethefuckup") || FStrEq(pcmdRefinedRef, "rise") || FStrEq(pcmdRefinedRef, "revive") || FStrEq(pcmdRefinedRef, "risefromthegrave") || FStrEq(pcmdRefinedRef, "getthefuckup") || FStrEq(pcmdRefinedRef, "suprisemotherfucker") || FStrEq(pcmdRefinedRef, "suprisemothafucka") || FStrEq(pcmdRefinedRef, "suprisemotherfucka") || FStrEq(pcmdRefinedRef, "suprisemothafucker") || FStrEq(pcmdRefinedRef, "getup") || FStrEq(pcmdRefinedRef, "younodie") || FStrEq(pcmdRefinedRef, "myparentsarenthome")   ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
-
+		
 		//First a check. Is the player dead? If so this is a self-revive.
 		if(tempplayer->pev->deadflag != DEAD_NO){
 			if(g_flWeaponCheat != 0.0){
@@ -2103,13 +2101,10 @@ void ClientCommand( edict_t *pEntity )
 		reviveAllMonsters(pEntity);
 
 	}else if( FStrEq(pcmdRefinedRef, "ent_remove") || FStrEq(pcmdRefinedRef, "remove") || FStrEq(pcmdRefinedRef, "removeent") || FStrEq(pcmdRefinedRef, "removeentity") || FStrEq(pcmdRefinedRef, "entremove") || FStrEq(pcmdRefinedRef, "entityremove") || FStrEq(pcmdRefinedRef, "kaplow") || FStrEq(pcmdRefinedRef, "ihateyou") || FStrEq(pcmdRefinedRef, "begone") || FStrEq(pcmdRefinedRef, "begonepeasant") || FStrEq(pcmdRefinedRef, "bye") || FStrEq(pcmdRefinedRef, "byebye")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
-
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "Can\'t remove things without cheats.");
 			return;
 		}
-
 		CBaseEntity* pEntityToRemove;
 		
 		// NOTE - can supply arg now.
@@ -2120,50 +2115,121 @@ void ClientCommand( edict_t *pEntity )
 			try {
 				tempNumb = tryStringToInt(CMD_ARGV(1));
 				theID = tempNumb;
-				pEntityToRemove = getMonsterWithID(tempNumb);
+				// Nope, get the entity of this ID instead (these ID's come from the engines)
+				pEntityToRemove = getEntityWithID(tempNumb);
 				if (pEntityToRemove != NULL) {
 					// ok
-				}
-				else {
+				}else {
 					// oh.
 					easyForcePrintLineClient(pEntity, "No entity of ID %d found.", theID);
 				}
-			}
-			catch (int) {
+			}catch (int) {
 				easyForcePrintClient(pEntity, "ERROR: ID given invalid. Must be integer.");
 			}
-		}
-		else {
+		}else {
 			// just look for something in front of me.
 			pEntityToRemove = FindEntityForward(tempplayer);
 			if (pEntityToRemove != NULL) {
 				// ok.
-			}
-			else {
+			}else {
 				// oh.
 				easyForcePrintClient(pEntity, "Could not find something in front to remove!");
 			}
 		}
-
-
-		if ( pEntityToRemove )
-		{
-			//if ( pEntity->pev->takedamage )
-
-			//in case there's any cleaning to do first (stop looping sounds).
-			//pEntityForward->onDelete();
-			//SUB_Remove calls this already, no need to manually  call onDelete.
-			
+		if ( pEntityToRemove ){
+			//SUB_Remove calls 'onDelete' already
 			pEntityToRemove->pev->nextthink = gpGlobals->time;
 			pEntityToRemove->SetThink(&CBaseEntity::SUB_Remove);
 		}else{
 			// error message already handled.
 		}
-
-
+	}else if( FStrEq(pcmdRefinedRef, "monster_remove") || FStrEq(pcmdRefinedRef, "removemonster") || FStrEq(pcmdRefinedRef, "removemon") || FStrEq(pcmdRefinedRef, "mon_remove") || FStrEq(pcmdRefinedRef, "monremove")){
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLineClient(pEntity, "Can\'t remove things without cheats.");
+			return;
+		}
+		CBaseEntity* pEntityToRemove;
 		
+		// NOTE - can supply arg now.
+		if (CMD_ARGC() > 1) {
+			// get an entity with that ID to remove
+			int theID;
+			int tempNumb;
+			try {
+				tempNumb = tryStringToInt(CMD_ARGV(1));
+				theID = tempNumb;
+				// monster of ID?
+				pEntityToRemove = getMonsterWithID(tempNumb);
+				if (pEntityToRemove != NULL) {
+					// ok
+				}else {
+					// oh.
+					easyForcePrintLineClient(pEntity, "No entity of ID %d found.", theID);
+				}
+			}catch (int) {
+				easyForcePrintClient(pEntity, "ERROR: ID given invalid. Must be integer.");
+			}
+		}else {
+			// just look for something in front of me.
+			pEntityToRemove = FindEntityForward(tempplayer);
+			if (pEntityToRemove != NULL) {
+				// ok.
+			}else {
+				// oh.
+				easyForcePrintClient(pEntity, "Could not find something in front to remove!");
+			}
+		}
+		if ( pEntityToRemove ){
+			//SUB_Remove calls 'onDelete' already
+			pEntityToRemove->pev->nextthink = gpGlobals->time;
+			pEntityToRemove->SetThink(&CBaseEntity::SUB_Remove);
+		}else{
+			// error message already handled.
+		}
+	}else if( FStrEq(pcmdRefinedRef, "entdrawbounds") || FStrEq(pcmdRefinedRef, "ent_drawbounds") || FStrEq(pcmdRefinedRef, "drawentbounds") ){
+		// not to be confused with "showbounds", that one's mad old
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLineClient(pEntity, "Can\'t remove things without cheats.");
+			return;
+		}
+		CBaseEntity* pEntityToDraw;
+
+		// NOTE - can supply arg now.
+		if (CMD_ARGC() > 1) {
+			// get an entity with that ID to remove
+			int theID;
+			int tempNumb;
+			try {
+				tempNumb = tryStringToInt(CMD_ARGV(1));
+				theID = tempNumb;
+				// monster of ID?
+				pEntityToDraw = getEntityWithID(tempNumb);
+				if (pEntityToDraw != NULL) {
+					// ok
+				}else {
+					// oh.
+					easyForcePrintLineClient(pEntity, "No entity of ID %d found.", theID);
+				}
+			}catch (int) {
+				easyForcePrintClient(pEntity, "ERROR: ID given invalid. Must be integer.");
+			}
+		}else {
+			// just look for something in front of me.
+			pEntityToDraw = FindEntityForward(tempplayer);
+			if (pEntityToDraw != NULL) {
+				// ok.
+			}else {
+				// oh.
+				easyForcePrintClient(pEntity, "Could not find something in front to remove!");
+			}
+		}
+		if ( pEntityToDraw ){
+			UTIL_drawBoxFrame(pEntityToDraw->pev->absmin, pEntityToDraw->pev->absmax, 12, 800, 255, 255, 255);
+
+		}else{
+			// error message already handled.
+		}
 	}else if( FStrEq(pcmdRefinedRef, "health") || FStrEq(pcmdRefinedRef, "gethealth") || FStrEq(pcmdRefinedRef, "sethealth")  ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "No health trickery for you, cheater!");
@@ -2182,7 +2248,6 @@ void ClientCommand( edict_t *pEntity )
 			//easyForcePrintLineClient(pEntity, "MODEL: %s", STRING(forwardEnt->pev->model));
 		}
 	}else if( FStrEq(pcmdRefinedRef, "setmyhealth") || FStrEq(pcmdRefinedRef, "setplayerhealth") || FStrEq(pcmdRefinedRef, "getmyhealth") || FStrEq(pcmdRefinedRef, "getplayerhealth") || FStrEq(pcmdRefinedRef, "myhealth") || FStrEq(pcmdRefinedRef, "playerhealth")  ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		//tryStringToInt
 
@@ -2194,7 +2259,6 @@ void ClientCommand( edict_t *pEntity )
 		interpretAsHealth(pEntity, (CBaseEntity*)tempplayer, arg1ref, "Client" );
 
 	}else if( FStrEq(pcmdRefinedRef, "setenthealth") || FStrEq(pcmdRefinedRef, "setmonsterhealth") ||  FStrEq(pcmdRefinedRef, "setentityhealth") || FStrEq(pcmdRefinedRef, "getenthealth") || FStrEq(pcmdRefinedRef, "getmonsterhealth") ||  FStrEq(pcmdRefinedRef, "getentityhealth") || FStrEq(pcmdRefinedRef, "monsterhealth") || FStrEq(pcmdRefinedRef, "enthealth") || FStrEq(pcmdRefinedRef, "entityhealth")  ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		
 		if(g_flWeaponCheat == 0.0){
@@ -2210,7 +2274,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "ERROR: Could not find an entity / monster in crosshairs.");
 		}
 	}else if( FStrEq(pcmdRefinedRef, "battery") || FStrEq(pcmdRefinedRef, "getbattery") || FStrEq(pcmdRefinedRef, "setbattery") || FStrEq(pcmdRefinedRef, "armor") || FStrEq(pcmdRefinedRef, "getarmor") || FStrEq(pcmdRefinedRef, "setarmor")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "No battery trickery for you, cheater!");
@@ -2228,7 +2291,6 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}else if( FStrEq(pcmdRefinedRef, "setmybattery") || FStrEq(pcmdRefinedRef, "setplayerbattery") || FStrEq(pcmdRefinedRef, "getmybattery") || FStrEq(pcmdRefinedRef, "getplayerbattery") || FStrEq(pcmdRefinedRef, "mybattery") || FStrEq(pcmdRefinedRef, "playerbattery")    ||    FStrEq(pcmdRefinedRef, "setmyarmor") || FStrEq(pcmdRefinedRef, "setplayerarmor") || FStrEq(pcmdRefinedRef, "getmyarmor") || FStrEq(pcmdRefinedRef, "getplayerarmor") || FStrEq(pcmdRefinedRef, "myarmor") || FStrEq(pcmdRefinedRef, "playerarmor")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		//tryStringToInt
 		if(g_flWeaponCheat == 0.0){
@@ -2239,7 +2301,6 @@ void ClientCommand( edict_t *pEntity )
 		interpretAsBattery(pEntity, (CBaseEntity*)tempplayer, arg1ref, "Client" );
 
 	}else if( FStrEq(pcmdRefinedRef, "setentbattery") || FStrEq(pcmdRefinedRef, "setmonsterbattery") ||  FStrEq(pcmdRefinedRef, "setentitybattery") || FStrEq(pcmdRefinedRef, "getentbattery") || FStrEq(pcmdRefinedRef, "getmonsterbattery") ||  FStrEq(pcmdRefinedRef, "getentitybattery") || FStrEq(pcmdRefinedRef, "monsterbattery") || FStrEq(pcmdRefinedRef, "entbattery") || FStrEq(pcmdRefinedRef, "entitybattery")    ||    FStrEq(pcmdRefinedRef, "setentarmor") || FStrEq(pcmdRefinedRef, "setmonsterarmor") || FStrEq(pcmdRefinedRef, "setentityarmor") || FStrEq(pcmdRefinedRef, "getentarmor") || FStrEq(pcmdRefinedRef, "getmonsterarmor") || FStrEq(pcmdRefinedRef, "getentityarmor") || FStrEq(pcmdRefinedRef, "monsterarmor") || FStrEq(pcmdRefinedRef, "entarmor") || FStrEq(pcmdRefinedRef, "entityarmor")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "No battery trickery for you, cheater!");
@@ -2254,7 +2315,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "ERROR: Could not find an entity / monster in crosshairs.");
 		}
 	}else if( FStrEq(pcmdRefinedRef, "id") || FStrEq(pcmdRefinedRef, "getid") || FStrEq(pcmdRefinedRef, "monsterid") || FStrEq(pcmdRefinedRef, "getmonsterid")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		
@@ -2279,7 +2339,6 @@ void ClientCommand( edict_t *pEntity )
 	
 	}else if( FStrEq(pcmdRefinedRef, "getsize") || FStrEq(pcmdRefinedRef, "sizes") ){
 		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
@@ -2319,8 +2378,7 @@ void ClientCommand( edict_t *pEntity )
 
 	
 	}else if( FStrEq(pcmdRefinedRef, "drawpathtrack") || FStrEq(pcmdRefinedRef, "pathtrackdraw")  || FStrEq(pcmdRefinedRef, "drawtrackpath") || FStrEq(pcmdRefinedRef, "trackpathdraw")  ){
-	
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
+		
 		const char* arg1ref = CMD_ARGV(1);
 		int trackIDToFind = -1;
 		CPathTrack* pathTrackTarget;
@@ -2344,8 +2402,6 @@ void ClientCommand( edict_t *pEntity )
 
 	
 	}else if( FStrEq(pcmdRefinedRef, "teleportpathtrack") || FStrEq(pcmdRefinedRef, "pathtrackteleport") || FStrEq(pcmdRefinedRef, "teleporttrackpath") || FStrEq(pcmdRefinedRef, "trackpathteleport")   ){
-	
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		int trackIDToFind = -1;
 		CPathTrack* pathTrackTarget;
@@ -2366,8 +2422,6 @@ void ClientCommand( edict_t *pEntity )
 
 	
 	}else if( FStrEq(pcmdRefinedRef, "enablepathtrack") || FStrEq(pcmdRefinedRef, "pathtrackenable") || FStrEq(pcmdRefinedRef, "enabletrackpath") || FStrEq(pcmdRefinedRef, "trackpathenable") ){
-	
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		int trackIDToFind = -1;
 		CPathTrack* pathTrackTarget;
@@ -2392,7 +2446,6 @@ void ClientCommand( edict_t *pEntity )
 	
 	}else if( FStrEq(pcmdRefinedRef, "disablepathtrack") || FStrEq(pcmdRefinedRef, "pathtrackdisable") || FStrEq(pcmdRefinedRef, "disabletrackpath") || FStrEq(pcmdRefinedRef, "trackpathdisable") ){
 		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		int trackIDToFind = -1;
 		CPathTrack* pathTrackTarget;
@@ -2417,7 +2470,6 @@ void ClientCommand( edict_t *pEntity )
 	
 	}else if( FStrEq(pcmdRefinedRef, "drawtrackchange") || FStrEq(pcmdRefinedRef, "trackchangedraw")){
 	
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		int trackIDToFind = -1;
 		CFuncTrackChange* trackChangeTarget;
@@ -2451,7 +2503,6 @@ void ClientCommand( edict_t *pEntity )
 	
 	}else if( FStrEq(pcmdRefinedRef, "teleporttrackchange") || FStrEq(pcmdRefinedRef, "trackchangeteleport")){
 	
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		int trackIDToFind = -1;
 		CFuncTrackChange* trackChangeTarget;
@@ -2472,11 +2523,8 @@ void ClientCommand( edict_t *pEntity )
 
 	
 	}else if( FStrEq(pcmdRefinedRef, "report")  ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
-
 		CBaseEntity* forwardEnt;
-		
 		
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "No reports for you, sorry.");
@@ -2493,9 +2541,7 @@ void ClientCommand( edict_t *pEntity )
 
 	
 	}else if( FStrEq(pcmdRefinedRef, "reportai") || FStrEq(pcmdRefinedRef, "reportstate") || FStrEq(pcmdRefinedRef, "getai") || FStrEq(pcmdRefinedRef, "getstate") || FStrEq(pcmdRefinedRef, "printai") || FStrEq(pcmdRefinedRef, "printState")  ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
-
 		CBaseEntity* forwardEnt;
 		
 		if(g_flWeaponCheat == 0.0){
@@ -2559,9 +2605,6 @@ void ClientCommand( edict_t *pEntity )
 
 
 	}else if( FStrEq(pcmdRefinedRef, "squadinfo") || FStrEq(pcmdRefinedRef, "squad") || FStrEq(pcmdRefinedRef, "reportsquad") || FStrEq(pcmdRefinedRef, "squadreport") || FStrEq(pcmdRefinedRef, "squadstate")  ){
-	
-	
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 	
 		if(g_flWeaponCheat == 0.0){
@@ -2626,7 +2669,6 @@ void ClientCommand( edict_t *pEntity )
 
 	}else if(FStrEq(pcmdRefinedRef, "reportnetname")){
 		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
@@ -2645,19 +2687,13 @@ void ClientCommand( edict_t *pEntity )
 	
 	
 	}else if( FStrEq(pcmdRefinedRef, "selfquery") || FStrEq(pcmdRefinedRef, "queryself") || FStrEq(pcmdRefinedRef, "reportself") ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		//pev->solid			= SOLID_SLIDEBOX;
 		//pev->movetype
-
 
 		easyForcePrintLineClient(pEntity, "PLAYER STATS:");
 		tempplayer->ReportAIState();
 	
 	}else if( FStrEq(pcmdRefinedRef, "gib") || FStrEq(pcmdRefinedRef, "gibbed") || FStrEq(pcmdRefinedRef, "gibme") || FStrEq(pcmdRefinedRef, "diehard") || FStrEq(pcmdRefinedRef, "diehard") || FStrEq(pcmdRefinedRef, "explode") || FStrEq(pcmdRefinedRef, "asplode") || FStrEq(pcmdRefinedRef, "yourheadasplode") || FStrEq(pcmdRefinedRef, "myheadasplode") ||  FStrEq(pcmdRefinedRef, "headasplode") || FStrEq(pcmdRefinedRef, "yourheadexplode") || FStrEq(pcmdRefinedRef, "myheadexplode") ||  FStrEq(pcmdRefinedRef, "headexplode")    ){
-		
-		//gib the player, for some reason...
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
-		
 		
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "No exploding.");
@@ -2794,8 +2830,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		
 		try{
@@ -2817,8 +2851,7 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Teleportation on a whim is not normal, mortal.");
 			return;
 		}
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
+		
 		const char* arg1ref = CMD_ARGV(1);
 		
 		try{
@@ -2910,9 +2943,6 @@ void ClientCommand( edict_t *pEntity )
 		}
 		*/
 		
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
-
 		Vector vecSearchStart;
 		if(!target){
 			//player's position.
@@ -3093,7 +3123,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 
 		if(forwardEnt != NULL){
@@ -3114,7 +3143,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 
 		if(forwardEnt != NULL){
@@ -3134,7 +3162,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 
 		if(forwardEnt != NULL){
@@ -3149,8 +3176,6 @@ void ClientCommand( edict_t *pEntity )
 	
 	}else if(FStrEq(pcmdRefinedRef, "removefirefly")){
 
-		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity *pEntityTemp = NULL;
 		
 		//TEST!
@@ -3168,8 +3193,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity *pEntityTemp = NULL;
 
 		while ((pEntityTemp = UTIL_FindEntityInSphere( pEntityTemp, tempplayer->pev->origin, 1024 )) != NULL)
@@ -3190,8 +3213,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Hm. No.");
 			return;
 		}
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 
 		edict_t		*pentIgnore;
 		TraceResult tr;
@@ -3265,7 +3286,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		edict_t		*pentIgnore;
 		TraceResult tr;
 		CBasePlayer* playerRef = tempplayer;
@@ -3323,12 +3343,8 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}else if(FStrEq(pcmdRefinedRef, "god2")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
-
 		if(g_flWeaponCheat != 0.0){
-
 			tempplayer->reviveIfDead();
-
 			if(tempplayer->pev->flags & FL_GODMODE){
 				tempplayer->pev->flags &= ~FL_GODMODE;
 				easyForcePrintLineClient(pEntity, "godmode OFF");
@@ -3341,10 +3357,7 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}else if(FStrEq(pcmdRefinedRef, "noclip2")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
-	
 		if(g_flWeaponCheat != 0.0){
-
 			if(tempplayer->pev->deadflag == DEAD_NO){
 				if(tempplayer->pev->movetype == MOVETYPE_NOCLIP){
 					tempplayer->pev->movetype = MOVETYPE_BOUNCE;
@@ -3366,8 +3379,6 @@ void ClientCommand( edict_t *pEntity )
 	}else if(FStrEq(pcmdRefinedRef, "cameraper_t")){
 		globalPSEUDO_cameraMode = 1;
 	}else if( FStrEq(pcmdRefinedRef, "crazyprintoutoff") ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
-		
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "Hm. No.");
 			return;
@@ -3390,7 +3401,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
@@ -3417,7 +3427,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
@@ -3438,14 +3447,11 @@ void ClientCommand( edict_t *pEntity )
 
 
 	}else if(FStrEq(pcmdRefinedRef, "forcetaskcomplete") || FStrEq(pcmdRefinedRef, "forcecompletetask") || FStrEq(pcmdRefinedRef, "taskcomplete") || FStrEq(pcmdRefinedRef, "completetask") ){
-
-
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "You may not tamper with artificial intelligence!");
 			return;
 		}
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
+		
 		const char* arg1ref = CMD_ARGV(1);
 
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
@@ -3472,7 +3478,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		if(arg1ref == NULL || isStringEmpty(arg1ref)){
@@ -3618,8 +3623,6 @@ void ClientCommand( edict_t *pEntity )
 		}
 		return;
 
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
-		
 		tempplayer->pev->flags &= ~FL_GODMODE;
 		tempplayer->TakeDamage(VARS(eoNullEntity), VARS(eoNullEntity), 99999, DMG_ALWAYSGIB, 0);
 		return;
@@ -3650,7 +3653,6 @@ void ClientCommand( edict_t *pEntity )
 		}
 	}
 	else if( FStrEq(pcmdRefinedRef, "debugcine2")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
@@ -3670,7 +3672,6 @@ void ClientCommand( edict_t *pEntity )
 		}
 	
 	}else if( FStrEq(pcmdRefinedRef, "debugcine3")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		edict_t		*pEdicttt;
@@ -3708,9 +3709,7 @@ void ClientCommand( edict_t *pEntity )
 		//large_hull: ( -32, -32, 0 ), ( 32, 32, 64 ) );
 		//head_hull:  (-16, -16, 0), (16, 16, 24)   (height unverified)
 		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		TraceResult tr;
-		
 
 		//Vector itsAngles = (Vector(-pev->v_angle.x, pev->v_angle.y, pev->v_angle.z) + pev->punchangle);
 		//UTIL_MakeVectors(itsAngles);
@@ -3762,9 +3761,7 @@ void ClientCommand( edict_t *pEntity )
 		if (CMD_ARGC() > 1) {
 			easyForcePrintLineClient(pEntity, "***tracemonsterhull does not take a hull-type, any parmeter(s) ignored.");
 		}
-
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
+		
 		TraceResult tr;
 		
 		UTIL_MakeVectors(tempplayer->pev->v_angle + tempplayer->pev->punchangle);
@@ -3792,7 +3789,6 @@ void ClientCommand( edict_t *pEntity )
 		//debugPoint3 = pev->origin + pev->view_ofs + tempForward * 180;
 
 	}else if( FStrEq(pcmdRefinedRef, "getorigin") ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "No origin trickery for you, cheater!");
@@ -3815,23 +3811,22 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}else if( FStrEq(pcmdRefinedRef, "setorigin") ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
-		const char* arg1ref = CMD_ARGV(1);
-		const char* arg2ref = CMD_ARGV(2);
-		const char* arg3ref = CMD_ARGV(3);
-
+		
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "No origin trickery for you, cheater!");
 			return;
 		}
 		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
-		if(
-			arg1ref == NULL || arg2ref == NULL || arg3ref == NULL ||
-			isStringEmpty(arg1ref) || isStringEmpty(arg2ref) || isStringEmpty(arg3ref)
-		){
+		if(CMD_ARGC() < 4){
 			easyForcePrintLineClient(pEntity, "Need 3 parameters.");
 			return;
+		}else if(CMD_ARGC() > 4){
+			easyForcePrintLineClient(pEntity, "WARNING: Parameters after the 3rd ignored.");
+			return;
 		}
+		const char* arg1ref = CMD_ARGV(1);
+		const char* arg2ref = CMD_ARGV(2);
+		const char* arg3ref = CMD_ARGV(3);
 
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 
@@ -3843,7 +3838,6 @@ void ClientCommand( edict_t *pEntity )
 			
 			try{
 				float xVal = tryStringToFloat(arg1ref);
-
 				float yVal = tryStringToFloat(arg2ref);
 				float zVal = tryStringToFloat(arg3ref);
 
@@ -3860,8 +3854,71 @@ void ClientCommand( edict_t *pEntity )
 
 		}//END OF forwardEnt check
 
+	}else if( FStrEq(pcmdRefinedRef, "getangles") ){
+		const char* arg1ref = CMD_ARGV(1);
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLineClient(pEntity, "No angles trickery for you, cheater!");
+			return;
+		}
+
+		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
+		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
+
+		if(forwardEnt == NULL){
+			//No.
+			easyForcePrintLineClient(pEntity, "NO entity found.");
+			return;
+		}else{
+			easyForcePrintLineClient(pEntity, "Entity found:%s. Angles:(%.2f,%.2f,%.2f)", forwardEnt->getClassname(),
+				forwardEnt->pev->angles.x,
+				forwardEnt->pev->angles.y,
+				forwardEnt->pev->angles.z
+			);
+		}
+
+	}else if( FStrEq(pcmdRefinedRef, "setangles") ){
+		
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLineClient(pEntity, "No angles trickery for you, cheater!");
+			return;
+		}
+		// ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
+		if(CMD_ARGC() < 4){
+			easyForcePrintLineClient(pEntity, "Need 3 parameters.");
+			return;
+		}else if(CMD_ARGC() > 4){
+			easyForcePrintLineClient(pEntity, "WARNING: Parameters after the 3rd ignored.");
+			return;
+		}
+		const char* arg1ref = CMD_ARGV(1);
+		const char* arg2ref = CMD_ARGV(2);
+		const char* arg3ref = CMD_ARGV(3);
+
+
+		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
+
+		if(forwardEnt == NULL){
+			//no.
+			easyForcePrintLineClient(pEntity, "NO entity found.");
+			return;
+		}else{
+			
+			try{
+				float xVal = tryStringToFloat(arg1ref);
+				float yVal = tryStringToFloat(arg2ref);
+				float zVal = tryStringToFloat(arg3ref);
+
+				pev->angles.x = xVal;
+				pev->angles.y = yVal;
+				pev->angles.z = zVal;
+
+			}catch(int){
+				easyForcePrintLineClient(pEntity, "ERROR - could not parse inputs. No commas or non numeric characters allowed.");
+			}
+
+		}//END OF forwardEnt check
+
 	}else if( FStrEq(pcmdRefinedRef, "setmyorigin") ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 		const char* arg2ref = CMD_ARGV(2);
 		const char* arg3ref = CMD_ARGV(3);
@@ -3898,7 +3955,6 @@ void ClientCommand( edict_t *pEntity )
 
 	
 	}else if( FStrEq(pcmdRefinedRef, "drawpath") || FStrEq(pcmdRefinedRef, "pathdraw") || FStrEq(pcmdRefinedRef, "drawnpcpath")  ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		if(g_flWeaponCheat == 0.0){
@@ -3947,8 +4003,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Hm. No.");
 			return;
 		}
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity *pEntityTemp = NULL;
 
 		while ((pEntityTemp = UTIL_FindEntityInSphere( pEntityTemp, tempplayer->pev->origin, 1024*6 )) != NULL)
@@ -3965,8 +4019,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Hm. No.");
 			return;
 		}
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity *pEntityTemp = NULL;
 
 		while ((pEntityTemp = UTIL_FindEntityInSphere( pEntityTemp, tempplayer->pev->origin, 1024*6 )) != NULL)
@@ -3979,7 +4031,6 @@ void ClientCommand( edict_t *pEntity )
 		}//END OF while(things in area)
 
 	}else if( FStrEq(pcmdRefinedRef, "drawfov") || FStrEq(pcmdRefinedRef, "fovdraw") || FStrEq(pcmdRefinedRef, "drawnpcfov")  ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
 		const char* arg1ref = CMD_ARGV(1);
 
 		if(g_flWeaponCheat == 0.0){
@@ -4027,8 +4078,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Hm. No.");
 			return;
 		}
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity *pEntityTemp = NULL;
 
 		while ((pEntityTemp = UTIL_FindEntityInSphere( pEntityTemp, tempplayer->pev->origin, 1024*6 )) != NULL)
@@ -4045,8 +4094,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Hm. No.");
 			return;
 		}
-
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity *pEntityTemp = NULL;
 
 		while ((pEntityTemp = UTIL_FindEntityInSphere( pEntityTemp, tempplayer->pev->origin, 1024*6 )) != NULL)
@@ -4070,7 +4117,6 @@ void ClientCommand( edict_t *pEntity )
 		g_queueCVarHiddenSave = TRUE;
 		
 	}else if( FStrEq(pcmdRefinedRef, "setsequence") || FStrEq(pcmdRefinedRef, "sequence") || FStrEq(pcmdRefinedRef, "setanimation") ){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity* forwardEnt = NULL;
 		const char* arg1ref = CMD_ARGV(1);
 		int seqNumb;
@@ -4115,8 +4161,6 @@ void ClientCommand( edict_t *pEntity )
 			return;
 		}
 
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
-		
 		static float side = 1.0;
 		static int count;
 
@@ -4156,7 +4200,6 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}else if( FStrEq(pcmdRefinedRef, "moveent")){
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev) ;
 		
 		const char* arg1ref = CMD_ARGV(1);
 		//const char* arg2ref = CMD_ARGV(1);
@@ -4224,8 +4267,6 @@ void ClientCommand( edict_t *pEntity )
 		}//END OF tempPlayer and weapon cheat checks
 
 	}else if(FStrEq(pcmdRefinedRef, "myasshungers")){
-		
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *)pev);
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 
 		if(forwardEnt != NULL && FClassnameIs(forwardEnt->pev, "monster_scientist")){
@@ -4562,22 +4603,15 @@ void ClientCommand( edict_t *pEntity )
 
 	}
 	else if (FStrEq(pcmdRefinedRef, "debug1")) {
-		//YEAH
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		DebugCall1(tempplayer);
 	}
 	else if (FStrEq(pcmdRefinedRef, "debug2")) {
-		//YEAH
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		DebugCall2(tempplayer);
 	}
 	else if (FStrEq(pcmdRefinedRef, "debug3")) {
-		//YEAH
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		DebugCall3(tempplayer);
 	}
 	else if (FStrEq(pcmdRefinedRef, "getnormalvector") || FStrEq(pcmdRefinedRef, "getnormal") || FStrEq(pcmdRefinedRef, "normalvector") || FStrEq(pcmdRefinedRef, "normal")) {
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		if (tempplayer)
 		{
 			if (g_flWeaponCheat != 0.0) {
@@ -4636,7 +4670,6 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmdRefinedRef, "chillout") || FStrEq(pcmdRefinedRef, "chill") || FStrEq(pcmdRefinedRef, "relax") || FStrEq(pcmdRefinedRef, "relaxbuddy") || FStrEq(pcmdRefinedRef, "smokeweed") || FStrEq(pcmdRefinedRef, "fageddaboutit") || FStrEq(pcmdRefinedRef, "forgetaboutit") || FStrEq(pcmdRefinedRef, "thesearenothtedroidsyouarelookingfor") || FStrEq(pcmdRefinedRef, "jedimindtrick")) {
 
 		if (g_flWeaponCheat) {
-			CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 			CBaseEntity* pEntityTemp = NULL;
 
 			while ((pEntityTemp = UTIL_FindEntityInSphere(pEntityTemp, tempplayer->pev->origin, 1024 * 2)) != NULL)
@@ -5006,7 +5039,6 @@ void ClientCommand( edict_t *pEntity )
 
 	}
 	else if (FStrEq(pcmdRefinedRef, "jolt") || FStrEq(pcmdRefinedRef, "boost") || (FStrEq(pcmdRefinedRef, "push"))) {
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		const char* arg1ref = CMD_ARGV(1);
 		if (g_flWeaponCheat == 0.0) {
 			easyForcePrintLineClient(pEntity, "No violating the laws of physics without cheats.");
@@ -5081,7 +5113,6 @@ void ClientCommand( edict_t *pEntity )
 		}
 	}
 	else if (FStrEq(pcmdRefinedRef, "printweapons")) {
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		easyForcePrintClient(tempplayer->edict(), "***Printing your weapons***");
 		tempplayer->printOutWeapons();
 	}
@@ -5090,7 +5121,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
 			return;
 		}
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 
 		tempplayer->RemoveAllItems(TRUE);
 	}else if ( FStrEq(pcmdRefinedRef, "removeallweapons") || (FStrEq(pcmdRefinedRef, "removeweapons") ) || FStrEq(pcmdRefinedRef, "strip") || FStrEq(pcmdRefinedRef, "stripme")) {
@@ -5098,7 +5128,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
 			return;
 		}
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 
 		// not the suit this time.
 		tempplayer->RemoveAllItems(FALSE);
@@ -5108,7 +5137,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
 			return;
 		}
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 
 		// only remove all ammo's.
 
@@ -5121,7 +5149,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
 			return;
 		}
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 
 		tempplayer->pev->weapons &= ~(1 << WEAPON_SUIT);
 		//tempplayer->UpdateClientData();  //and let clientside know
@@ -5131,7 +5158,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "Need cheats for that... weirdly.");
 			return;
 		}
-		CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*)pev);
 		int i;
 		for (i = 0; i < MAX_ITEMS; i++) {
 			tempplayer->m_rgItems[i] = 0;
@@ -5211,6 +5237,18 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmdRefinedRef, "test2")) {
 		EASY_CVAR_SET(pregame_server_cvar, 24);
 		easyForcePrintLine("pregame_server_cvar set?");
+	}else if( FStrEq(pcmd, "garbage")){
+
+		edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(139);
+		if(pEdi != NULL && !pEdi->free){
+			// ok
+			CBaseEntity* ddd = CBaseEntity::Instance(pEdi);
+			BOOL hasMonsterClip = ((ddd->pev->flags & FL_MONSTERCLIP) != 0);
+
+			int x = 45;
+		}
+
+
 	}
 
 
@@ -5232,6 +5270,14 @@ void ClientCommand( edict_t *pEntity )
 
 #ifndef _DEBUG
 	for(int i = 0; i < HIDDEN_CVAR_INFO_LENGTH; i++){
+
+		//easyForcePrintLine("What's my i? %d", i);
+
+		// no need for this check, but beware of it a cause of crashing.
+		// With proper setup, no need to check every time.
+		//if(aryHiddenCVarInfo[i].nameLowercase == 0){
+		//
+		//}
 
 		if( FStrEq(pcmdRefinedRef, aryHiddenCVarInfo[i].nameLowercase) ){
 			int theType = aryHiddenCVarInfo[i].type;
@@ -5948,6 +5994,7 @@ void StartFrame( void )
 	// EARLY TEST.
 	// Causes a crash in release mode on creating a multiplayer server.
 	// Errrrr.   okay?  Wait until the map has loaded and the first client connected and this is ok.
+	// !!! Forgot about a '!pEntity->pvPrivateData' check, can that be involed??
 	edict_t* thePlayerEd = g_engfuncs.pfnPEntityOfEntIndex(1);
 	CBasePlayer* tempplayer;
 	if (thePlayerEd != NULL) {

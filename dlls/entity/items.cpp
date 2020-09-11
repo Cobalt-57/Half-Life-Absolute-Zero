@@ -273,7 +273,7 @@ class CItemBattery : public CItem
 			pPlayer->pev->armorvalue += gSkillData.batteryCapacity;
 			pPlayer->pev->armorvalue = min(pPlayer->pev->armorvalue, MAX_NORMAL_BATTERY);
 
-			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, FALSE );
 
 			MESSAGE_BEGIN( MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev );
 				WRITE_STRING( STRING(pev->classname) );
@@ -372,7 +372,7 @@ class CItemAntidote : public CItem
 		//Max of 5 antidotes (or any type of power canister).
 		if(pPlayer->m_rgItems[ITEM_ANTIDOTE] < ITEM_ANTIDOTE_MAX){
 
-			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, FALSE );
 
 			pPlayer->SetSuitUpdate("!HEV_ANT_PICKUP", FALSE, SUIT_NEXT_IN_1MIN);
 		
@@ -435,7 +435,7 @@ class CItemAdrenaline : public CItem
 		//Max of 5 adrenalines (or any type of power canister).
 		if(pPlayer->m_rgItems[ITEM_ADRENALINE] < ITEM_ADRENALINE_MAX){
 
-			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, FALSE );
 
 			pPlayer->SetSuitUpdate("!HEV_ADR_PICKUP", FALSE, SUIT_NEXT_IN_1MIN);
 		
@@ -500,7 +500,7 @@ class CItemRadiation : public CItem
 		//Max of 5 antidotes (or any type of power canister).
 		if(pPlayer->m_rgItems[ITEM_RADIATION] < ITEM_RADIATION_MAX){
 
-			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, FALSE );
 
 			pPlayer->SetSuitUpdate("!HEV_RAD_PICKUP", FALSE, SUIT_NEXT_IN_1MIN);
 		
@@ -548,9 +548,14 @@ class CItemSecurity : public CItem
 	void Precache( void )
 	{
 		PRECACHE_MODEL ("models/w_security.mdl");
+		PRECACHE_SOUND( "items/gunpickup2.wav" );
 	}
 	BOOL MyTouch( CBasePlayer *pPlayer )
 	{
+		//MODDD - play the general item pickup sound
+		UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, FALSE );
+
+
 		pPlayer->m_rgItems[ITEM_SECURITY] += 1;
 		return TRUE;
 	}
@@ -612,7 +617,7 @@ class CItemLongJump : public CItem
 		if ( ( pPlayer->pev->weapons & (1<<WEAPON_SUIT) ) )
 		{
 			//MODDD - play this.
-			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, FALSE );
 
 
 			pPlayer->m_fLongJump = TRUE;// player now has longjump module
@@ -698,10 +703,6 @@ class CItemLongJump : public CItem
 			*/
 
 
-			//MODDD - play this.
-			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
-
-
 			pPlayer->longJumpCharge += PLAYER_LONGJUMP_PICKUPADD;
 			pPlayer->longJumpCharge = min(pPlayer->longJumpCharge, PLAYER_LONGJUMPCHARGE_MAX);
 			
@@ -712,7 +713,7 @@ class CItemLongJump : public CItem
 				WRITE_STRING( STRING(pev->classname) );
 			MESSAGE_END();
 
-			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, FALSE );
 
 			pPlayer->SetSuitUpdate("!HEV_LJC_PICKUP", FALSE, SUIT_NEXT_IN_1MIN*2 );
 			
@@ -750,7 +751,7 @@ class CItemGlockSilencer : public CItem
 		{
 			
 			//MODDD - play this.
-			EMIT_SOUND( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM );
+			UTIL_PlaySound( pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM, FALSE );
 
 			/*
 			MESSAGE_BEGIN( MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev );

@@ -406,6 +406,9 @@ public:
 	int				m_iMaxHealth;// keeps track of monster's maximum health value (for re-healing, etc)
 
 	Vector				m_vecEnemyLKP;// last known position of enemy. (enemy's origin)
+	// NEW.  Has m_vecEnemyLKP ever set before?  If not, don't try to use it (defalts to origin of the map, an odd place
+	// to look at for no apparent reason).
+	BOOL m_fEnemyLKP_EverSet;
 
 	int				m_cAmmoLoaded;		// how much ammo is in the weapon (used to trigger reload anim sequences)
 
@@ -460,6 +463,7 @@ public:
 
 	BOOL investigatingAltLKP;
 	Vector m_vecEnemyLKP_Real;
+	BOOL m_fEnemyLKP_Real_EverSet;
 
 	BOOL canSetAnim;
 	BOOL m_fNewScheduleThisFrame;
@@ -484,6 +488,7 @@ public:
 	//Used by a schedule possibly.
 	int oldWaterLevel;
 	float floatSinkSpeed;
+	float floatEndTimer;
 
 
 	//MODDD - okay
@@ -1304,6 +1309,7 @@ public:
 	virtual float ScriptEventSoundAttn(void);
 	virtual float ScriptEventSoundVoiceAttn(void);
 	virtual BOOL CanMakeBloodParticles(void);
+	virtual BOOL AffectedByKnockback(void);
 
 };
 

@@ -291,6 +291,8 @@ extern float Length(const float* v);
 //MODDD - NEW.  For C++.  cloned from C.   for some reason.
 float Distance(const vec3_t v1, const vec3_t v2);
 float Distance2D(const vec3_t v1, const vec3_t v2);
+float DistanceFromDelta(const vec3_t vDelta);
+float Distance2DFromDelta(const vec3_t vDelta);
 
 extern void VectorAngles(const float* forward, float* angles);
 extern float VectorNormalize(float* v);
@@ -306,9 +308,13 @@ void VectorMA(const vec3_t veca, float scale, const vec3_t vecb, vec3_t vecc);
 int VectorCompare(const vec3_t v1, const vec3_t v2);
 float Length(const vec3_t v);
 void CrossProduct(const vec3_t v1, const vec3_t v2, vec3_t cross);
+
 float Distance(const vec3_t v1, const vec3_t v2);
 float Distance2D(const vec3_t v1, const vec3_t v2);
-float VectorNormalize(vec3_t v);		// returns vector length
+float DistanceFromDelta(const vec3_t vDelta);
+float Distance2DFromDelta(const vec3_t vDelta);
+
+float VectorNormalize(vec3_t v); // returns vector length
 void VectorInverse(vec3_t v);
 void VectorScale(const vec3_t in, vec_t scale, vec3_t out);
 

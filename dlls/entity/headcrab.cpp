@@ -137,7 +137,7 @@ public:
 	void HandleEventQueueEvent(int arg_eventID);
 	///////////////////////////////////////////////
 
-
+	BOOL SeeThroughWaterLine(void);
 
 
 	CUSTOM_SCHEDULES;
@@ -967,6 +967,12 @@ void CHeadCrab::HandleEventQueueEvent(int arg_eventID) {
 
 }//END OF HandleEventQueueEvent
 
+
+
+ // If a headcrab lands in the water, go ahead and let it target something to jump out at.  Kinda useless stuck in there.
+BOOL CHeadCrab::SeeThroughWaterLine(void){
+	return TRUE;
+}//END OF SeeThroughWaterLine
 
 
 

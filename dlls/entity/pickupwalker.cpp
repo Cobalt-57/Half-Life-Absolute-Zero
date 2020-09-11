@@ -50,6 +50,15 @@ IMPLEMENT_CUSTOM_SCHEDULES( CPickupWalker, CBaseMonster );
 
 
 
+CPickupWalker::CPickupWalker(void){
+
+}
+
+
+BOOL CPickupWalker::usesSoundSentenceSave(void){
+	// Don't use it, uses sounds always precached for the player
+	return FALSE;
+}
 
 
 

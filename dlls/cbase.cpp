@@ -686,7 +686,10 @@ CBaseEntity::CBaseEntity(void){
 
 }
 
-// Whether this entity uses the sound sentence save feature. By default, false.  Most commonly expected monsters will though.
+// Whether this entity uses the sound sentence save feature. By default, false.
+// Most monsters will (not ones spawned by player-weapons like snarks/chumtoads, they share sounds that
+// are force-precached by player weapons, no sense having the sentence take up the sentence limit when the
+// sounds played are being precached normally regardless)
 BOOL CBaseEntity::usesSoundSentenceSave(void){
 	return FALSE;
 }
@@ -979,7 +982,7 @@ int CBaseEntity::Save( CSave &save )
 		// This is for getting the values before being grabbed only.
 		pev->mins = m_vecOldBoundsMins;
 		pev->maxs = m_vecOldBoundsMaxs;
-		SetGravity(1);  // ASSUMPTION, that gravity was 1 before being grabbed!
+		SetGravity(m_fOldGravity);
 	}
 
 	int baseWriteFieldsResult = 0;
