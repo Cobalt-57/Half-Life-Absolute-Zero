@@ -78,7 +78,7 @@ BOOL map_anyAirNodes;
 
 
 // Test!
-CBaseMonster* g_tempMonster = NULL;
+CBaseMonster* g_routeTempMonster = NULL;
 
 
 
@@ -545,7 +545,7 @@ int CGraph::FindNearestLink(const Vector& vecTestPoint, int* piNearestLink, BOOL
 
 #endif
 
-int CGraph::HullIndex(const CBaseEntity* pEntity)
+int CGraph::HullIndex(CBaseEntity* pEntity)
 {
 
 	//MODDD - other behavior.
@@ -577,7 +577,7 @@ int CGraph::HullIndex(const CBaseEntity* pEntity)
 }
 
 
-int CGraph::NodeType(const CBaseEntity* pEntity)
+int CGraph::NodeType(CBaseEntity* pEntity)
 {
 
 	//if ( pEntity->pev->movetype == MOVETYPE_FLY)
@@ -821,7 +821,7 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 	if (
 		EASY_CVAR_GET(pathfindIgnoreStaticRoutes) != 1 &&
 		m_fRoutingComplete &&
-		(g_tempMonster==NULL || !(g_tempMonster->pev->flags & FL_MONSTERCLIP)) &&
+		(g_routeTempMonster==NULL || !(g_routeTempMonster->pev->flags & FL_MONSTERCLIP)) &&
 		iHull >= 0 && iHull < MAX_NODE_HULLS
 	)
 	{
@@ -857,6 +857,9 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 	}
 	else
 	{
+		// Can't rely on built-in logic for FL_MONSTERCLIP, didn't factor that in.
+		BOOL theHardWay = (g_routeTempMonster!=NULL && g_routeTempMonster->pev->flags & FL_MONSTERCLIP);
+
 		CQueuePriority	queue;
 
 		switch (iHull)
@@ -909,10 +912,27 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 			{// run through all of this node's neighbors
 
 				iVisitNode = INodeLink(iCurrentNode, i);
-				if ((m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_afLinkInfo & iHullMask) != iHullMask)
-				{// monster is too large to walk this connection
-					//ALERT ( at_aiconsole, "fat ass %d/%d\n",m_pLinkPool[ m_pNodes[ iCurrentNode ].m_iFirstLink + i ].m_afLinkInfo, iMonsterHull );
-					continue;
+
+
+				if(m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_iDestNode == 11){
+					int x = 45;
+				}
+
+				if(!theHardWay){
+					if ((m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_afLinkInfo & iHullMask) != iHullMask)
+					{// monster is too large to walk this connection
+						//ALERT ( at_aiconsole, "fat ass %d/%d\n",m_pLinkPool[ m_pNodes[ iCurrentNode ].m_iFirstLink + i ].m_afLinkInfo, iMonsterHull );
+						continue;
+					}
+				}else{
+					CNode* shit1 = &m_pNodes[m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_iSrcNode];
+					CNode* shit2 = &m_pNodes[m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_iDestNode];
+
+					// running into your enemy is always a good thing.  Right?
+					BOOL succ = g_routeTempMonster->CheckLocalMove(shit1->m_vecOrigin, shit2->m_vecOrigin, g_routeTempMonster->m_hEnemy, NULL) == LOCALMOVE_VALID;
+					if(!succ){
+						continue;
+					}
 				}
 
 
@@ -956,6 +976,7 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 				if (m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_pLinkEnt != NULL)
 				{// there's a brush ent in the way! Don't mark this node or put it into the queue unless the monster can negotiate it
 
+					// This doesn't need to work with 'theHardWay' (FL_MONSTER), does it?
 					if (!HandleLinkEnt(iCurrentNode, m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_pLinkEnt, afCapMask, NODEGRAPH_STATIC))
 					{// monster should not try to go this way.
 						continue;
@@ -1108,11 +1129,12 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 		// (or at least WALK_MOVE?) from here to there would have worked.  CheckLocalMove would be as accurate as it gets though.
 		
 		// Letting that happen if pathfindNearestNodeExtra is on.
-		if(EASY_CVAR_GET_DEBUGONLY(pathfindNearestNodeExtra) == 1 && g_tempMonster != NULL ){
+		if(EASY_CVAR_GET_DEBUGONLY(pathfindNearestNodeExtra) == 1 && g_routeTempMonster != NULL ){
 			Vector vecStart = vecOrigin;
 			vecStart.z = EASY_CVAR_GET_DEBUGONLY(nodeSearchStartVerticalOffset);
 			
-			passed = (g_tempMonster->CheckLocalMove(vecStart, m_pNodes[iNode].m_vecOriginPeek, NULL, NULL) == LOCALMOVE_VALID);
+			// running into your enemy is always a good thing.  Right?
+			passed = (g_routeTempMonster->CheckLocalMove(vecStart, m_pNodes[iNode].m_vecOriginPeek, g_routeTempMonster->m_hEnemy, NULL) == LOCALMOVE_VALID);
 
 		}else{
 			// !!!   AS-IS WAY.   mostly.
@@ -1121,7 +1143,7 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 			//MODDD - involving nodeSearchStartVerticalOffset now.
 			Vector vecStart = vecOrigin;
 
-			//if(g_tempMonster->isMovetypeFlying()){
+			//if(g_routeTempMonster->isMovetypeFlying()){
 			///
 			//}
 
@@ -1200,7 +1222,7 @@ int CGraph::FindNearestNode(const Vector& vecOrigin, int afNodeTypes)
 
 	//MODDD - MAJOR.  ALSO.  Can skip using nearest-node cache by CVar, debug feature.
 	// Surrounds as-is script.
-	// ALSO.  If pathfindNearestNodeExtra is on and g_tempMonster isn't NULL (a sign it would be involved in finding the nearest node),
+	// ALSO.  If pathfindNearestNodeExtra is on and g_routeTempMonster isn't NULL (a sign it would be involved in finding the nearest node),
 	// automatically ignore the node cache.  What one entity size calls nearest another may not be able to get to with the size-involved
 	// checks.  Even though retail had no size-checking whatsoever for this, just a point-to-point line trace...
 	// Involving the HULL size (or best fit?) in m_Cache, and cacheing per size type would be ok there.
@@ -1214,12 +1236,12 @@ int CGraph::FindNearestNode(const Vector& vecOrigin, int afNodeTypes)
 
 	BOOL ignoreCacheException;
 
-	ignoreCacheException = (g_tempMonster != NULL && (g_tempMonster->pev->flags & FL_MONSTERCLIP));
+	ignoreCacheException = (g_routeTempMonster != NULL && (g_routeTempMonster->pev->flags & FL_MONSTERCLIP));
 	
 
 	if(
 		EASY_CVAR_GET(pathfindIgnoreNearestNodeCache) != 1 &&
-		!(EASY_CVAR_GET_DEBUGONLY(pathfindNearestNodeExtra) == 1 && g_tempMonster != NULL) &&
+		!(EASY_CVAR_GET_DEBUGONLY(pathfindNearestNodeExtra) == 1 && g_routeTempMonster != NULL) &&
 		!ignoreCacheException
 	){
 

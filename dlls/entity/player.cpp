@@ -6108,18 +6108,24 @@ edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
 	}
 
 	// If startspot is set, (re)spawn there.
-	if ( FStringNull( gpGlobals->startspot ) || !strlen(STRING(gpGlobals->startspot)))
-	{
-		pSpot = UTIL_FindEntityByClassname(NULL, "info_player_start");
-		if ( !FNullEnt(pSpot) )
-			goto ReturnSpot;
-	}
-	else
-	{
+	//MODDD - order changed a bit.  If the tried 'gpGlobals->startspot' does not exist,
+	// make a printout about it and just use info_player_start.
+
+	if ( !FStringNull( gpGlobals->startspot ) && strlen(STRING(gpGlobals->startspot))){
+
 		pSpot = UTIL_FindEntityByTargetname( NULL, STRING(gpGlobals->startspot) );
-		if ( !FNullEnt(pSpot) )
+		if ( !FNullEnt(pSpot) ){
 			goto ReturnSpot;
+		}else{
+			easyForcePrintLine("WARNING!  Player Spawn: Startspot '%s' not found, falling back to default info_player_start", STRING(gpGlobals->startspot) );
+		}
 	}
+
+	
+	pSpot = UTIL_FindEntityByClassname(NULL, "info_player_start");
+	if ( !FNullEnt(pSpot) )
+		goto ReturnSpot;
+	
 
 ReturnSpot:
 	if ( FNullEnt( pSpot ) )
@@ -6585,6 +6591,13 @@ void CBasePlayer::Spawn( BOOL revived ){
 	pev->classname = MAKE_STRING("player");
 	if(!revived){
 
+		//MODDD - why not reset these at a true spawn?
+		m_bitsDamageType = 0;
+		m_bitsDamageTypeMod = 0;
+		m_bitsDamageTypeForceShow = 0;
+		m_bitsDamageTypeModForceShow = 0;
+
+
 		// safe to reset this then
 		// Set to a very low negative number so that comparisons with gpGlobals->time shortly after loading
 		// the map still work (killed 6 seconds after beginning a map forgets you have adrenaline because
@@ -6610,15 +6623,10 @@ void CBasePlayer::Spawn( BOOL revived ){
 		//It will be reset if needed before now.
 		pev->armorvalue		= 0;
 
-		//MODDD - moved here.  Always occurs at a true spawn.
-		//m_bitsDamageType = 0;
-		//m_bitsDamageTypeMod = 0;
 		//MODDD - how about this while we're at it?  Already does the above two sets.
 		attemptResetTimedDamage(TRUE);
 
 	}else{
-		//m_bitsDamageType = 0;
-		//m_bitsDamageTypeMod = 0;
 
 
 		//MODDD - the player will not recover previous drowning-induced drown damage after an

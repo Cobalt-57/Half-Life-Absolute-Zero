@@ -495,12 +495,12 @@ public:
 	
 	
 
-	virtual BOOL isMovetypeFlying(void) const;
+	virtual BOOL isMovetypeFlying(void);
 
 	//MODDD - new. 
 	virtual BOOL isSizeGiant(void);
 	virtual BOOL isOrganic(void);
-	virtual int getHullIndexForNodes(void) const;
+	virtual int getHullIndexForNodes(void);
 	int getNumberOfBodyParts(void);
 	int getNumberOfSkins(void);
 
@@ -1023,6 +1023,8 @@ template <class T> T * GetClassPtr( T *a )
 		pev = VARS(CREATE_ENTITY());
 
 	// get the private data
+	// same as: 
+	//     a = (T*)pev->pContainingEntity->pvPrivateData;
 	a = (T *)GET_PRIVATE(ENT(pev));
 
 	if (a == NULL) 
@@ -1033,6 +1035,41 @@ template <class T> T * GetClassPtr( T *a )
 	}
 	return a;
 }
+
+//MODDD - clone of GetClassPtr that doesn't take any parameters and just makes the new entity.
+template <class T> T * CreateEntity(void)
+{
+	entvars_t* pev;
+	T* a;
+
+	// allocate entity
+	// 'CREATE_ENTITY()' creates the edict_t*.  
+	//pev = VARS(CREATE_ENTITY());
+	pev = &(CREATE_ENTITY())->v;
+
+	// get the private data
+	//a = (T*)GET_PRIVATE(ENT(pev));
+
+	//if (a == NULL) 
+	//{
+		// allocate private data 
+		// NOTE - same as calling  ALLOC_PRIVATE(ENT(pev), sizeof(T))  .  See the new constructor
+		// of CBaseEntity, 'operator new'.
+		// Nope!  For reasons science cannot explain, replacing 'new' still misses some needed behavior.
+		// Don't do that.  (can get random crashes on accessing some things, mostly methods)
+		a = new(pev) T;
+		//a = (T*)ALLOC_PRIVATE(pev->pContainingEntity, sizeof(T));
+
+		a->pev = pev;
+	//}
+	return a;
+}
+
+
+
+
+
+
 
 
 /*

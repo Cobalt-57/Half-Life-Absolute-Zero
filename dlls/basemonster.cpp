@@ -132,6 +132,12 @@ extern DLL_GLOBAL short g_sModelIndexLaserDot;// holds the index for the laser b
 
 extern CGraph WorldGraph;// the world node graph
 
+extern CBaseMonster* g_routeTempMonster;
+
+
+BOOL g_pathfind_preMoveOnly = FALSE;
+
+
 //extern Schedule_t* slAnimationSmartAndStop;
 //extern Schedule_t* slAnimationSmart;
 
@@ -2608,9 +2614,13 @@ BOOL CBaseMonster::FRouteClear ( void )
 //=========================================================
 BOOL CBaseMonster::FRefreshRoute ( void )
 {
-	CBaseEntity	*pPathCorner;
-	int		i;
-	BOOL		returnCode;
+	CBaseEntity *pPathCorner;
+	int i;
+	BOOL returnCode;
+
+	if(monsterID == 3){
+		int x = 45;
+	}
 
 	RouteNew();
 
@@ -2741,9 +2751,14 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 // up being very expensive and redundant on top of that.
 BOOL CBaseMonster::FRefreshRouteCheap ( void )
 {
-	CBaseEntity	*pPathCorner;
-	int		i;
-	BOOL		returnCode;
+	CBaseEntity *pPathCorner;
+	int i;
+	BOOL returnCode;
+
+
+	if(monsterID == 3){
+		int x = 45;
+	}
 
 	RouteNew();
 
@@ -2869,6 +2884,9 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 	Vector m5 = m_vecMoveGoal;
 
 
+	if(monsterID == 3){
+		int x = 45;
+	}
 
 	
 	BOOL returnCode;
@@ -4309,9 +4327,8 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 	}
 
 	return LOCALMOVE_VALID;
-
-
 }
+
 
 
 
@@ -4344,22 +4361,73 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 
 	vecStartPos = pev->origin;
 	
+
+	// NOTICE!  If this is a movetype step (might be a safe assumption given this method isn't overridden to be wildly different?),
+	// snap vecEnd to the ground first.  Cases of the monster clearly reaching the goal but the towards point being 'too high' even though
+	// it was just placed above the ground are irritating.
+	Vector vecStartFiltered;  //piggyback off the DROP_TO_FLOOR call below
+	Vector vecEndFiltered;
+
 	
-	flYaw = UTIL_VecToYaw ( vecEnd - vecStart );// build a yaw that points to the goal.
-	flDist = ( vecEnd - vecStart ).Length2D();// get the distance.
-	iReturn = LOCALMOVE_VALID;// assume everything will be ok.
+	if(this->isMovetypeFlying()){
+		// no change?
+		vecEndFiltered = vecEnd;
+	}else{
+		// snap it.
+		TraceResult tr;
+		Vector vecEndMod = vecEnd;
+		vecEndMod.z -= 100;
+		UTIL_TraceLine(vecEnd, vecEndMod, ignore_monsters, ENT(pev), &tr);
+
+		vecEndFiltered = tr.vecEndPos;
+	}
+	
+
+
 
 	// move the monster to the start of the local move that's to be checked.
 	UTIL_SetOrigin( pev, vecStart );// !!!BUGBUG - won't this fire triggers? - nope, SetOrigin doesn't fire
 
-	if ( !(pev->flags & (FL_FLY|FL_SWIM)) )
+
+	//MODDD - note.  Oh.  That's another way to check for flyer-types.  Ever a contradiction between pev->flags FL_TLY|FL_SWIM and isMovetypeFlying?
+	// seems those should match (either, both or neither be present, never only either.)
+	// Suppose there is one question:  Does a stukabat lose/get these flags depending on whether it is on the ground or flying?
+	// I imagine the pev->movetype check would be more accurate to how it is currently moving, not just belonging to a class of inherent fliers.
+	// Changing for now.
+	//if ( !(pev->flags & (FL_FLY|FL_SWIM)) )
+	if(!this->isMovetypeFlying())
 	{
 		DROP_TO_FLOOR( ENT( pev ) );//make sure monster is on the floor!
 	}
 
+
+	//MODDD - used to be above the 'UTIL_SetOrigin' call above.  Moved here so that vecStartFiltered can be set to
+	// where the origin is now (ent to test snapped to the ground after being moved to vecStart).
+	if(this->isMovetypeFlying()){
+		// no change
+		vecStartFiltered = vecStart;
+	}else{
+		// use the form snapped to the ground now
+		//vecStartFiltered = pev->absmin.z
+		vecStartFiltered = pev->origin;
+	}
+
+	// as-is, mostly
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	Vector pointDelta = vecEndFiltered - vecStartFiltered;
+	flYaw = UTIL_VecToYaw ( pointDelta);// build a yaw that points to the goal.
+	flDist = ( pointDelta ).Length2D();// get the distance.
+	iReturn = LOCALMOVE_VALID;// assume everything will be ok.
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
 	//pev->origin.z = vecStartPos.z;//!!!HACKHACK
 
-//	pev->origin = vecStart;
+//	pev->origin = vecStartFiltered;
 
 /*
 	if ( flDist > 1024 )
@@ -4471,7 +4539,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 			}
 			else
 			{
-				//DebugLine_Setup(vecStart, vecEnd, 255, 0, 0);
+				//DebugLine_Setup(vecStartFiltered, vecEndFiltered, 255, 0, 0);
 
 				// any other info on it?
 				if (gpGlobals->trace_ent != NULL) {
@@ -4512,7 +4580,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 				// Now wait just a minute.
 				TraceResult temp_tr;
 				Vector vecStartah = pev->origin + Vector(0, 0, 2);
-				Vector vecEndah = vecStartah + (vecEnd - vecStart).Normalize() * LOCAL_STEP_SIZE;
+				Vector vecEndah = vecStartah + (vecEndFiltered - vecStartFiltered).Normalize() * LOCAL_STEP_SIZE;
 				UTIL_TraceLine(vecStartah, vecEndah, dont_ignore_monsters, ENT(pev), &temp_tr);
 
 				if (!temp_tr.fAllSolid && !temp_tr.fStartSolid && temp_tr.flFraction >= 1.0) {
@@ -4557,13 +4625,13 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 		//MODDD - UHHHHhhhhh.    What??
 		// Now anything taller than 64 fails.  UGH.  Fantastic to run into. 
 		// Why not involve pev->size, like pev->size * 1.3?
-		//if ( fabs(vecEnd.z - pev->origin.z) > 64 )
+		//if ( fabs(vecEndFiltered.z - pev->origin.z) > 64 )
 
 		float maxZ_DistAllowed = pev->size.z * 1.2 + 16; //pev->size.z * 1.25;
-		float zDist = fabs(vecEnd.z - pev->origin.z);
+		float zDist = fabs(vecEndFiltered.z - pev->origin.z);
 
 		DebugLine_SetupPoint(1, pev->origin, 255, 0, 255);
-		DebugLine_SetupPoint(2, vecEnd, 255, 255, 255);
+		DebugLine_SetupPoint(2, vecEndFiltered, 255, 255, 255);
 
 		if ( zDist > maxZ_DistAllowed )
 		{
@@ -4584,9 +4652,9 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 	WRITE_COORD(MSG_BROADCAST, pev->origin.x);
 	WRITE_COORD(MSG_BROADCAST, pev->origin.y);
 	WRITE_COORD(MSG_BROADCAST, pev->origin.z);
-	WRITE_COORD(MSG_BROADCAST, vecStart.x);
-	WRITE_COORD(MSG_BROADCAST, vecStart.y);
-	WRITE_COORD(MSG_BROADCAST, vecStart.z);
+	WRITE_COORD(MSG_BROADCAST, vecStartFiltered.x);
+	WRITE_COORD(MSG_BROADCAST, vecStartFiltered.y);
+	WRITE_COORD(MSG_BROADCAST, vecStartFiltered.z);
 	*/
 
 
@@ -4620,7 +4688,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 	}
 
 	return iReturn;
-}
+}//CheckLocalMove
 
 
 float CBaseMonster::OpenDoorAndWait( entvars_t *pevDoor )
@@ -5625,8 +5693,11 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 	}
 
 
-	MakeIdealYaw(m_Route[m_iRouteIndex].vecLocation);
-	ChangeYaw(pev->yaw_speed);
+	// don't rotate if this is only checking to see whether I am up to so far along a route just by standing here
+	if(!g_pathfind_preMoveOnly){
+		MakeIdealYaw(m_Route[m_iRouteIndex].vecLocation);
+		ChangeYaw(pev->yaw_speed);
+	}
 
 	if (m_movementGoal == MOVEGOAL_NONE) {
 		//MODDD - YEAH
@@ -6252,6 +6323,9 @@ BOOL CBaseMonster::CheckPreMove(void){
 	// Failing the pre-move will change this.
 	BOOL returnCode = TRUE;
 
+	// careful about real changes to angles, etc. during this time, would look silly if we never move an inch
+	g_pathfind_preMoveOnly = TRUE;
+
 	int maxTimes = 2;
 	while (maxTimes > 0) {
 		maxTimes--;
@@ -6313,6 +6387,8 @@ BOOL CBaseMonster::CheckPreMove(void){
 			break;
 		}
 	}//END OF while loop
+
+	g_pathfind_preMoveOnly = FALSE;
 
 	return returnCode;
 }//CheckPreMove
@@ -6731,7 +6807,7 @@ void CBaseMonster::StartMonster ( void )
 
 void CBaseMonster::TaskComplete(void) {
 
-	if (monsterID == 11) {
+	if(monsterID == 3){
 		int x = 45;
 	}
 
@@ -6785,16 +6861,9 @@ void CBaseMonster::TaskFail(void)
 	//easyForcePrintLine("I PHAIL %.2f sched:%s task:%d", gpGlobals->time, getScheduleName(), getTaskNumber());
 	SetConditions(bits_COND_TASK_FAILED);
 
-	if (FClassnameIs(pev, "monster_alien_controller")) {
-		int x = 45;
-	}
 	
-	if(monsterID == 9){
-		int x = 4;
-	}
-
 	//if(FClassnameIs(this->pev, "monster_scientist")){
-	if(monsterID == 4){
+	if(monsterID == 3){
 		//break point!
 		const char* imLazy = (m_pSchedule!=NULL)?m_pSchedule->pName:"NULL!";
 		int x = 7;
@@ -7443,6 +7512,12 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 	}
 
 
+	// If this has FL_MONSTERCLIP, offer using CheckLocalMove as an alternative to looking up what nodes have good routes to other nodes.
+	// The predetermined static route table was made without MONSTERCLIP in mind, so it may have paths we can't take or lack paths we can take
+	// that obviously should work fine.
+	BOOL theHardWay = (this->pev->flags & FL_MONSTERCLIP);
+
+
 	// we'll do a rough sample to find nodes that are relatively nearby
 	for ( i = 0 ; i < maxTries; i++ )
 	{
@@ -7450,7 +7525,23 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 		////////////////////////////////////////////////////////////////
 		int nodeNumber = ((alternatingChoice * (int)((i+iOffset)*0.5)) + startSearchNode) % WorldGraph.m_cNodes;
 
+		
+		if(monsterID == 3 && nodeNumber == 11){
+			// WHAT
+			int x = 45;
+		}
+
 		if (nodeNumber == startSearchNode)continue;  //can happen with a random start-search node. Any node after can be picked.
+
+		//MODDD
+		// Also, don't try the node I'm already closest to as a destination if I'm already touching it.
+		if (nodeNumber == iMyNode){
+			float distah = Distance(pev->origin, WorldGraph.Node(iMyNode).m_vecOrigin);
+			if(distah < 5){
+				continue;
+			}
+		}
+
 
 		if (nodeNumber < 0) nodeNumber += WorldGraph.m_cNodes;  // in negatives, get out of the negative range, loop back around
 		CNode &node = WorldGraph.Node( nodeNumber );
@@ -7477,8 +7568,36 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 		*/
 
 
+		//MODDD - idea.  Wouldn't doing the dist check before the CheckLocalMove's make more sense?
+		// Seems cheaper than CheckLocalMove.   The retail way is still best with it after though, NextNodeInRoute
+		// might be cheaper than a distance check.   Really?
+		BOOL passingCondition;
 		// can I get there?
-		if (WorldGraph.NextNodeInRoute( iMyNode, nodeNumber, iMyHullIndex, 0 ) != iMyNode)
+		if(!theHardWay){
+			// usual cheaper way
+			//MODDD - Wait.  Why didn't this receive this monster's 'm_afCapability'?  It might be pointless but why not.
+			// (last parameter used to be 0)
+			passingCondition = WorldGraph.NextNodeInRoute(iMyNode, nodeNumber, iMyHullIndex, m_afCapability) != iMyNode;
+		}else{
+			// WARNING!  Very bad idea, many FindShortestPath calls like this lags like mad.  Don't do that.
+			// If a FL_MONSTERCLIP, just try CheckLocalMove from here to the dest, they're usually pretty simple checks.
+			/*
+			int iPath[ MAX_PATH_SIZE ];
+			// using FL_MONSTERCLIP?  can't trust no predetermined route info
+			g_routeTempMonster = this;
+			int daRouteSize = WorldGraph.FindShortestPath(iPath, iMyNode, nodeNumber, iMyHullIndex, m_afCapability);
+			g_routeTempMonster = NULL;
+			if(daRouteSize > 0){
+				passingCondition = TRUE;
+			}else{
+				passingCondition = FALSE;
+			}
+			*/
+			passingCondition = (CheckLocalMove(WorldGraph.Node(iMyNode).m_vecOrigin, WorldGraph.Node(nodeNumber).m_vecOrigin, m_hEnemy, NULL) == LOCALMOVE_VALID);
+		}
+
+
+		if (passingCondition)
 		{
 			flDist = ( vecThreat - node.m_vecOrigin ).Length();
 
@@ -7486,87 +7605,96 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 			if ( flDist > flMinDist && flDist < flMaxDist)
 			{
 
-				// can I see where I want to be from there?
-				//MODDD  - WARNING!!!  A TraceLine call will go through simple thin blocking objects like fences, fooling us into thinking
-				// that a route from point A to B through a fence is valid, just because a bullet can go through it.
-				// How about a trace-hull check instead?
-				//CHANGE.
-				// That might sound like a good idea, but some AI seems to expect this to still work the way it does.
-				// The controller will fail a lot more if we use TRACE_MONSTER_HULL here, but doing that anyway and
-				// giving a target like m_hEnemy on the BuildNearestRoute calls isn't good either.
-				// Then it goes straight for the player instead of picking routes around the map to move like it should.
-				// Really weird stuff.
-				UTIL_TraceLine( node.m_vecOrigin + pev->view_ofs, vecLookersOffset, ignore_monsters, edict(), &tr );
-
-				// One of these too ?
-				//UTIL_TraceHull(vecFrom, vecPos, ignore_monsters, large_hull, m_hEnemy->edict(), &tr);
-				//TRACE_MONSTER_HULL(edict(), pev->origin, Probe, dont_ignore_monsters, edict(), &tr);
-
-
-				/*
-				// This is the most accurate TRACE_MONSTER_HULL way at least.
-				// LEFT FOR DEBUGGING, what causes the differences can be interesting
-				TraceResult tr2;
-				TRACE_MONSTER_HULL(edict(), node.m_vecOrigin + pev->view_ofs, vecLookersOffset, dont_ignore_monsters, edict(), &tr2);
-
-				//if (FClassnameIs(pev, "monster_alien_controller"))
-				{
-
-					if (tr.pHit != tr2.pHit) {
-						// WHAT NOW
-						CBaseEntity* daHit1 = NULL;
-						CBaseEntity* daHit2 = NULL;
-						const char* classname1 = "NULL";
-						const char* classname2 = "NULL";
-						if (tr.pHit != NULL) {
-							daHit1 = CBaseEntity::Instance(tr.pHit);
-						}
-						if (tr2.pHit != NULL) {
-							daHit2 = CBaseEntity::Instance(tr2.pHit);
-						}
-						if(daHit1!=NULL)classname1 = daHit1->getClassname();
-						if(daHit2!=NULL)classname2 = daHit2->getClassname();
-						int x = 45;
-						DebugLine_Setup(node.m_vecOrigin + pev->view_ofs, tr.vecEndPos, tr.flFraction);
-						DebugLine_Setup(node.m_vecOrigin + pev->view_ofs + Vector(0,0,20), tr2.vecEndPos + Vector(0, 0, 20), tr2.flFraction);
-
-						easyForcePrintLine("TRACE PAIR");
-						printBasicTraceInfo(tr);
-						easyForcePrintLine();
-						printBasicTraceInfo(tr2);
-						easyForcePrintLine();
-
-					}
-
-				}
-				*/
-
-
 				BOOL unobscurred = FALSE;
 
-				// breakpoint stuff
-				const char* daClassname = "NULL";
 
-				if (tr.flFraction >= 1.0) {
-					// nothing in the way?  well, yeah.
-					unobscurred = TRUE;
-				}else {
-					// hit something?
-					if (tr.pHit != NULL) {
+				if(!theHardWay){
 
-						if (pTarget != NULL) {
-							// If we have a target and what was hit matches that...  yeah.  That's kind of the point.
-							unobscurred = (tr.pHit == pTarget->edict());
+					// can I see where I want to be from there?
+					//MODDD  - WARNING!!!  A TraceLine call will go through simple thin blocking objects like fences, fooling us into thinking
+					// that a route from point A to B through a fence is valid, just because a bullet can go through it.
+					// How about a trace-hull check instead?
+					//CHANGE.
+					// That might sound like a good idea, but some AI seems to expect this to still work the way it does.
+					// The controller will fail a lot more if we use TRACE_MONSTER_HULL here, but doing that anyway and
+					// giving a target like m_hEnemy on the BuildNearestRoute calls isn't good either.
+					// Then it goes straight for the player instead of picking routes around the map to move like it should.
+					// Really weird stuff.
+					UTIL_TraceLine( node.m_vecOrigin + pev->view_ofs, vecLookersOffset, ignore_monsters, edict(), &tr );
+
+					// One of these too ?
+					//UTIL_TraceHull(vecFrom, vecPos, ignore_monsters, large_hull, m_hEnemy->edict(), &tr);
+					//TRACE_MONSTER_HULL(edict(), pev->origin, Probe, dont_ignore_monsters, edict(), &tr);
+
+
+					/*
+					// This is the most accurate TRACE_MONSTER_HULL way at least.
+					// LEFT FOR DEBUGGING, what causes the differences can be interesting
+					TraceResult tr2;
+					TRACE_MONSTER_HULL(edict(), node.m_vecOrigin + pev->view_ofs, vecLookersOffset, dont_ignore_monsters, edict(), &tr2);
+
+					//if (FClassnameIs(pev, "monster_alien_controller"))
+					{
+
+						if (tr.pHit != tr2.pHit) {
+							// WHAT NOW
+							CBaseEntity* daHit1 = NULL;
+							CBaseEntity* daHit2 = NULL;
+							const char* classname1 = "NULL";
+							const char* classname2 = "NULL";
+							if (tr.pHit != NULL) {
+								daHit1 = CBaseEntity::Instance(tr.pHit);
+							}
+							if (tr2.pHit != NULL) {
+								daHit2 = CBaseEntity::Instance(tr2.pHit);
+							}
+							if(daHit1!=NULL)classname1 = daHit1->getClassname();
+							if(daHit2!=NULL)classname2 = daHit2->getClassname();
+							int x = 45;
+							DebugLine_Setup(node.m_vecOrigin + pev->view_ofs, tr.vecEndPos, tr.flFraction);
+							DebugLine_Setup(node.m_vecOrigin + pev->view_ofs + Vector(0,0,20), tr2.vecEndPos + Vector(0, 0, 20), tr2.flFraction);
+
+							easyForcePrintLine("TRACE PAIR");
+							printBasicTraceInfo(tr);
+							easyForcePrintLine();
+							printBasicTraceInfo(tr2);
+							easyForcePrintLine();
+
 						}
 
-						// DEBUG
-						CBaseEntity* daHit = CBaseEntity::Instance(tr.pHit);
-						if (daHit != NULL) {
-							daClassname = daHit->getClassname();
+					}
+					*/
+
+
+					// breakpoint stuff
+					const char* daClassname = "NULL";
+
+					if (tr.flFraction >= 1.0) {
+						// nothing in the way?  well, yeah.
+						unobscurred = TRUE;
+					}else {
+						// hit something?
+						if (tr.pHit != NULL) {
+
+							if (pTarget != NULL) {
+								// If we have a target and what was hit matches that...  yeah.  That's kind of the point.
+								unobscurred = (tr.pHit == pTarget->edict());
+							}
+
+							// DEBUG
+							CBaseEntity* daHit = CBaseEntity::Instance(tr.pHit);
+							if (daHit != NULL) {
+								daClassname = daHit->getClassname();
+							}
 						}
 					}
+
+
+				}else{
+					// Passed under 'theHardWay' ?  Already conuts.
+					unobscurred = TRUE;
+
 				}
-				
 				
 
 				//MODDD - was "tr.flFraction == 1.0", included above too.
@@ -7580,6 +7708,32 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 					// Described moreso at the top of the file.
 					// For now don't send 'iMoveFlag', the target should be fine maybe?
 					// CAREFUL!  No moveflags is bad, retail way of TO_LOCATION is fine.
+
+					
+
+					/*
+					// IDEA?  may not be necessary
+					// Nope.  Whatever calls BuildNearestRoute requires the 'max' distance to any route to a picked node to be less than
+					// the distance to my current enemy.
+					if(UseNearestRouteStrictCheck()){
+						// The node picked must also be a 'worthy' destination.  Does it even bring us closer to the target ent?
+						if(pTarget != NULL){
+							float myDistToEnemy = Distance(pev->origin, pTarget->pev->origin);
+							float nodeDistToEnemy = Distance(node.m_vecOrigin, pTarget->pev->origin);
+
+							if(nodeDistToEnem < myDistToEnemy * 0.9){
+								// at least 10% better distance if I reach it?  Go ahead, allow it.
+
+							}else{
+								// No.
+								continue;
+							}
+
+						}
+					}
+					*/
+
+
 					if ( BuildRoute ( node.m_vecOrigin, bits_MF_TO_LOCATION, NULL ) )
 					//if ( BuildRoute ( node.m_vecOrigin, iMoveFlag, pTarget ) )
 					//if ( BuildRoute ( node.m_vecOrigin, 0, NULL ) )
@@ -7588,6 +7742,12 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 						m_vecMoveGoal = node.m_vecOrigin;
 						//MODDD - there we go
 						WorldGraph.m_iLastCoverSearch = nodeNumber + 1;
+
+
+						if(monsterID == 3){
+							DebugLine_SetupPoint(m_vecMoveGoal, 255, 125, 255);
+						}
+
 						return TRUE; // UNDONE: keep looking for something closer!
 					}
 				}
@@ -8333,8 +8493,6 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 
 
 
-extern CBaseMonster* g_tempMonster;
-
 //=========================================================
 // NODE GRAPH
 //=========================================================
@@ -8361,7 +8519,7 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	// Record the monster checking the nodes for any node logic to be aware of (per some CVars) this call.
 	// Retail was never aware of this in nodes.cpp, besides getting the hull-size of the calling monster
 	// early on.
-	g_tempMonster = this;
+	g_routeTempMonster = this;
 
 	iSrcNode = WorldGraph.FindNearestNode ( pev->origin, this );
 	iDestNode = WorldGraph.FindNearestNode ( vecDest, this );
@@ -8374,14 +8532,14 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	{
 		// no node nearest self
 //		ALERT ( at_aiconsole, "FGetNodeRoute: No valid node near self!\n" );
-		g_tempMonster = NULL;
+		g_routeTempMonster = NULL;
 		return FALSE;
 	}
 	else if ( iDestNode == -1 )
 	{
 		// no node nearest target
 //		ALERT ( at_aiconsole, "FGetNodeRoute: No valid node near target!\n" );
-		g_tempMonster = NULL;
+		g_routeTempMonster = NULL;
 		return FALSE;
 	}
 
@@ -8424,7 +8582,7 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	iResult = WorldGraph.FindShortestPath ( iPath, iSrcNode, iDestNode, iNodeHull, m_afCapability );
 
 	// done with node-based logic
-	g_tempMonster = NULL;
+	g_routeTempMonster = NULL;
 
 
 

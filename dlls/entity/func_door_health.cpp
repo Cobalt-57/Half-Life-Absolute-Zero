@@ -1,24 +1,14 @@
 
-
-
 #include "extdll.h"
-
 #include "func_door_health.h"
-
 #include "util.h"
-
-
 #include "basetoggle.h"
 #include "basebutton.h"
-
 #include "player.h"
-
 #include "lights.h"
 
 
-
 EASY_CVAR_EXTERN_DEBUGONLY(wallHealthDoor_closeDelay)
-
 
 
 
@@ -27,8 +17,6 @@ LINK_ENTITY_TO_CLASS(func_door_health, CHealthDoor);
 #if FORCE_ROTDOOR_TO_HEALTHDOOR == 1
 LINK_ENTITY_TO_CLASS(func_door_rotating, CHealthDoor);
 #endif
-
-
 
 
 
@@ -571,7 +559,6 @@ void CHealthDoor::Precache()
 	healthModuleInstance.Precache();
 	CRotDoor::Precache();  //likely had something in mind?
 }
-
 
 
 /*

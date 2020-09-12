@@ -60,6 +60,21 @@ CCrossbow::CCrossbow(){
 }//END OF constructor
 
 
+
+
+/*
+#ifndef CLIENT_DLL
+	TYPEDESCRIPTION	CCrossbow::m_SaveData[] =
+	{
+		DEFINE_FIELD(CCrossbow, testcrossbowvar, FIELD_INTEGER),
+	};
+	IMPLEMENT_SAVERESTORE(CCrossbow, CBasePlayerWeapon);
+#endif
+*/
+
+
+
+
 void CCrossbow::Spawn( )
 {
 	Precache( );

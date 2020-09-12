@@ -55,6 +55,7 @@
 #include "../demo.h"
 
 
+
 // INCLUDES FROM com_weapons.cpp.
 //////////////////////////////////////////////////////
 #include "hud.h"
@@ -98,6 +99,8 @@ BOOL g_HUD_Redraw_ran = FALSE;
 // go ahead and allow the very first time?
 // After this, VidInit in cdll_int.cpp has to set this (map change).
 BOOL g_cl_queueSharedPrecache = TRUE;
+
+BOOL g_cl_firstSendoffSinceMapLoad = TRUE;
 
 
 
@@ -894,17 +897,44 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		// YES KEEP THIS.  I stared at this for 5+ hours to say... yes.  This gives better than retail behavior.
 		// Without this check, some clientside weapon-fires happen twice, especially with nextAttack's that are uneven
 		// (like + 0.82 instead of 0.75 on the singlefire shotgun).  Why?   BECAUSE THE GODS WERE NOT PLEASED WITH 0.82.
-		if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
-		pCurrent->m_flNextPrimaryAttack = pfrom->m_flNextPrimaryAttack;
+		
+
+
+		if(pCurrent->m_iId==WEAPON_CROSSBOW){
+			int x = 45;
 		}
-		if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
-		pCurrent->m_flNextSecondaryAttack = pfrom->m_flNextSecondaryAttack;
-		}
-		if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
-		pCurrent->m_flTimeWeaponIdle = pfrom->m_flTimeWeaponIdle;
+
+		if(g_cl_firstSendoffSinceMapLoad == FALSE){
+			// normal
+
+			if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
+				pCurrent->m_flNextPrimaryAttack = pfrom->m_flNextPrimaryAttack;
+			}else{
+				// !!!!
+				int x = 45;
+			}
+			if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
+				pCurrent->m_flNextSecondaryAttack = pfrom->m_flNextSecondaryAttack;
+			}
+			if( !(pfrom->m_flTimeWeaponIdle <= 0 && pCurrent->m_flTimeWeaponIdle >= 0.1) ){
+				pCurrent->m_flTimeWeaponIdle = pfrom->m_flTimeWeaponIdle;
+			}else{
+				//	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelSyncFixPrintouts)==1) easyForcePrintLine("*****VIEWMODEL SYNCH FIX APPLIED.");
+			}
+
 		}else{
-		//	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelSyncFixPrintouts)==1) easyForcePrintLine("*****VIEWMODEL SYNCH FIX APPLIED.");
+
+			if(pCurrent->m_iId==WEAPON_CROSSBOW){
+				int x = 45;
+			}
+
+			// Force it, no prevention
+			pCurrent->m_flNextPrimaryAttack = pfrom->m_flNextPrimaryAttack;
+			pCurrent->m_flNextSecondaryAttack = pfrom->m_flNextSecondaryAttack;
+			pCurrent->m_flTimeWeaponIdle = pfrom->m_flTimeWeaponIdle;
+
 		}
+		
 
 
 		pCurrent->pev->fuser1 = pfrom->fuser1;
@@ -1892,6 +1922,8 @@ void DLLEXPORT HUD_PostRunCmd(struct local_state_s* from, struct local_state_s* 
 	if (cl_lw && cl_lw->value)
 	{
 		HUD_WeaponsPostThink(from, to, cmd, arg_time, random_seed);
+
+		g_cl_firstSendoffSinceMapLoad = FALSE;
 	}
 	else
 #endif

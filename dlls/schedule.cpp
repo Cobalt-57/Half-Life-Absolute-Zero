@@ -440,10 +440,19 @@ BOOL CBaseMonster::FScheduleValid ( void )
 //=========================================================
 void CBaseMonster::MaintainSchedule ( void )
 {
+
+	//MODDD - NOTE.
+	// How should giving up due to picking the same schedule as the previous work?
+	// Run until the end of the current loop iteration (set i to 999)?
+	// Run through the 2nd picked schedule but end as soon as it wants to change the
+	// schedule for any reason?   'break' as soon as the 2nd same schedule is picked?
+
+
 	Schedule_t* pNewSchedule;
 	Schedule_t* pPrevSchedule;
 	int i;
 	BOOL pickedScheduleThisCall = FALSE;
+	BOOL queueStopAtScheduleEnd = FALSE;
 	
 	/*
 	if(m_iTaskStatus == TASKSTATUS_RUNNING){
@@ -474,10 +483,17 @@ void CBaseMonster::MaintainSchedule ( void )
 	// validate existing schedule 
 
 
+		BOOL validSchedule = FScheduleValid();
+
+		if(!validSchedule && queueStopAtScheduleEnd){
+			// goodbye
+			break;
+		}
+
 		//MODDD - a schedule with "scheduleSurvivesStateChange" set to TRUE will disregard state changes. But the schedule going invalid by having interruptible conditions from the schedule is still possible.
 		//if ( (!FScheduleValid() || m_MonsterState != m_IdealMonsterState) )
 		if (
-			!FScheduleValid() ||
+			!validSchedule ||
 			(!scheduleSurvivesStateChange && m_MonsterState != m_IdealMonsterState)
 		)
 		{
@@ -568,7 +584,10 @@ void CBaseMonster::MaintainSchedule ( void )
 				// new schedule.  Record whether this call of the method (MaintainSchedule) has ever fetched a method before intead.
 				if(pickedScheduleThisCall && pNewSchedule == pPrevSchedule){
 					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! %s:%d Same schedule (%s) picked in the same frame, BLOCKED. <fail>", getClassname(), monsterID, m_pSchedule->pName);}
-					i = 999;
+					//i = 999;
+					// queue the end instead, may still be possible to do several or all tasks in this 2nd run of the schedule
+					queueStopAtScheduleEnd = TRUE;
+					break;
 				}
 
 				pickedScheduleThisCall = TRUE;  // have now
@@ -621,7 +640,9 @@ void CBaseMonster::MaintainSchedule ( void )
 				//MODDD - yea.
 				if(pickedScheduleThisCall && pNewSchedule == pPrevSchedule){
 					if(EASY_CVAR_GET_DEBUGONLY(scheduleInterruptPrintouts)){easyForcePrintLine("!!! %s:%d Same schedule (%s) picked in the same frame, BLOCKED. <normal>", getClassname(), monsterID, m_pSchedule->pName);}
-					i = 999;
+					//i = 999;
+					queueStopAtScheduleEnd = TRUE;
+					break;
 				}
 
 				pickedScheduleThisCall = TRUE;  // have now
@@ -707,8 +728,9 @@ void CBaseMonster::MaintainSchedule ( void )
 		
 		// MODDD - IDEA.  What if we could pick a new schedule in the same frame that another one picked failed in the same frame?
 		// Only if it is running do we assume we're sticking with it.
+		// Also, don't run a task that failed while starting, that doesn't make much sense
 		//if ( !TaskIsComplete() && m_iTaskStatus != TASKSTATUS_NEW )
-		if (m_iTaskStatus == TASKSTATUS_RUNNING){
+		if (m_iTaskStatus == TASKSTATUS_RUNNING && !HasConditions(bits_COND_TASK_FAILED)){
 			//|| m_iTaskStatus == TASKSTATUS_RUNNING_TASK || m_iTaskStatus == TASKSTATUS_RUNNING_MOVEMENT) {
 			//break;
 
@@ -976,6 +998,14 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 	case TASK_WAIT_RANDOM:
 	case TASK_WAIT_STUMPED:
 		{
+
+			// (TASK_FACE_ENEMY)  Why not look at the LKP in the meantime?  Most likely place for the enemy to pop back in, right?
+			///////////////////////////////////////////////////////////////
+			MakeIdealYaw( m_vecEnemyLKP );
+			ChangeYaw( pev->yaw_speed );
+			///////////////////////////////////////////////////////////////
+
+
 			if ( gpGlobals->time >= m_flWaitFinished )
 			{
 				TaskComplete();
@@ -1175,6 +1205,7 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 					}
 					float enemyPathGoalDistance = (m_vecMoveGoal - vecDestination).Length();
 					
+
 					/*
 					if(pTask->flData <= 1){
 						//code! Use the flexible test.
@@ -1186,7 +1217,15 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 					*/
 					//easyForcePrintLine("TEST: e:%.2f m:%.2f a:%.2f", enemyRealDist, (m_vecMoveGoal - vecDestination).Length2D(), enemyRealDist*0.2);
 					//distance between the enemy and where I was told to go (position of the enemy since doing a path-find before)
-					redoPass = (enemyPathGoalDistance > enemyRealDist*0.2); //((m_vecMoveGoal - vecDestination).Length2D() > enemyRealDist*0.3);
+
+
+					if(this->m_movementGoal == MOVEGOAL_LOCATION){
+						// Picked a 'buildNearestRoute', do NOT refresh from being a distance.  That's kinda the point.
+						int x = 45;
+					}else{
+						// enemy got too far from the goal and we see they're goo far?   go ahead then, refresh.
+						redoPass = (enemyPathGoalDistance > enemyRealDist*0.2); //((m_vecMoveGoal - vecDestination).Length2D() > enemyRealDist*0.3);
+					}
 					
 				}
 
@@ -1252,8 +1291,19 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 					//  ...  FRefreshRouteChaseEnemySmart
 					BOOL test = FRefreshRouteChaseEnemySmart();
 					
-					if(!test){if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 3"); TaskFail();}else{if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: SUCCESS 3");};
-				}
+					if(!test){
+						if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 3");
+						TaskFail();
+					}else{
+						if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: SUCCESS 3");
+
+						if(MovementIsComplete()){
+							TaskComplete();
+							return;
+						}
+					}
+
+				}//redoPass check
 
 				
 					//easyForcePrintLine("WHAT???!!! %.2f %.2f", distance, pTask->flData);
@@ -1269,7 +1319,18 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 					
 					m_vecMoveGoal = m_vecEnemyLKP;
 					BOOL test = FRefreshRouteChaseEnemySmart();
-					if(!test)TaskFail();
+
+					if(!test){
+						if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 4");
+						TaskFail();
+					}else{
+						if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: SUCCESS 4");
+
+						if(MovementIsComplete()){
+							TaskComplete();
+							return;
+						}
+					}
 
 				}
 				else{
@@ -2501,6 +2562,21 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		}
 	case TASK_WAIT_STUMPED:
 		{
+			// from TASK_FACE_ENEMY
+			///////////////////////////////////////
+			MakeIdealYaw ( m_vecEnemyLKP );
+
+			//MODDD - added, if we can complete early we can move on with thinking in the same frame
+			if (FacingIdeal())
+			{
+				TaskComplete();
+				return;
+			}
+
+			SetTurnActivity(); 
+			//////////////////////////////////////////////
+
+
 			m_flWaitFinished = gpGlobals->time + EASY_CVAR_GET_DEBUGONLY(pathfindStumpedWaitTime);
 			break;
 		}
@@ -2599,7 +2675,10 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 				// or, assume m_movementActivity was set by FRefreshRouteChaseEnemySmart?
 				// Although it forces to ACT_RUN.   ehhh why not.
 				
-				m_IdealActivity = m_movementActivity;
+				if(!MovementIsComplete()){
+					// It is possible that movement completed in the same frame in a very short route?  what?
+					m_IdealActivity = m_movementActivity;
+				}
 				//////////////////////////////////////////////////////////////////////////////////////////////////
 				//////////////////////////////////////////////////////////////////////////////////////////////////
 				//////////////////////////////////////////////////////////////////////////////////////////////////

@@ -278,8 +278,8 @@ public:
 
 	void    SortNodes(void);
 
-	int		HullIndex(const CBaseEntity* pEntity);	// what hull the monster uses
-	int		NodeType(const CBaseEntity* pEntity);		// what node type the monster uses
+	int		HullIndex(CBaseEntity* pEntity);	// what hull the monster uses
+	int		NodeType(CBaseEntity* pEntity);		// what node type the monster uses
 
 	inline int CapIndex(int afCapMask)
 	{

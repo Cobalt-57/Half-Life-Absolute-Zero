@@ -548,8 +548,14 @@ int DispatchRestore( edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity
 
 void DispatchObjectCollsionBox( edict_t *pent )
 {
+	// TEST
+	// of course the crash won't happen when I'm staring at it.  that's just dynamite.
+	int daindexo = ENTINDEX(pent);
+	const char* daClassname = STRING(pent->v.classname);
 
 	CBaseEntity *pEntity = (CBaseEntity *)GET_PRIVATE(pent);
+
+
 	if (pEntity)
 	{
 		pEntity->SetObjectCollisionBox();
@@ -701,7 +707,7 @@ BOOL CBaseEntity::usesSoundSentenceSave(void){
 //Flyers are things that defy gravity and can move anywhere on the Z axis.  Not just anything that can jump.
 //Don't worry about swimming (pev->flags having FL_SWIM I think).  Swimmers are just flyers with a different coat of paint
 //and already know to use their own in-water nodes.
-BOOL CBaseEntity::isMovetypeFlying(void) const{
+BOOL CBaseEntity::isMovetypeFlying(void){
 	return (pev->movetype == MOVETYPE_FLY || pev->movetype == MOVETYPE_BOUNCEMISSILE);
 	//Count MOVETYPE_BOUNCEMISSILE too. It may be used sometimes?
 	//exclude TOSS for now, it obeys gravity.
@@ -722,7 +728,7 @@ BOOL CBaseEntity::isOrganic(void){
 // For things that don't fit evenly into certain sizes as seen in nodes.cpp's HullIndex method,
 // a NODE_HUMAN_HULL may be implied. Even something larger than the largest or smaller than the
 // smallest gets this assumption. It is not very good, so just say what an entity prefers here.
-int CBaseEntity::getHullIndexForNodes(void) const{
+int CBaseEntity::getHullIndexForNodes(void){
 	return NODE_DEFAULT_HULL;
 }//END OF getHullIndexForNodes
 

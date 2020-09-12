@@ -102,10 +102,10 @@ float CGrenade::massInfluence(void){return 0;}
 int CGrenade::GetProjectileType(void){return 0;}
 
 //MODDD
-BOOL CBaseEntity::isMovetypeFlying(void) const{return FALSE;}
+BOOL CBaseEntity::isMovetypeFlying(void){return FALSE;}
 BOOL CBaseEntity::isSizeGiant(void){return FALSE;}
 BOOL CBaseEntity::isOrganic(void){return FALSE;}
-int CBaseEntity::getHullIndexForNodes(void) const{return 0;}
+int CBaseEntity::getHullIndexForNodes(void){return 0;}
 
 //MODDD - moved from CBaseAnimating, serverside territority, to CBaseEntity, shared, so
 // these have to be dummied now.

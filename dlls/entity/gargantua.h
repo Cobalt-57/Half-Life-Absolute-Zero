@@ -143,7 +143,10 @@ public:
 	void EyeOff( void );
 	void EyeOn( int level );
 	void EyeUpdate( void );
-	void Leap( void );
+	
+	// Leap?  LEAP?!    Well that's... an interesting never implemented method?   (found as-is)
+	//void Leap( void );
+
 	void StompAttack( void );
 	void FlameCreate( void );
 	void FlameUpdate( void );

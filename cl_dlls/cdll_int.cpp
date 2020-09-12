@@ -18,6 +18,10 @@
 // this implementation handles the linking of the engine to the DLL
 //
 
+// ??
+#include <string.h>
+
+
 #include "hud.h"
 #include "cl_util.h"
 #include "netadr.h"
@@ -28,7 +32,6 @@ extern "C"
 #include "pm_shared.h"
 }
 
-#include <string.h>
 #include "hud_servers.h"
 #include "vgui_int.h"
 #include "interface.h"
@@ -76,6 +79,7 @@ extern float ary_g_LastEventCheckEXACT[1024];
 extern BOOL g_cl_egonEffectCreatedYet;
 extern BOOL g_firstFrameSinceRestore;
 extern BOOL g_cl_queueSharedPrecache;
+extern BOOL g_cl_firstSendoffSinceMapLoad;
 
 extern CGameStudioModelRenderer g_StudioRenderer;
 extern float g_mapStartTime;
@@ -286,9 +290,12 @@ int DLLEXPORT HUD_VidInit( void )
 	// should be fine then.
 	// NNNNNNNNNNnnnnnnnnnnnoooooooooooppppppppppppppppeeeeeeeeeee-PUH.
 	// It does appear that precaches done this early will always find a model of '0', not do anything.
-	// Let this be queued to run in 
+	// Let this be queued to run very soon when HUD_InitClientWeapons in hl_weapons.cpp (yes it gets called again)
+	// sees this.
 	//PrecacheShared();
 	g_cl_queueSharedPrecache = TRUE;
+
+	g_cl_firstSendoffSinceMapLoad = TRUE;
 
 
 	gHUD.VidInit();

@@ -899,7 +899,10 @@ public:
 		}
 		*/
 
-		
+		// NOTICE - several ways of clearing the movegoal don't advance m_iRouteIndex, so it may very well be
+		// at one less than the route length with MOVEGOAL_NONE.
+		// Even so, don't make assumptions based off of m_iRouteIndex.  Being one less than m_iRouteLength could still
+		// mean it's in progress.  Probably don't even need to count it here at all.
 		if ( m_iRouteIndex >= m_iRouteLength || m_movementGoal == MOVEGOAL_NONE ){
 			if(m_iRouteIndex >= m_iRouteLength && m_movementGoal != MOVEGOAL_NONE){
 				// let me know!

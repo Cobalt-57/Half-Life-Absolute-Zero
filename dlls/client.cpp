@@ -97,8 +97,9 @@ extern DLL_GLOBAL int g_iSkillLevel;
 extern DLL_GLOBAL ULONG g_ulFrameCount;
 
 extern BOOL g_firstPlayerEntered;
-
 extern BOOL g_queueCVarHiddenSave;
+
+extern CBaseMonster* g_routeTempMonster;
 
 
 extern void CopyToBodyQue(entvars_t* pev);
@@ -1228,6 +1229,18 @@ void Host_Say( edict_t *pEntity, int teamonly )
 	}
 }//END OF Host_Say
 
+
+
+
+/*
+void* newImitation( size_t stAllocateBlock, entvars_t *pev )
+{
+	return (void *)ALLOC_PRIVATE(ENT(pev), stAllocateBlock);
+}
+*/
+
+
+
 /*
 ===========
 ClientCommand
@@ -1260,21 +1273,92 @@ void ClientCommand( edict_t *pEntity )
 	//}
 
 	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Check for this command before the null-player check.  In case of bad transitions, the 'getmap'
+	// command will still work.
+	if (FStrEq(pcmdRefinedRef, "_mapname")) {
+		easyForcePrintLineClient(pEntity, "Map: %s", STRING(gpGlobals->mapname));
+		return;
+	}else if (FStrEq(pcmdRefinedRef, "fixnullplayer")) {
+		// More of an experiment in how entities work.  Taking a bad transition to another map that puts the player through walls
+		// in a dead-looking state can be fixed by calling for this in console, then 'revive' in console, then 'noclip'.
+		// The map can be entered then.
+		// Spawning for all ent's might be a little delayed though, unsure how this works.
+		// Proceed at your own risk after salvaging a bad map traversal like this!  Bizarre things can get broken, like turrets firing
+		// crazy fast (a2a2 -> a2a2c).  Or maybe not?   No clue how often or consistently issues happen.
+
+
+		// comparison?
+		//CBasePlayer* pPlayer = (CBasePlayer *)pEntity->pvPrivateData;
+		//CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*) pev);
+
+
+		if ( !pEntity->pvPrivateData ){
+			//CBasePlayer* testo = CreateEntity<CBasePlayer>();
+			
+			// HACKY: Assuming the problem is due to a bad startspot (given, but when attempted to search for something
+			// of this name, it finds nothing). Setting to null forces using the map's default spawn spot (as though
+			// doing 'map MAPNAME').  Although this isn't necessary anymore, the default loc is used instead now if this
+			// doesn't exist.
+			//gpGlobals->startspot = NULL;
+
+			/*
+			// None of these work???   Oooookay C++
+			//CBasePlayer* ye = (CBasePlayer*)ALLOC_PRIVATE(pEntity, sizeof(CBasePlayer));
+			//CBasePlayer* ye = (CBasePlayer*)ALLOC_PRIVATE((&pEntity->v)->pContainingEntity, sizeof(CBasePlayer));
+			//CBasePlayer* ye = (CBasePlayer*)newImitation((size_t)sizeof(CBasePlayer), &(pEntity->v) );
+
+			CBasePlayer* ye = new(&pEntity->v) CBasePlayer;
+			ye->pev = &pEntity->v;
+
+			//int whut = sizeof(CBasePlayer);
+
+			// because the default memory's '0' for 'deadflag' (DEAD_NO) can throw some things off.
+			ye->pev->deadflag = DEAD_DEAD;
+			ye->Spawn(TRUE);
+			*/
+
+			// WAIT!  Just do this
+			ClientPutInServer(pEntity);
+			CBasePlayer* ye = (CBasePlayer*)pEntity->pvPrivateData;
+
+
+
+
+			int ecks = ye->BloodColor();
+
+			easyForcePrintLine("Do they match? A %d", (ye == pEntity->pvPrivateData));
+
+			CBasePlayer* test2 = (CBasePlayer*)(pEntity->pvPrivateData);
+			easyForcePrintLine("Do they match? B %d", (ye == test2));
+
+
+			//g_engfuncs.pfnPvAllocEntPrivateData(pEntity, 16);
+			//pEntity->pvPrivateData = 
+
+
+			//FREE_PRIVATE(pEntity);
+			//pEntity = (void*)ALLOC_PRIVATE(ENT(pev), stAllocateBlock);
+		}
+		return;
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
 	// Is the client spawned yet?
-	if ( !pEntity->pvPrivateData )
+	if ( !pEntity->pvPrivateData ){
 		return;
+	}
 
-	entvars_t *pev = &pEntity->v;
+	entvars_t* pev = &pEntity->v;
 
 	//MODDD - just go ahead and do this now, almost every client call needs this anyway.
-	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer *) pev);
+	CBasePlayer* tempplayer = GetClassPtr((CBasePlayer*) pev);
 
 	//MODDD
-	//If the minimumfiredelay mem's  value does NOT match minimumfiredelay, it must have been changed.
-	//Force an RPG re-update to be safe.
+	// If the minimumfiredelay mem's  value does NOT match minimumfiredelay, it must have been changed.
+	// Force an RPG re-update to be safe.
 	if(globalPSEUDO_minimumfiredelaymem != EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay) ){
 		globalPSEUDO_minimumfiredelaymem = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay);
 		
@@ -3551,9 +3635,10 @@ void ClientCommand( edict_t *pEntity )
 					nodeList[i] = thisNodeNumber;
 				}else{
 					easyForcePrintLine("ERROR! Node of invalid index, negative or exceeding this map's node count not allowed.  Node given: %d   Map max: %d", thisNodeNumber, WorldGraph.m_cNodes);
+					return;
 				}
 
-			}
+			}//for loop through parameters
 			
 			CBaseMonster* theMon = getMonsterWithID(theMonsterID);
 			if(theMon == NULL){
@@ -3565,6 +3650,7 @@ void ClientCommand( edict_t *pEntity )
 			CNode* theNode = &WorldGraph.Node(nodeList[0]);
 
 			// Now with the nodes, check to see that the monster can reach the first node.
+			// And don't add pev->view_ofs to anything!  Ground-to-ground will work fine, snaps the start and end points to test at startup anyway
 			movePass = (theMon->CheckLocalMove(theMon->pev->origin + theMon->pev->view_ofs, theNode->m_vecOrigin + theMon->pev->view_ofs, NULL, &linkLength ) == LOCALMOVE_VALID);
 			routeLength += linkLength;
 
@@ -3602,6 +3688,88 @@ void ClientCommand( edict_t *pEntity )
 
 		}//arg count check
 	}//end of command
+	else if( FStrEq(pcmdRefinedRef, "testnoderoute2formonster") ){
+
+		if(CMD_ARGC() <= 1){
+			// only itself?  Print help instead
+			easyForcePrintLine("***No parameters given, printing out help info***");
+			easyForcePrintLine("Method takes the monster ID to use followed by two parameters: start and end node.  Route is determined by WorldGraph.FindShortestPath.");
+
+		}else if(CMD_ARGC() < 4){
+			easyForcePrintLine("***Not enough parameters, need the ID of the monster to use, start node, and end node***");
+		}else if(CMD_ARGC() > 4){
+			easyForcePrintLine("***Too many parameters, only start/end nodes allowed, none inbetween.***");
+		}else{
+			int i;
+			int theMonsterID;
+			int nodeParameterCount = 2;
+			int nodeList[2];
+			BOOL parseSuccess;
+			BOOL movePass;
+			BOOL routeSuccess = TRUE;  // assume it is until proven otherwise
+			// (the method ending early by 'return' never reaches a success message so that is the same as failing)
+
+			parseSuccess = attemptParseStringToInt(pEntity, &theMonsterID, CMD_ARGV(1), "ERROR!  Could not read MonsterID.", "???");
+			if(!parseSuccess)return;
+
+			for(i = 0; i < nodeParameterCount; i++){
+				int thisNodeNumber;
+				parseSuccess = attemptParseStringToInt(pEntity, &thisNodeNumber, CMD_ARGV(i + 2), "ERROR!  Could not read a node, bad characters?", "???");
+				if(!parseSuccess){
+					easyForcePrintLine("***Failed to read \"%s\".***", CMD_ARGV(i + 2));
+					return;
+				}
+
+				if(thisNodeNumber >= 0 && thisNodeNumber < WorldGraph.m_cNodes){
+					nodeList[i] = thisNodeNumber;
+				}else{
+					easyForcePrintLine("ERROR! Node of invalid index, negative or exceeding this map's node count not allowed.  Node given: %d   Map max: %d", thisNodeNumber, WorldGraph.m_cNodes);
+					return;
+				}
+			}//for loop through parameters
+
+
+			CBaseMonster* theMon = getMonsterWithID(theMonsterID);
+			if(theMon == NULL){
+				easyForcePrintLine("ERROR!  Monster of ID '%d' not found.", theMonsterID);
+				return;
+			}
+			easyForcePrintLine("***Route read successfully, testing***");
+
+
+			int iNodeHull;
+
+			if (EASY_CVAR_GET_DEBUGONLY(pathfindForcePointHull) != 1) {
+				// normal way.  Get the Hull from this monster trying to pathfind.
+				// Can be used to tell if some paths between nodes are invalid from this monster's size.
+				iNodeHull = WorldGraph.HullIndex( theMon ); // make this a monster virtual function
+			}else{
+				// force 0 size.
+				iNodeHull = NODE_POINT_HULL;
+			}
+
+
+			int iPath[ MAX_PATH_SIZE ];
+
+			g_routeTempMonster = theMon;
+			int iResult = WorldGraph.FindShortestPath ( iPath, nodeList[0], nodeList[1], iNodeHull, theMon->m_afCapability );
+			g_routeTempMonster = NULL;
+
+			if(iResult){
+				easyForcePrintLine("***Route success!  Route length: %d nodes***", iResult);
+
+				for(i = 0; i < iResult; i++){
+					easyForcePrintLine("#%d: %d", i, iPath[i]);
+				}
+
+			}else{
+				// oh
+				easyForcePrintLine("***Could not form route.***");
+			}
+
+		}//arg count check
+	}//end of command
+
 
 	/*
 	else if( FStrEq(pcmdRefinedRef, "debugcine1")){
@@ -4988,10 +5156,6 @@ void ClientCommand( edict_t *pEntity )
 		
 		tempRef->auto_determined_fov = tryStringToFloat(arg1ref);
 	}
-	else if (FStrEq(pcmdRefinedRef, "_mapname")) {
-		easyForcePrintLineClient(pEntity, "Map: %s", STRING(gpGlobals->mapname));
-
-	}
 	else if (FStrEq(pcmdRefinedRef, "cmdclient") || (FStrEq(pcmdRefinedRef, "clientcmd")) ) {
 		char arychr_buffer[64];
 		// CMD_ARGS() sends all individual CMD_ARGV(#) put together for convenience.
@@ -5597,78 +5761,80 @@ void PlayerPreThink( edict_t *pEntity )
 	// CHANGE, let StartFrame tell whether the game is paused instead maybe?    Nevermind, it isn't called when paused,
 	// but PlayerPreThink still is.
 	
+	CBasePlayer* pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
 
+	if(pPlayer != NULL){
+		//entvars_t* pev = &pEntity->v;
 
-	//easyForcePrintLineClient(pEntity, "??A %d", playerCanThink1);
+		//easyForcePrintLineClient(pEntity, "??A %d", playerCanThink1);
 
-	if (!IsMultiplayer()) {
-		BOOL stopMethod = FALSE;
-		// NOTICE!  Counting these in PlayerPreThink is only useful when not in multiplayer.
-		// Otherwise every player is calling this PlayerPreThink, not wise to rely on it from this method.
-		float pausecorrection_val = EASY_CVAR_GET(pausecorrection2);
+		if (!IsMultiplayer()) {
+			BOOL stopMethod = FALSE;
+			// NOTICE!  Counting these in PlayerPreThink is only useful when not in multiplayer.
+			// Otherwise every player is calling this PlayerPreThink, not wise to rely on it from this method.
+			float pausecorrection_val = EASY_CVAR_GET(pausecorrection2);
 
-		// And no, this isn't blocking frames with a tiny amount of change, even completely paused there is a very tiny difference
-		// at all times.  Weird.
-		g_gamePaused = ((gpGlobals->time - sp_previousFrameTime) <= 0.005);
+			// And no, this isn't blocking frames with a tiny amount of change, even completely paused there is a very tiny difference
+			// at all times.  Weird.
+			g_gamePaused = ((gpGlobals->time - sp_previousFrameTime) <= 0.005);
 
-		//easyForcePrintLineClient(pEntity, "WHAT THE heck %.8f %.8f d:%.8f %d", gpGlobals->time, previousFrameTime, (gpGlobals->time - previousFrameTime), g_gamePaused);
-		sp_previousFrameTime = gpGlobals->time;
+			//easyForcePrintLineClient(pEntity, "WHAT THE heck %.8f %.8f d:%.8f %d", gpGlobals->time, previousFrameTime, (gpGlobals->time - previousFrameTime), g_gamePaused);
+			sp_previousFrameTime = gpGlobals->time;
 
-		if (pausecorrection_val == 1 ) {
-			// SERVER PAUSE CORRECTION FIX #1.  Block think logic if there isn't enough time since the previous frame.
-			if (g_gamePaused) {
-				sp_playerCanPreThink = FALSE;
-				sp_playerCanPostThink = FALSE;
+			if (pausecorrection_val == 1 ) {
+				// SERVER PAUSE CORRECTION FIX #1.  Block think logic if there isn't enough time since the previous frame.
+				if (g_gamePaused) {
+					sp_playerCanPreThink = FALSE;
+					sp_playerCanPostThink = FALSE;
+				}
+				else {
+					sp_playerCanPreThink = TRUE;
+					sp_playerCanPostThink = TRUE;
+				}
 			}
-			else {
+			else if (pausecorrection_val != 2) {
+				// 0? always allow
 				sp_playerCanPreThink = TRUE;
 				sp_playerCanPostThink = TRUE;
 			}
-		}
-		else if (pausecorrection_val != 2) {
-			// 0? always allow
-			sp_playerCanPreThink = TRUE;
-			sp_playerCanPostThink = TRUE;
-		}
 
 
-		if (!sp_playerCanPreThink) {
-			// If somewhere wants to know.
-			g_gamePaused = TRUE;
-			// This client message call has been cut. Serverside can issue the unpause order.
-			//submitUnpauseRequest(&pEntity->v);
-			if (EASY_CVAR_GET_DEBUGONLY(disablePauseSinglePlayer) == 1) {
-				SERVER_COMMAND("unpause\n");
+			if (!sp_playerCanPreThink) {
+				// If somewhere wants to know.
+				g_gamePaused = TRUE;
+				// This client message call has been cut. Serverside can issue the unpause order.
+				//submitUnpauseRequest(&pEntity->v);
+				if (EASY_CVAR_GET_DEBUGONLY(disablePauseSinglePlayer) == 1) {
+					SERVER_COMMAND("unpause\n");
+				}
+				//easyForcePrintLineClient(pEntity, "!!! UNPAUSE REQUEST");
+				//return;
+				stopMethod = TRUE;
 			}
-			//easyForcePrintLineClient(pEntity, "!!! UNPAUSE REQUEST");
-			//return;
-			stopMethod = TRUE;
-		}
-		// must be turned back on by StartFrame.  Again, ignored in multiplayer.
+			// must be turned back on by StartFrame.  Again, ignored in multiplayer.
 		
-		if (pausecorrection_val == 2 ) {
-			// SERVER PAUSE CORRECTION FIX #2.  Block think logic next time if StartFrame hasn't run to re-allow another think frame.
-			sp_playerCanPreThink = FALSE;
-			//sp_playerCanPostThink = FALSE;
-		}
+			if (pausecorrection_val == 2 ) {
+				// SERVER PAUSE CORRECTION FIX #2.  Block think logic next time if StartFrame hasn't run to re-allow another think frame.
+				sp_playerCanPreThink = FALSE;
+				//sp_playerCanPostThink = FALSE;
+			}
 
-		if (stopMethod) {
-			// a late return.
-			return;
-		}
+			if (stopMethod) {
+				// a late return.
+				return;
+			}
+		}//END OF multiplayer check
+		
+		// to reach here, not paused?
+		g_gamePaused = FALSE;
 
-	}//END OF multiplayer check
+		//if (pPlayer)  //already checked above
+			pPlayer->PreThink( );
 
+	}// player null check
 
 	
-	g_gamePaused = FALSE;
-
-	entvars_t *pev = &pEntity->v;
-	CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
-
-	if (pPlayer)  //already factored in above; the whole method ends further above if "pPlayer" is null.
-	pPlayer->PreThink( );
-}
+}//PlayerPreThink
 
 
 /*
@@ -5680,132 +5846,133 @@ Called every frame after physics are run
 */
 void PlayerPostThink( edict_t *pEntity )
 {
-	
 	//easyForcePrintLineClient(pEntity, "??B %d", playerCanThink2);
 	
-	if (!IsMultiplayer()) {
-		if (!sp_playerCanPostThink) {
-			// Going to skip PlayerThink?  Process impulse commands anyway like
-			// PlayerThink would have
-			CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
+	CBasePlayer* pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
+	
+	// Don't assume pPlayer isn't NULL.   Really.   Don't.
+	if(pPlayer != NULL){
+		entvars_t *pev = &pEntity->v;
 
-			// Can all impulse commands be checked (flashlight, etc.)?
-			if(!g_fGameOver && pPlayer->IsAlive()){
-			    pPlayer->ImpulseCommands();
-			}else{
-				// Something forbidding the normal way?  That's fine, skip to
-				// checking for cheat ones.
-				pPlayer->CheatImpulseCommands(pPlayer->pev->impulse);
-				pPlayer->pev->impulse = 0;
+
+		if (!IsMultiplayer()) {
+			if (!sp_playerCanPostThink) {
+				// Going to skip PlayerThink?  Process impulse commands anyway like
+				// PlayerThink would have
+
+				// Can all impulse commands be checked (flashlight, etc.)?
+				if(!g_fGameOver && pPlayer->IsAlive()){
+					pPlayer->ImpulseCommands();
+				}else{
+					// Something forbidding the normal way?  That's fine, skip to
+					// checking for cheat ones.
+					pPlayer->CheatImpulseCommands(pPlayer->pev->impulse);
+					pPlayer->pev->impulse = 0;
+				}
+
+				return;
 			}
+			float pausecorrection_val = EASY_CVAR_GET(pausecorrection2);
+			// must be turned back on by StartFrame.
+			// Nevermind, the pre-think check is good enough.  I think.
+			// NNNNNNNNN-no.   Nope, that's a horrible idea.
 
-			return;
-		}
-		float pausecorrection_val = EASY_CVAR_GET(pausecorrection2);
-		// must be turned back on by StartFrame.
-		// Nevermind, the pre-think check is good enough.  I think.
-		// NNNNNNNNN-no.   Nope, that's a horrible idea.
-
-		if (pausecorrection_val == 2) {
-			// SERVER PAUSE CORRECTION FIX #2.  Block think logic next time if StartFrame hasn't run to re-allow another think frame.
-			//sp_playerCanPreThink = FALSE;
-			sp_playerCanPostThink = FALSE;
-		}
-	}
+			if (pausecorrection_val == 2) {
+				// SERVER PAUSE CORRECTION FIX #2.  Block think logic next time if StartFrame hasn't run to re-allow another think frame.
+				//sp_playerCanPreThink = FALSE;
+				sp_playerCanPostThink = FALSE;
+			}
+		}//not multiplayer check
 
 	
 
-	//For organization's sake, we're going to not involve things that have nothing to do with the sent "pEntity" up there.
-	
-	entvars_t *pev = &pEntity->v;
-	CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
-
-	if(queueYMG_stopSend == TRUE){
-		queueYMG_stopSend = FALSE;
-		message_ymg_stop(ENT(pev));
-	}
+		if(queueYMG_stopSend == TRUE){
+			queueYMG_stopSend = FALSE;
+			message_ymg_stop(ENT(pev));
+		}
 
 
-	if(crashableEntityReferTime > 0 && gpGlobals->time >= crashableEntityReferTime){
-		switch(crashableEntityReferMode){
-		case 5:{
-			//dereferencing a NULL entity.
-			const CBaseEntity& entRef = (*crashableEntityRef);
-		break;}
-		case 6:{
-			//accessing methods of a NULL entity.
-			crashableEntityRef->Spawn();
-		break;}
-		case 7:{
-			//dereferencing a deleted entity.
-			const CBaseEntity& entRef = (*crashableEntityRef);
-		break;}
-		case 8:{
-			//accessing methods of a deleted entity.
-			crashableEntityRef->Spawn();
-		break;}
+		if(crashableEntityReferTime > 0 && gpGlobals->time >= crashableEntityReferTime){
+			switch(crashableEntityReferMode){
+			case 5:{
+				//dereferencing a NULL entity.
+				const CBaseEntity& entRef = (*crashableEntityRef);
+			break;}
+			case 6:{
+				//accessing methods of a NULL entity.
+				crashableEntityRef->Spawn();
+			break;}
+			case 7:{
+				//dereferencing a deleted entity.
+				const CBaseEntity& entRef = (*crashableEntityRef);
+			break;}
+			case 8:{
+				//accessing methods of a deleted entity.
+				crashableEntityRef->Spawn();
+			break;}
 
-		}//END Of switch
+			}//END Of switch
 
-		crashableEntityReferTime = -1;  //.... what?
-	}//END OF crashable check
+			crashableEntityReferTime = -1;  //.... what?
+		}//END OF crashable check
 
-	if (pPlayer)
+
+		//if (pPlayer)   //already checked now
 		pPlayer->PostThink( );
 
-	if(!pPlayer){
-		//The next line would've been skipped anyways.  Cheat logic need not apply if there is no "player" either.
-		return;
-	}
 
-// ................................................. what.
-#if defined( CLIENT_WEAPONS )
+	// ................................................. what.
+	#if defined( CLIENT_WEAPONS )
 
-	//iterate through the player's weapons.
-	//for ( int i = 0 ; i < MAX_ITEM_TYPES ; i++ ){
-	//	if ( pPlayer->m_rgpPlayerItems[ i ] ){
-			//
-			//CBasePlayerItem *pPlayerItem = pPlayer->m_rgpPlayerItems[ i ];
+		//iterate through the player's weapons.
+		//for ( int i = 0 ; i < MAX_ITEM_TYPES ; i++ ){
+		//	if ( pPlayer->m_rgpPlayerItems[ i ] ){
+				//
+				//CBasePlayerItem *pPlayerItem = pPlayer->m_rgpPlayerItems[ i ];
 
-			//while ( pPlayerItem ){
-			//	CBasePlayerWeapon *gun;
-			//	gun = (CBasePlayerWeapon *)pPlayerItem->GetWeaponPtr();
+				//while ( pPlayerItem ){
+				//	CBasePlayerWeapon *gun;
+				//	gun = (CBasePlayerWeapon *)pPlayerItem->GetWeaponPtr();
 
-			//	//Essentially, if this "item" exists and is a "weapon":
-			//	if(gun){
+				//	//Essentially, if this "item" exists and is a "weapon":
+				//	if(gun){
 			
-			//		/*
-			//		if(clientCheat_infiniteclip->value == 1){
-			//			//all weapons must have at least "1" in the clip for convenience.
-			//			if(gun->m_iClip <= 0){
-			//				gun->m_iClip = 1;
-			//			}
-			//			//Secondary tends not to have clips, just assume they're meant too then.
-			//			if(gun->m_iSecondaryAmmoType > 0 && pPlayer->m_rgAmmo[gun->m_iSecondaryAmmoType] == 0){
-			//				pPlayer->m_rgAmmo[gun->m_iSecondaryAmmoType] = 1;
-			//			}
-			//		}
-			//		*/
-			//		/*
-			//		if(clientCheat_infiniteclip->value == 1){
-			//			//all weapons must have at least "1" in the total ammo-count for convenience.
-			//			if(gun->m_iPrimaryAmmoType > 0 && pPlayer->m_rgAmmo[gun->m_iPrimaryAmmoType] == 0){
-			//				pPlayer->m_rgAmmo[gun->m_iPrimaryAmmoType] = 1;
-			//			}
-			//			//Secondary too, if available.
-			//			if(gun->m_iSecondaryAmmoType > 0 && pPlayer->m_rgAmmo[gun->m_iSecondaryAmmoType] == 0){
-			//				pPlayer->m_rgAmmo[gun->m_iSecondaryAmmoType] = 1;
-			//			}
-			//		}*/
-			//				
+				//		/*
+				//		if(clientCheat_infiniteclip->value == 1){
+				//			//all weapons must have at least "1" in the clip for convenience.
+				//			if(gun->m_iClip <= 0){
+				//				gun->m_iClip = 1;
+				//			}
+				//			//Secondary tends not to have clips, just assume they're meant too then.
+				//			if(gun->m_iSecondaryAmmoType > 0 && pPlayer->m_rgAmmo[gun->m_iSecondaryAmmoType] == 0){
+				//				pPlayer->m_rgAmmo[gun->m_iSecondaryAmmoType] = 1;
+				//			}
+				//		}
+				//		*/
+				//		/*
+				//		if(clientCheat_infiniteclip->value == 1){
+				//			//all weapons must have at least "1" in the total ammo-count for convenience.
+				//			if(gun->m_iPrimaryAmmoType > 0 && pPlayer->m_rgAmmo[gun->m_iPrimaryAmmoType] == 0){
+				//				pPlayer->m_rgAmmo[gun->m_iPrimaryAmmoType] = 1;
+				//			}
+				//			//Secondary too, if available.
+				//			if(gun->m_iSecondaryAmmoType > 0 && pPlayer->m_rgAmmo[gun->m_iSecondaryAmmoType] == 0){
+				//				pPlayer->m_rgAmmo[gun->m_iSecondaryAmmoType] = 1;
+				//			}
+				//		}*/
+				//				
 
-			//	}//END OF if(gun)
-			//}//END OF while (this particular chained item exists)
-			//pPlayerItem = pPlayerItem->m_pNext;
-	//	}//END OF if( this player's particular item exists)
-	//}//END OF for each item in the player's inventory
+				//	}//END OF if(gun)
+				//}//END OF while (this particular chained item exists)
+				//pPlayerItem = pPlayerItem->m_pNext;
+		//	}//END OF if( this player's particular item exists)
+		//}//END OF for each item in the player's inventory
 
-#endif //CLIENT_WEAPONS
+	#endif //CLIENT_WEAPONS
+
+
+	}//player null check
+
 
 }//END OF PlayerPostThink
 

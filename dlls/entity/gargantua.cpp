@@ -329,15 +329,17 @@ Schedule_t	slGargStompAttack[] =
 
 //MODDD - new.  Clone of ChaseEnemySmart (defaultai.cpp).
 // Oh.  Nothing different about this.  Well.  Oops.
-Task_t tlGargChaseEnemySmart[] = 
+Task_t tlGargChaseEnemySmart[] =
 {
-	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE},   //MODDD is this okay?
+	//{ TASK_SET_ACTIVITY, (float)ACT_IDLE },   //MODDD is this okay?
+	{ TASK_STOP_MOVING, 0},
 
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CHASE_ENEMY_FAILED	},
 	//{ TASK_GET_PATH_TO_ENEMY,	(float)0		},
 	//{ TASK_RUN_PATH,			(float)0		},
 	{ TASK_MOVE_TO_ENEMY_RANGE,	(float)0		},
 	{ TASK_CHECK_STUMPED,		(float)0		},
+	{ TASK_STOP_MOVING, 0},
 };
 
 Schedule_t slGargChaseEnemySmart[] =
@@ -2283,6 +2285,9 @@ BOOL CGargantua::CheckMeleeAttack2( float flDot, float flDist )
 //=========================================================
 BOOL CGargantua::CheckRangeAttack1( float flDot, float flDist )
 {
+	//TEST
+	return FALSE;
+
 	if ( gpGlobals->time > m_seeTime )
 	{
 		if(flDist > GARG_MELEEATTACKDIST){
@@ -2515,7 +2520,8 @@ Schedule_t *CGargantua::GetScheduleOfType( int Type )
 			// WAIT!  What if the reason we failed is because the player moved into some trigger (FL_MONSTERCLIP) that blocks us?
 			// Moving only 3 feet and then stopping because the player darted back into a forbidden area isn't terribly smart, at least
 			// get close to see if a flamethrower attack would work, block em' off, yadda yadda.
-
+			// NO NEED.  Corrected other logic, now the garg properly uses 'BuildNearestRoute' even with FL_MONSTERCLIP to get closer
+			// when it can.
 
 
 			// Only decrease the time if there's over 6 seconds left though.
@@ -2527,7 +2533,9 @@ Schedule_t *CGargantua::GetScheduleOfType( int Type )
 				setEnemyLKP(m_hEnemy);
 			}
 
-			return &slFail[ 0 ];
+
+			//return &slFail[ 0 ];
+			return &slGargGenericFail[ 0 ];
 		}
 		break;
 		case SCHED_RANGE_ATTACK1:

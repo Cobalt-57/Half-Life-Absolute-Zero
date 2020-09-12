@@ -238,7 +238,10 @@ const Vector &CBeam::GetEndPos( void )
 CBeam *CBeam::BeamCreate( const char *pSpriteName, int width )
 {
 	// Create a new entity with CBeam private data
-	CBeam *pBeam = GetClassPtr( (CBeam *)NULL );
+	//CBeam *pBeam = GetClassPtr( (CBeam *)NULL );
+	//MODDD - same effect?
+	CBeam* pBeam = CreateEntity<CBeam>();
+
 
 	//MODDD NOTE - why is the created beam's classname being set here? Why not in the CBeam class's own "spawn" method?
 	//             assuming that ever gets called in this process (GetClassPtr vs. CreateNamedEntity, or

@@ -609,6 +609,7 @@ GARGANTUA
 - All garg sounds carry further (less attenuation).
 - New throw attack (CVar sv_gargantua_throwattack)!  Defaults to 1, for a 20% chance on any melee (may still revert to normal melee on not finding enough empty space nearby)
 - Falling death anim can also deal insta-death damage to things that are not monsters or players (breakables).
+- Faces the player while standing more often.
 
 
 SLIGHT RESTORE BUG: Fixed monsters needing to change from the default blend (such as the torso bending to look straight down) to the one the game was saved with.
@@ -687,7 +688,20 @@ Garg in a2a1 pathfinding greatly improved, able to go over tracks as intended.  
 Also no longer clashes with the existing pathfinding structure (meant for ordinary entities that are blocked or able to move through things it can't).
 Will move close to the edge of its allowed bounds instead of giving up early if the player quickly moves into a forbidden area.
 
+AI harder to outsmart in general by moving around monsters quickly; turns to face the 'LKP (last known position)' when it reaches its destination without the enemy in sight in case that jogs something.  It often does.
+
+Further oscilating between paths when the enemy is in an unroutable place while using smart-chase fixed.
+
+Panthereye's sneak-schedule not as exploitable (was able to run in front of it and shoot it without provoking it)
+
+View-model animation/event skipped on firing immediately after loading a saved-game with certain weapons out, especially the crossbow, fixed.
+
+
 
 IN PROGRESS:
 Many melee attacks are less likely to hit nearby level geometry when attacking from odd places (extra check for the enemy being nearby).
 Panthereye jump:  although not failing to jump at all, it is odd it picks a position it cannot reach jumping as far as possible.
+Revision to how the AI determines the elevation between points in progress, beware of refusal to go up/down ramps in the meantime
+
+
+
