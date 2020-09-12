@@ -123,7 +123,15 @@ void CControllerHeadBall::HuntThink( void  )
 		//MODDD - was a distance of 64 required
 		// TODO - affect the criteria (right-hand side) by the monster size?  Hit larger things from a further distance since otherwise
 		// you'd bump into them sooner than get within X distance of their center.
-		if ((m_hEnemy->Center() - pev->origin).Length() < 54) // 42? 50?
+		// Done maybe?
+
+		Vector pointDelta = (m_hEnemy->Center() - pev->origin);
+		float distToEnemy = DistanceFromDelta(pointDelta);
+		float dist2DToEnemy = Distance2DFromDelta(pointDelta);
+
+
+		//if ((m_hEnemy->Center() - pev->origin).Length() < 54) // 42? 50?
+		if(distToEnemy < m_hEnemy->pev->size.x + 16 && dist2DToEnemy < m_hEnemy->pev->size.z + 16)
 		{
 			TraceResult tr;
 

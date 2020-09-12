@@ -186,19 +186,19 @@ hideNodeGraphRebuildNotice (1) - BOOLEAN.  If on, hides the yellow "Node Graph o
 
 
 
-ignoreIsolatedNodes (1) - BOOLEAN.  If 1, nodes that have no outgoing connections will be ignored by pathfinding node-mapping (trying to map current start / destination points to path nodes for forming a route between).
-~May require a map-restart or load-game to take effect!  Pathfinding caches points under the assumption nothing would change between calls under some circumstances and skips where this CVar would have made a difference.
- Or use 'clearnodecache' in console after setting the CVar to avoid the out-of-date cache.
- This applies to most node-related CVars.  In some cases node rebuilds may even be necesssary (saved to a file; unaffected by game or map restarts).
- To force a node rebuild, enter 'buildnodegraph' in console.
+pathfindIgnoreIsolatedNodes (1) - BOOLEAN.  If 1, nodes that have no outgoing connections will be ignored by pathfinding node-mapping (trying to map current start / destination points to path nodes for forming a route between).
+~ May require a map-restart or load-game to take effect!  Pathfinding caches points under the assumption nothing would change between calls under some circumstances and skips where this CVar would have made a difference.
+  Or use 'clearnodecache' in console after setting the CVar to avoid the out-of-date cache.
+  This applies to most node-related CVars.  In some cases node rebuilds may even be necesssary (saved to a file; unaffected by game or map restarts).
+  To force a node rebuild, enter 'buildnodegraph' in console.
 
 
 drawNodeAll (0) - BOOLEAN - ADJUSTABLE. Whether to draw all nodes on the map as single RED vertical lines that pass through the node's origin (generally snapped to the ground).
-~Set to a value above 10 to become the minimum range for drawing nodes instead to preserve drawing (too much can crash the game)
+~ Set to a value above 10 to become the minimum range for drawing nodes instead to preserve drawing (too much can crash the game)
 
 drawNodeSpecial (-1) - INTEGER. When above -1 (and legal), draws this particular node white instead.
-~Does not require "drawNodeAll".
-~IGNORED if "drawNodeAlternateTime" is above 0 and being used.
+~ Does not require "drawNodeAll".
+~ IGNORED if "drawNodeAlternateTime" is above 0 and being used.
 
 drawNodeConnections (0) - MODE. 
 0: nothing.
@@ -206,9 +206,9 @@ drawNodeConnections (0) - MODE.
 2: Any nodes rendered (special, all, or under "drawNodeAll"'s range) will have their connections rendered.
 
 drawNodeAlternateTime (0) - DECIMAL. When above 0, will change the currently shaded white AI node every "variable" number of seconds, and print out what the currently shaded AI node is by its ID.
-~Stare at a node until it turns white to tell what it is.
-~OVERSHADOWS "drawSpecialNode"'s picked ID.
-~example: a value of 2.5 means the AI node marked "special" (white) changes every 2.5 seconds.
+~ Stare at a node until it turns white to tell what it is.
+~ OVERSHADOWS "drawSpecialNode"'s picked ID.
+~ example: a value of 2.5 means the AI node marked "special" (white) changes every 2.5 seconds.
 
 nodeSearchStartVerticalOffset (30) - DECIMAL.  A vertical offset (positive is above) to the checks done for finding the nearest node.  Being above 0 may help for movement-checks not to get snagged on terrain and give up.
 
@@ -218,22 +218,22 @@ nodeSearchStartVerticalOffset (30) - DECIMAL.  A vertical offset (positive is ab
 
 --------------------------------------------------------------------------------------
 SPARKS MULTI CVARS - adjust how many of the default "6" sparks appear for each spark generaiton call.  Only applies if "useAlphaSparks" is on (1).
-~WARNING.  Too many particles (alpha sparks) will crash the game.  Multiples above 1 unadvised, and an env multiple of even "1" crashes in some places.
-~use 0.17 for one spark.  Values round down, so best go slightly higher than the # desired to be safe.
-~under 0.17 by much produces 0 sparks (or, just say 0).
-~1.0 is the full 6 sparks.  0.5 is 3 sparks.
-~There is a spawnflag that can be accepted named "SF_BEAM_REDUCEDSPARKS" for CBeam entities. This flag is defined as such:
- #define SF_BEAM_REDUCEDSPARKS	0x0200  //2^9
-~There is also a spawnflag named "SF_ENVSPARK_REDUCEDSPARKS" for env_spark (same value):
- #define SF_ENVSPARK_REDUCEDSPARKS	0x0200  //2^9
-~all defaults are "1", except for Env.  Scale of 0 - 1 expected.
+~ Large numbers of particles should no longer crash the game, will simply stop generating.
+~ use 0.17 for one spark.  Values round down, so best go slightly higher than the # desired to be safe.
+~ under 0.17 by much produces 0 sparks
+~ 1.0 is the full 6 sparks.
+~ There is a spawnflag that can be accepted named "SF_BEAM_REDUCEDSPARKS" for CBeam entities. This flag is defined as such:
+  #define SF_BEAM_REDUCEDSPARKS	0x0200  //2^9
+~ There is also a spawnflag named "SF_ENVSPARK_REDUCEDSPARKS" for env_spark (same value):
+  #define SF_ENVSPARK_REDUCEDSPARKS	0x0200  //2^9
+~ all defaults are "1", except for Env.  Scale of 0 - 1 expected.
 
 resetSparks
-~method to reset all sparks-related CVars to straight 1's (envMulti to 0.5):
+~ method to reset all sparks-related CVars to straight 1's (envMulti to 0.5):
 
 
 sparksAllMulti - float.  Multiple applied to all spark generation calls.  Below are for more specific cases (on top of this one). 
-~For instance, if "sparksEnvMulti" were 0.4 and "sparksAllMulti" were 0.5, the resulting amount of env sparks would actually be 0.4 * 0.5 = 0.2 as many (1/5).
+~ For instance, if "sparksEnvMulti" were 0.4 and "sparksAllMulti" were 0.5, the resulting amount of env sparks would actually be 0.4 * 0.5 = 0.2 as many (1/5).
 
 sparksEnvMulti (default of 0.5 instead)
 sparksButtonMulti

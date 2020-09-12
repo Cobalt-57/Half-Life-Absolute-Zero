@@ -1739,17 +1739,23 @@ BOOL CPantherEye::CheckMeleeAttack1 ( float flDot, float flDist )
 		if(tr.pHit == NULL){
 			// ok?
 		}else{
+
+			/*
 			CBaseEntity* theHit = CBaseEntity::Instance(tr.pHit);
-			if(tr.pHit == m_hEnemy->edict() || IRelationship(theHit) < R_NO){
-				// if whatever I hit is the enemy, or I hate it anyway, proceed
-			}else{
-				// hmm.
-				easyForcePrintLine("BLOCKED LIKE HOW");
-				return FALSE;
+			if(theHit != NULL){
+				int theRel = IRelationship(theHit);
+				if(tr.pHit == m_hEnemy->edict() || (theRel > R_NO || theRel == R_FR) ){
+					// if whatever I hit is the enemy, or I hate it anyway, proceed
+				}else{
+					// hmm.
+					easyForcePrintLine("BLOCKED LIKE HOW");
+					return FALSE;
+				}
 			}
+			*/
 		}
 
-		//also need to be looking closely enough.
+		// also need to be looking closely enough.
 		if(flDot >= 0.7 && HasConditions(bits_COND_SEE_ENEMY)){
 			return TRUE;
 		}else{
@@ -1898,45 +1904,6 @@ void CPantherEye::MonsterThink ( void )
 		//return;
 
 
-
-		if(gpGlobals->time >= pissedRunTime){
-			// Not pissed?  If I don't see the enemy, drop it.
-			if(!HasConditions(bits_COND_SEE_ENEMY)){
-				ForgetEnemy();
-			}
-		}
-
-		// not working?... oops?
-		if(m_afSoundTypes & (bits_SOUND_COMBAT | bits_SOUND_PLAYER) ){
-			// Hey!
-			pissedRunTime = gpGlobals->time + 12;
-			if(pev->sequence == g_panthereye_walk_sequenceID){
-				// change it
-				SetActivity(ACT_RUN);
-			}
-		}
-		
-		if(gpGlobals->time < pissedRunTime){
-			if(HasConditions(bits_COND_SEE_ENEMY)){
-				// keep the frenzy going
-				pissedRunTime = gpGlobals->time + 12;
-			}
-		}else{
-			if(m_hEnemy != NULL){
-				float daDistah = Distance(pev->origin, m_hEnemy->pev->origin);
-				if(daDistah < 500){
-					// in my territory?  FRENZY
-					pissedRunTime = gpGlobals->time + 12;
-				}
-			}
-
-		}
-
-
-
-
-
-
 		if(newPathDelay != -1){
 			if(newPathDelay <= gpGlobals->time){
 				//-1 is a symbol that means, no longer waiting.
@@ -1994,7 +1961,58 @@ void CPantherEye::MonsterThink ( void )
 
 
 	CBaseMonster::MonsterThink();
-}
+
+}//MonsterThink
+
+
+
+void CPantherEye::PrescheduleThink(void){
+	
+
+	// not working?... oops?
+	if(m_afSoundTypes & (bits_SOUND_COMBAT | bits_SOUND_PLAYER) ){
+		// Hey!
+		pissedRunTime = gpGlobals->time + 12;
+		if(pev->sequence == g_panthereye_walk_sequenceID){
+			// change it
+			SetActivity(ACT_RUN);
+		}
+	}
+
+
+	if(m_hEnemy != NULL){
+		//pissedRunTime != -1 &&
+		if(pissedRunTime != -1 && gpGlobals->time >= pissedRunTime){
+			// Not pissed?  If I don't see the enemy, drop it.
+			// FUCKING
+			if(!HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_NEW_ENEMY)){
+				pissedRunTime = -1;
+				ForgetEnemy();
+				return CBaseMonster::PrescheduleThink();
+			}
+		}
+
+
+		if(gpGlobals->time < pissedRunTime){
+			if(HasConditions(bits_COND_SEE_ENEMY)){
+				// keep the frenzy going
+				pissedRunTime = gpGlobals->time + 12;
+			}
+		}else{
+			float daDistah = Distance(pev->origin, m_hEnemy->pev->origin);
+			if(daDistah < 500){
+				// in my territory?  FRENZY
+				pissedRunTime = gpGlobals->time + 12;
+			}
+		}
+
+	}//m_hEnemy check
+
+
+
+
+	return CBaseMonster::PrescheduleThink();
+}//PrescheduleThink
 
 
 
@@ -2909,19 +2927,29 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 	}
 		
 	case TASK_FACE_ENEMY:
+
+		//if(!m_hEnemy){
+		///	// ???
+		//	TaskFail();
+		//	return;
+		//}
+
+		// Why do this?  Base AI should take care of this portion
+		/*
 		if(HasConditions(bits_COND_SEE_ENEMY)){
-			setEnemyLKP(m_hEnemy);
+			setEnemyLKP(m_vecEnemyLKP);
 		}else{
 
 			if(!HasConditions(bits_COND_ENEMY_OCCLUDED)){
 				//if not occluded, try to see anyways?
-				setEnemyLKP(m_hEnemy);
+				setEnemyLKP(m_vecEnemyLKP);
 			}else{
 				//can't see the enemy?  Can't face them.
 				TaskFail();
 				return;
 			}
 		}
+		*/
 
 		if(faceLookTime <= gpGlobals->time){
 			//nope.
@@ -3120,7 +3148,15 @@ void CPantherEye::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t *
 	//default case from CBaseMonster's TakeDamage.
 	//Also count being in a non-combat state to force looking in that direction.
 	//if ( flDamage > 0 )
-	if(m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage >= 15)
+
+	if(m_MonsterState == MONSTERSTATE_COMBAT){
+
+		if(m_pSchedule == slPanthereyeSneakToLocation || m_pSchedule == slPanthereyeSneakWait){
+			// force it anyway, get out of this schedule
+			SetConditions(bits_COND_LIGHT_DAMAGE);
+			forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
+		}
+	}else if(m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT || flDamage >= 15)
 	{
 		SetConditions(bits_COND_LIGHT_DAMAGE);
 		forgetSmallFlinchTime = gpGlobals->time + DEFAULT_FORGET_SMALL_FLINCH_TIME;
@@ -3162,5 +3198,27 @@ int CPantherEye::getHullIndexForNodes(void){
 BOOL CPantherEye::SeeThroughWaterLine(void){
 	return TRUE;
 }//END OF SeeThroughWaterLine
+
+
+// AREWIOSDI:TGBJTDFH JRSTIPEe5wtrhiok
+BOOL CPantherEye::getForceAllowNewEnemy(CBaseEntity* pOther){
+	
+	if(m_pSchedule == slPanthereyeSneakToLocation || m_pSchedule == slPanthereyeSneakWait){
+		// If they're close and looking at me, go ahead.
+		// (allow less distance if they're looking at me)
+		float theDist = Distance(pev->origin, pOther->pev->origin);
+		float distToTickOff = 240;
+		if(UTIL_IsFacing(pOther->pev, this->pev->origin, 0.034)){
+			distToTickOff = 700;
+		}
+
+		if(theDist <= distToTickOff){
+			return TRUE;
+		}
+
+	}
+
+	return FALSE;
+}
 
 

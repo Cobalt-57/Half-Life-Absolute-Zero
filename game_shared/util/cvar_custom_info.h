@@ -408,7 +408,7 @@
 #define DEFAULT_r_shadows 0
 #define DEFAULT_altSquadRulesRuntime 0
 #define DEFAULT_hgruntLockStrafeTime 0.67
-#define DEFAULT_ignoreIsolatedNodes 1
+#define DEFAULT_pathfindIgnoreIsolatedNodes 1
 #define DEFAULT_drawNodeAll 0
 #define DEFAULT_drawNodeSpecial -1
 #define DEFAULT_drawNodeConnections 0

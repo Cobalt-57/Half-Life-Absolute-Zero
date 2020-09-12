@@ -1163,6 +1163,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFloater)
 	//CFlyingMonster already calls PainSound.
 	//PainSound();
 
+	// I don't take damage from poison, since I'm poison-based.
+	m_bitsDamageType &= ~DMG_POISON;
+
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CFlyingMonster);
 }
 

@@ -736,7 +736,6 @@ public:
 	virtual void wanderAway(const Vector& toWalkAwayFrom);
 	
 
-	//NOTICE: beware of IRelationship's implementation in dlls/mpstubb.cpp if changing. By default it is identical to monster.cpp's implementation
 	virtual int IRelationship ( CBaseEntity *pTarget );
 
 	//MODDD - new. Sometimes a monster may want to know what a certain class would think of another target, instead of its own class.

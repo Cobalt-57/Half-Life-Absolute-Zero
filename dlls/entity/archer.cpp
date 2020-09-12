@@ -1471,7 +1471,7 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 			}
 
 			if(pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC){
-				// must be all the way in the water, I can be pickier.
+				// must be all the way in the water
 				validFollow = (m_hEnemy->pev->waterlevel == 3);
 			}else{
 				// not long range?  Likely in a shallow body of water, crawl to its feet
@@ -1501,9 +1501,26 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 			// Repeat from what schedule.cpp.  I'm not calling the parent method just for this.
 			if(m_hEnemy != NULL){
 				setEnemyLKP(m_hEnemy.GetEntity());
+			}else{
+				// what
+				return slCombatLook;
 			}
 
-			if(m_hEnemy != NULL && m_hEnemy->pev->waterlevel == 3){
+			BOOL validFollow = FALSE;
+
+
+			if(pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC){
+				// must be all the way in the water
+				validFollow = (m_hEnemy->pev->waterlevel == 3);
+			}else{
+				// not long range?  Likely in a shallow body of water, crawl to its feet
+				// (more leech-like)
+				validFollow = (m_hEnemy->pev->waterlevel != 0);
+			}
+
+
+
+			if(validFollow){
 				// enemy is in the water and you failed?  Typical pathfind fail I guess.
 				//return &slFail[ 0 ];
 				return &slArcherGenericFail[0];

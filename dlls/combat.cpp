@@ -1003,7 +1003,7 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, fl
 		}
 		*/
 	}else if(tr.pHit != NULL && strcmp(STRING(tr.pHit->v.classname), "worldspawn") == 0){
-		//hit the world? is it possible we're swinging at something above us from an incline? Do a re-check for slightly higher.
+		// hit the world? is it possible we're swinging at something above us from an incline? Do a re-check for slightly higher.
 		TraceResult trB;
 		
 		Vector vecStartB = pev->origin + vecStartOffset + Vector(0, 0, pev->size.z*0.6);
@@ -1036,30 +1036,90 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, fl
 	{
 		CBaseEntity *pEntity = CBaseEntity::Instance( thingHit );
 		
-		if (pEntity != NULL && iDamage > 0 )
-		{
-			pEntity->TakeDamage( pev, pev, iDamage, iDmgType, iDmgTypeMod );
+		if(pEntity != NULL){
 
-			//MODDD - draw blood.
-			UTIL_fromToBlood(this, pEntity, (float)iDamage, flDist, &tr.vecEndPos, &vecStart, &vecEnd);
 
-			/*
-			for(int i = 0; i < 10; i++){
-				UTIL_BloodStream(tr.pHit->, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
+			Vector targetEnd = tr.vecEndPos;
+
+			if(m_hEnemy != NULL && pEntity->edict() != m_hEnemy->edict() ){
+				// Hit something, but it wasn't my intended target?  Do I hate it anyway?
+				CBaseMonster* monTest = pEntity->GetMonsterPointer();
+				if(monTest != NULL){
+					int theRel = IRelationship(pEntity);
+					if(theRel > R_NO || theRel == R_FR){
+						// I hate it anyway?  Proceed then.
+					}else{
+						// Thing I hit is a friendly or to be ignored?  Don't waste time attacking level geometry if the enemy is still
+						// within a straight line trace and close
+
+						vecStart = EyePosition();
+						vecEnd = m_hEnemy->BodyTargetMod(vecStart);
+						Vector pointDelta = vecEnd - vecStart;
+
+
+
+						
+
+						UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &tr);
+
+						if(tr.flFraction == 1.0){
+							// ok, how's the distance?
+
+							// vecEnd = VecBModelOrigin( m_hEnemy->pev ) ???
+
+							// This essentially moves the origin of the target to the corner nearest the player to test to see 
+							// if it's "hull" is in the view cone
+							pointDelta = UTIL_ClampVectorToBoxNonNormalized( pointDelta, m_hEnemy->pev->size * 0.5 );
+
+							Vector closestPointOnBox = vecStart + pointDelta;
+							if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 2) {
+								DebugLine_SetupPoint(closestPointOnBox, 0, 0, 255);
+							}
+
+							// Use the closest point on the enemy hitbox to me for determining distance instead,
+							// precision this close up can be important
+							Vector newPointDelta = (closestPointOnBox - vecStart);
+
+							float theDist = DistanceFromDelta(newPointDelta);
+							float theDist2D = Distance2DFromDelta(newPointDelta);
+
+							if(theDist < pev->size.x * 0.78 && theDist2D < pev->size.z * 0.65){
+
+							}
+						}else{
+							// oh.
+						}
+						
+
+					}//relationship of thing hit check
+				}//monTest != NULL Check
+			}// hitent - m_hEnemy mismatch check
+
+
+			if (iDamage > 0 ){
+				pEntity->TakeDamage( pev, pev, iDamage, iDmgType, iDmgTypeMod );
+
+				//MODDD - draw blood.
+				UTIL_fromToBlood(this, pEntity, (float)iDamage, flDist, &targetEnd, &vecStart, &vecEnd);
+
+				/*
+				for(int i = 0; i < 10; i++){
+					UTIL_BloodStream(tr.pHit->, UTIL_RandomBloodVector(), BloodColor(), RANDOM_LONG(50, 100));
+				}
+				*/
 			}
-			*/
 		}
 
+
 		if(out_traceResult != NULL){
-			//copy our lineTrace to the destination if provided.
+			// copy our lineTrace to the destination if provided.
 			*out_traceResult = tr;
 		}
 
 		return pEntity;
 	}
 
-	//don't copy anything?
-
+	// don't copy anything?
 	return NULL;
 }
 
@@ -2027,7 +2087,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 
 			SetConditions( bits_COND_LIGHT_DAMAGE );
 
-			/*
 			//MODDD
 			// BEWARE!  Setting _DAMAGE conditions without setting m_vecEnemyLKP is a no-no!
 			//setEnemyLKP()  ???
@@ -2044,8 +2103,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			}
 			MakeIdealYaw( m_vecEnemyLKP );
 			//////////////////////////////////////////////////////////////////////////////////////
-			*/
-
+			
 		}
 		g_rawDamageCumula = 0;  //whoopsie
 		return 0;

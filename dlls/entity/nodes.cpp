@@ -28,7 +28,7 @@
 
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindPrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(nodeSearchStartVerticalOffset)
-EASY_CVAR_EXTERN_DEBUGONLY(ignoreIsolatedNodes)
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreIsolatedNodes)
 EASY_CVAR_EXTERN_DEBUGONLY(hideNodeGraphRebuildNotice)
 EASY_CVAR_EXTERN_DEBUGONLY(nodeConnectionBreakableCheck)
 EASY_CVAR_EXTERN_DEBUGONLY(nodeDetailPrintout)
@@ -813,9 +813,15 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 	//MODDD - MAJOR.  If pathfindIgnoreStaticRouges is on, forbid using these.  Debug feature.
 	// ALSO.  Require a valid iHull choice.  It is used to access the static route table (array)
 	// so it can't be out of range.
+	// ALSO.  Forbid using static routes if this monster has MonsterClip on, none of the node-testing done
+	// to fill the static route table involved FL_MONSTERCLIP'd entities, so they aren't accurate for them.
+	// Then again, this is kindof the case for all entities if anything about the placement of MONSTERCLIP bounded
+	// things can change over time, but that's rare and not nearly as often of a problem for non-FL_MONSTERCLIP'd
+	// entities.  So, idea:  ignore static routes for any MONSTERCLIP'd entity regardless of this CVar.
 	if (
 		EASY_CVAR_GET(pathfindIgnoreStaticRoutes) != 1 &&
 		m_fRoutingComplete &&
+		(g_tempMonster==NULL || !(g_tempMonster->pev->flags & FL_MONSTERCLIP)) &&
 		iHull >= 0 && iHull < MAX_NODE_HULLS
 	)
 	{
@@ -1086,7 +1092,7 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 	// on having a path to the machines interrupted.   This isn't really behavior worth preserving
 	// for what could weaken other pathfind checks into thinking a route that leads nowhere could 
 	// really work.
-	if (EASY_CVAR_GET_DEBUGONLY(ignoreIsolatedNodes) == 1 && m_pNodes[iNode].m_cNumLinks < 1) {
+	if (EASY_CVAR_GET_DEBUGONLY(pathfindIgnoreIsolatedNodes) == 1 && m_pNodes[iNode].m_cNumLinks < 1) {
 		//BAM!  Class dismissed for you.
 		return;
 	}
@@ -1129,7 +1135,7 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 			//UTIL_TraceLine ( vecOrigin, m_pNodes[ iNode ].m_vecOriginPeek, ignore_monsters, 0, &tr );
 			UTIL_TraceLine(vecStart, m_pNodes[iNode].m_vecOriginPeek, ignore_monsters, 0, &tr);
 
-			passed = (tr.flFraction == 1.0);
+			passed = (tr.flFraction >= 1.0);
 			/////////////////////////////////////////////////////////////////////////////////////////////////			
 		}
 		//WALK_MOVE(testEnt, yaw, dist, iMode);
@@ -1199,7 +1205,23 @@ int CGraph::FindNearestNode(const Vector& vecOrigin, int afNodeTypes)
 	// checks.  Even though retail had no size-checking whatsoever for this, just a point-to-point line trace...
 	// Involving the HULL size (or best fit?) in m_Cache, and cacheing per size type would be ok there.
 	////////////////////////////////////////////////////////////////////////////////////
-	if(EASY_CVAR_GET(pathfindIgnoreNearestNodeCache) != 1 && !(EASY_CVAR_GET_DEBUGONLY(pathfindNearestNodeExtra) == 1 && g_tempMonster != NULL) ){
+	// Should monsters with the FL_MONSTERCLIP flag skip the nearest-node cache?  They're much less common and woulnd't benefit
+	// from setting the cache for ordinary monsters to fool them into thinking a node close to them that they can't traceline to is valid
+	// (but the MONSTERCLIP one could), and vice versa.
+	// Doing this, and that means don't set the cache in such a case, leave it only for normal monsters.
+	// If a huge number of monsters had MONSTERCLIP a separate cache for that type would make sense (same for the static route table
+	// having an entry for each type of hull size really)
+
+	BOOL ignoreCacheException;
+
+	ignoreCacheException = (g_tempMonster != NULL && (g_tempMonster->pev->flags & FL_MONSTERCLIP));
+	
+
+	if(
+		EASY_CVAR_GET(pathfindIgnoreNearestNodeCache) != 1 &&
+		!(EASY_CVAR_GET_DEBUGONLY(pathfindNearestNodeExtra) == 1 && g_tempMonster != NULL) &&
+		!ignoreCacheException
+	){
 
 		//MODDD - extra check.  allowed to return a -1 node?
 		//...then again, memory is memory. If it failed before, it won't change. guess this is ok.
@@ -1399,8 +1421,12 @@ int CGraph::FindNearestNode(const Vector& vecOrigin, int afNodeTypes)
 		ALERT(at_aiconsole, "All that work for nothing.\n");
 	}
 #endif
-	m_Cache[iHash].v = vecOrigin;
-	m_Cache[iHash].n = m_iNearest;
+
+	//MODDD - only set the cache if I'm not a special case.
+	if(!ignoreCacheException){
+		m_Cache[iHash].v = vecOrigin;
+		m_Cache[iHash].n = m_iNearest;
+	}
 	return m_iNearest;
 }
 

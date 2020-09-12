@@ -508,6 +508,9 @@ Slight AI improvement: something facing off from ideal but still able to attack 
 NEW CVars: pathfindForcePointHull, pathfindIgnoreNearestNodeCache, pathfindIgnoreStaticRoutes, pathfindNearestNodeExtra.
 In maps where 'pathfindIgnoreStaticRoutes' being 1 makes a difference in pathfinding through nodes, their node routes should be rebuilt (saved to a file, do it on our end and ship them out).
 
+CVar ignoreIsolatedNodes renamed to pathfindIgnoreIsolatedNodes
+
+
 EGON
 - Both fire-modes show in multiplayer and the beams show much more consistently.  (uses client/serverside effect calls properly)
 - Hitcloud occurs as often in multiplayer as often as it does in singleplayer now, and adjusted to have the same tracking as a lasersight in multiplayer (default env_sprite tracking is not as fast).
@@ -535,6 +538,7 @@ Egon and Gauss also properly stop firing / release charge when the game is pause
 Automatic weapon switches from picking up a new weapon no longer occur if picked up while reloading.
 
 bullsquids immune to poison.  Mainly so bullsquids fighting each other don't poison each other (should be immune).
+Floaters also immune to poison for being poison-based.
 
 HAssaults can now throw grenades (CVar hassaultAllowGrenades, defaults to 1).
 
@@ -604,6 +608,8 @@ GARGANTUA
 - Gargantuas that die have their model pivot's reset (no more being arched oddly above the ground while dead).
 - All garg sounds carry further (less attenuation).
 - New throw attack (CVar sv_gargantua_throwattack)!  Defaults to 1, for a 20% chance on any melee (may still revert to normal melee on not finding enough empty space nearby)
+- Falling death anim can also deal insta-death damage to things that are not monsters or players (breakables).
+
 
 SLIGHT RESTORE BUG: Fixed monsters needing to change from the default blend (such as the torso bending to look straight down) to the one the game was saved with.
 
@@ -678,6 +684,9 @@ Chumtoads and pickup-walker (pick-up able snark) sounds now properly work while 
 Shotgun cock sound no longer plays at startup on loaded games that begin with it equipped.
 
 Garg in a2a1 pathfinding greatly improved, able to go over tracks as intended.  Should be several cases of less flinching between anims while going between stopped/moving too.
+Also no longer clashes with the existing pathfinding structure (meant for ordinary entities that are blocked or able to move through things it can't).
+Will move close to the edge of its allowed bounds instead of giving up early if the player quickly moves into a forbidden area.
+
 
 IN PROGRESS:
 Many melee attacks are less likely to hit nearby level geometry when attacking from odd places (extra check for the enemy being nearby).

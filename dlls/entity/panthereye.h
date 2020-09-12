@@ -151,6 +151,8 @@ public:
 	GENERATE_TRACEATTACK_PROTOTYPE
 	
 	void MonsterThink ( void );
+	void PrescheduleThink(void);
+
 	void SetActivity ( Activity NewActivity );
 
 
@@ -162,6 +164,7 @@ public:
 
 	int getHullIndexForNodes(void);
 	BOOL SeeThroughWaterLine(void);
+	BOOL getForceAllowNewEnemy(CBaseEntity* pOther);
 
 
 	//originally 784.

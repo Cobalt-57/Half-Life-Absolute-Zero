@@ -855,6 +855,13 @@ void CBreakable::Die( void )
 	if ( size < pev->size.z )
 		size = pev->size.z;
 
+
+
+	//MODDD - NOTE.  OHHhhhhhh.   This is checking to see if anything above the recently destroyed
+	// breakable was standing on it, so drop its 'FL_ONGROUND' flag and let it fall.  Some stuff
+	// needs that update, clearly.  Could be a useful idea for other places, turn into a util method,
+	// something like "UTIL_CheckStandingOnDeleted(somePEV)" ?
+	
 	// !!! HACK  This should work!
 	// Build a box above the entity that looks like an 8 pixel high sheet
 	Vector mins = pev->absmin;

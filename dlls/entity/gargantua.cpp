@@ -237,6 +237,39 @@ Schedule_t	slGargFlamethrowerFail[] =
 
 
 
+
+
+Task_t	tlGargGenericFail[] =
+{
+	{ TASK_STOP_MOVING,			0				},
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
+
+	// how about this instead
+	//{ TASK_WAIT,				(float)0.5		},
+	{ TASK_WAIT_FACE_ENEMY,				(float)0.5		},
+	
+	//{ TASK_WAIT_PVS,			(float)0		},
+};
+
+Schedule_t	slGargGenericFail[] =
+{
+	{
+		tlGargGenericFail,
+		ARRAYSIZE ( tlGargGenericFail ),
+		bits_COND_CAN_ATTACK |
+		//MODDD - new?  Retrying methods to get to an enemy when pathfinding fails despite a better enemy being closer isn't great.
+		bits_COND_NEW_ENEMY
+		,
+		0,
+		"slGargGenericFail"
+	},
+};
+
+
+
+
+
+
 // primary melee attack
 Task_t	tlGargSwipe[] =
 {
@@ -342,6 +375,7 @@ DEFINE_CUSTOM_SCHEDULES( CGargantua )
 	slGargSwipe,
 	slGargStompAttack,
 	slGargChaseEnemySmart,
+	slGargGenericFail,
 };
 
 IMPLEMENT_CUSTOM_SCHEDULES( CGargantua, CBaseMonster );
@@ -2478,6 +2512,12 @@ Schedule_t *CGargantua::GetScheduleOfType( int Type )
 			// Failing to pathfind while looking at a montser decreases the time until the next stomp (All we can do besides
 			// stare at em' like a dumbass)
 
+			// WAIT!  What if the reason we failed is because the player moved into some trigger (FL_MONSTERCLIP) that blocks us?
+			// Moving only 3 feet and then stopping because the player darted back into a forbidden area isn't terribly smart, at least
+			// get close to see if a flamethrower attack would work, block em' off, yadda yadda.
+
+
+
 			// Only decrease the time if there's over 6 seconds left though.
 			if(m_seeTime - gpGlobals->time > 6){
 				m_seeTime -= 3;
@@ -2498,11 +2538,11 @@ Schedule_t *CGargantua::GetScheduleOfType( int Type )
 			// INTERVENTION.  If the delay hasn't been started yet, do that.
 			if(flameThrowerPreAttackDelay == -1){
 				if(g_iSkillLevel == SKILL_HARD){
-					flameThrowerPreAttackDelay = gpGlobals->time + 0.15;
+					flameThrowerPreAttackDelay = gpGlobals->time + 0.12;
 				}else if(g_iSkillLevel == SKILL_MEDIUM){
-					flameThrowerPreAttackDelay = gpGlobals->time + 0.48;
+					flameThrowerPreAttackDelay = gpGlobals->time + 0.25;
 				}else{
-					flameThrowerPreAttackDelay = gpGlobals->time + 0.85;
+					flameThrowerPreAttackDelay = gpGlobals->time + 0.5;
 				}
 				// In X seconds, reset the flameThrowerPreAttackDelay if no 
 				resetFlameThrowerPreAttackDelay = gpGlobals->time + 3;
@@ -2521,9 +2561,9 @@ Schedule_t *CGargantua::GetScheduleOfType( int Type )
 		case SCHED_GARG_FLAMETHROWER_FAIL:{
 			return slGargFlamethrowerFail;
 		}
-		//case SCHED_FAIL:{
-		//	return slFail;
-		//}
+		case SCHED_FAIL:{
+			return slGargGenericFail;
+		}
 
 	}
 
@@ -2920,15 +2960,17 @@ void CGargantua::RunTask( Task_t *pTask )
 				float finalY = 49 + yMod;
 
 
-				//we have an idea of the place to fall now.
+				// we have an idea of the place to fall now.
 				
-				CBaseEntity *pList[50];
+				CBaseEntity *pList[64];
 				int count = UTIL_EntitiesInBox(
-					pList,
-					10, boundCenter + Vector(-finalX - 8, -finalY - 8, 0),
+					pList, 64,
+					boundCenter + Vector(-finalX - 8, -finalY - 8, 0),
 					boundCenter + Vector(finalX + 8, finalY + 8, 86),
-					(FL_CLIENT|FL_MONSTER)
+					//MODDD - why (FL_CLIENT|FL_MONSTER) for required type?   That excludes other things that can take damage like breakables
+					0
 				);
+
 				for(int i = 0; i < count; i++){
 					if(pList[i]->pev != this->pev ){
 						//Crushed by this guy? Insta-death.

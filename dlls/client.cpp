@@ -2189,14 +2189,14 @@ void ClientCommand( edict_t *pEntity )
 	}else if( FStrEq(pcmdRefinedRef, "entdrawbounds") || FStrEq(pcmdRefinedRef, "ent_drawbounds") || FStrEq(pcmdRefinedRef, "drawentbounds") ){
 		// not to be confused with "showbounds", that one's mad old
 		if(g_flWeaponCheat == 0.0){
-			easyForcePrintLineClient(pEntity, "Can\'t remove things without cheats.");
+			easyForcePrintLineClient(pEntity, "no drawin");
 			return;
 		}
 		CBaseEntity* pEntityToDraw;
 
 		// NOTE - can supply arg now.
 		if (CMD_ARGC() > 1) {
-			// get an entity with that ID to remove
+			// get an entity with that ID to draw
 			int theID;
 			int tempNumb;
 			try {
@@ -2220,12 +2220,11 @@ void ClientCommand( edict_t *pEntity )
 				// ok.
 			}else {
 				// oh.
-				easyForcePrintClient(pEntity, "Could not find something in front to remove!");
+				easyForcePrintClient(pEntity, "Could not find something in front to draw!");
 			}
 		}
 		if ( pEntityToDraw ){
 			UTIL_drawBoxFrame(pEntityToDraw->pev->absmin, pEntityToDraw->pev->absmax, 12, 800, 255, 255, 255);
-
 		}else{
 			// error message already handled.
 		}
@@ -4419,9 +4418,8 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}else if( FStrEq(pcmdRefinedRef, "clearnodecache") || FStrEq(pcmdRefinedRef, "resetnodecache")){
-
 		// Weaker call than rebuilding all nodes.  Force the node cache to reset in case of changing pathfinding-related CVars related
-		// to shortest-path like ignoreIsolatedNodes.
+		// to shortest-path like pathfindIgnoreIsolatedNodes.
 
 		memset(WorldGraph.m_Cache, 0, sizeof(WorldGraph.m_Cache));
 		easyForcePrintLineClient(pEntity, "***Node cache cleared.");
@@ -5239,7 +5237,9 @@ void ClientCommand( edict_t *pEntity )
 		easyForcePrintLine("pregame_server_cvar set?");
 	}else if( FStrEq(pcmd, "garbage")){
 
-		edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(139);
+		// 139?
+		edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(79);
+
 		if(pEdi != NULL && !pEdi->free){
 			// ok
 			CBaseEntity* ddd = CBaseEntity::Instance(pEdi);
@@ -5250,7 +5250,7 @@ void ClientCommand( edict_t *pEntity )
 
 
 	}
-
+	// new stuff?
 
 
 	

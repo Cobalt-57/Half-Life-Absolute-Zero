@@ -59,7 +59,7 @@
 #include "util_debugdraw.h"
 //MODDD - why not?
 #include "game.h"
-#include "player.h"      //HERESY
+#include "player.h"
 	
 	
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
@@ -103,9 +103,16 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 //#define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
 
 
+
 #define USE_MOVEMENT_BOUND_FIX
 
 // ok... don't know what I was smoking there.  AdvanceRoute as a respose to failing in MoveExecute?...   uhhhhhh.   wat.
+// Still works so long as USE_MOVEMENT_BOUND_FIX is also on now it seems.  I got nothing.
+// Disabling these fixes for MoveExecute, lead to a rare bug of something moving in a way that makes the player get stuck in itself
+// as it approaches.  Hard to see in normal use but much more common by getting a gargantuta to see you (make enemy), turn on autoSneaky,
+// and get close to the garg.  It might path into you and keep walking so that its bounds get stuck and neither can move away.
+// This looks to be because the fix changes the bounds of the garg before pathfinding.  Unfortunate this side effect happens.
+// See the 'undef' lines that turn off these constants before MoveExecute
 #define USE_MOVEMENT_BOUND_FIX_ALT
 
 
@@ -349,6 +356,9 @@ const char* CBaseMonster::pStandardAttackMissSounds[] =
 
 
 int CBaseMonster::monsterIDLatest = 0;
+
+
+BOOL g_CheckLocalMoveCanReportBlocker = FALSE;
 
 
 
@@ -4440,6 +4450,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 			}
 
 			const char* debugStuff;
+			//const char* daClassname = STRING(gpGlobals->trace_ent->v.classname);
 			
 			if(gpGlobals->trace_ent!=NULL){
 				CBaseEntity* tempEntt = CBaseEntity::Instance(gpGlobals->trace_ent);
@@ -4464,11 +4475,29 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 
 				// any other info on it?
 				if (gpGlobals->trace_ent != NULL) {
+
 					CBaseEntity* testRef = CBaseEntity::Instance(gpGlobals->trace_ent);
 
 					int daInd = ENTINDEX(gpGlobals->trace_ent);
 
 					if(testRef != NULL){
+
+
+						
+						// draw the bounds of the thing that blocked me
+						// Way too spammy, need to do this only on MoveExecute calls.  In fact...
+						if(g_CheckLocalMoveCanReportBlocker){
+							if(this->drawPathConstant){
+								easyForcePrintLine("drawpathconstant, %s:%d: There was a %s in the way. entindex:%d", this->getClassname(), this->monsterID, debugStuff, daInd);
+
+								if(!testRef->IsWorld()){
+									// don't bother drawing the world, no point
+									UTIL_drawBoxFrame(testRef->pev->absmin, testRef->pev->absmax, 12, 300, 255, 255, 255);
+								}
+							}
+						}
+						
+
 						//const char* mahName = testRef->getClassname();
 						if( FClassnameIs(gpGlobals->trace_ent, "func_monsterclip")){
 							int x = 45;
@@ -4509,8 +4538,8 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 				break;
 			}
 
-		}
-	}
+		}//WALK_MOVE check
+	}//FOR LOOP through flDist
 
 #if defined(USE_MOVEMENT_BOUND_FIX)
 	if(needsMovementBoundFix()){
@@ -4533,12 +4562,14 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 		float maxZ_DistAllowed = pev->size.z * 1.2 + 16; //pev->size.z * 1.25;
 		float zDist = fabs(vecEnd.z - pev->origin.z);
 
+		DebugLine_SetupPoint(1, pev->origin, 255, 0, 255);
+		DebugLine_SetupPoint(2, vecEnd, 255, 255, 255);
+
 		if ( zDist > maxZ_DistAllowed )
 		{
 			// too spammy in any map with lots of vertical level space (a2a1a).
 			//easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Route failed from reaching a point too far from the goal in Z compared to my height.  Difference in Z is: %.2f.  Most allowed: %.2f.", getClassname(), monsterID, zDist, maxZ_DistAllowed);
-			//DebugLine_SetupPoint(0, pev->origin, 255, 0, 0);
-			//DebugLine_SetupPoint(1, vecEnd, 255, 0, 0);
+			
 
 			iReturn = LOCALMOVE_INVALID_DONT_TRIANGULATE;
 		}
@@ -4814,9 +4845,14 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 		int arrrr = 45;
 	}
 
-	
+
+	// If a straight-line trace couldn't work, show me why
+	g_CheckLocalMoveCanReportBlocker = TRUE;
+
 // check simple local move
 	iLocalMove = CheckLocalMove( pev->origin, vecGoal, pTarget, &flDist );
+
+	g_CheckLocalMoveCanReportBlocker = FALSE;
 
 	if ( iLocalMove == LOCALMOVE_VALID )
 	{
@@ -5658,6 +5694,10 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 		useHullCheckMask |= bits_MF_TO_NODE;
 	}
 
+
+	g_CheckLocalMoveCanReportBlocker = TRUE;
+	// Let this check draw extra info, checking some dozens of nodes and printing out any reason they can't work is obnoxious
+
 	if ((m_Route[m_iRouteIndex].iType & ~bits_MF_NOT_TO_MASK) & (useHullCheckMask)) {
 		//for now...
 		localMovePass = (CheckLocalMoveHull(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) == LOCALMOVE_VALID);
@@ -5665,11 +5705,10 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 
 		//DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 0, 255, 0);
 
-
-
 		if (!localMovePass) {
 			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Move: CheckLocalMoveHull Failed!!!", getClassnameShort(), monsterID));
 		}
+
 	}
 	else {
 		localMovePass = (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) == LOCALMOVE_VALID);
@@ -5699,6 +5738,9 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 		}
 	}
 
+	g_CheckLocalMoveCanReportBlocker = FALSE;
+
+
 	return localMovePass;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -5721,6 +5763,8 @@ void CBaseMonster::Move ( float flInterval )
 
 	//MODDD - section moved to its own method, MovePRE, as a simple way to see if a route looks promising at other points.
 	// Jumping to a movement activity only to give up the next frame causes twiching between moving/standing anims.
+
+
 	int localMovePass = MovePRE(flInterval, flWaypointDist, flCheckDist, flDist, vecDir, pTargetEnt);
 
 	if (localMovePass == -1) {
@@ -6278,7 +6322,8 @@ BOOL CBaseMonster::CheckPreMove(void){
 
 
 
-
+#undef USE_MOVEMENT_BOUND_FIX
+#undef USE_MOVEMENT_BOUND_FIX_ALT
 
 void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
@@ -6304,7 +6349,6 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 #endif
 
 
-
 #ifdef USE_MOVEMENT_BOUND_FIX_ALT
 	flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );
 #endif
@@ -6317,7 +6361,7 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		flStep = min( 16.0, flTotal );
 
 #ifndef USE_MOVEMENT_BOUND_FIX_ALT
-		//Normal way!
+		// Normal way!
 		UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
 
 #else
@@ -8031,10 +8075,59 @@ void CBaseMonster::HandleAnimEvent( MonsterEvent_t *pEvent )
 			ALERT( at_aiconsole, "Death event: %s\n", STRING(pev->classname) );
 #endif
 			pev->health = 0;
+
+
+			//MODDD - HACKY HACKY HACKY.
+			// Look for any func_monsterclip close to where this happened and make it non-collidable.
+			// Yes, this is diabolical 
+			////////////////////////////////////////////////////////////////////////////////////////////////
+			Vector boundCenter = Center();
+
+			int boundExtent = 60; //50
+			Vector boundCheckMin = boundCenter + Vector(-boundExtent, -boundExtent, -boundExtent);
+			Vector boundCheckMax = boundCenter + Vector(boundExtent, boundExtent, boundExtent);
+			CBaseEntity *pList[64];
+			int count = UTIL_EntitiesInBox(
+				pList,
+				64,
+				boundCheckMin,
+				boundCheckMax,
+				// (FL_CLIENT|FL_MONSTER) for players and monsters only
+				0
+			);
+			//UTIL_drawBoxFrame(boundCheckMin, boundCheckMax, 12, 1000, 0, 255, 255);
+
+			for(int i = 0; i < count; i++){
+				if(pList[i]->pev != this->pev ){
+					if(FClassnameIs(pList[i]->pev, "func_monsterclip")){
+						BOOL hasMonsterClip = (pList[i]->pev->flags & FL_MONSTERCLIP) != 0;
+						if(hasMonsterClip && pList[i]->pev->solid != SOLID_NOT && pList[i]->pev->solid != SOLID_TRIGGER ){
+							// Wait!  One more check.  Is this bound's center close enough to mine?  Bounds whose center are off greatly
+							// is a sign they are very large and not meant for just this monster.
+							float distToTrigCenter = Distance(pev->origin, pList[i]->Center());
+							float distToTrigCenter2 = Distance(pev->origin, VecBModelOrigin(pList[i]->pev));
+
+							if(distToTrigCenter <= 50){
+
+								//DebugLine_SetupPoint(5, pList[i]->Center(), 255, 255, 0);
+								//DebugLine_SetupPoint(6, VecBModelOrigin(pList[i]->pev), 0, 255, 255);
+								//DebugLine_SetupPoint(7, pev->origin, 255, 0, 0);
+								
+								// a working MONSTERCLIP that's close enough?  Disable for now.
+								pList[i]->pev->solid = SOLID_NOT;
+							}
+						}
+					}
+				}
+			}
+			////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 		}
 #if _DEBUG
-		else
+		else{
 			ALERT( at_aiconsole, "INVALID death event:%s\n", STRING(pev->classname) );
+		}
 #endif
 		break;
 	case SCRIPT_EVENT_NOT_DEAD:
@@ -8265,13 +8358,14 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	int i;
 	int iNumToCopy;
 
-	// TESTING
+	// Record the monster checking the nodes for any node logic to be aware of (per some CVars) this call.
+	// Retail was never aware of this in nodes.cpp, besides getting the hull-size of the calling monster
+	// early on.
 	g_tempMonster = this;
 
 	iSrcNode = WorldGraph.FindNearestNode ( pev->origin, this );
 	iDestNode = WorldGraph.FindNearestNode ( vecDest, this );
 
-	g_tempMonster = NULL;
 
 
 	//easyForcePrintLine("MY GOD   WHAT ARE YOU DOING %d %d", iSrcNode, iDestNode);
@@ -8280,12 +8374,14 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	{
 		// no node nearest self
 //		ALERT ( at_aiconsole, "FGetNodeRoute: No valid node near self!\n" );
+		g_tempMonster = NULL;
 		return FALSE;
 	}
 	else if ( iDestNode == -1 )
 	{
 		// no node nearest target
 //		ALERT ( at_aiconsole, "FGetNodeRoute: No valid node near target!\n" );
+		g_tempMonster = NULL;
 		return FALSE;
 	}
 
@@ -8327,6 +8423,8 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 
 	iResult = WorldGraph.FindShortestPath ( iPath, iSrcNode, iDestNode, iNodeHull, m_afCapability );
 
+	// done with node-based logic
+	g_tempMonster = NULL;
 
 
 
@@ -9730,9 +9828,9 @@ void CBaseMonster::OnTakeDamageSetConditions(entvars_t *pevInflictor, entvars_t 
 			// Finally.  Just pick a new schedule and get out of this 'IdleTrigger' one, clearly this was a sign just to snap out of it.
 			ChangeSchedule(GetSchedule());
 			
-		}
-		else {
-
+		}else {
+			// Normal behavior,  set LIGHT_DAMAGE and likely to look startled and turn to face the direction suggested elsewhere
+			// in TakeDamage ("ow that stings, where'd it come from?")
 			SetConditions(bits_COND_LIGHT_DAMAGE);
 
 			//MODDD NEW - set a timer to forget a flinch-preventing memory bit.
