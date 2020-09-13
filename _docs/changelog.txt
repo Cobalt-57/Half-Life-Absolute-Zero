@@ -697,11 +697,16 @@ Panthereye's sneak-schedule not as exploitable (was able to run in front of it a
 View-model animation/event skipped on firing immediately after loading a saved-game with certain weapons out, especially the crossbow, fixed.
 
 
+Many melee attacks are less likely to hit nearby level geometry when attacking from odd places (extra check for the enemy being nearby).
+
+Revision to how the AI determines the elevation between points.  Panthereye no longer endlessly runs against a box the player is standing on in a1a1b.
+
 
 IN PROGRESS:
-Many melee attacks are less likely to hit nearby level geometry when attacking from odd places (extra check for the enemy being nearby).
 Panthereye jump:  although not failing to jump at all, it is odd it picks a position it cannot reach jumping as far as possible.
-Revision to how the AI determines the elevation between points in progress, beware of refusal to go up/down ramps in the meantime
+Panthereye will also be more willing to jump while routing randomly around a player it can't reach to melee.
+Allowance of a node near a box on low-elevation would be good if the target would be in melee range.
+Archers: sometimes deprived-of-water killed never happens.
 
 
 

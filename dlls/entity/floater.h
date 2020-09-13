@@ -62,7 +62,7 @@ public:
 	Activity	GetStoppedActivity( void );
 	void	Stop( void );
 
-	int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );
+	int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist );
 	
 	void Move( float flInterval );
 	BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );

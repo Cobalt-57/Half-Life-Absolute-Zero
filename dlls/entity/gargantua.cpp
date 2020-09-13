@@ -14,18 +14,6 @@
 ****/
 
 
-//MODDD - TODO, low priority.
-// Idea: The 'throwbody' sequence is a choice for MELEE_ATTACK1 if there is enough space above the garg.
-// A 'grab' event goes at time 5/16 into the animation.  If successful, turn off gravity for the thing grabbed
-// and force its position to my hand every frame, faster think times during that time (not for the usual AI).
-// Toss the grabbed entity at time 16/16 into the animation (stop forcing to attachment, restore gravity, apply
-// toss velocity to it).  And restore normal think time.
-// Friendly shows how to do the different think-time thing at least
-// LOT OF THAT DONE, but disabled from builds until finished... maybe.
-// Player needs a physics flag to disable gravity if they're the grabbed ent, AND need to implement the faster thing
-// times while having a grabbed ent.
-
-
 
 //=========================================================
 // Gargantua
@@ -2286,7 +2274,7 @@ BOOL CGargantua::CheckMeleeAttack2( float flDot, float flDist )
 BOOL CGargantua::CheckRangeAttack1( float flDot, float flDist )
 {
 	//TEST
-	return FALSE;
+	//return FALSE;
 
 	if ( gpGlobals->time > m_seeTime )
 	{
@@ -3392,6 +3380,9 @@ int CGargantua::LookupActivityHard(int activity){
 
 
 					SetFastThink(TRUE);  // do logic more often to keep things more smooth
+
+					m_flFramerateSuggestion = 0.87;
+					pev->framerate = m_flFramerateSuggestion;
 
 					return g_gargantua_throwbody_sequenceID;
 				}

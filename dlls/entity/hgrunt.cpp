@@ -2346,7 +2346,7 @@ float CHGrunt::findCoverInDirection(const Vector& arg_vecStart, const float& arg
 		return -1;
 	}
 
-	if(CheckLocalMove(arg_vecStart, arg_vecStart + arg_inDir * bestCoverDistancePre, NULL, NULL) == LOCALMOVE_VALID){
+	if(CheckLocalMove(arg_vecStart, arg_vecStart + arg_inDir * bestCoverDistancePre, NULL, TRUE, NULL) == LOCALMOVE_VALID){
 		//go ahead!
 		if(arg_vecDirFeedback != NULL){
 			//feedback the start direction.
@@ -2355,7 +2355,7 @@ float CHGrunt::findCoverInDirection(const Vector& arg_vecStart, const float& arg
 		bestCoverDistance = bestCoverDistancePre;
 	}else{
 		if(canTryAlternateDegrees){
-			//a few more tries...
+			// a few more tries...
 			Vector vecDegUp = getRotatedVectorAboutZAxis(arg_inDir, 9);
 			Vector vecDegDown = getRotatedVectorAboutZAxis(arg_inDir, -9);
 			float bestCoverDistanceUp = findCoverInDirection(arg_vecStart, arg_vecDistanceCompete, vecDegUp, arg_maxDist * 1.11, NULL, FALSE);
@@ -2363,7 +2363,7 @@ float CHGrunt::findCoverInDirection(const Vector& arg_vecStart, const float& arg
 
 
 			if(bestCoverDistanceUp == -1 && bestCoverDistanceDown == -1){
-				//nope.
+				// nope.
 			}else if(bestCoverDistanceDown == -1){
 				bestCoverDistance = bestCoverDistanceUp;
 				if(arg_vecDirFeedback != NULL){*arg_vecDirFeedback = vecDegUp;}
@@ -2404,7 +2404,7 @@ float CHGrunt::findCoverInDirection(const Vector& arg_vecStart, const float& arg
 		return -1;
 	}
 
-}
+}// findCoverInDirection
 
 
 

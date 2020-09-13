@@ -158,7 +158,7 @@ public:
 	BOOL usesSegmentedMove(void);
 	int MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt);
 	void Move ( float flInterval );
-	int  CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );
+	int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist );
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
 	void SetActivity ( Activity NewActivity );
 	BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
@@ -1143,8 +1143,8 @@ int CController::MovePRE(float flInterval, float& flWaypointDist, float& flCheck
 		// If this fails, it should be because of some dynamic entity blocking this guy.
 		// We've already checked this path, so we should wait and time out if the entity doesn't move
 		flDist = 0;
-		//if (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) != LOCALMOVE_VALID)
-		localMoveResult = (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) == LOCALMOVE_VALID);
+		//if (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, doZCheck, &flDist) != LOCALMOVE_VALID)
+		localMoveResult = (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, doZCheck, &flDist) == LOCALMOVE_VALID);
 	// ...
 	*/
 
@@ -1273,7 +1273,7 @@ void CController::Move ( float flInterval )
 		// We've already checked this path, so we should wait and time out if the entity doesn't move
 		flDist = 0;
 		//MODDD - !!!    Anytnything above is in MovePRE as well for one initial try.
-		if ( CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) != LOCALMOVE_VALID )
+		if ( CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, FALSE, &flDist ) != LOCALMOVE_VALID )
 		{
 			CBaseEntity *pBlocker;
 
@@ -1384,7 +1384,8 @@ BOOL CController::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 }
 
 
-int CController::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+// the new 'doCheckZ' is not relevant to fliers.
+int CController::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist )
 {
 	TraceResult tr;
 

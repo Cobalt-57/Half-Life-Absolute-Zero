@@ -100,6 +100,7 @@ extern BOOL g_firstPlayerEntered;
 extern BOOL g_queueCVarHiddenSave;
 
 extern CBaseMonster* g_routeTempMonster;
+extern CBaseEntity* g_routeTempMonster_GoalEnt;
 
 
 extern void CopyToBodyQue(entvars_t* pev);
@@ -3576,7 +3577,7 @@ void ClientCommand( edict_t *pEntity )
 		
 		Vector vecStart = tempplayer->pev->origin + Vector(0, 0, 10);
 		Vector vecEnd = vecStart + gpGlobals->v_forward * dist;
-		BOOL success = (tempplayer->CheckLocalMove(vecStart, vecEnd, NULL, &distReg) == LOCALMOVE_VALID);
+		BOOL success = (tempplayer->CheckLocalMove(vecStart, vecEnd, NULL, TRUE, &distReg) == LOCALMOVE_VALID);
 		//UTIL_TraceLine(tempplayer->pev->origin + tempplayer->pev->view_ofs + gpGlobals->v_forward * 5,pMe->pev->origin + pMe->pev->view_ofs + gpGlobals->v_forward * 2048,dont_ignore_monsters, pMe->edict(), &tr );
 
 		::DebugLine_ClearAll();
@@ -3650,8 +3651,14 @@ void ClientCommand( edict_t *pEntity )
 			CNode* theNode = &WorldGraph.Node(nodeList[0]);
 
 			// Now with the nodes, check to see that the monster can reach the first node.
-			// And don't add pev->view_ofs to anything!  Ground-to-ground will work fine, snaps the start and end points to test at startup anyway
-			movePass = (theMon->CheckLocalMove(theMon->pev->origin + theMon->pev->view_ofs, theNode->m_vecOrigin + theMon->pev->view_ofs, NULL, &linkLength ) == LOCALMOVE_VALID);
+			// And don't add pev->view_ofs to anything!  Ground-to-ground will work fine, snaps the start at startup anyway and
+			// the point it ends up at (simulated movement against the ground to point B) is compared to the end-point snapped to
+			// the ground, if 'doCheckZ' is on.
+			// WAIT!  end point isn't snapped to the ground, and that can be a good thing.  If the dest point is to the enemy origin (player)
+			// and the player is standing over the edge of something like a box, do we really want to be fooled into thinking hitting the
+			// point under the player is ok just because the player's origin (centered floor-wise, at least) could trace lower to the ground from
+			// that height?
+			movePass = (theMon->CheckLocalMove(theMon->pev->origin, theNode->m_vecOrigin, NULL, TRUE, &linkLength ) == LOCALMOVE_VALID);
 			routeLength += linkLength;
 
 			// is that fair
@@ -3668,7 +3675,7 @@ void ClientCommand( edict_t *pEntity )
 				CNode* firstNode = &WorldGraph.Node(nodeList[i]);
 				CNode* secondNode = &WorldGraph.Node(nodeList[i+1]);
 				
-				movePass = (theMon->CheckLocalMove(firstNode->m_vecOrigin + theMon->pev->view_ofs, secondNode->m_vecOrigin + theMon->pev->view_ofs, NULL, &linkLength ) == LOCALMOVE_VALID);
+				movePass = (theMon->CheckLocalMove(firstNode->m_vecOrigin, secondNode->m_vecOrigin, NULL, TRUE, &linkLength ) == LOCALMOVE_VALID);
 				routeLength += linkLength;
 
 				if(!movePass){
@@ -3752,6 +3759,9 @@ void ClientCommand( edict_t *pEntity )
 			int iPath[ MAX_PATH_SIZE ];
 
 			g_routeTempMonster = theMon;
+			// Assume the movegoal is set if it will be relevant?
+			g_routeTempMonster_GoalEnt = theMon->GetGoalEntity();
+
 			int iResult = WorldGraph.FindShortestPath ( iPath, nodeList[0], nodeList[1], iNodeHull, theMon->m_afCapability );
 			g_routeTempMonster = NULL;
 

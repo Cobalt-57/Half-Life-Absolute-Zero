@@ -82,7 +82,7 @@ public:
 
 	void HandleEventQueueEvent(int arg_eventID);
 
-	int CheckLocalMove(const Vector& vecStart, const Vector& vecEnd, CBaseEntity* pTarget, float* pflDist);// check validity of a straight move through space
+	int CheckLocalMove(const Vector& vecStart, const Vector& vecEnd, CBaseEntity* pTarget, BOOL doZCheck, float* pflDist);// check validity of a straight move through space
 
 	int ISoundMask(void);
 

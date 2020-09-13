@@ -104,8 +104,9 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFlyingMonster)
 
 
 
+// the new 'doZCheck' is ignored here, not relevant to fliers.
 
-int CFlyingMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+int CFlyingMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist )
 {
 	// UNDONE: need to check more than the endpoint
 	if (FBitSet(pev->flags, FL_SWIM) && (UTIL_PointContents(vecEnd) != CONTENTS_WATER))
@@ -290,7 +291,7 @@ void CFlyingMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir,
 		//MODDD - wait.  As-is, CheckLocalMove, and didn't check that it's LOCALMOVE_VALID
 		// (since CheckLocalMove can also return LOCALMOVE_INVALID_DONT_TRIANGULATE, which is also non-zero)???
 		// No idea.  Now it's checked.
-		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) == LOCALMOVE_VALID)
+		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, FALSE, NULL ) == LOCALMOVE_VALID)
 		{
 			m_vecTravel = (vecMove - pev->origin);
 			m_vecTravel = m_vecTravel.Normalize();

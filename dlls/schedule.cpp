@@ -3544,7 +3544,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 
 
 			//test!
-			success = (this->CheckLocalMove(vecStart, vecEnd, NULL, &distReg) == LOCALMOVE_VALID);
+			success = (this->CheckLocalMove(vecStart, vecEnd, NULL, TRUE, &distReg) == LOCALMOVE_VALID);
 				
 			if(success){
 				//because on success, distReg is likely not written to. Bizarre.

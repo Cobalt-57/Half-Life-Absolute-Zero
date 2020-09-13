@@ -778,7 +778,7 @@ void CPantherEye::panthereye_findCoverFromEnemy( void ){
 	else
 		pevCover = m_hEnemy->pev;
 			
-	EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("YOU nAYYYYYYYYYYYYYYYYYYY") );
+
 	if ( FindLateralCover( pevCover->origin, pevCover->view_ofs ) )
 	{
 		// try lateral first

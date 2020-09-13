@@ -526,7 +526,7 @@ void CBaseMonster::SetSequenceByNameForceLoops(char* szSequence, float flFramera
 
 
 //MODDD - new 
-int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist ) { return 0; }
+int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist ) { return 0; }
 int CBaseMonster::CheckLocalMoveHull ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist ) { return 0; }
 
 
@@ -534,8 +534,11 @@ float CBaseMonster::OpenDoorAndWait( entvars_t *pevDoor ) { return 0.0; }
 void CBaseMonster::AdvanceRoute ( float distance, float flInterval ) { }
 int CBaseMonster::RouteClassify( int iMoveFlag ) { return 0; }
 int CBaseMonster::MovementGoalToMoveFlag(int iMoveGoal){return 0;}
-BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget ) { return FALSE; }
 
+BOOL CBaseMonster::attemptRampFix(const Vector& vecGoal, int iMoveFlag, CBaseEntity* pTarget) {return FALSE;}
+
+BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget ) { return FALSE; }
+BOOL CBaseMonster::BuildRouteCheap(const Vector& vecGoal, int iMoveFlag, CBaseEntity* pTarget) {return FALSE;}
 
 BOOL CBaseMonster::NoFriendlyFireImp(const Vector& startVec, const Vector& endVec){return FALSE;}
 
@@ -848,7 +851,9 @@ float CBaseMonster::MoveYawDegreeTolerance(){return 0;}
 int CBaseMonster::BloodColorRedFilter(){return 0;}
 int CBaseMonster::CanUseGermanModel(){return 0;}
 
-WayPoint_t* CBaseMonster::GetGoalNode(){return NULL;}
+WayPoint_t* CBaseMonster::GetGoalNode(void){return NULL;}
+CBaseEntity* CBaseMonster::GetGoalEntity(void) {return NULL;}
+
 void CBaseMonster::ReportGeneric(){}
 void CBaseMonster::onEnemyDead(CBaseEntity* pRecentEnemy) {}
 BOOL CBaseMonster::predictRangeAttackEnd(void) { return FALSE; }

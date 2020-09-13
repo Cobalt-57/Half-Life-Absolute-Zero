@@ -1032,73 +1032,102 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, fl
 	}
 	*/
 
-	if ( thingHit )
-	{
+	if ( thingHit ){
 		CBaseEntity *pEntity = CBaseEntity::Instance( thingHit );
 		
 		if(pEntity != NULL){
-
-
 			Vector targetEnd = tr.vecEndPos;
 
 			if(m_hEnemy != NULL && pEntity->edict() != m_hEnemy->edict() ){
 				// Hit something, but it wasn't my intended target?  Do I hate it anyway?
-				CBaseMonster* monTest = pEntity->GetMonsterPointer();
-				if(monTest != NULL){
+				//CBaseMonster* monTest = m_hEnemy->GetMonsterPointer();
+				//if(monTest != NULL){
 					int theRel = IRelationship(pEntity);
 					if(theRel > R_NO || theRel == R_FR){
-						// I hate it anyway?  Proceed then.
+						// I hate whatever got hit anyway?  Fall through to normal behavior then.
+
 					}else{
-						// Thing I hit is a friendly or to be ignored?  Don't waste time attacking level geometry if the enemy is still
-						// within a straight line trace and close
+						// Thing I hit is a friendly or to be ignored?  Don't waste time attacking level geometry if the enemy
+						// is still within a straight line trace and close to the point hit.
+						// (Count as a hit to the enemy instead, if the enemyis close enough to the point on something unintended hit)
+						Vector t_vecStart = EyePosition();
+						Vector t_vecEnd = m_hEnemy->BodyTargetMod(t_vecStart);
+						Vector pointDelta = t_vecEnd - t_vecStart;
+						TraceResult t_tr;
 
-						vecStart = EyePosition();
-						vecEnd = m_hEnemy->BodyTargetMod(vecStart);
-						Vector pointDelta = vecEnd - vecStart;
+						UTIL_TraceLine(t_vecStart, t_vecEnd, dont_ignore_monsters, ENT(pev), &t_tr);
 
+						BOOL somethingIHateHit = FALSE;
+						CBaseEntity* t_hitEnt;
 
+						if(t_tr.flFraction < 1.0 && t_tr.pHit != NULL){
+							// Is the thing hit something I dislike + beyond?
+							if(t_tr.pHit == m_hEnemy.Get()){
+								// good to go!
+								somethingIHateHit = TRUE;
+								t_hitEnt = m_hEnemy;
+							}else{
+								// Is it something that I at least want to hurt?
+								CBaseEntity* t_hitTest = CBaseEntity::Instance(t_tr.pHit);
+								if(t_hitTest != NULL){
+									int t_theRel = IRelationship(t_hitTest);
+									if(t_theRel > R_NO || t_theRel == R_FR){
+										// ok.
+										somethingIHateHit = TRUE;
+										t_hitEnt = t_hitTest;
+									}
+								}
+							}
+						}//trace check
 
-						
-
-						UTIL_TraceLine(vecStart, vecEnd, ignore_monsters, ENT(pev), &tr);
-
-						if(tr.flFraction == 1.0){
+						if(somethingIHateHit){
 							// ok, how's the distance?
-
-							// vecEnd = VecBModelOrigin( m_hEnemy->pev ) ???
+							//t_vecEnd = VecBModelOrigin( t_hitEnt->pev ) ???
 
 							// This essentially moves the origin of the target to the corner nearest the player to test to see 
 							// if it's "hull" is in the view cone
-							pointDelta = UTIL_ClampVectorToBoxNonNormalized( pointDelta, m_hEnemy->pev->size * 0.5 );
+							Vector clampedHitRelative = UTIL_ClampVectorToBoxNonNormalized( pointDelta, t_hitEnt->pev->size * 0.5 );
 
-							Vector closestPointOnBox = vecStart + pointDelta;
+							Vector closestPointOnBox = t_vecStart + clampedHitRelative;
 							if (EASY_CVAR_GET_DEBUGONLY(playerUseDrawDebug) == 2) {
 								DebugLine_SetupPoint(closestPointOnBox, 0, 0, 255);
 							}
 
 							// Use the closest point on the enemy hitbox to me for determining distance instead,
 							// precision this close up can be important
-							Vector newPointDelta = (closestPointOnBox - vecStart);
-
+							Vector newPointDelta = (closestPointOnBox - targetEnd);
+							Vector newPointDelta_ALT = (t_vecEnd - targetEnd);
+							
 							float theDist = DistanceFromDelta(newPointDelta);
 							float theDist2D = Distance2DFromDelta(newPointDelta);
+							float theDist_ALT = DistanceFromDelta(newPointDelta_ALT);
+							float theDist2D_ALT = Distance2DFromDelta(newPointDelta_ALT);
 
-							if(theDist < pev->size.x * 0.78 && theDist2D < pev->size.z * 0.65){
+							//DebugLine_SetupPoint(4, closestPointOnBox, 255, 0, 255);
+							//DebugLine_SetupPoint(4, t_vecStart, 0, 255, 0);
 
+							//if(theDist < pev->size.x * 0.78 && theDist2D < pev->size.z * 0.65){
+							if(theDist < flDist * 0.52 && theDist2D < flDist * 0.44){
+								// close enough to the intended enemy?  Hit em' instead, save other vars for the blood call
+								// coming soon
+								pEntity = t_hitEnt;
+								vecStart = t_vecStart;
+								vecEnd = t_vecEnd;
+								targetEnd = t_tr.vecEndPos;
+								tr = t_tr;
 							}
-						}else{
-							// oh.
-						}
+						}//somethingIHateHit
 						
-
 					}//relationship of thing hit check
-				}//monTest != NULL Check
+				//}//monTest != NULL Check
 			}// hitent - m_hEnemy mismatch check
 
 
 			if (iDamage > 0 ){
-				pEntity->TakeDamage( pev, pev, iDamage, iDmgType, iDmgTypeMod );
+				
+				pEntity->TraceAttack_Traceless(pev, (float)iDamage, (vecEnd - vecStart).Normalize(), iDmgType, iDmgTypeMod);
 
+				pEntity->TakeDamage( pev, pev, iDamage, iDmgType, iDmgTypeMod );
 				//MODDD - draw blood.
 				UTIL_fromToBlood(this, pEntity, (float)iDamage, flDist, &targetEnd, &vecStart, &vecEnd);
 
@@ -1109,7 +1138,6 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack( const Vector vecStartOffset, fl
 				*/
 			}
 		}
-
 
 		if(out_traceResult != NULL){
 			// copy our lineTrace to the destination if provided.

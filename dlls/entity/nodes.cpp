@@ -79,7 +79,7 @@ BOOL map_anyAirNodes;
 
 // Test!
 CBaseMonster* g_routeTempMonster = NULL;
-
+CBaseEntity* g_routeTempMonster_GoalEnt = NULL;
 
 
 
@@ -925,11 +925,11 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 						continue;
 					}
 				}else{
-					CNode* shit1 = &m_pNodes[m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_iSrcNode];
-					CNode* shit2 = &m_pNodes[m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_iDestNode];
+					CNode* srcNode = &m_pNodes[m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_iSrcNode];
+					CNode* destNode = &m_pNodes[m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_iDestNode];
 
 					// running into your enemy is always a good thing.  Right?
-					BOOL succ = g_routeTempMonster->CheckLocalMove(shit1->m_vecOrigin, shit2->m_vecOrigin, g_routeTempMonster->m_hEnemy, NULL) == LOCALMOVE_VALID;
+					BOOL succ = g_routeTempMonster->CheckLocalMove(srcNode->m_vecOrigin, destNode->m_vecOrigin, g_routeTempMonster_GoalEnt, TRUE, NULL) == LOCALMOVE_VALID;
 					if(!succ){
 						continue;
 					}
@@ -1134,7 +1134,7 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 			vecStart.z = EASY_CVAR_GET_DEBUGONLY(nodeSearchStartVerticalOffset);
 			
 			// running into your enemy is always a good thing.  Right?
-			passed = (g_routeTempMonster->CheckLocalMove(vecStart, m_pNodes[iNode].m_vecOriginPeek, g_routeTempMonster->m_hEnemy, NULL) == LOCALMOVE_VALID);
+			passed = (g_routeTempMonster->CheckLocalMove(vecStart, m_pNodes[iNode].m_vecOriginPeek, g_routeTempMonster_GoalEnt, TRUE, NULL) == LOCALMOVE_VALID);
 
 		}else{
 			// !!!   AS-IS WAY.   mostly.

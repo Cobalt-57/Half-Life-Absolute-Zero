@@ -87,10 +87,12 @@ public:
 			pev->absmax = pev->origin + Vector(76, 76, 60);
 		}
 		else {
-			// = DEAD_NO
+			// == DEAD_NO
+			// do we need this?  I don't know
+			//CBaseMonster::SetObjectCollisionBox();
+
 			pev->absmin = pev->origin + Vector(-35, -35, 0);
 			pev->absmax = pev->origin + Vector(35, 35, 42);
-			//return CBaseMonster::SetObjectCollisionBox();
 		}
 	}//END OF SetObjectCollisionBox
 

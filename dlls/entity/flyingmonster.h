@@ -40,7 +40,7 @@ public:
 	GENERATE_TAKEDAMAGE_PROTOTYPE_VIRTUAL
 
 	//MODDD - you too?!
-	virtual int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space
+	virtual int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist );// check validity of a straight move through space
 	BOOL FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex );
 	Activity GetStoppedActivity( void );
 

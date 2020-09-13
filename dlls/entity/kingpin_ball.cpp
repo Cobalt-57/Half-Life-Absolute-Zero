@@ -308,7 +308,7 @@ void CKingpinBall::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		else
 			m_flightSpeed = UTIL_Approach( 20, m_flightSpeed, 300 * gpGlobals->frametime );
 		
-		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, NULL ) == LOCALMOVE_VALID)
+		if ( CheckLocalMove ( pev->origin, vecMove, pTargetEnt, doZCheck, NULL ) == LOCALMOVE_VALID)
 		{
 			m_vecTravel = (vecMove - pev->origin);
 			m_vecTravel = m_vecTravel.Normalize();
@@ -369,7 +369,7 @@ void CKingpinBall::SetActivity(Activity NewActivity){
 
 
 
-int CKingpinBall::CheckLocalMove( const Vector& vecStart, const Vector& vecEnd, CBaseEntity* pTarget, float* pflDist ){
+int CKingpinBall::CheckLocalMove( const Vector& vecStart, const Vector& vecEnd, CBaseEntity* pTarget, BOOL doZCheck, float* pflDist ){
 	int iReturn;
 
 

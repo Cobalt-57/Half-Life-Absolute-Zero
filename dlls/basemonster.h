@@ -756,7 +756,7 @@ public:
 	virtual void HandleAnimEvent( MonsterEvent_t *pEvent );
 
 
-	virtual int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space
+	virtual int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist );// check validity of a straight move through space
 	
 	virtual int CheckLocalMoveHull ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space
 	
@@ -936,8 +936,12 @@ public:
 
 	virtual void SetYawSpeed ( void ) { return; }// allows different yaw_speeds for each activity
 	
+
+	virtual BOOL attemptRampFix(const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget);
+
 	//MODDD - made virtual like BuildNearestRoute was. If something overrides this we should probably use their version.
 	virtual BOOL BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget );
+	virtual BOOL BuildRouteCheap ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget );
 
 	//MODDD - now accepts an optional moveflag and optional target entity just like BuildRoute does. To whatever route it makes with BuildRoute,
 	//        it should be able to pass that information along just as if BuildRoute were called plainly.
@@ -1296,6 +1300,7 @@ public:
 	int CanUseGermanModel(void);
 
 	WayPoint_t* GetGoalNode(void);
+	CBaseEntity* GetGoalEntity(void);
 
 	virtual void ReportGeneric(void);
 

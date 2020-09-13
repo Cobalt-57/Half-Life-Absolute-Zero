@@ -3999,7 +3999,7 @@ BOOL CStukaBat::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 
 
 //Clone of the flyer's CheckLocalMove.
-int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist )
 {
 	// UNDONE: need to check more than the endpoint
 	if (FBitSet(pev->flags, FL_SWIM) && (UTIL_PointContents(vecEnd) != CONTENTS_WATER))
@@ -4134,7 +4134,7 @@ int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 	return iReturn;
 
 	//Not reached. Comment out all above to do this instead.
-	return CBaseMonster::CheckLocalMove(vecStart, vecEnd, pTarget, pflDist);
+	return CBaseMonster::CheckLocalMove(vecStart, vecEnd, pTarget, doZCheck, pflDist);
 }
 */
 

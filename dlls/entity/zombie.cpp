@@ -1396,7 +1396,7 @@ void CZombie::HandleEventQueueEvent(int arg_eventID){
 }//END OF HandleEventQueueEvent
 
 
-int CZombie::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist ){
+int CZombie::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist ){
 
 	int mahTask = getTaskNumber();
 
@@ -1406,8 +1406,7 @@ int CZombie::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 	}
 
 	//default behavior.
-	return CBaseMonster::CheckLocalMove(vecStart, vecEnd, pTarget, pflDist);
-
+	return CBaseMonster::CheckLocalMove(vecStart, vecEnd, pTarget, doZCheck, pflDist);
 }//END OF CheckLocalMove
 
 

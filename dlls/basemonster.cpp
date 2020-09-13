@@ -20,8 +20,6 @@
 
 */
 
-
-
 // NOTE!!! Bad change I made a long while ago.
 // BuildNearestRoute should NOT give the 'bits_MF_TO_ENEMY' moveflag.
 // This tricks other areas of pathfinding into thinking the route is directly to the enemy
@@ -132,10 +130,17 @@ extern DLL_GLOBAL short g_sModelIndexLaserDot;// holds the index for the laser b
 
 extern CGraph WorldGraph;// the world node graph
 
+
 extern CBaseMonster* g_routeTempMonster;
+// not necesarily m_hTargetEnt, could be m_hEnemy or whatever else would usually go to CheckLocalMove
+// calls within routing?
+extern CBaseEntity* g_routeTempMonster_GoalEnt;
+
 
 
 BOOL g_pathfind_preMoveOnly = FALSE;
+BOOL g_CheckLocalMoveCanReportBlocker = FALSE;
+
 
 
 //extern Schedule_t* slAnimationSmartAndStop;
@@ -362,9 +367,6 @@ const char* CBaseMonster::pStandardAttackMissSounds[] =
 
 
 int CBaseMonster::monsterIDLatest = 0;
-
-
-BOOL g_CheckLocalMoveCanReportBlocker = FALSE;
 
 
 
@@ -845,17 +847,19 @@ SCHEDULE_TYPE CBaseMonster::getHeardBaitSoundSchedule(CSound* pSound){
 	
 	return SCHED_NONE;
 
-}//END OF getHeardBaitSoundSchedule(...)
+}//END OF getHeardBaitSoundSchedule
+
 
 SCHEDULE_TYPE CBaseMonster::_getHeardBaitSoundSchedule(CSound* pSound){
 	if ( pSound && (pSound->m_iType & bits_SOUND_BAIT) )
 	{
 		//MODDD TODO - shouldn't the INVESTIGATE_SOUND_BAIT schedule better handle that?
 		//if we can directly see the bait and are less than X units away (distance), we'll just look at it instead.
+		//MODDD TODO - how about involving this monster's abiltiy to hear? this dist of 400 should be ok though
 		if( 
-			(pSound->m_vecOrigin - EarPosition()).Length() < 200 &&
+			(pSound->m_vecOrigin - EarPosition()).Length() < 460 &&
 			FInViewCone( &pSound->m_vecOrigin ) &&
-			this->CheckLocalMove(this->pev->origin + Vector(0, 0, 4), pSound->m_vecOrigin+ Vector(0, 0, 4), NULL, NULL ) == LOCALMOVE_VALID
+			this->CheckLocalMove(this->pev->origin, pSound->m_vecOrigin, NULL, TRUE, NULL ) == LOCALMOVE_VALID
 		){
 			//look at it instead.
 			easyForcePrintLine("%s:ID%d LOOKIN AT THE BAIT!", this->getClassname(), this->monsterID);
@@ -2805,7 +2809,7 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 			*/
 
 			//setEnemyLKP(m_hEnemy);
-			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
+			returnCode = BuildRouteCheap( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
 
 
 			//if (returnCode == FALSE)
@@ -2821,7 +2825,7 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 			break;
 
 		case MOVEGOAL_LOCATION:
-			returnCode = BuildRoute( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
+			returnCode = BuildRouteCheap( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
 
 			//MODDD - can we do a nearest instead?              no
 			//if(returnCode == FALSE){
@@ -2833,7 +2837,7 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 		case MOVEGOAL_TARGETENT:
 			if (m_hTargetEnt != NULL)
 			{
-				returnCode = BuildRoute( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
+				returnCode = BuildRouteCheap( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
 
 				//if(!returnCode){
 				//	//is this okay?             no
@@ -3260,7 +3264,7 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 			outRoute[outCount] = m_Route[ m_iRouteIndex + i ];
 			outCount++;
 		}
-		else if ( CheckLocalMove ( vecStart, m_Route[m_iRouteIndex+i+1].vecLocation, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+		else if ( CheckLocalMove ( vecStart, m_Route[m_iRouteIndex+i+1].vecLocation, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
 		{
 			// Skip vert
 			continue;
@@ -3276,12 +3280,12 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 			vecSplit = (m_Route[m_iRouteIndex+i].vecLocation + vecStart) * 0.5;
 
 			int iType = (m_Route[m_iRouteIndex+i].iType | bits_MF_TO_DETOUR) & ~bits_MF_NOT_TO_MASK;
-			if ( CheckLocalMove ( vecStart, vecTest, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+			if ( CheckLocalMove ( vecStart, vecTest, pTargetEnt, FALSE, NULL ) == LOCALMOVE_VALID )
 			{
 				outRoute[outCount].iType = iType;
 				outRoute[outCount].vecLocation = vecTest;
 			}
-			else if ( CheckLocalMove ( vecSplit, vecTest, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+			else if ( CheckLocalMove ( vecSplit, vecTest, pTargetEnt, FALSE, NULL ) == LOCALMOVE_VALID )
 			{
 				outRoute[outCount].iType = iType;
 				outRoute[outCount].vecLocation = vecSplit;
@@ -4290,13 +4294,7 @@ BOOL CBaseMonster::getHasPathFindingMod(){
 EASY_CVAR_EXTERN_DEBUGONLY(drawDebugPathfinding)
 
 
-
 static const float stepChoiceArray[] = {LOCAL_STEP_SIZE, LOCAL_STEP_SIZE_MOD};
-
-
-
-
-
 
 
 int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist  )
@@ -4331,7 +4329,8 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 
 
 
-
+//MODDD - NEW.  Accepts whether to do the Z-check at the end on a successful route (can change its mind
+// if the intended end point is too high/low of where WALK_MOVE against the ground put me)
 //=========================================================
 // CheckLocalMove - returns TRUE if the caller can walk a 
 // straight line from its current origin to the given 
@@ -4346,7 +4345,7 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 // DON"T USE SETORIGIN! 
 //=========================================================
 #define LOCAL_STEP_SIZE	16
-int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist )
+int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist )
 {
 
 	Vector	vecStartPos;// record monster's position before trying the move
@@ -4363,11 +4362,31 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 	
 
 	// NOTICE!  If this is a movetype step (might be a safe assumption given this method isn't overridden to be wildly different?),
-	// snap vecEnd to the ground first.  Cases of the monster clearly reaching the goal but the towards point being 'too high' even though
-	// it was just placed above the ground are irritating.
-	Vector vecStartFiltered;  //piggyback off the DROP_TO_FLOOR call below
+	// snap vecEnd to the ground first.  Cases of the monster clearly reaching the goal but the towards point being 'too high' even
+	// though it was just placed above the ground are irritating.
+	
+	// NEVERMIND.  Always use vecStart and vecEnd.
+	// The main issue is only accuracy to the Z check at the end, being properly snapped to the ground has no bearing on WALK_MOVE's
+	// success after all, it's moreso used only for yaw purposes (how WALK_MOVE travels from its start point Z-wise).
+	// It is better to skip z-checks if they're partial checks (myOrigin + directionToGoal * 300), since there is no guarantee the Z
+	// of the target point will be on the ramp, it could even go through the ground that's passed over to reach there, often happens
+	// if the start or end point is deep behind the upward point of a ramp.  Being able to WALK_MOVE to this point at all is enough.
+
+	// BUT.  If CheckLocalMove is being used to see if a straight-line path to the goal itself, the Z check should be involved.
+	// The point of the Z check is to see that, after WALK_MOVE'ing to the destination, the target entity would be close enough for
+	// this route to have been worthwhile.  Reaching the point and going 'oh, that entity is still too high/low for me to do anything',
+	// or underneath/above where the entity is standing completely, is not good.
+
+	// ALSO.  If the snap-to-ground approach were to be used again,  check for tr.fStartSolid or tr.fAllSolid, I forget if only
+	// either is necessary.  Wait, no, use that "UTIL_PointContents(vec)" or whats-its-name to tell if the given vecEnd is
+	// going through the map.  If so, it would make more sense to rise up and look for where the ground is instead.
+	// Going down will likely return a point 100 lower and still in the map, since the trace ends at a change in 'in/out of map',
+	// so it works like penetration when starting inside the map. The point hit, if any, is more like an 'exit point' for the trace.
+
+	Vector vecStartFiltered;  // piggyback off the DROP_TO_FLOOR call below.  Or don't.
 	Vector vecEndFiltered;
 
+	/*
 	
 	if(this->isMovetypeFlying()){
 		// no change?
@@ -4379,9 +4398,18 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 		vecEndMod.z -= 100;
 		UTIL_TraceLine(vecEnd, vecEndMod, ignore_monsters, ENT(pev), &tr);
 
+		if( tr.fStartSolid == 0 && tr.fAllSolid == 0){
+			// ok
+		}else{
+			// ???? should not happen?
+			int x = 45;
+		}
+
 		vecEndFiltered = tr.vecEndPos;
 	}
-	
+	*/
+	vecStartFiltered = vecStart;
+	vecEndFiltered = vecEnd;
 
 
 
@@ -4401,6 +4429,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 	}
 
 
+	/*
 	//MODDD - used to be above the 'UTIL_SetOrigin' call above.  Moved here so that vecStartFiltered can be set to
 	// where the origin is now (ent to test snapped to the ground after being moved to vecStart).
 	if(this->isMovetypeFlying()){
@@ -4411,6 +4440,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 		//vecStartFiltered = pev->absmin.z
 		vecStartFiltered = pev->origin;
 	}
+	*/
 
 	// as-is, mostly
 	//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4470,8 +4500,6 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 		oldOrigin = pev->origin;
 		if ( !WALK_MOVE( ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY ) )
 		{// can't take the next step, fail!
-
-
 
 #ifdef USE_MOVEMENT_BOUND_FIX_ALT
 			if( EASY_CVAR_GET_DEBUGONLY(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ){
@@ -4543,15 +4571,10 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 
 				// any other info on it?
 				if (gpGlobals->trace_ent != NULL) {
-
 					CBaseEntity* testRef = CBaseEntity::Instance(gpGlobals->trace_ent);
-
 					int daInd = ENTINDEX(gpGlobals->trace_ent);
 
 					if(testRef != NULL){
-
-
-						
 						// draw the bounds of the thing that blocked me
 						// Way too spammy, need to do this only on MoveExecute calls.  In fact...
 						if(g_CheckLocalMoveCanReportBlocker){
@@ -4565,7 +4588,6 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 							}
 						}
 						
-
 						//const char* mahName = testRef->getClassname();
 						if( FClassnameIs(gpGlobals->trace_ent, "func_monsterclip")){
 							int x = 45;
@@ -4604,7 +4626,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 //				else
 				iReturn = LOCALMOVE_INVALID;
 				break;
-			}
+			}//END OF check for trace-hit matching target
 
 		}//WALK_MOVE check
 	}//FOR LOOP through flDist
@@ -4617,31 +4639,157 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 #endif
 
 
-	// what..?
-	if ( iReturn == LOCALMOVE_VALID && 	!(pev->flags & (FL_FLY|FL_SWIM) ) && (!pTarget || (pTarget->pev->flags & FL_ONGROUND)) )
-	{
-		// The monster can move to a spot UNDER the target, but not to it. Don't try to triangulate, go directly to the node graph.
-		// UNDONE: Magic # 64 -- this used to be pev->size.z but that won't work for small creatures like the headcrab
-		//MODDD - UHHHHhhhhh.    What??
-		// Now anything taller than 64 fails.  UGH.  Fantastic to run into. 
-		// Why not involve pev->size, like pev->size * 1.3?
-		//if ( fabs(vecEndFiltered.z - pev->origin.z) > 64 )
+	//MODDD - NEW.  Skip if told to.
+	if(doZCheck){
+		//MODDD - also, changed a bit.  The target not being on the ground shouldn't be important, it's just as 
+		// unhittable from being too far above/below my reach.
+		// ALSO. Removing the 'LOCALMOVE_VALID' requirement.  This check should happen even if WALK_MOVE failed to reach
+		// its point for any other reason already (something in the way that wasn't my target or trying to go over some
+		// otherwise impassible area) so that triangulation doesn't happen to try and fool us into thinking this is still
+		// a good idea.  Triangulate doesn't use the Z check, and no sense doing that when this point should've realized
+		// that once.
+		// To be clear, this check has to run to be able to see that the enemy is too far away Z-wise and explicitly forbid
+		// trying to triangulate up a better path.  Yes, I said that.
 
-		float maxZ_DistAllowed = pev->size.z * 1.2 + 16; //pev->size.z * 1.25;
-		float zDist = fabs(vecEndFiltered.z - pev->origin.z);
+		//if ( iReturn == LOCALMOVE_VALID && 	!(pev->flags & (FL_FLY|FL_SWIM) ) && (!pTarget || (pTarget->pev->flags & FL_ONGROUND)) )
+		if(
+			//iReturn == LOCALMOVE_VALID &&
+			!(pev->flags & (FL_FLY|FL_SWIM) )
+			//(!pTarget || (pTarget->pev->flags & FL_ONGROUND)) )
+		){
+			// The monster can move to a spot UNDER the target, but not to it. Don't try to triangulate, go directly to the node graph.
+			// UNDONE: Magic # 64 -- this used to be pev->size.z but that won't work for small creatures like the headcrab
+			//MODDD
+			// Now anything taller than 64 fails.  UGH.  Fantastic to run into. 
+			// Why not involve pev->size, like pev->size * 1.3?  Looks like the big issue with using a small 
+			// tolerance for z-dist is just from partial checklocalmove checks (myOrigin + vecDirToGoal * 300)
+			// giving too much z-dist from going to a point that's some distance from the terrain, even though
+			// the Z in partial checks isn't important, only comparing the goal to the final target does.
+			// This is left up to whatever calls CheckLocalMove instead (doZCheck). If we reach here, assume it's important.
+			// It does, after all, make sense to forbid a headcrab from trying to reach a point it can't stair-step up or
+			// melee attack from.  It jumps to its target anyway.
+			//if ( fabs(vecEndFiltered.z - pev->origin.z) > 64 )
 
-		DebugLine_SetupPoint(1, pev->origin, 255, 0, 255);
-		DebugLine_SetupPoint(2, vecEndFiltered, 255, 255, 255);
-
-		if ( zDist > maxZ_DistAllowed )
-		{
-			// too spammy in any map with lots of vertical level space (a2a1a).
-			//easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Route failed from reaching a point too far from the goal in Z compared to my height.  Difference in Z is: %.2f.  Most allowed: %.2f.", getClassname(), monsterID, zDist, maxZ_DistAllowed);
+			Vector myCenter = Center();
+			// How about from my center to the target's center insteaad (if they're close)?
+			//float maxZ_DistAllowed = pev->size.z * 0.4 + 6; //pev->size.z * 1.25;
+			float maxZ_DistAllowed = pev->size.z * 0.65 + 6; //pev->size.z * 1.25;
+			//float zDist = fabs(vecEndFiltered.z - pev->origin.z);
+			float zDist;
+			Vector vecTarget;
+			BOOL forcePass = FALSE;
+			BOOL snappedToTargetEnt = FALSE;
 			
+			if(pTarget != NULL){
+				Vector targetCenter = pTarget->Center();
+				float theDisto2D = Distance2D(myCenter, targetCenter);
 
-			iReturn = LOCALMOVE_INVALID_DONT_TRIANGULATE;
-		}
-	}
+				// was 0.63, 0.63 ?
+				if(theDisto2D < this->pev->size.x * 0.83 + pTarget->pev->size.x*0.83){
+					// Close enough to the target ent?  Go ahead, snap to its center for more accuracy
+					vecEndFiltered = targetCenter;
+					// !
+					vecEndFiltered.z = pTarget->pev->origin.z + pTarget->pev->mins.z; //pTarget->pev->absmin.z;
+					snappedToTargetEnt = TRUE;
+				}else{
+					// normal
+				}
+
+			}//pTarget check
+
+
+			if(!snappedToTargetEnt){
+				// If the target ent wasn't nearby or wasn't defined, snap vecEndFiltered
+				// to the ground.  That makes the Z comparison more fair.
+
+				// CONTENTS_SOLID?  WATER?  EMPTY?
+				int theContents = UTIL_PointContents(vecEndFiltered);
+
+				if(theContents != CONTENTS_SOLID){
+					//snap the vecEndFiltered to the ground then.
+					TraceResult t_tr;
+					Vector t_vecStart = vecEndFiltered;
+					Vector t_vecEnd = vecEndFiltered;
+					t_vecEnd.z -= 100;
+					UTIL_TraceLine(t_vecStart, t_vecEnd, ignore_monsters, ENT(pev), &t_tr);
+
+					vecEndFiltered = t_tr.vecEndPos;
+				}else{
+					// rise above the ground?
+					// And uh.  Not going to stop on reaching the exit point?   Yeah yeah uh,  okay then.
+					// Oh.  So looking at gauss.cpp, that is indeed the case: trace backwards from this end
+					// point to find the exit.   UHhhhhh sure.
+					// Only problem is, going too far high could land in the ceiling, which means tracing down
+					// to find its exit point too.
+					// So, move up in small increments and stop to go back down once a trace isn't AllSolid
+					// (ends in mid-air).
+
+					TraceResult t_tr;
+					Vector t_vecStart = vecEndFiltered;
+					Vector t_vecEnd = vecEndFiltered;
+
+					int tries = 5;
+
+					while(tries > 0){
+						t_vecEnd.z += 20;
+
+						UTIL_TraceLine(t_vecStart, t_vecEnd, ignore_monsters, ENT(pev), &t_tr);
+						if(t_tr.fAllSolid == 0){
+							// reached the open?  Start at that mid-air point instead (t_vecEnd)/
+							// and set the end to downard to see where the ground is.
+							// Yeah... at least that isn't overcomplicated or anything.
+							t_vecStart = t_vecEnd;
+							t_vecEnd.z -= 25;
+							break;
+						}
+
+						t_vecStart.z += 20;
+
+						tries--;
+					}
+
+					if(tries == 0){
+						// oh.  Ran out of tries, not much else can be done here.
+						easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Could not get point (%.2f,%.2f,%.2f) out of the map into the ground above!", getClassname(), monsterID, vecEndFiltered.x, vecEndFiltered.y, vecEndFiltered.z);
+
+						// There is moving in the yaw-wise dir of the monster though.  At that point just
+						// skip to allowing this anyway.
+						forcePass = TRUE;
+
+					}else{
+						//UTIL_TraceLine(t_tr.vecEndPos, t_vecEnd, ignore_monsters, ENT(pev), &t_tr);
+						UTIL_TraceLine(t_vecStart, t_vecEnd, ignore_monsters, ENT(pev), &t_tr);
+						//DebugLine_SetupPoint(3, vecEndFiltered, 0, 255, 255);
+
+						vecEndFiltered = t_tr.vecEndPos;
+					}
+					
+				}//point contents check
+			}//snappedToTargetEnt
+
+
+
+			// For now, just compare the bottoms of the bounds.
+
+			//zDist = fabs(vecEndFiltered.z - myCenter.z);
+			//zDist = fabs(vecEndFiltered.z - this->pev->absmin.z);
+			zDist = fabs(vecEndFiltered.z - (this->pev->origin.z + this->pev->mins.z) );
+			
+			// Why on EARTH is pev->origin.z + pev->mins.z or maxs.z different from
+			// a flat pev->absmin.z and pev->absmax.y?
+
+			//DebugLine_SetupPoint(1, pev->origin, 255, 0, 255);
+			//DebugLine_SetupPoint(2, vecEndFiltered, 0, 255, 0);
+
+			if ( forcePass || zDist > maxZ_DistAllowed )
+			{
+				// too spammy in any map with lots of vertical level space (a2a1a).
+				//easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Route failed from reaching a point too far from the goal in Z compared to my height.  Difference in Z is: %.2f.  Most allowed: %.2f.", getClassname(), monsterID, zDist, maxZ_DistAllowed);
+				
+				iReturn = LOCALMOVE_INVALID_DONT_TRIANGULATE;
+			}
+		}//localmove check, 
+	}//doZCheck
 	
 
 
@@ -4767,9 +4915,9 @@ void CBaseMonster::AdvanceRoute ( float distance, float flInterval )
 		{
 			// If we've just passed a path_corner, advance m_pGoalEnt
 			
-			
-			//if ( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) == bits_MF_TO_PATHCORNER )
-			if ( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) & bits_MF_TO_PATHCORNER )
+			//MODDD - HMMMmmmmmmmm revert
+			if ( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) == bits_MF_TO_PATHCORNER )
+			//if ( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) & bits_MF_TO_PATHCORNER )
 				m_pGoalEnt = m_pGoalEnt->GetNextTarget();
 
 			// IF both waypoints are nodes, then check for a link for a door and operate it.
@@ -4886,15 +5034,277 @@ int CBaseMonster::MovementGoalToMoveFlag(int iMoveGoal){
 }
 
 
+
+
+BOOL CBaseMonster::attemptRampFix(const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget){
+	float flDist;
+	Vector vecDir = (vecGoal - pev->origin).Normalize();
+	
+	//if( !localMovePass ){
+	//still a shot...?
+		
+	Vector rampTopPoint1;
+	Vector rampTopPoint2;
+	BOOL localMovePass = FALSE;
+
+	int rampFixAttempt = 0; 
+	//-1 = to go down (I'm higher than the goal, have to go down)
+	//0 = none (too flat, no ramp fix possible)
+	//1 = to go up (I'm lower than the goal, have to go up)
+
+	if(pev->origin.z > vecGoal.z + 20 ){
+		//above. 
+		rampFixAttempt = 1;
+	}else if(pev->origin.z < vecGoal.z + -20 ){
+		//below.
+		rampFixAttempt = -1;
+	}
+
+	if(rampFixAttempt != 0){
+		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: TRYING RAMPFIX...", getClassnameShort(), monsterID) );
+		//first, check the point where the first localMove check failed. Is this a ramp? Check the slope.
+			
+		debugVectorMode = 1;
+
+		BOOL hasTowardsRampNode = FALSE;
+
+		Vector vecDirFlatUnnormal = Vector(vecDir.x, vecDir.y, 0);
+		//Vector initFailPoint = pev->origin + vecDir * flDist;
+		Vector vecMyOrigin = pev->origin;
+		//Vector vecNextNode = m_Route[m_iRouteIndex].vecLocation;
+		Vector vecNextNode = vecGoal;
+
+		/*
+		TraceResult trPathFind;
+	    edict_t* pentIgnore = ENT( this->pev );
+		UTIL_TraceLine(vecMyOrigin, pev->origin + vecDir * flCheckDist, dont_ignore_monsters, pentIgnore, &trPathFind);
+		//CBaseEntity* pEntityHit;
+		*/
+
+		TraceResult trRampBeginAttempt;
+	    edict_t* pentIgnore;
+
+		Vector vecTraceStart;
+		Vector vecTraceEnd;
+
+
+		if(rampFixAttempt == 1){
+			//travel down the ramp.
+			//(go from the goal to MY origin to collide with the ramp first)
+			vecTraceStart = Vector(vecNextNode.x, vecNextNode.y, vecNextNode.z + 4);
+			vecTraceEnd = Vector(vecMyOrigin.x, vecMyOrigin.y, vecNextNode.z + 4);
+				
+			if(pTarget != NULL){
+				pentIgnore = ENT( pTarget->pev );
+			}else{
+				pentIgnore = ENT( this->pev );
+			}
+				
+		}else{
+			//travel up the ramp
+			vecTraceStart = Vector(vecMyOrigin.x, vecMyOrigin.y, vecMyOrigin.z + 4);
+			//vecTraceEnd = Vector(vecGoal.x, vecGoal.y, vecMyOrigin.z + 4);
+			vecTraceEnd = Vector(vecNextNode.x, vecNextNode.y, vecMyOrigin.z + 4);
+				
+			pentIgnore = ENT( this->pev );
+		}
+
+		/*
+		debugVector1 = vecRampLowPoint;
+		debugVector2 = rampTopPoint1;
+		debugVector3 = rampTopPoint2;
+		debugVector4 = vecGoalOrigin;
+		debugVectorsSet = TRUE;
+		*/
+
+		/*
+		debugVector1 = vecTraceStart;
+		debugVector2 = vecTraceEnd;
+		debugVectorsSet = TRUE;
+		debugFailColor = FALSE;
+		debugVectorMode = 2;
+		*/
+
+		//UTIL_TraceLine(vecTraceStart, vecTraceEnd, dont_ignore_monsters, pentIgnore, &trRampBeginAttempt);
+		UTIL_TraceLine(vecTraceStart, vecTraceEnd, ignore_monsters, pentIgnore, &trRampBeginAttempt);
+			
+		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BOTTOM TO UP: GOALPOS? (%.2f %.2f %.2f) SLD?:%d FRAC:%.2f N:(%.2f %.2f %.2f)", getClassnameShort(), this->monsterID,
+			vecGoal.x, vecGoal.y, vecGoal.z
+			, !trRampBeginAttempt.fAllSolid, trRampBeginAttempt.flFraction,
+			trRampBeginAttempt.vecPlaneNormal.x, trRampBeginAttempt.vecPlaneNormal.y, trRampBeginAttempt.vecPlaneNormal.z ) );
+
+		//MODDD TODO - is it possible for a ramp to have a vecPlaneNormal.z that is negative and still a typical ramp (as opposed to an incline down from the ceiling)?
+
+		//also, if the fracition is 1.0, that means nothing was hit.  That is important this time.
+		//if (!trPathFind.fAllSolid && trPathFind.flFraction < 1.0 && ((pEntityHit = CBaseEntity::Instance(trPathFind.pHit)) != NULL) ){
+		if (!trRampBeginAttempt.fAllSolid && trRampBeginAttempt.flFraction < 1.0 && (trRampBeginAttempt.vecPlaneNormal.z >= 0.92) ){
+
+			Vector distVect = (vecGoal - vecMyOrigin);
+			Vector distVectFlat = Vector(distVect.x, distVect.y, 0);
+			BOOL checkLocalMovePreRampTest;
+
+			Vector toBaseRamp;
+			Vector vecRampLowPoint;
+			if(rampFixAttempt == 1){
+				//travel down the ramp
+				toBaseRamp = -vecDirFlatUnnormal * distVectFlat.Length() * trRampBeginAttempt.flFraction;
+				vecRampLowPoint = vecNextNode + Vector(0, 0, 12) + toBaseRamp + vecDirFlatUnnormal * 6;
+			}else{
+				//travel up the ramp.
+				toBaseRamp = vecDirFlatUnnormal * distVectFlat.Length() * trRampBeginAttempt.flFraction;
+				vecRampLowPoint = vecMyOrigin + Vector(0, 0, 12) + toBaseRamp + -vecDirFlatUnnormal * 6;
+			}
+
+			/*
+			Vector vecRampLowPoint = vecMyOrigin + Vector(0, 0, 12) + toBaseRamp + -vecDirFlatUnnormal * 6;
+			if(toBaseRamp.Length() > 20){
+				hasTowardsRampNode = TRUE;
+			}else{
+				hasTowardsRampNode = FALSE;
+				//change. "I" am the ramp low point.
+				vecRampLowPoint = pev->origin;
+			}
+
+			if(!hasTowardsRampNode){
+				checkLocalMovePreRampTest = TRUE;
+			}else{
+				//checkLocalMovePreRampTest = CheckLocalMoveHull(pev->origin + Vector(0, 0, 12), vecRampLowPoint, pTarget, &flDist);
+				//HACK
+				checkLocalMovePreRampTest = TRUE;
+			}
+			*/
+
+			checkLocalMovePreRampTest = TRUE;
+
+			//if close enough, skip this check. otherwise, require it to be safe.
+			if(checkLocalMovePreRampTest ){
+				//this passed? continue with the ramp check.
+				Vector vecRampPlaneNormal = trRampBeginAttempt.vecPlaneNormal;
+				Vector vecGoalOrigin;
+				if(rampFixAttempt == 1){
+					//travel down.
+					vecGoalOrigin = vecMyOrigin;
+				}else{
+					//travel up.
+					//vecGoalOrigin = m_Route[m_iRouteIndex].vecLocation;  ??
+					vecGoalOrigin = vecGoal;
+				}
+
+				float dotTest = -DotProduct(vecRampPlaneNormal, vecDir);
+				//if(dotTest < 0.5){
+					//skipping the check for now.
+					Vector dirRawStartToGoal = ( vecGoalOrigin - vecRampLowPoint ).Normalize();
+						
+					//First, get a direction from the goal to the current point, flat-ways.
+					Vector dirFlatGoalToStart = projectionOntoPlane( dirRawStartToGoal, Vector(0, 0, 1) ).Normalize();
+					Vector dirUpRamp = projectionOntoPlane(dirRawStartToGoal, vecRampPlaneNormal).Normalize();
+
+					//columns by rows. NOT including the constant column.
+					Vector deltaOrigin = vecGoalOrigin + -vecRampLowPoint;
+					float par_t;
+
+					Vector n = Vector(0, 0, 1); //flat plane at top of ramp
+					Vector la = dirUpRamp;
+
+					float dot1 = DotProduct(n, deltaOrigin);
+					float dot2 = DotProduct(n, la);
+					if (dot2 != 0) {
+						par_t = dot1 / dot2;
+							
+						Vector vecIntersection = Vector(
+							dirUpRamp.x * par_t + vecRampLowPoint.x,
+							dirUpRamp.y * par_t + vecRampLowPoint.y,
+							dirUpRamp.z * par_t + vecRampLowPoint.z
+						);
+								
+						//rampTopPoint1 = vecIntersection + Vector(0, 0, 6) + -dirUpRamp * 3;
+						//rampTopPoint2 = vecIntersection + Vector(0, 0, 6) + -dirFlatGoalToStart * 3;
+						rampTopPoint1 = vecIntersection + Vector(0, 0, 12); //+ -dirUpRamp * 20;
+						rampTopPoint2 = vecIntersection + Vector(0, 0, 12);
+
+						BOOL passCheck1 = (CheckLocalMoveHull (vecRampLowPoint, rampTopPoint1, pTarget, &flDist) == LOCALMOVE_VALID);
+						BOOL passCheck2 = FALSE; //default.
+						//if(passCheck1){
+							passCheck2 = (CheckLocalMoveHull (rampTopPoint2, vecGoalOrigin, pTarget, &flDist) == LOCALMOVE_VALID);
+						//}
+								
+						if(rampFixAttempt == 1){
+							EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BOTTOM TO UP: PASS? %d %d", getClassnameShort(), this->monsterID, passCheck1, passCheck2 ) );
+						}else{
+							EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d TOP TO DOWN: PASS? %d %d", getClassnameShort(), this->monsterID, passCheck1, passCheck2) );
+						}
+
+						if(passCheck1 && passCheck2){
+							//we can go "up" the ramp.
+							localMovePass = TRUE;
+						}
+					}
+					else {
+						EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d HORRIBLE FAILURE YOU CANNOT DIVIDE BY 0 MORTAL", getClassnameShort(), this->monsterID ) );
+					}
+
+					if(localMovePass){
+						int currentNodeIndex = 0;
+								
+
+						//hasTowardsRampNode
+						if( (vecGoalOrigin - vecMyOrigin ).Length2D() > 60 ){
+							m_Route[ currentNodeIndex ].vecLocation = vecRampLowPoint;
+							m_Route[ currentNodeIndex ].iType = (iMoveFlag | bits_MF_RAMPFIX | bits_MF_TO_DETOUR);
+							currentNodeIndex++;
+						}
+
+						m_Route[ currentNodeIndex ].vecLocation = rampTopPoint1;
+						m_Route[ currentNodeIndex ].iType = (iMoveFlag | bits_MF_RAMPFIX | bits_MF_TO_DETOUR);
+						currentNodeIndex++;
+
+						m_Route[ currentNodeIndex ].vecLocation = vecGoal;
+						m_Route[ currentNodeIndex ].iType = iMoveFlag | bits_MF_RAMPFIX | bits_MF_IS_GOAL;
+						currentNodeIndex++;
+
+						m_iRouteLength = currentNodeIndex;
+
+						m_vecMoveGoal = vecGoal;
+						//RouteSimplify( pTarget );
+
+						debugVector1 = vecRampLowPoint;
+						debugVector2 = rampTopPoint1;
+						debugVector3 = rampTopPoint2;
+						debugVector4 = vecGoalOrigin;
+						debugVectorsSet = TRUE;
+						return TRUE;
+					}//END OF if(localMovePass)
+					else{
+						debugVector1 = vecRampLowPoint;
+						debugVector2 = rampTopPoint1;
+						debugVector3 = rampTopPoint2;
+						debugVector4 = vecGoalOrigin;
+						debugVectorsSet = TRUE;
+						debugFailColor = TRUE;
+					}
+
+				//}//END OF dot check
+			}//END OF pre move test (from current place to the bottom of the ramp, if not immediately there)
+		}//END OF trace-hit-something check
+	}else{
+		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: NO RAMP TEST.", getClassnameShort(), monsterID) );
+	}
+
+	// fell through? assume failure
+	return FALSE;
+}//attemptRampFix
+
+
+
+
 //=========================================================
 // BuildRoute
 //=========================================================
 BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
 {
 	float flDist;
-	Vector	vecApex;
+	Vector vecApex;
 	int	iLocalMove;
-
 
 	RouteNew();
 
@@ -4907,18 +5317,11 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 	m_iRouteLength = 1;  //so far?
 
 
-	//DebugLine_SetupPoint(0, m_Route[0].vecLocation, 255, 0, 0);
-
-	if(monsterID == 6){
-		int arrrr = 45;
-	}
-
-
 	// If a straight-line trace couldn't work, show me why
 	g_CheckLocalMoveCanReportBlocker = TRUE;
 
 // check simple local move
-	iLocalMove = CheckLocalMove( pev->origin, vecGoal, pTarget, &flDist );
+	iLocalMove = CheckLocalMove( pev->origin, vecGoal, pTarget, TRUE, &flDist );
 
 	g_CheckLocalMoveCanReportBlocker = FALSE;
 
@@ -4968,8 +5371,7 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 
 
 
-	Vector vecDir = (vecGoal - pev->origin).Normalize();
-
+	//Vector vecDir = (vecGoal - pev->origin).Normalize();
 
 	//TODO IN THE PATH FINDING:
 	//elevation check?  See if the goal (next node; m_Route[m_iRouteIndex].vecLocation) position is above my current position, or below.
@@ -4984,9 +5386,9 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 	/*
 
 	//
-	BOOL localMovePass = (CheckLocalMove ( pev->origin, vecGoal, pTarget, &flDist ) == LOCALMOVE_VALID);
-	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flWaypointDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
-	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
+	BOOL localMovePass = (CheckLocalMove ( pev->origin, vecGoal, pTarget, TRUE &flDist ) == LOCALMOVE_VALID);
+	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flWaypointDist, pTargetEnt, FALSE, &flDist ) == LOCALMOVE_VALID);
+	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, FALSE, &flDist ) == LOCALMOVE_VALID);
 	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: ROUTE FIRST PASS? %d", getClassnameShort(), monsterID, localMovePass) );
 	*/
 			//debugVectorMode = 0;
@@ -5002,269 +5404,109 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 
 
 	if(EASY_CVAR_GET_DEBUGONLY(pathfindRampFix) == 1){
-	//if( !localMovePass ){
-		//still a shot...?
-		
-		
-		Vector rampTopPoint1;
-		Vector rampTopPoint2;
-
-		BOOL localMovePass = FALSE;
-
-
-
-		int rampFixAttempt = 0; 
-		//-1 = to go down (I'm higher than the goal, have to go down)
-		//0 = none (too flat, no ramp fix possible)
-		//1 = to go up (I'm lower than the goal, have to go up)
-
-		if(pev->origin.z > vecGoal.z + 20 ){
-			//above. 
-			rampFixAttempt = 1;
-		}else if(pev->origin.z < vecGoal.z + -20 ){
-			//below.
-			rampFixAttempt = -1;
+		BOOL rampFixSuccess = attemptRampFix(vecGoal, iMoveFlag, pTarget);
+		if(rampFixSuccess){
+			// yipee
+			return TRUE;
 		}
-
-		if(rampFixAttempt != 0){
-			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: TRYING RAMPFIX...", getClassnameShort(), monsterID) );
-			//first, check the point where the first localMove check failed. Is this a ramp? Check the slope.
-			
-			debugVectorMode = 1;
-
-			BOOL hasTowardsRampNode = FALSE;
-
-			Vector vecDirFlatUnnormal = Vector(vecDir.x, vecDir.y, 0);
-			//Vector initFailPoint = pev->origin + vecDir * flDist;
-			Vector vecMyOrigin = pev->origin;
-			//Vector vecNextNode = m_Route[m_iRouteIndex].vecLocation;
-			Vector vecNextNode = vecGoal;
-
-			/*
-			TraceResult trPathFind;
-	        edict_t* pentIgnore = ENT( this->pev );
-			UTIL_TraceLine(vecMyOrigin, pev->origin + vecDir * flCheckDist, dont_ignore_monsters, pentIgnore, &trPathFind);
-			//CBaseEntity* pEntityHit;
-			*/
-
-			TraceResult trRampBeginAttempt;
-	        edict_t* pentIgnore;
-
-			Vector vecTraceStart;
-			Vector vecTraceEnd;
-
-
-			if(rampFixAttempt == 1){
-				//travel down the ramp.
-				//(go from the goal to MY origin to collide with the ramp first)
-				vecTraceStart = Vector(vecNextNode.x, vecNextNode.y, vecNextNode.z + 4);
-				vecTraceEnd = Vector(vecMyOrigin.x, vecMyOrigin.y, vecNextNode.z + 4);
-				
-				if(pTarget != NULL){
-					pentIgnore = ENT( pTarget->pev );
-				}else{
-					pentIgnore = ENT( this->pev );
-				}
-				
-			}else{
-				//travel up the ramp
-				vecTraceStart = Vector(vecMyOrigin.x, vecMyOrigin.y, vecMyOrigin.z + 4);
-				//vecTraceEnd = Vector(vecGoal.x, vecGoal.y, vecMyOrigin.z + 4);
-				vecTraceEnd = Vector(vecNextNode.x, vecNextNode.y, vecMyOrigin.z + 4);
-				
-				pentIgnore = ENT( this->pev );
-			}
-
-			/*
-			debugVector1 = vecRampLowPoint;
-			debugVector2 = rampTopPoint1;
-			debugVector3 = rampTopPoint2;
-			debugVector4 = vecGoalOrigin;
-			debugVectorsSet = TRUE;
-			*/
-
-			/*
-			debugVector1 = vecTraceStart;
-			debugVector2 = vecTraceEnd;
-			debugVectorsSet = TRUE;
-			debugFailColor = FALSE;
-			debugVectorMode = 2;
-			*/
-
-			//UTIL_TraceLine(vecTraceStart, vecTraceEnd, dont_ignore_monsters, pentIgnore, &trRampBeginAttempt);
-			UTIL_TraceLine(vecTraceStart, vecTraceEnd, ignore_monsters, pentIgnore, &trRampBeginAttempt);
-			
-			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BOTTOM TO UP: GOALPOS? (%.2f %.2f %.2f) SLD?:%d FRAC:%.2f N:(%.2f %.2f %.2f)", getClassnameShort(), this->monsterID,
-				vecGoal.x, vecGoal.y, vecGoal.z
-				, !trRampBeginAttempt.fAllSolid, trRampBeginAttempt.flFraction,
-				trRampBeginAttempt.vecPlaneNormal.x, trRampBeginAttempt.vecPlaneNormal.y, trRampBeginAttempt.vecPlaneNormal.z ) );
-
-			//MODDD TODO - is it possible for a ramp to have a vecPlaneNormal.z that is negative and still a typical ramp (as opposed to an incline down from the ceiling)?
-
-			//also, if the fracition is 1.0, that means nothing was hit.  That is important this time.
-			//if (!trPathFind.fAllSolid && trPathFind.flFraction < 1.0 && ((pEntityHit = CBaseEntity::Instance(trPathFind.pHit)) != NULL) ){
-			if (!trRampBeginAttempt.fAllSolid && trRampBeginAttempt.flFraction < 1.0 && (trRampBeginAttempt.vecPlaneNormal.z >= 0.92) ){
-
-				Vector distVect = (vecGoal - vecMyOrigin);
-				Vector distVectFlat = Vector(distVect.x, distVect.y, 0);
-				BOOL checkLocalMovePreRampTest;
-
-				Vector toBaseRamp;
-				Vector vecRampLowPoint;
-				if(rampFixAttempt == 1){
-					//travel down the ramp
-					toBaseRamp = -vecDirFlatUnnormal * distVectFlat.Length() * trRampBeginAttempt.flFraction;
-					vecRampLowPoint = vecNextNode + Vector(0, 0, 12) + toBaseRamp + vecDirFlatUnnormal * 6;
-				}else{
-					//travel up the ramp.
-					toBaseRamp = vecDirFlatUnnormal * distVectFlat.Length() * trRampBeginAttempt.flFraction;
-					vecRampLowPoint = vecMyOrigin + Vector(0, 0, 12) + toBaseRamp + -vecDirFlatUnnormal * 6;
-				}
-
-				/*
-				Vector vecRampLowPoint = vecMyOrigin + Vector(0, 0, 12) + toBaseRamp + -vecDirFlatUnnormal * 6;
-				if(toBaseRamp.Length() > 20){
-					hasTowardsRampNode = TRUE;
-				}else{
-					hasTowardsRampNode = FALSE;
-					//change. "I" am the ramp low point.
-					vecRampLowPoint = pev->origin;
-				}
-
-				if(!hasTowardsRampNode){
-					checkLocalMovePreRampTest = TRUE;
-				}else{
-					//checkLocalMovePreRampTest = CheckLocalMoveHull(pev->origin + Vector(0, 0, 12), vecRampLowPoint, pTarget, &flDist);
-					//HACK
-					checkLocalMovePreRampTest = TRUE;
-				}
-				*/
-
-				checkLocalMovePreRampTest = TRUE;
-
-				//if close enough, skip this check. otherwise, require it to be safe.
-				if(checkLocalMovePreRampTest ){
-					//this passed? continue with the ramp check.
-					Vector vecRampPlaneNormal = trRampBeginAttempt.vecPlaneNormal;
-					Vector vecGoalOrigin;
-					if(rampFixAttempt == 1){
-						//travel down.
-						vecGoalOrigin = vecMyOrigin;
-					}else{
-						//travel up.
-						//vecGoalOrigin = m_Route[m_iRouteIndex].vecLocation;  ??
-						vecGoalOrigin = vecGoal;
-					}
-
-					float dotTest = -DotProduct(vecRampPlaneNormal, vecDir);
-					//if(dotTest < 0.5){
-						//skipping the check for now.
-						Vector dirRawStartToGoal = ( vecGoalOrigin - vecRampLowPoint ).Normalize();
-						
-						//First, get a direction from the goal to the current point, flat-ways.
-						Vector dirFlatGoalToStart = projectionOntoPlane( dirRawStartToGoal, Vector(0, 0, 1) ).Normalize();
-						Vector dirUpRamp = projectionOntoPlane(dirRawStartToGoal, vecRampPlaneNormal).Normalize();
-
-						//columns by rows. NOT including the constant column.
-						Vector deltaOrigin = vecGoalOrigin + -vecRampLowPoint;
-						float par_t;
-
-						Vector n = Vector(0, 0, 1); //flat plane at top of ramp
-						Vector la = dirUpRamp;
-
-						float dot1 = DotProduct(n, deltaOrigin);
-						float dot2 = DotProduct(n, la);
-						if (dot2 != 0) {
-							par_t = dot1 / dot2;
-							
-							Vector vecIntersection = Vector(
-								dirUpRamp.x * par_t + vecRampLowPoint.x,
-								dirUpRamp.y * par_t + vecRampLowPoint.y,
-								dirUpRamp.z * par_t + vecRampLowPoint.z
-							);
-								
-							//rampTopPoint1 = vecIntersection + Vector(0, 0, 6) + -dirUpRamp * 3;
-							//rampTopPoint2 = vecIntersection + Vector(0, 0, 6) + -dirFlatGoalToStart * 3;
-							rampTopPoint1 = vecIntersection + Vector(0, 0, 12); //+ -dirUpRamp * 20;
-							rampTopPoint2 = vecIntersection + Vector(0, 0, 12);
-
-							BOOL passCheck1 = (CheckLocalMoveHull (vecRampLowPoint, rampTopPoint1, pTarget, &flDist) == LOCALMOVE_VALID);
-							BOOL passCheck2 = FALSE; //default.
-							//if(passCheck1){
-								passCheck2 = (CheckLocalMoveHull (rampTopPoint2, vecGoalOrigin, pTarget, &flDist) == LOCALMOVE_VALID);
-							//}
-								
-							if(rampFixAttempt == 1){
-								EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BOTTOM TO UP: PASS? %d %d", getClassnameShort(), this->monsterID, passCheck1, passCheck2 ) );
-							}else{
-								EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d TOP TO DOWN: PASS? %d %d", getClassnameShort(), this->monsterID, passCheck1, passCheck2) );
-							}
-
-							if(passCheck1 && passCheck2){
-								//we can go "up" the ramp.
-								localMovePass = TRUE;
-							}
-						}
-						else {
-							EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d HORRIBLE FAILURE YOU CANNOT DIVIDE BY 0 MORTAL", getClassnameShort(), this->monsterID ) );
-						}
-
-						if(localMovePass){
-							int currentNodeIndex = 0;
-								
-
-							//hasTowardsRampNode
-							if( (vecGoalOrigin - vecMyOrigin ).Length2D() > 60 ){
-								m_Route[ currentNodeIndex ].vecLocation = vecRampLowPoint;
-								m_Route[ currentNodeIndex ].iType = (iMoveFlag | bits_MF_RAMPFIX | bits_MF_TO_DETOUR);
-								currentNodeIndex++;
-							}
-
-							m_Route[ currentNodeIndex ].vecLocation = rampTopPoint1;
-							m_Route[ currentNodeIndex ].iType = (iMoveFlag | bits_MF_RAMPFIX | bits_MF_TO_DETOUR);
-							currentNodeIndex++;
-
-							m_Route[ currentNodeIndex ].vecLocation = vecGoal;
-							m_Route[ currentNodeIndex ].iType = iMoveFlag | bits_MF_RAMPFIX | bits_MF_IS_GOAL;
-							currentNodeIndex++;
-
-							m_iRouteLength = currentNodeIndex;
-
-							m_vecMoveGoal = vecGoal;
-							//RouteSimplify( pTarget );
-
-							debugVector1 = vecRampLowPoint;
-							debugVector2 = rampTopPoint1;
-							debugVector3 = rampTopPoint2;
-							debugVector4 = vecGoalOrigin;
-							debugVectorsSet = TRUE;
-							return TRUE;
-						}//END OF if(localMovePass)
-						else{
-							debugVector1 = vecRampLowPoint;
-							debugVector2 = rampTopPoint1;
-							debugVector3 = rampTopPoint2;
-							debugVector4 = vecGoalOrigin;
-							debugVectorsSet = TRUE;
-							debugFailColor = TRUE;
-						}
-
-					//}//END OF dot check
-				}//END OF pre move test (from current place to the bottom of the ramp, if not immediately there)
-			}//END OF trace-hit-something check
-		}else{
-			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Pathfinding: NO RAMP TEST.", getClassnameShort(), monsterID) );
-		}
-
-	}//END OF first  if( !localMovePass)  check
+	}//pathfindRampFix check
 
 	
 	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: TOTAL FAIL!", getClassnameShort(), monsterID) );
 
 	// b0rk
 	return FALSE;
-}
+}//BuildRoute
 
+
+// Clone, don't triangulate.
+BOOL CBaseMonster::BuildRouteCheap ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
+{
+	float flDist;
+	Vector vecApex;
+	int	iLocalMove;
+
+	RouteNew();
+
+	m_movementGoal = RouteClassify( iMoveFlag );
+
+// so we don't end up with no moveflags
+	m_Route[ 0 ].vecLocation = vecGoal;
+	m_Route[ 0 ].iType = iMoveFlag | bits_MF_IS_GOAL;
+
+	m_iRouteLength = 1;  //so far?
+
+
+	// If a straight-line trace couldn't work, show me why
+	g_CheckLocalMoveCanReportBlocker = TRUE;
+
+// check simple local move
+	iLocalMove = CheckLocalMove( pev->origin, vecGoal, pTarget, TRUE, &flDist );
+
+	g_CheckLocalMoveCanReportBlocker = FALSE;
+
+	if ( iLocalMove == LOCALMOVE_VALID )
+	{
+		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: I GOT SATISIFED 1", getClassnameShort(), monsterID) );
+		// monster can walk straight there!
+		return TRUE;
+	}
+
+// try to triangulate around any obstacles.
+	else if ( iLocalMove != LOCALMOVE_INVALID_DONT_TRIANGULATE && FTriangulate( pev->origin, vecGoal, flDist, pTarget, &vecApex ) )
+	{
+		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: I GOT SATISIFED 2", getClassnameShort(), monsterID) );
+		// there is a slightly more complicated path that allows the monster to reach vecGoal
+		m_Route[ 0 ].vecLocation = vecApex;
+		m_Route[ 0 ].iType = (iMoveFlag | bits_MF_TO_DETOUR);
+
+		m_Route[ 1 ].vecLocation = vecGoal;
+		m_Route[ 1 ].iType = iMoveFlag | bits_MF_IS_GOAL;
+
+		m_iRouteLength = 2;
+
+			
+			//WRITE_BYTE(MSG_BROADCAST, SVC_TEMPENTITY);
+			//WRITE_BYTE(MSG_BROADCAST, TE_SHOWLINE);
+			//WRITE_COORD(MSG_BROADCAST, vecApex.x );
+			//WRITE_COORD(MSG_BROADCAST, vecApex.y );
+			//WRITE_COORD(MSG_BROADCAST, vecApex.z );
+			//WRITE_COORD(MSG_BROADCAST, vecApex.x );
+			//WRITE_COORD(MSG_BROADCAST, vecApex.y );
+			//WRITE_COORD(MSG_BROADCAST, vecApex.z + 128 );
+			
+
+		RouteSimplify( pTarget );
+		return TRUE;
+	}
+
+// last ditch, try nodes
+	if ( FGetNodeRoute( vecGoal ) )
+	{
+//		ALERT ( at_console, "Can get there on nodes\n" );
+		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: I GOT SATISIFED 3", getClassnameShort(), monsterID) );
+		m_vecMoveGoal = vecGoal;
+		RouteSimplify( pTarget );
+		return TRUE;
+	}
+
+
+	debugVectorsSet = FALSE;
+	debugFailColor = FALSE;
+
+	if(EASY_CVAR_GET_DEBUGONLY(pathfindRampFix) == 1){
+		BOOL rampFixSuccess = attemptRampFix(vecGoal, iMoveFlag, pTarget);
+		if(rampFixSuccess){
+			// yipee
+			return TRUE;
+		}
+	}//pathfindRampFix check
+
+	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: TOTAL FAIL!", getClassnameShort(), monsterID) );
+
+	// b0rk
+	return FALSE;
+}//BuildRouteCheap
 
 
 //=========================================================
@@ -5316,8 +5558,7 @@ void CBaseMonster::InsertWaypoint ( Vector vecLocation, int afMoveFlags )
 	m_Route[ m_iRouteIndex ].vecLocation = vecLocation;
 	m_Route[ m_iRouteIndex ].iType = type;
 
-
-}
+}//InsertWaypoint
 
 
 
@@ -5339,8 +5580,8 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 	Vector		vecTop;// the spot we'll try to triangulate to on the top
 	Vector		vecBottom;// the spot we'll try to triangulate to on the bottom
 	Vector		vecFarSide;// the spot that we'll move to after hitting the triangulated point, before moving on to our normal goal.
-	int		i;
-	float	sizeX, sizeZ;
+	int i;
+	float sizeX, sizeZ;
 
 	// If the hull width is less than 24, use 24 because CheckLocalMove uses a min of
 	// 24.
@@ -5428,9 +5669,9 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 		}
 #endif
 
-		if ( CheckLocalMove( pev->origin, vecRight, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+		if ( CheckLocalMove( pev->origin, vecRight, pTargetEnt, FALSE, NULL ) == LOCALMOVE_VALID )
 		{
-			if ( CheckLocalMove ( vecRight, vecFarSide, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+			if ( CheckLocalMove ( vecRight, vecFarSide, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
 			{
 				if ( pApex )
 				{
@@ -5440,9 +5681,9 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 				return TRUE;
 			}
 		}
-		if ( CheckLocalMove( pev->origin, vecLeft, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+		if ( CheckLocalMove( pev->origin, vecLeft, pTargetEnt, FALSE, NULL ) == LOCALMOVE_VALID )
 		{
-			if ( CheckLocalMove ( vecLeft, vecFarSide, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+			if ( CheckLocalMove ( vecLeft, vecFarSide, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
 			{
 				if ( pApex )
 				{
@@ -5455,9 +5696,9 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 
 		if (isMovetypeFlying())
 		{
-			if ( CheckLocalMove( pev->origin, vecTop, pTargetEnt, NULL ) == LOCALMOVE_VALID)
+			if ( CheckLocalMove( pev->origin, vecTop, pTargetEnt, FALSE, NULL ) == LOCALMOVE_VALID)
 			{
-				if ( CheckLocalMove ( vecTop, vecFarSide, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+				if ( CheckLocalMove ( vecTop, vecFarSide, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
 				{
 					if ( pApex )
 					{
@@ -5469,9 +5710,9 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 				}
 			}
 #if 1
-			if ( CheckLocalMove( pev->origin, vecBottom, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+			if ( CheckLocalMove( pev->origin, vecBottom, pTargetEnt, FALSE, NULL ) == LOCALMOVE_VALID )
 			{
-				if ( CheckLocalMove ( vecBottom, vecFarSide, pTargetEnt, NULL ) == LOCALMOVE_VALID )
+				if ( CheckLocalMove ( vecBottom, vecFarSide, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
 				{
 					if ( pApex )
 					{
@@ -5531,7 +5772,6 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 	if (drawPathConstant) {
 		DrawMyRoute(0, 0, 176);
 	}
-
 
 
 	/*
@@ -5615,12 +5855,12 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 	flDist = 0;
 	
 	// !!! redirect to return!  was if(...)
-	BOOL localMoveResult = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
+	// Also, skipping the Z-check by sending FALSE, 2nd to last in the param list.  Retail would've always done it.
+	BOOL localMoveResult = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, FALSE, &flDist ) == LOCALMOVE_VALID);
 
 	return localMoveResult;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	*/
-
 
 
 	// NEW WAY
@@ -5705,29 +5945,45 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 		return -1;
 	}
 
+
+	BOOL checkTheZ;
+
 	// if the waypoint is closer than CheckDist, CheckDist is the dist to waypoint
 	if (flWaypointDist < DIST_TO_CHECK)
 	{
 		flCheckDist = flWaypointDist;
+
+		checkTheZ = TRUE;
+
 	}
 	else
 	{
 		flCheckDist = DIST_TO_CHECK;
+		// incomplete dist?  Don't check the Z, 
+		// Wait!
+		if(
+			m_Route[m_iRouteIndex].iType & (bits_MF_TO_ENEMY | bits_MF_TO_TARGETENT) &&
+			m_Route[m_iRouteIndex].iType & (bits_MF_IS_GOAL)
+			){
+			checkTheZ = TRUE;
+		}else{
+			checkTheZ = FALSE;
+		}
 	}
 
 	//MODDD - bit checks instead now.
-	//if ( (m_Route[ m_iRouteIndex ].iType & (~bits_MF_NOT_TO_MASK)) == bits_MF_TO_ENEMY )
-	if ((m_Route[m_iRouteIndex].iType & (~bits_MF_NOT_TO_MASK)) & bits_MF_TO_ENEMY)
+	// Actualy leeeeeeet's be careful about this kind of thing,  keep the strict 'bits_MF_TO_ENEMY' exclusiveness.
+	if ( (m_Route[ m_iRouteIndex ].iType & (~bits_MF_NOT_TO_MASK)) == bits_MF_TO_ENEMY )
+	//if ((m_Route[m_iRouteIndex].iType & (~bits_MF_NOT_TO_MASK)) & bits_MF_TO_ENEMY)
 	{
 		// only on a PURE move to enemy ( i.e., ONLY MF_TO_ENEMY set, not MF_TO_ENEMY and DETOUR )
 		pTargetEnt = m_hEnemy;
 	}
-	//else if ( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) == bits_MF_TO_TARGETENT )
-	else if ((m_Route[m_iRouteIndex].iType & ~bits_MF_NOT_TO_MASK) & bits_MF_TO_TARGETENT)
+	else if ( (m_Route[ m_iRouteIndex ].iType & ~bits_MF_NOT_TO_MASK) == bits_MF_TO_TARGETENT )
+	//else if ((m_Route[m_iRouteIndex].iType & ~bits_MF_NOT_TO_MASK) & bits_MF_TO_TARGETENT)
 	{
 		pTargetEnt = m_hTargetEnt;
 	}
-
 
 
 
@@ -5755,7 +6011,7 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 	flDist = 0;
 
 
-	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flWaypointDist, pTargetEnt, &flDist ) == LOCALMOVE_VALID);
+	//BOOL localMovePass = (CheckLocalMove ( pev->origin, pev->origin + vecDir * flWaypointDist, pTargetEnt, checkTheZ, &flDist ) == LOCALMOVE_VALID);
 
 	BOOL localMovePass;
 
@@ -5769,12 +6025,16 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 	g_CheckLocalMoveCanReportBlocker = TRUE;
 	// Let this check draw extra info, checking some dozens of nodes and printing out any reason they can't work is obnoxious
 
+	Vector vecCheckStart = pev->origin;
+	Vector vecCheckEnd = pev->origin + vecDir * flCheckDist;
+
+
 	if ((m_Route[m_iRouteIndex].iType & ~bits_MF_NOT_TO_MASK) & (useHullCheckMask)) {
 		//for now...
-		localMovePass = (CheckLocalMoveHull(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) == LOCALMOVE_VALID);
+		localMovePass = (CheckLocalMoveHull(pev->origin, vecCheckEnd, pTargetEnt, &flDist) == LOCALMOVE_VALID);
 		//localMovePass = TRUE;
 
-		//DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 0, 255, 0);
+		//DebugLine_Setup(0, pev->origin, vecCheckEnd, 0, 255, 0);
 
 		if (!localMovePass) {
 			EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d Move: CheckLocalMoveHull Failed!!!", getClassnameShort(), monsterID));
@@ -5782,17 +6042,16 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 
 	}
 	else {
-		localMovePass = (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) == LOCALMOVE_VALID);
+		localMovePass = (CheckLocalMove(pev->origin, vecCheckEnd, pTargetEnt, checkTheZ, &flDist) == LOCALMOVE_VALID);
 
 		
 		//if (localMovePass == 1) {
-		//	DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 0, 255, 0);
+		//	DebugLine_Setup(0, pev->origin, vecCheckEnd, 0, 255, 0);
 		//}
 		//else {
-		//	DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, 255, 0, 0);
+		//	DebugLine_Setup(0, pev->origin, vecCheckEnd, 255, 0, 0);
 		//}
 		
-
 
 		if (localMovePass) {
 			//if it passed, likely didn't bother writing anything to flDist. Just go ahead and assume it was full, that is what passing means.
@@ -5801,7 +6060,7 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 
 		if (drawPathConstant) {
 			//Show the result of the recent localMove?
-			::DebugLine_Setup(0, pev->origin, pev->origin + vecDir * flCheckDist, (flDist / flCheckDist));
+			::DebugLine_Setup(0, pev->origin, vecCheckEnd, (flDist / flCheckDist));
 		}
 
 		if (!localMovePass) {
@@ -5811,13 +6070,9 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 
 	g_CheckLocalMoveCanReportBlocker = FALSE;
 
-
 	return localMovePass;
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-
 }//MovePRE
-
 
 
 
@@ -5850,8 +6105,8 @@ void CBaseMonster::Move ( float flInterval )
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// !!! cange to tie into the new modular form
-	//if (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist) != LOCALMOVE_VALID)
+	// !!! changed to tie into the new modular form
+	//if (CheckLocalMove(pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, FALSE, &flDist) != LOCALMOVE_VALID)
 	if(localMovePass != 1)
 	{
 		CBaseEntity* pBlocker;
@@ -5953,11 +6208,10 @@ void CBaseMonster::Move ( float flInterval )
 
 
 
-
 	
 	//MODDD - new way!
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//if ( CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, &flDist ) != LOCALMOVE_VALID )
+	//if ( CheckLocalMove ( pev->origin, pev->origin + vecDir * flCheckDist, pTargetEnt, FALSE, &flDist ) != LOCALMOVE_VALID )
 	if( localMovePass != 1 )
 	{
 		CBaseEntity *pBlocker;
@@ -6044,25 +6298,12 @@ void CBaseMonster::Move ( float flInterval )
 						// Before admitting failure, do a check. Are we close enough to the goal to let this count as success?
 					
 						//m_iRouteIndex
-						WayPoint_t* waypointGoalRef = NULL;
-
-						
-						//if(m_Route[ 0 ].iType & bits_MF_IS_GOAL){
-						//	waypointGoalRef = &m_Route[ 0 ];
-						//}else if(m_Route[ 1 ].iType & bits_MF_IS_GOAL){
-						//	waypointGoalRef = &m_Route[ 1 ];
-						//	//is our current destination waypoint not 0 or 1 but the goal? 0 and 1 have already been tried of course.
-						//}else if(m_iRouteIndex != 0 && m_iRouteIndex != 1 && (m_Route[ m_iRouteIndex ].iType & bits_MF_IS_GOAL)){
-						//	waypointGoalRef = &m_Route[ m_iRouteIndex ];
-						//}
-						
-
+						WayPoint_t* waypointGoalRef;
 						waypointGoalRef = GetGoalNode();
 
 						////////////////////////////////////////////////
 						if( ( waypointGoalRef != NULL && waypointGoalRef->iType & bits_MF_IS_GOAL) )
 						{
-
 							float distanceee = (waypointGoalRef->vecLocation - pev->origin ).Length();
 							
 							////////////////////////////////////////////////////////////
@@ -6092,7 +6333,6 @@ void CBaseMonster::Move ( float flInterval )
 
 
 
-
 							//NOTICE - this allowed distance is very floaty. It is the expected distance to move in a frame times a number to go a bit further.
 							//...no, our movement speed is unimportant. Use a constant distance instead, possibly factor in this monster's own size later.
 							// ... < (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval * 5)
@@ -6101,21 +6341,21 @@ void CBaseMonster::Move ( float flInterval )
 							EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("PathfindEdgeCheck: DISTANCE TO GOAL: %.2f MAX ALLOWED: %.2f", distanceee, maxDist));
 							if(distanceee <= maxDist){
 
-								//Is there a straight line from me to the goal?
+								// Is there a straight line from me to the goal?
 								TraceResult trTemp;
 								UTIL_TraceLine ( pev->origin + Vector(0, 0, 5), waypointGoalRef->vecLocation + Vector(0, 0, 5), dont_ignore_monsters, dont_ignore_glass,  ENT(pev), &trTemp );
 
 								if(drawPathConstant){
 									DebugLine_ClearAll();
 								}
+
 								if( trTemp.flFraction==1 || trTemp.pHit == NULL || (m_hEnemy != NULL && trTemp.pHit == m_hEnemy.Get()) ){
-									//if nothing was hit or I happened to hit my enemy with this trace, pass.
+									// if nothing was hit or I happened to hit my enemy with this trace, pass.
 									
 									MovementComplete();
 									return;
 								}else{
 									EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("PathfindEdgeCheck: TRACE FAILED?! classname:%s : fract:%.2f", STRING(trTemp.pHit->v.classname), trTemp.flFraction));
-									
 									
 									if(drawPathConstant){
 										DebugLine_Setup(0, pev->origin+Vector(0, 0, 5), waypointGoalRef->vecLocation + Vector(0, 0, 5), trTemp.flFraction);
@@ -7577,14 +7817,22 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 			// usual cheaper way
 			//MODDD - Wait.  Why didn't this receive this monster's 'm_afCapability'?  It might be pointless but why not.
 			// (last parameter used to be 0)
-			passingCondition = WorldGraph.NextNodeInRoute(iMyNode, nodeNumber, iMyHullIndex, m_afCapability) != iMyNode;
+			// WAIT!  Bad idea to send out m_afCapability on its own.  It should be thought of as a 'cap index', with choices
+			// 0 and 1 only.  Which choice to use comes from checking m_afCapability for the presence of certain flags.
+			// Still beats me why even that much wasn't done here, wandering around to a nearest point may as well
+			// use whatever capability.
+			int iCap = WorldGraph.CapIndex(m_afCapability);
+			passingCondition = WorldGraph.NextNodeInRoute(iMyNode, nodeNumber, iMyHullIndex, iCap) != iMyNode;
 		}else{
 			// WARNING!  Very bad idea, many FindShortestPath calls like this lags like mad.  Don't do that.
 			// If a FL_MONSTERCLIP, just try CheckLocalMove from here to the dest, they're usually pretty simple checks.
 			/*
 			int iPath[ MAX_PATH_SIZE ];
 			// using FL_MONSTERCLIP?  can't trust no predetermined route info
+			
 			g_routeTempMonster = this;
+			// Assume the movegoal is set if it will be relevant?
+			g_routeTempMonster_GoalEnt = GetGoalEntity();
 			int daRouteSize = WorldGraph.FindShortestPath(iPath, iMyNode, nodeNumber, iMyHullIndex, m_afCapability);
 			g_routeTempMonster = NULL;
 			if(daRouteSize > 0){
@@ -7593,7 +7841,7 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 				passingCondition = FALSE;
 			}
 			*/
-			passingCondition = (CheckLocalMove(WorldGraph.Node(iMyNode).m_vecOrigin, WorldGraph.Node(nodeNumber).m_vecOrigin, m_hEnemy, NULL) == LOCALMOVE_VALID);
+			passingCondition = (CheckLocalMove(WorldGraph.Node(iMyNode).m_vecOrigin, WorldGraph.Node(nodeNumber).m_vecOrigin, m_hEnemy, TRUE, NULL) == LOCALMOVE_VALID);
 		}
 
 
@@ -7604,7 +7852,6 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 			// is it close?
 			if ( flDist > flMinDist && flDist < flMaxDist)
 			{
-
 				BOOL unobscurred = FALSE;
 
 
@@ -8519,7 +8766,12 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	// Record the monster checking the nodes for any node logic to be aware of (per some CVars) this call.
 	// Retail was never aware of this in nodes.cpp, besides getting the hull-size of the calling monster
 	// early on.
+
+
 	g_routeTempMonster = this;
+	// Assume the movegoal is set if it will be relevant?
+	g_routeTempMonster_GoalEnt = GetGoalEntity();
+
 
 	iSrcNode = WorldGraph.FindNearestNode ( pev->origin, this );
 	iDestNode = WorldGraph.FindNearestNode ( vecDest, this );
@@ -8598,19 +8850,10 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 		// ---Should we set some flag to do something about this...? Ranged AI can just try another nearby node also close to the enemy
 		// to see if that is a point with a clear shot?
 
-		//go ahead and try the straight-shot.
-		CBaseEntity* goalEnt = NULL;
-		if(m_hEnemy != NULL){
-			//goalEnt = (CBaseEntity *)GET_PRIVATE( m_hEnemy.Get( ) );
-			goalEnt = m_hEnemy.GetEntity();
-		}
+		CBaseEntity* goalEnt = GetGoalEntity();
 
-		// NO.  Checking m_vecMoveGoal is a bad idea!  That's where we wanted to go to begin with, which of
-		// course we can't go to, that was the whole point of trying to use a route.
-		// instead, go towards the dest node we picked.
-		
 		CNode& thatNode = WorldGraph.Node(iDestNode);  // same as iSrcNode here
-		Vector currentNodeLoc = thatNode.m_vecOrigin + pev->view_ofs;
+		Vector currentNodeLoc = thatNode.m_vecOrigin;
 
 		// !!! But it is worth checking to see that the goal can be reached from this node, however.  If the goal is on
 		// top of some huge cliff, a nearest node 2 feet away won't be very helpful anyway.
@@ -8618,33 +8861,61 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 		// types of movegoals (entity, target, location, node, etc.?).
 		// And should 'vecDest' have  + pev->view_ofs added?  If the movegoaltype is a location, probably.
 		// Check for that later, maybe?
-		float distFromMeToNode = Distance(pev->origin + pev->view_ofs, currentNodeLoc);
+		float distFromMeToNode = Distance(pev->origin, currentNodeLoc);
 		float distFromNodeToGoal = Distance(currentNodeLoc, vecDest);
 
-		if(distFromMeToNode > 400 || distFromNodeToGoal > 400){
-			// give up then, unlikely for this to be any good.
-			return FALSE;
-		}
 
-		// still going?  ok, CheckLocalMove checks ahoy.
-
-		//if(this->CheckLocalMove(pev->origin, m_vecMoveGoal, goalEnt, NULL)){
-		if(this->CheckLocalMove(pev->origin + pev->view_ofs, currentNodeLoc, goalEnt, NULL) == LOCALMOVE_VALID){
-			// ok, how about from that node to the dest?
-			
-			if(this->CheckLocalMove(currentNodeLoc, vecDest, goalEnt, NULL) == LOCALMOVE_VALID){
-				// ok, fall through then.
-			}else{
-				// oh
+		if(distFromMeToNode > 350){
+			// If we're too far from the start, go ahead and assume it's ok to reach.  A line-trace was already needed
+			// to figure out that this monster has a straight-line path to the node anyway.
+		}else{
+			// Closer?  Go ahead, CheckLocalMove
+			BOOL testPass = (CheckLocalMove(pev->origin, currentNodeLoc, goalEnt, TRUE, NULL) == LOCALMOVE_VALID);
+			if (!testPass){
 				return FALSE;
 			}
-		}else{
-			// No!
-			// DebugLine_Setup(0, pev->origin + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
-			return FALSE;
 		}
 
-	}
+		// Still good?
+		if(distFromNodeToGoal > 350){
+			// If we're too far from the end, go ahead and assume it's ok to reach too.
+			// Could always check from 350 units away from the goal to the goal to see if the 
+			// last stretch is valid too, or even only that.
+		}else{
+			// Closer?  Go ahead, CheckLocalMove
+			BOOL testPass = (CheckLocalMove(currentNodeLoc, vecDest, goalEnt, TRUE, NULL) == LOCALMOVE_VALID);
+			if(!testPass){
+				//DebugLine_Setup(0, pev->origin + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
+				return FALSE;
+			}
+		}
+
+	}else if(iResult > 2){
+		// Any other route?  Just check to see that the dest-node can reach vecDest, that is important.
+
+		CNode& thatNode = WorldGraph.Node(iDestNode);
+		Vector currentNodeLoc = thatNode.m_vecOrigin;
+		float distFromNodeToGoal = Distance(currentNodeLoc, vecDest);
+
+		CBaseEntity* goalEnt = GetGoalEntity();
+
+		if(distFromNodeToGoal > 350){
+			// If we're too far from the end, go ahead and assume it's ok to reach too.
+			// Could always check from 350 units away from the goal to the goal to see if the 
+			// last stretch is valid too, or even only that.
+		}else{
+			// Closer?  Go ahead, CheckLocalMove.
+			//if(!(pev->flags & FL_MONSTERCLIP)){
+				BOOL testPass = (CheckLocalMove(currentNodeLoc, vecDest, goalEnt, TRUE, NULL) == LOCALMOVE_VALID);
+				if(!testPass){
+					//DebugLine_Setup(0, pev->origin + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
+					return FALSE;
+				}
+			//}
+		}
+
+	}// same-src-dest-node check
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 
@@ -8764,17 +9035,13 @@ int CBaseMonster::FindHintNode ( void )
 
 
 void CBaseMonster::reportNetName(void){
-
-
 	const char* netnameBetter;
 	if(FStringNull(pev->netname) || ((netnameBetter = STRING(pev->netname)) == NULL)  ){
 		easyForcePrintLine("%s:%d MY NETNAME IS %s", this->getClassname(), this->monsterID, "__NULL__");
 	}else{
 		easyForcePrintLine("%s:%d MY NETNAME IS %s", this->getClassname(), this->monsterID, netnameBetter);
 	}
-
 }
-
 
 
 char* getActivityName(Activity arg_act){
@@ -9197,7 +9464,7 @@ BOOL CBaseMonster::FindLateralCover ( const Vector &vecThreat, const Vector &vec
 		
 		if (tr.flFraction != 1.0)
 		{
-			if ( FValidateCover ( vecLeftTest ) && CheckLocalMove( pev->origin, vecLeftTest, NULL, NULL ) == LOCALMOVE_VALID )
+			if ( FValidateCover ( vecLeftTest ) && CheckLocalMove( pev->origin, vecLeftTest, NULL, FALSE, NULL ) == LOCALMOVE_VALID )
 			{
 				if ( MoveToLocation( ACT_RUN, 0, vecLeftTest ) )
 				{
@@ -9211,7 +9478,7 @@ BOOL CBaseMonster::FindLateralCover ( const Vector &vecThreat, const Vector &vec
 		
 		if ( tr.flFraction != 1.0 )
 		{
-			if (  FValidateCover ( vecRightTest ) && CheckLocalMove( pev->origin, vecRightTest, NULL, NULL ) == LOCALMOVE_VALID )
+			if (  FValidateCover ( vecRightTest ) && CheckLocalMove( pev->origin, vecRightTest, NULL, FALSE, NULL ) == LOCALMOVE_VALID )
 			{
 				if ( MoveToLocation( ACT_RUN, 0, vecRightTest ) )
 				{
@@ -10148,7 +10415,7 @@ int CBaseMonster::CanUseGermanModel(){
 
 
 // Try to find the earliest node that is marked GOAL. Sometimes this gets shifted around from 0
-WayPoint_t* CBaseMonster::GetGoalNode(){
+WayPoint_t* CBaseMonster::GetGoalNode(void){
 
 	/*
 	for(int i = 0; i < m_iRouteLength; i++){
@@ -10179,6 +10446,27 @@ WayPoint_t* CBaseMonster::GetGoalNode(){
 	// the max number of nodes a route can hold (ROUTE_SIZE).
 	return NULL;
 }//END OF getGoalNode
+
+
+// Use the current 'moveGoal' type to tell which entity handle (m_hEnemy, m_hTarget, or none)
+// has the relevant entity to use as a 'goal' for pathfinding calls, most likely CheckLocalMove.
+// The goal ent is able to be hit by pathfinding and still count as a 'successful' path.  With it
+// missing some of the pathfind failures can seem silly.
+CBaseEntity* CBaseMonster::GetGoalEntity(void){
+	if(m_movementGoal == MOVEGOAL_ENEMY){
+		if(m_hEnemy != NULL){
+			return m_hEnemy.GetEntity();
+		}
+	}else if(m_movementGoal == MOVEGOAL_TARGETENT){
+		if(m_hTargetEnt != NULL){
+			return m_hTargetEnt.GetEntity();
+		}
+	}else{
+		// No entity associated with any other movegoals.
+	}
+	return NULL;
+}
+
 
 
 //MODDD - off for most.  Some new NPCs may use this (or old could be made to).
@@ -10365,7 +10653,11 @@ void CBaseMonster::setEnemyLKP(const Vector& argNewVector, const Vector& extraAd
 // at the lowest point of the monster's bounding box).
 // Archers can use this to try and path to an enemy's center instead of its feet.
 void CBaseMonster::setEnemyLKP(CBaseEntity* theEnt){
+	//m_vecEnemyLKP = theEnt->pev->origin;
 	m_vecEnemyLKP = theEnt->pev->origin;
+
+	//m_vecEnemyLKP.z += theEnt->pev->mins.z
+
 	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = FALSE; //this is the real deal.
 }

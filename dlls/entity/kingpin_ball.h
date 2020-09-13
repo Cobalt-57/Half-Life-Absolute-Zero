@@ -44,7 +44,7 @@ public:
 	void Stop(void);
 	void SetActivity(Activity NewActivity);
 	
-	int CheckLocalMove( const Vector& vecStart, const Vector& vecEnd, CBaseEntity* pTarget, float* pflDist );
+	int CheckLocalMove( const Vector& vecStart, const Vector& vecEnd, CBaseEntity* pTarget, BOOL doZCheck, float* pflDist );
 	
 	float getFadeOutAmount(void);
 	float StartHealth(void);
