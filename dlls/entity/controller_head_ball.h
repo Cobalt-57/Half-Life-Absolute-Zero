@@ -65,6 +65,10 @@ public:
 
 	void AdministerZap(CBaseEntity* pEntity, TraceResult& tr);
 
+	int getNodeTypeAllowed(void);
+	int getHullIndexForNodes(void);
+
+
 };
 
 

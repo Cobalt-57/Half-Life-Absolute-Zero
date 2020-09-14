@@ -9,6 +9,7 @@
 #include "util_debugdraw.h"
 #include "squidspit.h"
 #include "weapons.h"
+#include "nodes.h"
 #include "archer_ball.h"
 
 
@@ -3298,6 +3299,9 @@ void CArcher::setEnemyLKP(CBaseEntity* theEnt){
 	investigatingAltLKP = FALSE;
 }//
 
+int CArcher::getNodeTypeAllowed(void){
+	return bits_NODE_WATER;
+}
 
 /*
 // wait. nevermind, go ahead.  If 'Move' is barely changed, should be safe to use segmentedmove.

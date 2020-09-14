@@ -278,10 +278,18 @@ BOOL CBasePlayerWeapon::DefaultDeploy(char* szViewModel, char* szWeaponModel, in
 	
 	///////////////////////////////////////////////////////////////////////////////////////////
 
+	// ALSO, if any logic below gets put back in, try setting 
+	// the other attacks (primary/secondary).  Seems to be weirdness if m_flNextAttack gets set
+	// without those.  (SetAttackDelays does this, put after changing m_flNextAttack)
+	//SetAttackDelays(m_pPlayer->m_flNextAttack);
+
+
 
 	// preference, what looks better with or without holstering.   Maybe?  Really don't know anymore.
 	/*
 	if(EASY_CVAR_GET(cl_holster) == 1){
+		// !!! RETAIL WAY.
+
 		if ( !CanDeploy() )
 			return FALSE;
 

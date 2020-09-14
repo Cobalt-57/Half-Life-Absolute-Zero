@@ -45,6 +45,7 @@ GetViewEntity
 Return's the current weapon/view model
 =================
 */
+//MODDD - also be aware of IEngineStudio.GetViewEntity(), but no clue what the difference is, if any
 struct cl_entity_s *GetViewEntity( void )
 {
 	return gEngfuncs.GetViewModel();

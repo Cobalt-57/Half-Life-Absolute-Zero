@@ -2654,12 +2654,12 @@ void CBasePlayer::WaterMove()
 		}
 	}
 
-	if (pev->watertype == CONTENT_LAVA)		// do damage
+	if (pev->watertype == CONTENTS_LAVA)		// do damage
 	{
 		if (pev->dmgtime < gpGlobals->time)
 			TakeDamage(VARS(eoNullEntity), VARS(eoNullEntity), 10 * pev->waterlevel, DMG_BURN);
 	}
-	else if (pev->watertype == CONTENT_SLIME)		// do damage
+	else if (pev->watertype == CONTENTS_SLIME)		// do damage
 	{
 		pev->dmgtime = gpGlobals->time + 1;
 		TakeDamage(VARS(eoNullEntity), VARS(eoNullEntity), 4 * pev->waterlevel, DMG_ACID);
@@ -5820,7 +5820,7 @@ void CBasePlayer::PostThink()
 		}
 
 
-		if (pev->watertype == CONTENT_WATER)
+		if (pev->watertype == CONTENTS_WATER)
 		{
 			// Did he hit the world or a non-moving entity?
 			// BUG - this happens all the time in water, especially when 

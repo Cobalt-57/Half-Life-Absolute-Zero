@@ -206,8 +206,6 @@ BOOL CShotgun::Deploy( )
 	//if ( flRndSound <= 0.5 )
 
 
-
-
 	//Just try to play at all only if using soundSentenceSave. This stupid meme isn't worth a "could not precache" notice or "missing file" problem.
 #ifndef CLIENT_DLL
 	if(EASY_CVAR_GET(soundSentenceSave) == 1){
@@ -217,8 +215,6 @@ BOOL CShotgun::Deploy( )
 	}
 #endif
 	
-
-
 
 	//MODDD - offermore specific deploy anim time after skipping other params.
 	return DefaultDeploy( "models/v_shotgun.mdl", "models/p_shotgun.mdl", SHOTGUN_DRAW, "shotgun", 0, 0, 13.0/24.0 );

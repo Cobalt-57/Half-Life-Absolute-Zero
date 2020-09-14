@@ -38,6 +38,18 @@
 // NOTE - m_nFrameCount starts counting down at 0 when the current map loaded changes (any way: from loading a game,
 // changing the map by console, or taking a transition).
 
+// HOWEVER.   beware.   The closest thing to a 'think' we have (thanks devs) is looking to see whether the m_nFrameCount
+// has changed from the cached count (m_nCachedFrameCount) in StudioDrawModel, since this method likely gets called many
+// times per frame (once for every single modeled entity able to be seen by the player's camera, interestingly enough).
+// Problem is, if there isn't a single viewable entity (map alone doesn't count, like spawned in a new map staring at
+// an empty area), StudioDrawModel will not be called a single time, despite the m_nFrameCount counting up in the background.
+// This means, any checks for a low m_nFrameCount for earliy logic (under 1, under 5) or low time elapsed never happen to 
+// act on the low values.  Later when any entity is seen by the camera, it's too late: the frame is well over 5, etc.
+// Good idea is, any logic that should happen if anything is to be rendered can happen there, but it isn't guaranteed to 
+// happen if nothing will be rendered this frame.  Checks for particular times are bad.
+// Even allowing the 'first' time a certain frame is reached could be bad, like 'on over 5 frames, then tick a flag off to
+// not do this over and over'.  Later when the player sees something, it's frame 200+ something, and some early logic
+// done at the time for being the 'first' time a frame amount above 5 has been observed could be a little off.
 
 
 
@@ -75,6 +87,8 @@ EASY_CVAR_EXTERN(r_glowshell_debug)
 extern float global2PSEUDO_IGNOREcameraMode;
 
 extern int cam_thirdperson;
+extern float g_cl_mapStartTime;
+
 
 //MODDD - from in_camera.cpp 
 extern "C"
@@ -120,35 +134,45 @@ cl_entity_s* g_viewModelRef = NULL;
 
 
 
-
 BOOL g_freshRenderFrame = TRUE;
 
 // Pretty sure the max number of entities is around 1024, but the game crashes at trying to spawn over 900 anyway.
 // Or at least when an index reaches 900.
 // MAX_MAP_ENTITIES ???  that constant was set to 1024.  Close enough to the observed 900 anyway, unless that's some
 // freak coincidence.
-float ary_g_prevTime[1024];
-float ary_g_prevFrame[1024];
-float ary_g_LastEventCheck[1024];
-float ary_g_LastEventCheckEXACT[1024];
-float ary_g_recentInterpEstimate[1024];
-float ary_g_recentInterpEstimatePrev[1024];
-BOOL ary_g_recentInterpEstimateHandled[32];
+// Best to use our own constant anyway (now GAME_MAX_ENTITIES), MAX_MAP_ENTITIES is from a file that doesn't even
+// look to be included.
 
-//static float g_prevTime;
-//static float g_prevFrame;
-float g_OLDprevTime = 0;
-float g_debugPrevTime = 0;
+// Wait.. I'm confused.  m_clTime is a double, comes that way from IEngineStuodio.GetTimes.  Making all time-related
+// storage doubles like that.
+// But why do some time-related things like m_pCurrentEntity->curstate.animtime still use float?
+
+// AND NOPE.  Using our own GAME_MAX_ENTITIES is a bad idea, this just has to be 1024.
+// Anything too much lower, even 1000, causes IEngineStudio.GetTimes to arrive NULL and this
+// never gets changed, likely sign all kinds of other engine-related stuff got <desanctified>.
+// The.   Size.   Of.   These.   Arrays.    Can.    Cause.    Built-in.     Methods.    To.    Go.
+// Missing.
+// YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAHAHAHAHAHAAAAAAAHHHHHhhhhh.
+//    ahem.
+// Yeah I don't know.
+
+double ary_g_prevTime[MAX_ENTITY_CONSTANT_THAT_PLEASES_THE_DARK_GODS];
+float ary_g_prevFrame[MAX_ENTITY_CONSTANT_THAT_PLEASES_THE_DARK_GODS];
+double ary_g_LastEventCheck[MAX_ENTITY_CONSTANT_THAT_PLEASES_THE_DARK_GODS];
+double ary_g_LastEventCheckEXACT[MAX_ENTITY_CONSTANT_THAT_PLEASES_THE_DARK_GODS];
+float ary_g_recentInterpEstimate[MAX_ENTITY_CONSTANT_THAT_PLEASES_THE_DARK_GODS];
+float ary_g_recentInterpEstimatePrev[MAX_ENTITY_CONSTANT_THAT_PLEASES_THE_DARK_GODS];
+BOOL ary_g_recentInterpEstimateHandled[MAX_CLIENTS];
+
+//static double g_prevTime;
+//static double g_prevFrame;
+double g_OLDprevTime = 0;
+double g_debugPrevTime = 0;
 
 BOOL g_blockUpdateRecentInterpArray = FALSE;
 
-float g_prevRenderTime = 0;
+double g_prevRenderTime = 0;
 BOOL g_eventsPaused = FALSE;
-
-float g_mapStartTime = 0;
-
-
-
 
 
 
@@ -177,7 +201,9 @@ Init
 
 ====================
 */
-
+//MODDD - NOTE.  This only runs at game bootup, never on starting maps, loading games, or transitions.
+// Any resets related to that here need to happen however indirectly from some change in VidInit (cdll_int.cpp).
+// It gets called anytime the map is changed.
 void CStudioModelRenderer::Init( void )
 {
 	int i;
@@ -198,7 +224,7 @@ void CStudioModelRenderer::Init( void )
 	m_protationmatrix		= (float (*)[3][4])IEngineStudio.StudioGetRotationMatrix();
 
 	//MODDD - safety
-	for (i = 0; i < 1024; i++) {
+	for (i = 0; i < MAX_ENTITY_CONSTANT_THAT_PLEASES_THE_DARK_GODS; i++) {
 		ary_g_prevTime[i] = 0;
 		ary_g_prevFrame[i] = 0;
 		ary_g_LastEventCheck[i] = 0;
@@ -209,7 +235,7 @@ void CStudioModelRenderer::Init( void )
 		// it is still 0.  Some event on loading the game might be nice though.
 		// How about HUD_VidInit (cdll_int.cpp)?
 	}
-	for (i = 0; i < 32; i++) {
+	for (i = 0; i < MAX_CLIENTS; i++) {
 		// client indexes supported only!
 		ary_g_recentInterpEstimateHandled[i] = FALSE;
 	}
@@ -1375,7 +1401,7 @@ float CStudioModelRenderer::StudioEstimateFrame( mstudioseqdesc_t *pseqdesc )
 
 	if (g_blockUpdateRecentInterpArray == TRUE) {
 		blockUpdateRecentInterpArray = TRUE;
-	}else if (myIndex >= 1 && myIndex <= gEngfuncs.GetMaxClients() && myIndex < 32) {
+	}else if (myIndex >= 1 && myIndex <= gEngfuncs.GetMaxClients() && myIndex < MAX_CLIENTS) {
 		isPlayerIndex = TRUE;
 		// it is a player, can have commits blocked by having already been handled this frame.
 		if (ary_g_recentInterpEstimateHandled[m_pCurrentEntity->index - 1]) {
@@ -2144,9 +2170,21 @@ void CStudioModelRenderer::StudioSetupBones ( byte isReflection )
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	
-	static float disallowSmoothBlendTime = 0.15;
-	//if(m_nFrameCount < 2){
-	if(m_clTime - g_mapStartTime < disallowSmoothBlendTime){
+	static double disallowSmoothBlendTime = 0.15;
+
+	// Early in any sense?  Disallow blending so loaded games don't freak out a bit when started with
+	// something visible (hassault pitch looking straight-down and blending into its real place, saved
+	// properly serverside and even relayed here in time, but the blend from a 'nothing' state throws 
+	// it off).
+	// Note that this point is only reached for entities that are rendered (visible in
+	// the player's camera), so an entity out of view suddenly back in-view could do some odd things
+	// with blending coming back into view in a while too.
+	// Although that might be the point of the 'sequencetime + 0.2 > m_clTime' check below?  unsure
+
+	if(g_cl_mapStartTime==-1 || ((m_clTime - g_cl_mapStartTime) < disallowSmoothBlendTime) ){
+		//if(g_freshRenderFrame){
+		//	easyPrintLine("HERE COMES THE SUN");
+		//}
 		m_pCurrentEntity->latched.sequencetime = -0.2;
 	}
 
@@ -2901,12 +2939,20 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 	return 0;
 #endif
 
-
 	//easyPrintLine("FLAGZ %d", (flags & 128));
 	alight_t lighting;
 	vec3_t dir;
 
+
+	// ?????????????????????????????????????????
+	// WHAT MAKES THIS POSSIBLE
+	if(IEngineStudio.GetTimes == NULL){
+		easyForcePrintLine("HELLO I AM VERY BROKEN");
+		return 0;
+	}
+
 	IEngineStudio.GetTimes( &m_nFrameCount, &m_clTime, &m_clOldTime );
+
 
 	//MODDDMIRROR - makes the player show up in first person (for mirror reflections), wtf?
 	// ALSO, looks like this is how to judge the start of a new frame.  Niiiiice that this is what we have to
@@ -2917,15 +2963,19 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		b_PlayerMarkerParsed = false;
 		m_nCachedFrameCount = m_nFrameCount;
 
-
+		/*
 		if(m_nFrameCount < 5){
-			// Mark the start time to know to handle some logic differently (no smoothing model blending like torso pitch, causes
-			// some things on the instant of a load-game to appear facing downward and quickly warp into their normal place)
-			// See 'disallowSmoothBlendTime' in the comments elsewhere for what does the smooth blocking
-			g_mapStartTime = m_clTime;
+			// Mark the start time to know to handle some logic differently (no smoothing model blending like
+			// torso pitch, causes some things on the instant of a load-game to appear facing downward and
+			// quickly warp into their normal place)
+			// See 'disallowSmoothBlendTime' in the comments elsewhere for what does the smooth blocking.
+			// NO.  Don't do it in here!  If the player hasn't seen any entities within the first 5 frames
+			// since loading a map, this var never gets set.  Not good, handled in hl_weapons more reliably.
+			g_cl_mapStartTime = m_clTime;
 		}
+		*/
 
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < MAX_CLIENTS; i++) {
 			ary_g_recentInterpEstimateHandled[i] = FALSE;
 		}
 
@@ -2948,7 +2998,14 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 
 		//MODDD - while we're at it, refresh g_viewModelRef.  Just safety, and no reason to do after the
 		// start of a frame
+		// Any reason to use gEngfuncs.GetViewModel() or IEngineStudio.GetViewEntity() ?
+		// The 'IEngineStudio' equivalent is often preferred here.
 		g_viewModelRef = gEngfuncs.GetViewModel();
+		//g_viewModelRef = IEngineStudio.GetViewEntity();
+
+		// They do lead to differnet areas in the executable, curious.
+		//BOOL doTheyMatch = (gEngfuncs.GetViewModel == IEngineStudio.GetViewEntity);
+		//int x = 4;
 
 	}//END OF frameCount checks
 	else {
@@ -4269,7 +4326,9 @@ void CStudioModelRenderer::StudioRenderFinal(void)
 
 BOOL canPrintout = FALSE;
 
-
+// NOTICE.  Leaving most time-related things (flInterval) as float's for now like the as-is serverside logic
+// expected them to be.  All kinds of places over here expect floats for time/durations anyway, even though
+// m_clTime is a double.  I got nothing.
 void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 	
 
@@ -4311,7 +4370,6 @@ void CStudioModelRenderer::CUSTOM_StudioClientEvents(void) {
 	float animtime = m_pCurrentEntity->curstate.animtime;
 	int frameCount = pseqdesc->numframes;
 	int m_fSequenceLoops = ((pseqdesc->flags & STUDIO_LOOPING) != 0);
-
 
 
 	float frame;

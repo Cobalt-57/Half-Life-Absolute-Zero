@@ -2047,6 +2047,9 @@ Schedule_t *CBaseMonster::ScheduleInList( const char *pName, Schedule_t **pList,
 Schedule_t* CBaseMonster::GetScheduleOfType ( int Type ) 
 {
 
+	if(monsterID == 2){
+		int x = 45;
+	}
 
 	if(Type == SCHED_RANGE_ATTACK2){
 		int x = 666;

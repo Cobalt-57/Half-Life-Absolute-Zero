@@ -724,13 +724,27 @@ BOOL CBaseEntity::isOrganic(void){
 	return FALSE;
 }
 
-// Override me if specifying a different hull is necessary.
+// Override to specify a different hull for pathfinding to keep in mind.
 // For things that don't fit evenly into certain sizes as seen in nodes.cpp's HullIndex method,
-// a NODE_HUMAN_HULL may be implied. Even something larger than the largest or smaller than the
-// smallest gets this assumption. It is not very good, so just say what an entity prefers here.
+// a NODE_HUMAN_HULL may be implied but not wanted.
+// (NODE_DEFAULT_HULL is a default that tells pathfinding to use retail logic to determine 
+//  automatically from the entity's size)
 int CBaseEntity::getHullIndexForNodes(void){
 	return NODE_DEFAULT_HULL;
-}//END OF getHullIndexForNodes
+}
+
+// What type of nodes can I take?  This default '-1' means the retail logic will pick for you,
+// but it could have some oddities in rare cases, such as an archer (fish-like) trying to take
+// air nodes because it got knocked out of the water for a few moments to count as being in
+// the 'air' when it happened to pathfind.
+// Return bits_NODE_LAND, bits_NODE_AIR, or bits_NODE_WATER, or any combo.
+// Maybe even depending on some part of the state of the monster (flying or ground stukabat).
+// Consider that checking to see if going for air nodes is a good idea would require returning
+// 'NODE_AIR' here, even if currently on the ground.  Giving up if there are perfectly valid air
+// nodes, only because the monster is on the ground now, would be silly.
+int CBaseEntity::getNodeTypeAllowed(void){
+	return -1;
+}
 
 
 int CBaseEntity::getNumberOfBodyParts(void){
@@ -990,6 +1004,22 @@ int CBaseEntity::Save( CSave &save )
 		pev->maxs = m_vecOldBoundsMaxs;
 		SetGravity(m_fOldGravity);
 	}
+
+
+	// What's my size at the moment?
+	/*
+	if(pev != NULL){
+		const char* daClassname = STRING(pev->classname);
+		CBaseEntity* theInst = CBaseEntity::Instance(pev);
+		if(FClassnameIs(pev, "monster_panthereye")){
+			int x = 45;
+		}
+	}
+	*/
+
+
+
+
 
 	int baseWriteFieldsResult = 0;
 	if ( save.WriteEntVars( "ENTVARS", pev ) ){

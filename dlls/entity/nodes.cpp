@@ -579,6 +579,11 @@ int CGraph::HullIndex(CBaseEntity* pEntity)
 
 int CGraph::NodeType(CBaseEntity* pEntity)
 {
+	int nodeTypeTest = pEntity->getNodeTypeAllowed();
+
+	if(nodeTypeTest != -1){
+		return nodeTypeTest;
+	}
 
 	//if ( pEntity->pev->movetype == MOVETYPE_FLY)
 	if (pEntity->isMovetypeFlying())
@@ -586,7 +591,6 @@ int CGraph::NodeType(CBaseEntity* pEntity)
 
 		//MODDD TODO - checking for the presence of the FL_SWIM flag may be more helpful here than checking
 		//whether the thing happens to be in the water or not?
-
 
 		if (pEntity->pev->waterlevel != 0)
 		{
@@ -1150,7 +1154,7 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 			if(m_pNodes[iNode].m_afNodeInfo & (bits_NODE_LAND)){
 				// has the LAND flag?  Add the vertical offset
 				//MODDD - TODO.  ish.
-				// Iif ever doing any hack to treat land nodes as air nodes to force using them, that needs to be checked separately)
+				// If ever doing any hack to treat land nodes as air nodes to force using them, that needs to be checked separately)
 				vecStart.z += EASY_CVAR_GET_DEBUGONLY(nodeSearchStartVerticalOffset);
 			}
 
@@ -1193,6 +1197,7 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 //=========================================================
 int CGraph::FindNearestNode(const Vector& vecOrigin, CBaseEntity* pEntity)
 {
+	// TODO - why not 'pEntity->getNodeTypeAllowed()' ?
 	return FindNearestNode(vecOrigin, NodeType(pEntity));
 }
 
@@ -2156,17 +2161,33 @@ void CTestHull::BuildNodeGraph(void)
 	//
 	for (i = 0; i < WorldGraph.m_cNodes; i++)
 	{
+		//MODDD - likely for this to come up at some point.
+		int thisNodeContents = UTIL_PointContents(WorldGraph.m_pNodes[i].m_vecOrigin);
+
 		if (WorldGraph.m_pNodes[i].m_afNodeInfo & bits_NODE_AIR)
 		{
 			// do nothing
+			//MODDD - actually, do a POINT_CONTENTS check.  If this is stuck in the map,
+			// it's not worth considering.  Remove its afNodeInfo.
+			if(thisNodeContents == CONTENTS_SOLID){
+				easyPrintLine("NodeType WARNING! Node #%d (air node), was stuck in the map!  NodeInfo stripped.", i);
+				WorldGraph.m_pNodes[i].m_afNodeInfo = 0;
+			}
+
 		}
-		else if (UTIL_PointContents(WorldGraph.m_pNodes[i].m_vecOrigin) == CONTENTS_WATER)
+		else if (thisNodeContents == CONTENTS_WATER)
 		{
+			// Clearly to have point contents in the WATER, this is not stuck in the map.
 			WorldGraph.m_pNodes[i].m_afNodeInfo |= bits_NODE_WATER;
 		}
 		else
 		{
-			WorldGraph.m_pNodes[i].m_afNodeInfo |= bits_NODE_LAND;
+			//MODDD - don't be so quick to assume this is even a valid LAND node!
+			// That will come from either snapping to the ground or being so far high up
+			// that it reaches the max '384' distance in the trace (retail went ahead and
+			// called that a 'land' node?).
+			//WorldGraph.m_pNodes[i].m_afNodeInfo |= bits_NODE_LAND;
+
 
 			// trace to the ground, then pop up 8 units and place node there to make it
 			// easier for them to connect (think stairs, chairs, and bumps in the floor).
@@ -2193,16 +2214,56 @@ void CTestHull::BuildNodeGraph(void)
 			if (trEnt.flFraction < tr.flFraction)
 			{
 				// If it was a world brush entity, copy the node location
-				if (trEnt.pHit && (trEnt.pHit->v.flags & FL_WORLDBRUSH))
+				if (trEnt.pHit && (trEnt.pHit->v.flags & FL_WORLDBRUSH)){
 					tr.vecEndPos = trEnt.vecEndPos;
+					//MODDD - record the fraction too
+					tr.flFraction = trEnt.flFraction;
+				}
+			}
+
+			//MODDD - now another check.  Is the point reached from attempting to snap to the ground
+			// even in valid space?  If it started in some odd place deep inside the map and only found
+			// more map 384 below, it shouldn't have any nodeinfo.
+			// But only bother if tr.flFraction is 1.  Ending any earlier is only possible from hitting
+			// something it snapped to (found ground; valid).
+			// Will consider ending mid-air also valid (assume this at a fraction of 1 that is still in
+			// mid-air).
+			if(tr.flFraction >= 1.0){
+				int newContents = UTIL_PointContents(tr.vecEndPos);
+				if(newContents != CONTENTS_SOLID){
+					// in some space?  We'll count it then.
+					// EHHHhhhhh call it mid-air.  It really is then, but give a warning, how could
+					// this be intentional.
+					// Note that nodes made 'air' from failing to snap to the ground don't count for
+					// 'map_anyAirNodes', likely far too few to justify that.
+					// Although loading a map would see that these are AIR nodes and still set map_anyAirNodes.
+					// NEVERMIND.  Remove all nodeinfo here too, this clearly was a mistake.
+					//WorldGraph.m_pNodes[i].m_afNodeInfo |= bits_NODE_LAND;
+					//WorldGraph.m_pNodes[i].m_afNodeInfo |= bits_NODE_AIR;
+					WorldGraph.m_pNodes[i].m_afNodeInfo = 0;
+
+					if(thisNodeContents == CONTENTS_SOLID){
+						// started at solid
+						easyPrintLine("NodeType WARNING! Node #%d (ground node), began stuck in the map and lowered into valid space, but still could not snap to ground. NodeInfo stripped.", i);  // NodeInfo changed to 'air'."
+					}else{
+						easyPrintLine("NodeType WARNING! Node #%d (ground node) too high, could not snap to ground. NodeInfo stripped.", i);
+					}
+
+				}else{
+					// Couldn't break out of solid geometry?  Nope.
+					easyPrintLine("NodeType WARNING! Node #%d (ground node), started stuck in the map and could not lower out of it!  NodeInfo stripped.", i);
+					WorldGraph.m_pNodes[i].m_afNodeInfo = 0;
+				}
+			}else{
+				WorldGraph.m_pNodes[i].m_afNodeInfo |= bits_NODE_LAND;
 			}
 
 			//MODDD - don't add node_linktest_height anymore. It's going to just get subtracted anyways.
-			//Checking to see what is land based or not later is perfectly fine.  This height change gets reverted anyways.
-			WorldGraph.m_pNodes[i].m_vecOriginPeek.z =
-				WorldGraph.m_pNodes[i].m_vecOrigin.z = tr.vecEndPos.z;// + node_linktest_height;
-		}
-	}
+			// Checking to see what is land based or not later is perfectly fine.  This height change gets reverted anyways.
+			WorldGraph.m_pNodes[i].m_vecOriginPeek.z = WorldGraph.m_pNodes[i].m_vecOrigin.z = tr.vecEndPos.z;// + node_linktest_height;
+		}//node type determining
+
+	}//for loop through nodes
 
 	cPoolLinks = WorldGraph.LinkVisibleNodes(pTempPool, file, &iBadNode);
 
@@ -2979,6 +3040,13 @@ int CGraph::FLoadGraph(char* szMapName)
 		for (i = 0; i < m_cNodes; i++)
 		{
 			m_di[i].m_CheckedEvent = 0;
+			
+			//MODDD - record if at least one node is an AIR node.
+			if (m_pNodes[i].m_afNodeInfo & bits_NODE_AIR) {
+				//found one? we're good.
+				map_anyAirNodes = TRUE;
+				break;
+			}
 		}
 
 		// Read in the route information.
@@ -3009,17 +3077,6 @@ int CGraph::FLoadGraph(char* szMapName)
 		//
 		m_fGraphPresent = TRUE;
 		m_fGraphPointersSet = FALSE;
-
-		//MODDD - one more thing.  Is any of the nodes created an AIR node?
-		for (i = 0; i < m_cNodes; i++) {
-			//CWorldGraph
-			//WorldGraph.m_pNodes
-			if (m_pNodes[i].m_afNodeInfo & bits_NODE_AIR) {
-				//found one? we're good.
-				map_anyAirNodes = TRUE;
-				break;
-			}
-		}
 
 
 		FREE_FILE(aMemFile);

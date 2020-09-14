@@ -842,7 +842,6 @@ void CEgon::ItemPostFrameThink(void){
 
 	//if(!(m_pPlayer->m_bHolstering)){
 		if(holdingPrimary && holdingSecondary) {
-			// FUCK THIS
 			if(!fireException &&
 				(
 				(m_fireState != FIRE_OFF) ||
@@ -1585,14 +1584,10 @@ void CEgon::CreateEffect( void )
 		m_pBeam->pev->owner = m_pPlayer->edict();
 
 
-
-		if ( m_fInAttack == FIRE_WIDE )
-		{
+		if ( m_fInAttack == FIRE_WIDE ){
 			m_pBeam->SetScrollRate( 50 );
 			m_pBeam->SetNoise( 20 );
-		}
-		else
-		{
+		}else{
 			m_pBeam->SetScrollRate( 110 );
 			m_pBeam->SetNoise( 5 );
 		}
@@ -1784,15 +1779,17 @@ void CEgon::CreateEffect( void )
 			m_pSprite->pev->scale = 2.25;
 		}
 		
-
+		// kRenderGlow makes it avoid the black background and not go through nearby geometry.
+		// kRenderFxNoDissipation makes it pay attention to scale and not fade with distance.
 		m_pSprite->SetTransparency( kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation );
 		m_pSprite->pev->spawnflags |= SF_SPRITE_TEMPORARY;
 		//m_pSprite->pev->flags |= FL_SKIPLOCALHOST;
 		m_pSprite->pev->owner = m_pPlayer->edict();
 
-	}
+	}//egonHitCloudVar check
 
 	
+
 	//MODDD - note.  Colors may not matter here if they are updated constantly by "updateEffect".
 	
 	/*

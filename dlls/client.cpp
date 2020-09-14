@@ -23,6 +23,13 @@
 
 */
 
+
+// TODO.  How about node type filtering (_AIR, _GROUND, _WATER) for 'FindNearestNode' debug calls?
+// Let them be specified by another parameter, as typed "air", "ground", or "water". if text,
+// or for those as bits if a number (7 is 111 in binary, all three choices)
+
+
+
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
@@ -69,6 +76,10 @@ EASY_CVAR_EXTERN(pausecorrection2)
 
 
 extern CGraph WorldGraph;
+
+
+
+
 
 
 
@@ -194,7 +205,14 @@ typedef struct HiddenCVarInfo_s{
 
 // IMPORTANT!  Keep HIDDEN_CVAR_INFO_LENGTH in check with the number of entries in it
 // (cvar_custom_list.h) change.
-#define HIDDEN_CVAR_INFO_LENGTH 446
+//#define HIDDEN_CVAR_INFO_LENGTH 446
+
+// Wait, how about this?
+//#define HIDDEN_CVAR_INFO_LENGTH		(sizeof(aryHiddenCVarInfo)/sizeof(aryHiddenCVarInfo[0]))
+// TEST.  How about this?
+#define HIDDEN_CVAR_INFO_LENGTH		(sizeof(aryHiddenCVarInfo)/sizeof(HiddenCVarInfo_t))
+
+
 HiddenCVarInfo_t aryHiddenCVarInfo[HIDDEN_CVAR_INFO_LENGTH] = {
 	// example of how an entry might look (some of these are CVar constants that derive to numbers)
 	//{"someCVar", "somecvar", someCVar_ID, 0, &global_someCVar }
@@ -4133,15 +4151,12 @@ void ClientCommand( edict_t *pEntity )
 	
 	}else if( FStrEq(pcmdRefinedRef, "drawpath") || FStrEq(pcmdRefinedRef, "pathdraw") || FStrEq(pcmdRefinedRef, "drawnpcpath")  ){
 		const char* arg1ref = CMD_ARGV(1);
-
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "Hey, that\'s a debugging feature mister!");
 			return;
 		}
-
 		CBaseEntity* forwardEnt = NULL;
 		const char* argTest = CMD_ARGV(1);
-
 		if(!isStringEmpty(argTest)){
 			//get the monster with this ID.
 			try{
@@ -4155,7 +4170,6 @@ void ClientCommand( edict_t *pEntity )
 			//no argument provided? Try to see if there is a monster in front of the player.
 			forwardEnt = FindEntityForward(tempplayer);
 		}
-
 		if(forwardEnt == NULL){
 			//can't do this.
 			easyForcePrintLineClient(pEntity, "***No entity found.***");
@@ -4172,9 +4186,46 @@ void ClientCommand( edict_t *pEntity )
 			}else{
 				easyForcePrintLineClient(pEntity, "***Entity \"%s\" is not a monster / NPC.***", forwardEnt->getClassname() );
 			}
-
 		}
-
+	}else if( FStrEq(pcmdRefinedRef, "dummy") || FStrEq(pcmdRefinedRef, "dummyai") || FStrEq(pcmdRefinedRef, "nothinkforyou")  ){
+		// Does not dummy all AI, only for the directed monster
+		const char* arg1ref = CMD_ARGV(1);
+		if(g_flWeaponCheat == 0.0){
+			easyForcePrintLineClient(pEntity, "Hey, that\'s a debugging feature mister!");
+			return;
+		}
+		CBaseEntity* forwardEnt = NULL;
+		const char* argTest = CMD_ARGV(1);
+		if(!isStringEmpty(argTest)){
+			//get the monster with this ID.
+			try{
+				int numbAttempt = tryStringToInt(arg1ref);
+				forwardEnt = getMonsterWithID(numbAttempt);
+			}catch(int){
+				easyForcePrintLineClient(pEntity, "Problem reading number.  (arg must be whole number)");
+				return;
+			}
+		}else{
+			//no argument provided? Try to see if there is a monster in front of the player.
+			forwardEnt = FindEntityForward(tempplayer);
+		}
+		if(forwardEnt == NULL){
+			//can't do this.
+			easyForcePrintLineClient(pEntity, "***No entity found.***");
+		}else{
+			CBaseMonster* tempMon;
+			if(  (tempMon = forwardEnt->GetMonsterPointer() ) != NULL){
+				if(tempMon->dummyAI){
+					easyForcePrintLineClient(pEntity, "***Resuming AI for %s ID:%d.***", tempMon->getClassname(), tempMon->monsterID);
+					tempMon->dummyAI = FALSE;
+				}else{
+					easyForcePrintLineClient(pEntity, "***Stopping AI for %s ID:%d.***", tempMon->getClassname(), tempMon->monsterID);
+					tempMon->dummyAI = TRUE;
+				}
+			}else{
+				easyForcePrintLineClient(pEntity, "***Entity \"%s\" is not a monster / NPC.***", forwardEnt->getClassname() );
+			}
+		}
 	}else if( FStrEq(pcmdRefinedRef, "stopdrawpath") || FStrEq(pcmdRefinedRef, "pathdrawstop") || FStrEq(pcmdRefinedRef, "stopdrawnpcpath") || FStrEq(pcmdRefinedRef, "drawpathstop") || FStrEq(pcmdRefinedRef, "drawnpcpathstop") ){
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "Hm. No.");
@@ -4207,6 +4258,50 @@ void ClientCommand( edict_t *pEntity )
 			}
 		}//END OF while(things in area)
 
+	}else if( FStrEq(pcmdRefinedRef, "testpointcontents") || FStrEq(pcmdRefinedRef, "pointcontents") ){
+		
+		if(CMD_ARGC() == 1){
+			easyForcePrintLineClient(pEntity, "Need the X Y Z (no commas, only spaces) coords of a point to test.");
+		}else if(CMD_ARGC() != 4){
+			easyForcePrintLineClient(pEntity, "Invalid number of params, 3 expected.");
+		}else{
+			try{
+				float the_x = tryStringToFloat(CMD_ARGV(1));
+				float the_y = tryStringToFloat(CMD_ARGV(2));
+				float the_z = tryStringToFloat(CMD_ARGV(3));
+				Vector theVec = Vector(the_x, the_y, the_z);
+				int theContents = UTIL_PointContents(theVec);
+				const char* contentsTerm;
+				switch(theContents){
+				case CONTENTS_EMPTY:contentsTerm = "EMPTY";break;
+				case CONTENTS_SOLID:contentsTerm = "SOLID";break;
+				case CONTENTS_WATER:contentsTerm = "WATER";break;
+				case CONTENTS_SLIME:contentsTerm = "SLIME";break;
+				case CONTENTS_LAVA:contentsTerm = "LAVA";break;
+				case CONTENTS_SKY:contentsTerm = "SKY";break;
+				// Do any of these others have a chance of showing up?  No idea
+				case CONTENTS_ORIGIN:contentsTerm = "ORIGIN";break;
+				case CONTENTS_CLIP:contentsTerm = "CLIP";break;
+				case CONTENTS_CURRENT_0:contentsTerm = "CURRENT_0";break;
+				case CONTENTS_CURRENT_90:contentsTerm = "CURRENT_90";break;
+				case CONTENTS_CURRENT_180:contentsTerm = "CURRENT_180";break;
+				case CONTENTS_CURRENT_270:contentsTerm = "CURRENT_270";break;
+				case CONTENTS_CURRENT_UP:contentsTerm = "CURRENT_UP";break;
+				case CONTENTS_CURRENT_DOWN:contentsTerm = "CURRENT_DOWN";break;
+				case CONTENTS_TRANSLUCENT:contentsTerm = "TRANSLUCENT";break;
+				case CONTENTS_LADDER:contentsTerm = "LADDER";break;
+				case CONTENTS_FLYFIELD:contentsTerm = "FLYFIELD";break;
+				case CONTENTS_GRAVITY_FLYFIELD:contentsTerm = "GRAVITY_FLYFIELD";break;
+				case CONTENTS_FOG:contentsTerm = "FOG";break;
+				default:contentsTerm = "???";break;
+
+				}//theContents
+				easyForcePrintLineClient(pEntity, "Point is %d (%s)", theContents, contentsTerm);
+			}catch(int){
+				easyForcePrintLineClient(pEntity, "Problem reading coords?");
+				return;
+			}
+		}	
 	}else if( FStrEq(pcmdRefinedRef, "drawfov") || FStrEq(pcmdRefinedRef, "fovdraw") || FStrEq(pcmdRefinedRef, "drawnpcfov")  ){
 		const char* arg1ref = CMD_ARGV(1);
 

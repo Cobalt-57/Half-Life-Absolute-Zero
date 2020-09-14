@@ -439,7 +439,7 @@ BOOL CBaseMonster::NoFriendlyFireImp(const Vector& startVec, const Vector& endVe
 
 
 //MODDD - new
-CBaseMonster::CBaseMonster(){
+CBaseMonster::CBaseMonster(void){
 	
 	// Just a setting to keep this from being garbage from entities that never specify it.
 	// Probably paranoia at this point though, think any issues with black-and-white blood are gone anyway.
@@ -477,6 +477,8 @@ CBaseMonster::CBaseMonster(){
 
 	drawPathConstant = FALSE;
 	drawFieldOfVisionConstant = FALSE;
+
+	dummyAI = FALSE;
 
 	monsterID = -1;
 
@@ -2033,6 +2035,11 @@ void CBaseMonster::MonsterThink ( void )
 	pev->nextthink = gpGlobals->time + 0.1;// keep monster thinking.
 	
 
+	if(dummyAI){
+		// no thinking
+		return;
+	}
+
 
 	//MODDD - Instead of sending this interval 500 different places, keep it here too for now.
 	// For this think-method these two values are identical, m_flInterval is just available outside this method for CBaseMonster.
@@ -2233,72 +2240,25 @@ void CBaseMonster::MonsterThink ( void )
 	// NEVERMIND, let thing setting custom sequences that should switch over to ordinary idle tick usingCustomSequence off after calling for them.
 	// This seems to cause random rare issues with idle anims getting picked for things that really, really don't want them, like right before/after
 	// (unclear) hassault firing to make it a little glitchy, same for panthereye on jumps.   UGH.
+	// Also, may as well let finished ACT_TURN_LEFT/RIGHT anims get re-picked as idle, staying stuck in the end-turn frame
+	// is just kinda awkward.
 	if (
 		//!(m_pSchedule != NULL && getTaskNumber() ==  
 		
 		//!(m_fSequenceLoops && usingCustomSequence) && 
 		!IsMoving() && pev->framerate != 0 && m_fSequenceFinished && (!usingCustomSequence) &&  //  || !m_fSequenceLoops
-		!getMonsterBlockIdleAutoUpdate() && m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_DEAD &&
-		( (m_Activity == ACT_IDLE ) ) ) 
+		!getMonsterBlockIdleAutoUpdate() && m_MonsterState != MONSTERSTATE_SCRIPT && m_MonsterState != MONSTERSTATE_DEAD
+		 ) 
 	{
-		int iSequence;
+		if(m_Activity == ACT_IDLE){
+			//good to go.	
+			RefreshActivity();
+		}else if(m_Activity == ACT_TURN_LEFT || m_Activity == ACT_TURN_RIGHT){
+			// force it to ACT_IDLE.
+			SetActivity(ACT_IDLE);
+		}
 		
-		if ( m_fSequenceLoops )
-		{
-			// animation does loop, which means we're playing subtle idle. Might need to 
-			// fidget.
-			if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET #1? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
-
-			if(usesAdvancedAnimSystem()){
-				iSequence = LookupActivityHard ( m_Activity );
-			}else{
-				iSequence = LookupActivity ( m_Activity );
-			}
-			
-		}
-		else
-		{
-			if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET #2? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
-
-			// animation that just ended doesn't loop! That means we just finished a fidget
-			// and should return to our heaviest weighted idle (the subtle one)
-
-			if(usesAdvancedAnimSystem()){
-				iSequence = LookupActivityHard ( m_Activity );
-			}else{
-				iSequence = LookupActivityHeaviest ( m_Activity );
-			}
-
-		}
-
-		if ( iSequence != ACTIVITY_NOT_AVAILABLE )
-		{
-			int oldSequence = pev->sequence;
-			//BOOL resetFrameYet = FALSE;
-
-			// don't reset sinceLoopMem, that is remembered through this type of change.
-			BOOL sinceLoopMem = m_fSequenceFinishedSinceLoop;
-			
-			//easyPrintLine("ANIMATION CHANGE!!!! B");
-			pev->sequence = iSequence;	// Set to new anim (if it's there)
-			ResetSequenceInfo( );
-
-			m_fSequenceFinishedSinceLoop = sinceLoopMem;
-
-
-			//MODDD IMPORTANT. Go ahead and let the system know this sequence finshed at least once, sometimes that matters. Even a replacement different idle sequence.
-			//m_fSequenceFinishedSinceLoop = TRUE;
-			// NO NOT HERE.  Leave it to animating.cpp, probably
-
-			
-			//MODDD - why wasn't this here before?!  Why do we assume the new sequence will reset the frame? We sure don't know that?
-			//        Even without forceIdleFrameReset.
-			if(forceIdleFrameReset() || !(iSequence == oldSequence && this->m_fSequenceLoops) ){
-				//if this is the same sequence and it loops, no need to reset.
-				resetFrame();
-			}
-		}
-	}
+	}//lotsa conditions for when to reset a still animation
 
 	if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info D? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
 	DispatchAnimEvents( flInterval );
@@ -2611,16 +2571,136 @@ BOOL CBaseMonster::FRouteClear ( void )
 
 
 
+
+
+// Strict is more similar to retail FRefreshRoute, in that it doesn't allow BuildNearestRoute
+// attempts if the main BuildRoute fails.
+// 'strictNodeTolerance' may also be something that replicates retail moreso (not much tolerance
+// for reaching a node).
+BOOL CBaseMonster::FRefreshRouteStrict ( void )
+{
+	CBaseEntity *pPathCorner;
+	int i;
+	BOOL returnCode;
+
+	RouteNew();
+
+	strictNodeTolerance = TRUE;
+
+	returnCode = FALSE;
+
+	switch( m_movementGoal )
+	{
+		case MOVEGOAL_PATHCORNER:
+			{
+				// monster is on a path_corner loop
+				pPathCorner = m_pGoalEnt;
+				i = 0;
+
+				while ( pPathCorner && i < ROUTE_SIZE )
+				{
+					m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
+					m_Route[ i ].vecLocation = pPathCorner->pev->origin;
+
+					pPathCorner = pPathCorner->GetNextTarget();
+
+					// Last path_corner in list?
+					if ( !pPathCorner )
+						m_Route[i].iType |= bits_MF_IS_GOAL;
+					
+					i++;
+				}
+				//MODDD - looks safe to treat 'i' as the route length then.
+				// If there is no GoalEnt (first pPathCorner choice), there is no route (0 length).
+				// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
+				// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
+				m_iRouteLength = i;
+			}
+			returnCode = TRUE;
+			break;
+
+		case MOVEGOAL_ENEMY:
+			setEnemyLKP(m_hEnemy);
+			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
+
+			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
+			if(returnCode){
+				m_vecMoveGoal = m_vecEnemyLKP;
+			}
+
+			break;
+
+		case MOVEGOAL_LOCATION:
+			returnCode = BuildRoute( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
+
+			break;
+		case MOVEGOAL_TARGETENT:
+			if (m_hTargetEnt != NULL)
+			{
+				returnCode = BuildRoute( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
+
+			}else{
+				returnCode = FALSE;
+			}
+
+			if(returnCode){
+				//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
+				if(returnCode){
+					m_vecMoveGoal = m_hTargetEnt->pev->origin;
+				}
+			}
+
+			break;
+
+		case MOVEGOAL_NODE:
+			returnCode = FGetNodeRoute( m_vecMoveGoal );
+			//MODDD - NOTE.  Found commented out as-is.  Is simplifying a node-route really that bad, or it's just not done this soon?
+			// Maybe that's already part of FGetNodeRoute.
+//			if ( returnCode )
+//				RouteSimplify( NULL );
+			break;
+	}//movegoal?
+
+
+	//MODDD
+	// Now, do another check to make sure this route is actually passable for at least one frame.
+	// It is possible to pick a route that will fail the very next time, leading to flinching back and forth between
+	// a standing and move animation.  If this fails, that point isn't reached.
+	// (some things don't want this check or don't have custom move script properly separated, they turn 'SegmentedMove' off
+	// to avoid this).
+
+
+
+	if (returnCode != FALSE && usesSegmentedMove()) {
+		returnCode = CheckPreMove();
+	}
+
+	return returnCode;
+}//FRefreshRouteStrict
+
+
+
 //=========================================================
 // FRefreshRoute - after calculating a path to the monster's
 // target, this function copies as many waypoints as possible
 // from that path to the monster's Route array
 //=========================================================
+//MODDD - few changes from retail, mainly taking the nearest point (buildnearestroute) if a route
+// to the goal exactly can't be made.
+
 BOOL CBaseMonster::FRefreshRoute ( void )
 {
 	CBaseEntity *pPathCorner;
 	int i;
 	BOOL returnCode;
+
+	if(!strictNodeTolerance){
+		// proceed as usual.
+	}else{
+		// redirect to the strict version.
+		return FRefreshRouteStrict();
+	}
+
 
 	if(monsterID == 3){
 		int x = 45;
@@ -3063,8 +3143,7 @@ BOOL CBaseMonster::MoveToLocationCheap( Activity movementAct, float waitTime, co
 }
 
 
-BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime )
-{
+BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime ){
 	Activity m1 = m_movementActivity;
 	float m2 = m_moveWaitTime;
 	int m3 = m_movementGoal;
@@ -3072,12 +3151,6 @@ BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime )
 	m_movementActivity = movementAct;
 	m_moveWaitTime = waitTime;
 	m_movementGoal = MOVEGOAL_TARGETENT;
-
-
-	if (monsterID == 14) {
-		int x = 4;
-	}
-
 
 	//MODDD - only keep movement activity if this passes
 	BOOL theResult = FRefreshRoute();
@@ -3089,6 +3162,24 @@ BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime )
 	return theResult;
 }
 
+BOOL CBaseMonster::MoveToTargetStrict( Activity movementAct, float waitTime ){
+	Activity m1 = m_movementActivity;
+	float m2 = m_moveWaitTime;
+	int m3 = m_movementGoal;
+
+	m_movementActivity = movementAct;
+	m_moveWaitTime = waitTime;
+	m_movementGoal = MOVEGOAL_TARGETENT;
+
+	//MODDD - only keep movement activity if this passes
+	BOOL theResult = FRefreshRouteStrict();
+	if (!theResult) {
+		m_movementActivity = m1;
+		m_moveWaitTime = m2;
+		m_movementGoal = m3;
+	}
+	return theResult;
+}
 
 BOOL CBaseMonster::MoveToNode( Activity movementAct, float waitTime, const Vector &goal )
 {
@@ -3124,7 +3215,6 @@ void CBaseMonster::DrawRoute( entvars_t *pev, WayPoint_t *m_Route, int m_iRouteL
 		ALERT( at_aiconsole, "No route!\n" );
 		return;
 	}
-
 
 //	UTIL_ParticleEffect ( m_Route[ m_iRouteIndex ].vecLocation, g_vecZero, 255, 25 );
 
@@ -4113,7 +4203,71 @@ void CBaseMonster::SetActivity ( Activity NewActivity )
 	// In case someone calls this with something other than the ideal activity
 	m_IdealActivity = m_Activity;
 
-}
+}//SetActivity
+
+
+
+//MODDD - script that used to be in MonsterThink for what to do when an idle animation hit the last frame.
+// Picks a new sequence for the current m_Activity (does not change the activity).
+void CBaseMonster::RefreshActivity(void){
+	int iSequence;
+
+	if ( m_fSequenceLoops )
+	{
+		// animation does loop, which means we're playing subtle idle. Might need to 
+		// fidget.
+		if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET #1? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+
+		if(usesAdvancedAnimSystem()){
+			iSequence = LookupActivityHard ( m_Activity );
+		}else{
+			iSequence = LookupActivity ( m_Activity );
+		}
+			
+	}
+	else
+	{
+		if(EASY_CVAR_GET_DEBUGONLY(animationPrintouts) == 1 && monsterID >= -1)easyForcePrintLine("%s:%d Anim info IDLE RESET #2? frame:%.2f done:%d", getClassname(), monsterID, pev->frame, m_fSequenceFinished);
+
+		// animation that just ended doesn't loop! That means we just finished a fidget
+		// and should return to our heaviest weighted idle (the subtle one)
+
+		if(usesAdvancedAnimSystem()){
+			iSequence = LookupActivityHard ( m_Activity );
+		}else{
+			iSequence = LookupActivityHeaviest ( m_Activity );
+		}
+
+	}
+
+	if ( iSequence != ACTIVITY_NOT_AVAILABLE )
+	{
+		int oldSequence = pev->sequence;
+		//BOOL resetFrameYet = FALSE;
+
+		// don't reset sinceLoopMem, that is remembered through this type of change.
+		BOOL sinceLoopMem = m_fSequenceFinishedSinceLoop;
+			
+		//easyPrintLine("ANIMATION CHANGE!!!! B");
+		pev->sequence = iSequence;	// Set to new anim (if it's there)
+		ResetSequenceInfo( );
+
+		m_fSequenceFinishedSinceLoop = sinceLoopMem;
+
+
+		//MODDD IMPORTANT. Go ahead and let the system know this sequence finshed at least once, sometimes that matters. Even a replacement different idle sequence.
+		//m_fSequenceFinishedSinceLoop = TRUE;
+		// NO NOT HERE.  Leave it to animating.cpp, probably
+
+			
+		//MODDD - why wasn't this here before?!  Why do we assume the new sequence will reset the frame? We sure don't know that?
+		//        Even without forceIdleFrameReset.
+		if(forceIdleFrameReset() || !(iSequence == oldSequence && this->m_fSequenceLoops) ){
+			//if this is the same sequence and it loops, no need to reset.
+			resetFrame();
+		}
+	}
+}//RefreshActivity
 
 
 
@@ -4480,8 +4634,8 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 		//record the old bounds for getting them back.
 		oldMins = pev->mins;
 		oldMaxs = pev->maxs;
-
-		UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
+		// What?  Why change the bounds so soon?
+		//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 	}
 #endif
 
@@ -4498,7 +4652,20 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 
 		
 		oldOrigin = pev->origin;
-		if ( !WALK_MOVE( ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY ) )
+
+		BOOL walkMoveResult = WALK_MOVE(ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY);
+
+		/*
+		Vector originNow = pev->origin;
+		Vector pointDelta = (originNow - oldOrigin);
+		float moveDisto = DistanceFromDelta(pointDelta);
+		float moveDisto2D = Distance2DFromDelta(pointDelta);
+
+		easyForcePrintLine("heyyy %.2f %.2f", moveDisto, moveDisto2D);
+		*/
+
+
+		if ( !walkMoveResult )
 		{// can't take the next step, fail!
 
 #ifdef USE_MOVEMENT_BOUND_FIX_ALT
@@ -4516,19 +4683,23 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 				}
 
 				if(whut == NULL || whut->IsWorld()){
-					//WAIT. You get one more chance.
-					oldMins = pev->mins;
-					oldMaxs = pev->maxs;
+					// WAIT. You get one more chance.
+					// ???  Any why record these here again?  Startup got it right the first time.
+					//oldMins = pev->mins;
+					//oldMaxs = pev->maxs;
+
 					UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 					pev->origin = oldOrigin;
 
 
 					if(!WALK_MOVE( ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY )){
-						//still fail? it is ok to run the script below that accepts failure.
+						// still fail? it is ok to run the script below that accepts failure.
+						/*
 						UTIL_SetSize(pev, oldMins, oldMaxs);
-						//WAIT. Allow below to run in this case or not?  I don't know man!!
-						//But slowdowns can happen sometimes from this.  Why??
-						//continue;
+						// WAIT. Allow below to run in this case or not?  I don't know man!!
+						// But slowdowns can happen sometimes from this.  Why??
+						continue;
+						*/
 					}else{
 						//success? no, allowed to keep going.
 						UTIL_SetSize(pev, oldMins, oldMaxs);
@@ -4594,6 +4765,13 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 							//continue; // SKIIIIIIIP IT
 						}
 					}
+
+					if(monsterID == 3 && strcmp(debugStuff, "monster_generic") == 0){
+						int x = 45;
+						// PRINT THIS stuff OUT
+						//DebugLine_SetupPoint(7, vecEndFiltered, 255, 255, 0);
+					}
+
 				}
 
 
@@ -4627,6 +4805,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 				iReturn = LOCALMOVE_INVALID;
 				break;
 			}//END OF check for trace-hit matching target
+
 
 		}//WALK_MOVE check
 	}//FOR LOOP through flDist
@@ -4751,6 +4930,10 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 					if(tries == 0){
 						// oh.  Ran out of tries, not much else can be done here.
 						easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Could not get point (%.2f,%.2f,%.2f) out of the map into the ground above!", getClassname(), monsterID, vecEndFiltered.x, vecEndFiltered.y, vecEndFiltered.z);
+						
+						//DebugLine_SetupPoint(1, pev->origin, 255, 0, 255);
+						//DebugLine_SetupPoint(2, vecEndFiltered, 0, 255, 0);
+						//DebugLine_SetupPoint(3, t_vecEnd, 0, 255, 255);
 
 						// There is moving in the yaw-wise dir of the monster though.  At that point just
 						// skip to allowing this anyway.
@@ -4781,7 +4964,8 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 			//DebugLine_SetupPoint(1, pev->origin, 255, 0, 255);
 			//DebugLine_SetupPoint(2, vecEndFiltered, 0, 255, 0);
 
-			if ( forcePass || zDist > maxZ_DistAllowed )
+			//if ( forcePass || zDist > maxZ_DistAllowed )
+			if ( !forcePass && zDist > maxZ_DistAllowed )
 			{
 				// too spammy in any map with lots of vertical level space (a2a1a).
 				//easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Route failed from reaching a point too far from the goal in Z compared to my height.  Difference in Z is: %.2f.  Most allowed: %.2f.", getClassname(), monsterID, zDist, maxZ_DistAllowed);
@@ -5420,6 +5604,8 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 
 
 // Clone, don't triangulate.
+// WAIT!  No, still triangulate.  Even getting between some pre-placed map nodes requires triangulation
+// to work right.   UUuuuuhhh.   alrighty then.
 BOOL CBaseMonster::BuildRouteCheap ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
 {
 	float flDist;
@@ -6031,7 +6217,7 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 
 	if ((m_Route[m_iRouteIndex].iType & ~bits_MF_NOT_TO_MASK) & (useHullCheckMask)) {
 		//for now...
-		localMovePass = (CheckLocalMoveHull(pev->origin, vecCheckEnd, pTargetEnt, &flDist) == LOCALMOVE_VALID);
+		localMovePass = (CheckLocalMoveHull(vecCheckStart, vecCheckEnd, pTargetEnt, &flDist) == LOCALMOVE_VALID);
 		//localMovePass = TRUE;
 
 		//DebugLine_Setup(0, pev->origin, vecCheckEnd, 0, 255, 0);
@@ -6042,7 +6228,7 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 
 	}
 	else {
-		localMovePass = (CheckLocalMove(pev->origin, vecCheckEnd, pTargetEnt, checkTheZ, &flDist) == LOCALMOVE_VALID);
+		localMovePass = (CheckLocalMove(vecCheckStart, vecCheckEnd, pTargetEnt, checkTheZ, &flDist) == LOCALMOVE_VALID);
 
 		
 		//if (localMovePass == 1) {
@@ -6678,7 +6864,140 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 
 #ifndef USE_MOVEMENT_BOUND_FIX_ALT
 		// Normal way!
-		UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
+
+
+		//UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_STRAFE );
+
+
+
+		//DebugLine_SetupPoint(m_Route[m_iRouteIndex].vecLocation, 255, 255, 255);
+		
+		//MODDD - using MOVE_STRAFE instead of MOVE_NORMAL.
+		// Already moving in the direction I want to, and this jitters around less (if at all) when
+		// moving stuck against a ramp, better to detect stagnation that way.
+
+		Vector oldOrigin = pev->origin;
+		// the stepsize makes the difference in overcoming some ramp edges??
+		UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_STRAFE );
+
+		Vector originNow = pev->origin;
+		Vector pointDeltaTE = (originNow - oldOrigin);
+		//float moveDisto = DistanceFromDelta(pointDeltaTE);
+		float moveDisto2D = Distance2DFromDelta(pointDeltaTE);
+
+
+		//MODDD - could always back up by however much the '16' went overboard on the current step
+		// but I doubt this will ever happen very often, and that could land back on the issue'd
+		// area anyway.
+		if(moveDisto2D < flStep * 0.3){
+			// Couldn't cover even 30% of that step?  Try again with the full step size to try and get past this
+
+			if(flStep == 16){
+				// Already a step size of 16??  What do I do here?
+				easyPrintLine("MoveExecute ERROR: %s:%d Could not overcome obstacle at max step size!", getClassname(), monsterID);
+				TaskFail();
+				return;
+			}else {
+				// not at the max step size?  ok, try at 16 then
+				oldOrigin = pev->origin;
+				UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, 16, MOVE_STRAFE );
+			
+				originNow = pev->origin;
+				pointDeltaTE = (originNow - oldOrigin);
+				//float moveDisto = DistanceFromDelta(pointDeltaTE);
+				moveDisto2D = Distance2DFromDelta(pointDeltaTE);
+			
+				if(moveDisto2D < 16 * 0.3){
+					// Still stagnating?  FAIL
+					easyPrintLine("MoveExecute ERROR: %s:%d Could not overcome obstacle at re-done step size!", getClassname(), monsterID);
+					TaskFail();
+					return;
+				}
+			}
+		}// movement stagnation check
+
+
+
+
+
+
+
+		/*
+		float flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length2D();
+		float flCheckDist;
+		BOOL checkTheZ;
+		float flDist;
+
+		// if the waypoint is closer than CheckDist, CheckDist is the dist to waypoint
+		if (flWaypointDist < DIST_TO_CHECK)
+		{
+			flCheckDist = flWaypointDist;
+
+			checkTheZ = TRUE;
+
+		}
+		else
+		{
+			flCheckDist = DIST_TO_CHECK;
+			// incomplete dist?  Don't check the Z, 
+			// Wait!
+			if(
+				m_Route[m_iRouteIndex].iType & (bits_MF_TO_ENEMY | bits_MF_TO_TARGETENT) &&
+				m_Route[m_iRouteIndex].iType & (bits_MF_IS_GOAL)
+				){
+				checkTheZ = TRUE;
+			}else{
+				checkTheZ = FALSE;
+			}
+		}
+		Vector vecCheckStart = pev->origin;
+		Vector vecCheckEnd = pev->origin + vecDir * flCheckDist;
+		//localMovePass = (CheckLocalMove(vecCheckStart, vecCheckEnd, pTargetEnt, checkTheZ, &flDist) == LOCALMOVE_VALID);
+
+
+		UTIL_SetOrigin( pev, pev->origin );
+		if(!this->isMovetypeFlying())
+		{
+			DROP_TO_FLOOR( ENT( pev ) );//make sure monster is on the floor!
+		}
+		Vector vecStartFiltered = pev->origin;
+		Vector vecEndFiltered = vecCheckEnd;
+
+		Vector pointDelta = vecEndFiltered - vecStartFiltered;
+		float flYaw = UTIL_VecToYaw ( pointDelta);
+
+		Vector oldOrigin = pev->origin;
+		// the stepsize makes the difference in overcoming some ramp edges??
+		float myStepSize = 16;
+		BOOL walkMoveResult = WALK_MOVE(ENT(pev), flYaw, myStepSize, WALKMOVE_CHECKONLY);
+
+		Vector originNow = pev->origin;
+		Vector pointDeltaTE = (originNow - oldOrigin);
+		float moveDisto = DistanceFromDelta(pointDeltaTE);
+		float moveDisto2D = Distance2DFromDelta(pointDeltaTE);
+
+		easyForcePrintLine("yargh %.2f %.2f", moveDisto, moveDisto2D);
+		*/
+		/////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+		// CHECK:  If movement is stagnating, maybe we're caught in some oddness near where the ramp
+		// begins or ends.  Raise my Z a little and go again.
+
+
+		// Why not use WALK_MOVE ?
+		// oh, looks like the same, same flaws.  Nevermind.
+		/*
+		//////////////////////////////////////////////////////////////////////////////////
+		Vector pointDelta = m_Route[m_iRouteIndex].vecLocation - pev->origin;
+		float flYaw = UTIL_VecToYaw ( pointDelta);
+		WALK_MOVE(ENT(pev), flYaw, flStep, WALKMOVE_NORMAL);
+		//////////////////////////////////////////////////////////////////////////////////
+		*/
 
 #else
 
@@ -7276,18 +7595,22 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 
 
 	alternatingChoice = 1;
+	/*
 	// ANY WAY BUT NEWEST
 	startSearchNode = WorldGraph.m_iLastCoverSearch;
 	maxTries = WorldGraph.m_cNodes;
+	*/
 	// NEWEST
-	//startSearchNode = iMyNode;
-	//maxTries = WorldGraph.m_cNodes - 1;
+	startSearchNode = iMyNode;
+	maxTries = WorldGraph.m_cNodes - 1;
+
+	int myNodeTypeAllowed = getNodeTypeAllowed();
 
 	// we'll do a rough sample to find nodes that are relatively nearby
 	for ( i = 0 ; i < maxTries ; i++ )
 	{
 
-		/*
+		
 		// NEWEST WAY.  Start from the marked 'iMyNode' instead and alternate in adding/subtracting from startSearchNode
 		// each time.  Also move i up half as fast (since it's +1, -1, +2, -2, etc.     +1, -2, +3, -4 skips nodes, BAD)
 		// Also, start i at 2 from it's normal start (0) so that the divide by 2 still ends up at a different value.
@@ -7302,7 +7625,7 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 		}else{
 			alternatingChoice = 1;
 		}
-		*/
+		
 
 
 		//MODDD - NOPE.  Do at the end.
@@ -7320,16 +7643,22 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 		*/
 		////////////////////////////////////////////////////////////////
 
-		
+		/*
 		// OLD WAY
 		////////////////////////////////////////////////////////////////
 		int nodeNumber = (i + WorldGraph.m_iLastCoverSearch) % WorldGraph.m_cNodes;
 		CNode &node = WorldGraph.Node( nodeNumber );
 		WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
 		////////////////////////////////////////////////////////////////
-		
+		*/
 
 
+		//MODDD - Also, new early check.  If this node clashes with this monster's type of movement
+		// (mid-air nodes even though I'm a walker), deny even trying them.  What good would that route be.
+		if(!(node.m_afNodeInfo & myNodeTypeAllowed)){
+			// no types in common?  Skip it
+			continue;
+		}
 
 		// could use an optimization here!!
 		flDist = ( pev->origin - node.m_vecOrigin ).Length();
@@ -7389,6 +7718,11 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 // interesting point to explore than 5 inches away or that I can already see, after all.
 // Also takes a preference of movement activity (ACT_WALK or ACT_RUN most likely), since this might be casual for otherwise
 // fast-moving entities.
+
+// TODO: could some randomness be part of each desirability increase, so that there's a floatiness to what node is
+// ideal one time and ideal another?  Hard to get it to make a worthwhile difference without sometimes picking oddly
+// close nodes maybe.   Eh, little can't hurt.   thisNodeDesirability += 0.4 * RANDOM_FLOAT(0.78, 1.0);
+
 BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector vecViewOffset, float flMinDist, float flMaxDist )
 {
 	int i;
@@ -7443,10 +7777,19 @@ BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector v
 	// At the end, the node with the highest desirability is what I want to make a path to (call 'MoveToLocation';
 	// that builds the route from here to there).
 	float bestNodeDesirability = 0;
+	int bestNodeNumber = -1;
 	CNode* bestNode = NULL;
 	
 
 
+
+
+
+
+	// DEBUG!  FORCE THIS
+	//bestNode = &WorldGraph.Node( 25 );
+	//MoveToLocation(ACT_RUN, 0, bestNode->m_vecOrigin);
+	//return TRUE;
 
 
 
@@ -7462,6 +7805,8 @@ BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector v
 	// NEWEST
 	startSearchNode = iMyNode;
 	maxTries = WorldGraph.m_cNodes - 1;
+
+	int myNodeTypeAllowed = getNodeTypeAllowed();
 
 	// we'll do a rough sample to find nodes that are relatively nearby
 	for ( i = 0 ; i < maxTries ; i++ )
@@ -7479,6 +7824,7 @@ BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector v
 			alternatingChoice = 1;
 		}
 
+
 		// NEW WAY
 		/*
 		//MODDD - TODO?   Does relying on the same 'recent' node from Cover even make sense here?
@@ -7492,10 +7838,32 @@ BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector v
 
 
 
+
+
 		// TEST!!!
 		//if(nodeNumber == 73 || nodeNumber == 77 || nodeNumber == 79 || nodeNumber == 75){
 		//	easyForcePrintLine("IM present %d", nodeNumber);
 		//}
+
+		// Beware!  This node may be in the map.  Don't know why this happens sometimes,
+		// see node #63 ('teleporttonode 63' in console) in a1a1b.bsp.)
+		// Wait!  Now making nodes that start in bad locations have 0 nodeinfo (land, air,
+		// or water), so that check is all that's needed.
+		// No a type of movement able to reach it.
+		/*
+		Vector testVecto = node.m_vecOriginPeek;
+		// a 'node.m_cNumLinks' under 1 would also be suspicious (no links out), but eh.
+		// We are just trying to go anywhere anyway.
+		if(UTIL_PointContents(testVecto) == CONTENTS_SOLID){
+			// what.
+			continue;
+		}
+		*/
+		if(!(node.m_afNodeInfo & myNodeTypeAllowed)){
+			// no types in common?  Skip it
+			continue;
+		}
+
 
 
 		// could use an optimization here!!
@@ -7562,6 +7930,7 @@ BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector v
 				if(canPath){
 					// take it!
 					bestNodeDesirability = thisNodeDesirability;
+					bestNodeNumber = nodeNumber;
 					bestNode = &WorldGraph.Node( nodeNumber );
 				}
 				RouteClear();  // necessary?  cheap though
@@ -7570,6 +7939,9 @@ BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector v
 		}// flDist minimum requirements
 	}// for loop through nodes to test
 
+	
+	// breakpoints.
+	bestNodeNumber;
 
 	if(bestNodeDesirability > 0.3){
 		// yippee.  Leave off with this path.
@@ -7743,9 +8115,11 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 		// then -2, +3, -3, etc.
 		iOffset = 2;
 		alternatingChoice = 1;
+		/*
 		// ANY WAY BUT NEWEST
-		//startSearchNode = WorldGraph.m_iLastCoverSearch;
-		//maxTries = WorldGraph.m_cNodes;
+		startSearchNode = WorldGraph.m_iLastCoverSearch;
+		maxTries = WorldGraph.m_cNodes;
+		*/
 		// NEWEST
 		startSearchNode = iMyNode;
 		maxTries = WorldGraph.m_cNodes - 1;
@@ -7757,6 +8131,7 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 	// that obviously should work fine.
 	BOOL theHardWay = (this->pev->flags & FL_MONSTERCLIP);
 
+	int myNodeTypeAllowed = getNodeTypeAllowed();
 
 	// we'll do a rough sample to find nodes that are relatively nearby
 	for ( i = 0 ; i < maxTries; i++ )
@@ -7765,23 +8140,18 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 		////////////////////////////////////////////////////////////////
 		int nodeNumber = ((alternatingChoice * (int)((i+iOffset)*0.5)) + startSearchNode) % WorldGraph.m_cNodes;
 
-		
 		if(monsterID == 3 && nodeNumber == 11){
-			// WHAT
 			int x = 45;
 		}
 
-		if (nodeNumber == startSearchNode)continue;  //can happen with a random start-search node. Any node after can be picked.
-
 		//MODDD
-		// Also, don't try the node I'm already closest to as a destination if I'm already touching it.
+		// Don't try the node I'm already closest to as a destination if I'm already very close.
 		if (nodeNumber == iMyNode){
 			float distah = Distance(pev->origin, WorldGraph.Node(iMyNode).m_vecOrigin);
-			if(distah < 5){
+			if(distah <= 10){
 				continue;
 			}
 		}
-
 
 		if (nodeNumber < 0) nodeNumber += WorldGraph.m_cNodes;  // in negatives, get out of the negative range, loop back around
 		CNode &node = WorldGraph.Node( nodeNumber );
@@ -7806,6 +8176,12 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 		CNode &node = WorldGraph.Node( nodeNumber );
 		WorldGraph.m_iLastCoverSearch = nodeNumber + 1; // next monster that searches for cover node will start where we left off here.
 		*/
+
+
+		if(!(node.m_afNodeInfo & myNodeTypeAllowed)){
+			// no types in common?  Skip it
+			continue;
+		}
 
 
 		//MODDD - idea.  Wouldn't doing the dist check before the CheckLocalMove's make more sense?
@@ -7990,10 +8366,11 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 						//MODDD - there we go
 						WorldGraph.m_iLastCoverSearch = nodeNumber + 1;
 
-
+						/*
 						if(monsterID == 3){
 							DebugLine_SetupPoint(m_vecMoveGoal, 255, 125, 255);
 						}
+						*/
 
 						return TRUE; // UNDONE: keep looking for something closer!
 					}
@@ -8522,15 +8899,20 @@ void CBaseMonster::HandleAnimEvent( MonsterEvent_t *pEvent )
 								
 								// a working MONSTERCLIP that's close enough?  Disable for now.
 								pList[i]->pev->solid = SOLID_NOT;
-							}
-						}
-					}
-				}
-			}
+							}//close enough (distance)
+						}//has monsterclip flag and bounds are obstructive
+					}//is func_monsterclip
+				}//not-me check
+			}//loop through nearby entities
+
+			// Make my bounds invisible too right now.  Some scripted things put visible model far away
+			// very quickly, so continuing to be an obstacle doesn't make much sense.
+			// If doing it this soon is ever an issue, say so.
+			this->pev->solid = SOLID_NOT;
+
 			////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-		}
+		}//SCRIPT_EVENT_DEAD
 #if _DEBUG
 		else{
 			ALERT( at_aiconsole, "INVALID death event:%s\n", STRING(pev->classname) );
@@ -8890,7 +9272,7 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 			}
 		}
 
-	}else if(iResult > 2){
+	}else if(iResult >= 2){
 		// Any other route?  Just check to see that the dest-node can reach vecDest, that is important.
 
 		CNode& thatNode = WorldGraph.Node(iDestNode);
@@ -8913,7 +9295,6 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 				}
 			//}
 		}
-
 	}// same-src-dest-node check
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////

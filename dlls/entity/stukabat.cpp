@@ -10,6 +10,7 @@
 #include "defaultai.h"
 #include "studio.h"
 #include "player.h"
+#include "nodes.h"
 
 
 EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
@@ -5598,5 +5599,16 @@ Activity CStukaBat::getIdleActivity(void){
 
 
 }//END OF getIdleActivity)
+
+
+// Override to tell whether this monster prefers to look for bits_NODE_GROUND or AIR
+// nodes.  Again, going from the ground to air, returning AIR is still needed so that it tries
+// those nodes.
+// Although the way things work now, it just jumps to mid-air if the target is up to far away.
+// So it probably works fine really.
+// (Stukabat sets FL_FLY on and off which affects how picking up the _NODE to use works)
+int CStukaBat::getNodeTypeAllowed(void){
+	return -1;
+}
 
 

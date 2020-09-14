@@ -2002,7 +2002,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 			PainSound();// "Ouch!"
 		}
 
-
 		//MODDD - SAFETY.  Reset the damage bits, no reason to keep them around when applyNewTimedDamage
 		// handled them and put them in other arrays if needed.
 		// Should anything at a later point need to read these, put this reset later or those other places
@@ -2011,7 +2010,6 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBaseMonster){
 		// ...nevermind, don't do this reset.  Messes with player hud showing the damages I bet, but untested.
 		//m_bitsDamageType = 0;
 		//m_bitsDamageTypeMod = 0;
-
 
 	}else{
 		// dead?  can't take any timed damages.

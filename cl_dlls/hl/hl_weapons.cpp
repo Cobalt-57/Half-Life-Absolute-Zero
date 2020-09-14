@@ -99,8 +99,9 @@ BOOL g_HUD_Redraw_ran = FALSE;
 // go ahead and allow the very first time?
 // After this, VidInit in cdll_int.cpp has to set this (map change).
 BOOL g_cl_queueSharedPrecache = TRUE;
-
 BOOL g_cl_firstSendoffSinceMapLoad = TRUE;
+float g_cl_mapStartTime = -1;
+
 
 
 
@@ -501,6 +502,9 @@ Set up weapons, player and functions needed to run weapons code client-side.
 */
 
 
+//#include "r_studioint.h"
+//extern engine_studio_api_t IEngineStudio;
+
 //Note - does nothing if already initialized from an earlier call.
 void HUD_InitClientWeapons( void )
 {
@@ -511,9 +515,23 @@ void HUD_InitClientWeapons( void )
 	// what used to be here only (weapon-related stuff), keeping that much that way.
 	if(g_cl_queueSharedPrecache){
 		g_cl_queueSharedPrecache = FALSE;
+		// Also set the current time for rendering to know how long it's been since the map has been loaded.
+		// There is also IEngineStudio.GetTimes( ... ), but it looks like this gets the exact same time, or 
+		// close enough for it to work out anyway.  Unsure if would even perform any better in VidInit.
+		g_cl_mapStartTime = gEngfuncs.GetClientTime();
+
+		// Interesting, this actually fails.  IEngineStudio.GetTimes (pointer to a method) is NULL.
+		// Which is odd because VidInit happens earlier than HUD_InitClientWeapons, where it isn't NULL.
+		// Strange strange strange, not that it needs to be used here.
+		/*
+		int dummy1;
+		double test3;
+		double dummy2;
+		IEngineStudio.GetTimes(&dummy1, &test3, &dummy2);
+		*/
+		
 		PrecacheShared();
 	}
-
 
 	if (initialized) {
 		return;  //right there.
@@ -900,9 +918,6 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		
 
 
-		if(pCurrent->m_iId==WEAPON_CROSSBOW){
-			int x = 45;
-		}
 
 		if(g_cl_firstSendoffSinceMapLoad == FALSE){
 			// normal
@@ -910,7 +925,6 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 			if( !(pfrom->m_flNextPrimaryAttack <= 0 && pCurrent->m_flNextPrimaryAttack >= 0.1) ){
 				pCurrent->m_flNextPrimaryAttack = pfrom->m_flNextPrimaryAttack;
 			}else{
-				// !!!!
 				int x = 45;
 			}
 			if( !(pfrom->m_flNextSecondaryAttack <= 0 && pCurrent->m_flNextSecondaryAttack >= 0.1) ){
@@ -923,10 +937,6 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 			}
 
 		}else{
-
-			if(pCurrent->m_iId==WEAPON_CROSSBOW){
-				int x = 45;
-			}
 
 			// Force it, no prevention
 			pCurrent->m_flNextPrimaryAttack = pfrom->m_flNextPrimaryAttack;

@@ -46,6 +46,8 @@ EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(sv_gargantua_throwattack)
 
 
+//MODDD - all attacksound and missound pitches increased, were 50 and 50 base, now 60 and 75.
+
 
 // no need for this now
 //#define bits_COND_GARG_FLAMETHROWER_PREATTACK_EXPIRED	( bits_COND_SPECIAL1 )
@@ -630,7 +632,9 @@ void CStomp::Think( void )
 		}
 
 		if ( pEntity ){
-			pEntity->TakeDamage( pev, pevOwner, gSkillData.gargantuaDmgStomp, DMG_SONIC, 0 );
+			//MODDD - cutting stomp damage in half, being near-enough to insta kill from standing dead-center
+			// in the way seems like a bit much, this would still be bad.
+			pEntity->TakeDamage( pev, pevOwner, gSkillData.gargantuaDmgStomp * 0.4, DMG_SONIC, 0 );
 		}
 	}
 	
@@ -1386,7 +1390,7 @@ void CGargantua::StompAttack( void )
 	UTIL_ScreenShake( pev->origin, 12.0, 100.0, 2.0, 1500 );
 
 	//MODDD - same for you, lower attenuation.  Was 'ATTN_GARG'
-	UTIL_PlaySound( edict(), CHAN_WEAPON, pStompSounds[ RANDOM_LONG(0,ARRAYSIZE(pStompSounds)-1) ], 1.0, ATTN_NORM - 0.23, 0, PITCH_NORM + RANDOM_LONG(-10,10) );
+	UTIL_PlaySound( edict(), CHAN_WEAPON, pStompSounds[ RANDOM_LONG(0,ARRAYSIZE(pStompSounds)-1) ], 1.0, ATTN_NORM - 0.23, 0, PITCH_NORM + RANDOM_LONG(-7,7) );
 
 
 	//MODDD - you can do better
@@ -2321,10 +2325,10 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 					//UTIL_MakeVectors(pev->angles);	// called by CheckTraceHullAttack
 					pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
 				}
-				UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+				UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 60 + RANDOM_LONG(0,15) );
 			}
 			else{ // Play a random attack miss sound
-				UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+				UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 75 + RANDOM_LONG(0,15) );
 			}
 
 			// ??????? for what purpose, as-is?
@@ -2336,7 +2340,7 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 	case GARG_AE_RIGHT_FOOT:
 	case GARG_AE_LEFT_FOOT:
 		UTIL_ScreenShake( pev->origin, 4.0, 3.0, 1.0, 750 );
-		UTIL_PlaySound( edict(), CHAN_BODY, pFootSounds[ RANDOM_LONG(0,ARRAYSIZE(pFootSounds)-1) ], 1.0, ATTN_GARG, 0, PITCH_NORM + RANDOM_LONG(-10,10) );
+		UTIL_PlaySound( edict(), CHAN_BODY, pFootSounds[ RANDOM_LONG(0,ARRAYSIZE(pFootSounds)-1) ], 1.0, ATTN_GARG, 0, PITCH_NORM + RANDOM_LONG(-5,5) );
 		break;
 
 	case GARG_AE_STOMP:
@@ -2352,7 +2356,7 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t *pEvent)
 		break;
 
 	case GARG_AE_BREATHE:
-		UTIL_PlaySound( edict(), CHAN_VOICE, pBreatheSounds[ RANDOM_LONG(0,ARRAYSIZE(pBreatheSounds)-1) ], 1.0, ATTN_GARG, 0, PITCH_NORM + RANDOM_LONG(-10,10) );
+		UTIL_PlaySound( edict(), CHAN_VOICE, pBreatheSounds[ RANDOM_LONG(0,ARRAYSIZE(pBreatheSounds)-1) ], 1.0, ATTN_GARG, 0, PITCH_NORM + RANDOM_LONG(-7,7) );
 		break;
 
 	default:
@@ -3500,15 +3504,15 @@ void CGargantua::HandleEventQueueEvent(int arg_eventID){
 				pHurt->pev->groundentity = NULL;
 				pHurt->pev->origin.z += 1;
 			}
-			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 60 + RANDOM_LONG(0,15) );
 		}
 		else{ // Play a random attack miss sound
-			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 75 + RANDOM_LONG(0,15) );
 		}
 
 		// Play the stomp-sound, smacked the ground pretty good at least.
 		UTIL_ScreenShake( pev->origin, 12.0, 100.0, 2.0, 1500 );
-		UTIL_PlaySound( edict(), CHAN_WEAPON, pStompSounds[ RANDOM_LONG(0,ARRAYSIZE(pStompSounds)-1) ], 1.0, ATTN_NORM - 0.23, 0, PITCH_NORM + RANDOM_LONG(7,12) );
+		UTIL_PlaySound( edict(), CHAN_WEAPON, pStompSounds[ RANDOM_LONG(0,ARRAYSIZE(pStompSounds)-1) ], 1.0, ATTN_NORM - 0.23, 0, PITCH_NORM + RANDOM_LONG(11,16) );
 
 		TraceResult trace;
 		Vector decalTraceStart = pev->origin + gpGlobals->v_forward * 86 + Vector(0, 0, 20);
@@ -3536,10 +3540,10 @@ void CGargantua::HandleEventQueueEvent(int arg_eventID){
 				pHurt->pev->groundentity = NULL;
 				pHurt->pev->origin.z += 1;
 			}
-			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 60 + RANDOM_LONG(0,15) );
 		}
 		else{ // Play a random attack miss sound
-			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 75 + RANDOM_LONG(0,15) );
 		}
 
 	}break;
@@ -3566,7 +3570,7 @@ void CGargantua::HandleEventQueueEvent(int arg_eventID){
 		else{ // Play a random attack miss sound
 			// ALSO, give up the task.  Doesn't make sense to finish this one on a miss.
 			// ...at time 10/16 that is (will be noticed without a grabbedEnt).  Now, event #7 will do that check.
-			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 50 + RANDOM_LONG(0,15) );
+			UTIL_PlaySound( edict(), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM - 0.05, 0, 75 + RANDOM_LONG(0,15) );
 		}
 	}break;
 	case 7:{

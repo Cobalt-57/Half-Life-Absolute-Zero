@@ -5,7 +5,14 @@
 // $NoKeywords: $
 //=============================================================================
 
+//MODDD - library stuff.  externallibinclude.h maybe ?
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <memory.h>
+#include <math.h>
+
+
 #include "hud.h"
 #include "cl_util.h"
 #include "const.h"
@@ -15,11 +22,6 @@
 #include "cl_entity.h"
 #include "dlight.h"
 #include "triangleapi.h"
-
-#include <stdio.h>
-#include <string.h>
-#include <memory.h>
-#include <math.h>
 
 #include "studio_util.h"
 #include "r_studioint.h"

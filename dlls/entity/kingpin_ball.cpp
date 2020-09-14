@@ -36,7 +36,9 @@ void CKingpinBall::Spawn( void ){
 
 	pathfind_onRoute = FALSE;
 
-	if(map_anyAirNodes){
+	// Hold on!  Now able to use ground nodes instead, or supposed to anyway, in maps that lack air nodes.
+	// VERIFY THIS!
+	//if(map_anyAirNodes){
 		//Use a different type of think to mimic 
 		if(m_hEnemy != NULL){
 			//this once.
@@ -44,10 +46,10 @@ void CKingpinBall::Spawn( void ){
 		}
 
 		startSmartFollow();
-	}else{
-
-		//nothing out of the ordinary.
-	}
+	//}else{
+	//
+	//	//nothing out of the ordinary.
+	//}
 
 }//END OF Spawn
 
@@ -463,3 +465,4 @@ float CKingpinBall::GetMaxSpeed(void){
 GENERATE_KILLED_IMPLEMENTATION(CKingpinBall) {
 	GENERATE_KILLED_PARENT_CALL(CControllerHeadBall);
 }
+

@@ -44,7 +44,7 @@ extern "C"
 #include "cvar_custom_info.h"
 #include "cvar_custom_list.h"
 
-//#include "StudioModelRenderer.h"
+#include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
 
 
@@ -71,10 +71,10 @@ extern int g_cl_frameCount;
 extern BOOL resetNormalRefDefVars;
 extern float sp_ClientPreviousTime;
 
-extern float ary_g_prevTime[1024];
+extern double ary_g_prevTime[1024];
 extern float ary_g_prevFrame[1024];
-extern float ary_g_LastEventCheck[1024];
-extern float ary_g_LastEventCheckEXACT[1024];
+extern double ary_g_LastEventCheck[1024];
+extern double ary_g_LastEventCheckEXACT[1024];
 
 extern BOOL g_cl_egonEffectCreatedYet;
 extern BOOL g_firstFrameSinceRestore;
@@ -82,7 +82,7 @@ extern BOOL g_cl_queueSharedPrecache;
 extern BOOL g_cl_firstSendoffSinceMapLoad;
 
 extern CGameStudioModelRenderer g_StudioRenderer;
-extern float g_mapStartTime;
+extern float g_cl_mapStartTime;
 
 
 
@@ -217,6 +217,8 @@ int DLLEXPORT Initialize( cl_enginefunc_t *pEnginefuncs, int iVersion )
 
 
 //#include "GameStudioModelRenderer.h"
+//#include "r_studioint.h"
+//extern engine_studio_api_t IEngineStudio;
 
 /*
 ==========================
@@ -260,13 +262,33 @@ int DLLEXPORT HUD_VidInit( void )
 
 	// is this safe?
 	// No.
-	//g_mapStartTime = g_StudioRenderer.m_clTime;
+	//g_cl_mapStartTime = g_StudioRenderer.m_clTime;
 	// Wait uh.  What's the difference between g_engfuncs.pfnTime() and gEngfuncs.GetClientTime() ?
 	// Most stuff clientside looks to use the latter.
+
 	// OOooookay, both of these don't get the updated time since loading a game, fantastic
-	//g_mapStartTime = g_engfuncs.pfnTime();
-	//g_mapStartTime = gEngfuncs.GetClientTime();
-	
+
+	// Nowhere uses pfnTime().  It's NULL clientside and never even given a reference to replace that
+	// in hl_weapons.cpp (HUD_InitClientWeapons) like a few other engine methods for g_engfuncs.
+	//float test1 = g_engfuncs.pfnTime();
+	// And, GetClientTime() always reports 0 at this point, even if the time of the current game doesn't
+	// begin at 0 (loaded game or coming from a transition to a previously run map with a remembered time).
+	// Seems the best idea is to set a queued var for HUD_InitClientWeapons to see and set the map's first
+	// time to GetClientTime() then.  For now, force the time var to -1 so that rendering that sees it extra
+	// early at least knows 'oh, it's been really soon since loading the map' which is the point.
+	// In fact, going to let the queue-first-frame piggyback off g_cl_queueSharedPrecache, it is the exact
+	// same time/place it would've been checked anyway
+	//float test2 = gEngfuncs.GetClientTime();
+
+	/*
+	// Nope, no difference
+	int dummy1;
+	double test3;
+	double dummy2;
+	IEngineStudio.GetTimes(&dummy1, &test3, &dummy2);
+	*/
+
+	g_cl_mapStartTime = -1;	
 	g_StudioRenderer.m_nCachedFrameCount = -1;
 
 
@@ -274,7 +296,7 @@ int DLLEXPORT HUD_VidInit( void )
 	//extern CGameStudioModelRenderer g_StudioRenderer;
 	//MODDD - from studioModelRenderer.cpp, initialize to the current game global time.
 	// ...nope, always still 0.    ugh.
-	for (int i = 0; i < 1024; i++) {
+	for (int i = 0; i < MAX_ENTITY_CONSTANT_THAT_PLEASES_THE_DARK_GODS; i++) {
 		// NOTE - gpGlobals->time is unavailable, has to be dummied and routinely set to gEngfuncs.GetClientTime().
 		// So get it from the source then.
 		ary_g_prevTime[i] = 0; //g_StudioRenderer.m_clTime; //gEngfuncs.GetClientTime();

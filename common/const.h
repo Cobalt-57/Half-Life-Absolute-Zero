@@ -166,6 +166,11 @@
 #define FALSE 0
 
 
+// not really sure what else to call this?  Max number of entities possible in the game at a time, going
+// past index 899 crashes if I remember right.  (Not be confused with MAX_MAP_ENTITIES from a barely related,
+// if at all, file)
+#define GAME_MAX_ENTITIES 900
+
 #define MAX_CLIENTS 32
 
 //MODDD - version better for working with floats.
@@ -910,6 +915,9 @@ typedef float vec_t;
 #define MSG_ONE_UNRELIABLE	8		// Send to one client, but don't put in reliable stream, put in unreliable datagram ( could be dropped )
 #define MSG_SPEC			9		// Sends to all spectator proxies
 
+
+
+
 // contents of a spot in the world
 #define CONTENTS_EMPTY		-1
 #define CONTENTS_SOLID		-2
@@ -923,6 +931,8 @@ typedef float vec_t;
 // its own re-defines.
 // Even weirder when you consider that sveral macro constants were defined
 // both here and in bspfile.h anyway.
+// All contents will begin with "CONTENTS_" instead of "CONTENT_" like some did,
+// looks like this way is more common, may as well be consistent.
 #define CONTENTS_ORIGIN		-7		// removed at csg time
 #define CONTENTS_CLIP		-8		// changed to contents_solid
 #define CONTENTS_CURRENT_0		-9
@@ -933,20 +943,14 @@ typedef float vec_t;
 #define CONTENTS_CURRENT_DOWN	-14
 #define CONTENTS_TRANSLUCENT	-15
 
-
-
 #define CONTENTS_LADDER		-16
 
-#define CONTENT_FLYFIELD			-17
-#define CONTENT_GRAVITY_FLYFIELD	-18
-#define CONTENT_FOG					-19
+#define CONTENTS_FLYFIELD			-17
+#define CONTENTS_GRAVITY_FLYFIELD	-18
+#define CONTENTS_FOG				-19
 
-#define CONTENT_EMPTY	-1
-#define CONTENT_SOLID	-2
-#define CONTENT_WATER	-3
-#define CONTENT_SLIME	-4
-#define CONTENT_LAVA	-5
-#define CONTENT_SKY		-6
+
+
 
 // channels
 #define CHAN_AUTO			0

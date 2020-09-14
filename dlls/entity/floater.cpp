@@ -9,6 +9,7 @@
 #include "squidspit.h"
 #include "weapons.h"
 #include "util_debugdraw.h"
+#include "nodes.h"
 /*
 #include "extdll.h"
 #include "util.h"
@@ -1915,7 +1916,7 @@ Vector CFloater::BodyTargetMod(const Vector &posSrc){
 }
 
 
-void CFloater::onDeathAnimationEnd(){
+void CFloater::onDeathAnimationEnd(void){
 	
 	//This monster is now a ticking time bomb...
 	//Also don't call the parent onDeathAnimationEnd. That's what stops the think method (could not even keep track of the countdown timer then)
@@ -1929,4 +1930,11 @@ void CFloater::onDeathAnimationEnd(){
 	//CFlyingMonster::onDeathAnimationEnd();
 
 }//END OF onDeathAnimationEnd
+
+
+// Can move in the water a little if I have to, but I'd prefer not to.
+int CFloater::getNodeTypeAllowed(void){
+	return bits_NODE_AIR;
+}
+
 

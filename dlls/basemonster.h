@@ -509,6 +509,8 @@ public:
 	BOOL drawPathConstant;
 	BOOL drawFieldOfVisionConstant;
 
+	BOOL dummyAI;
+
 
 	//MODDD - new, pertaining to "takeDamage".
 	BOOL blockDamage;
@@ -819,6 +821,7 @@ public:
 	const char* getScheduleName(void);
 
 	virtual void SetActivity ( Activity NewActivity );
+	virtual void RefreshActivity(void);
 	//MODDD
 	//virtual void SetActivity ( Activity NewActivity, BOOL forceReset );
 	
@@ -916,7 +919,8 @@ public:
 
 	int IScheduleFlags ( void );
 	//MODDD - made virtual.
-	virtual BOOL FRefreshRoute( void );
+	virtual BOOL FRefreshRouteStrict( void );
+	virtual BOOL FRefreshRoute(void);
 	virtual BOOL FRefreshRouteCheap( void );
 	virtual BOOL FRefreshRouteChaseEnemySmart(void);
 	BOOL FRouteClear ( void );
@@ -1102,6 +1106,7 @@ public:
 
 	BOOL MoveToNode( Activity movementAct, float waitTime, const Vector &goal );
 	BOOL MoveToTarget( Activity movementAct, float waitTime );
+	BOOL MoveToTargetStrict( Activity movementAct, float waitTime );
 	BOOL MoveToLocation( Activity movementAct, float waitTime, const Vector &goal );
 	BOOL MoveToLocationCheap( Activity movementAct, float waitTime, const Vector &goal );
 	BOOL MoveToEnemy( Activity movementAct, float waitTime );

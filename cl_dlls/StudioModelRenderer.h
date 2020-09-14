@@ -11,15 +11,16 @@
 #pragma once
 #endif
 
-
-
 // and these weren't included in this file beeeccccccaaaaauuuuuusssseee?
 #include "engine/studio.h"
 #include "common/com_model.h"
-
 // ooookay then
 //typedef struct MonsterEvent_t;
 #include "dlls/monsterevent.h"
+
+
+#define MAX_ENTITY_CONSTANT_THAT_PLEASES_THE_DARK_GODS 1024
+
 
 
 

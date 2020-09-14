@@ -1447,6 +1447,9 @@ BOOL CBasePlayerWeapon::DefaultDeploy( char *szViewModel, char *szWeaponModel, i
 
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fireDelayTime; //0.5;
+	//MODDD - why not primary/secondary ones too??  Always weirdness if m_flNextAttack is set without those
+	SetAttackDelays(m_pPlayer->m_flNextAttack);
+
 	//m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + deployAnimTime; //used to be "... + 1.0", now depends on optional parameter (defaults to "1.0");
 	
 	// MODDD - "+ randomIdleAnimationDelay()" removed.  Leave that up to the weapons themselves instead.

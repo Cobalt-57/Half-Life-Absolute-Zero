@@ -168,6 +168,8 @@ public:
 	BOOL FCanCheckAttacks(void);
 	void setEnemyLKP(CBaseEntity* theEnt);
 
+	int getNodeTypeAllowed(void);
+
 
 	void SetObjectCollisionBox( void ){
 

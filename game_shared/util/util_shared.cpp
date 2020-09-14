@@ -2157,12 +2157,10 @@ void UTIL_Sparks(const Vector& position, int arg_ballsToSpawn, float arg_extraSp
 
 
 
-
-
-
 //MODDD - yet more shared now!
-
 //TODO - a version that takes 'float*' might be nice for clientside?
+// May not be as necessary now, support for the Vector side is more standardized now
+// (Vector class supported everywhere C++)
 int UTIL_PointContents(const Vector& vec)
 {
 #ifdef CLIENT_DLL

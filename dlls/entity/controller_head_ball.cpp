@@ -1,6 +1,7 @@
 
 #include "controller_head_ball.h"
 #include "weapons.h"
+#include "nodes.h"
 
 // TODO - why bounce touch no work. Supposed to deal a zap if touched.  Did it in retail, breakpoint there.
 // Can enemy size be involved in the distance-for-zap criteria?
@@ -22,12 +23,23 @@ void CControllerHeadBall::Spawn( void )
 	pev->movetype = MOVETYPE_FLY;
 	pev->solid = SOLID_BBOX;
 
+	//MODDD - why not?
+	pev->flags |= FL_FLY;
+
+
 	SET_MODEL(ENT(pev), "sprites/xspark4.spr");
 	pev->rendermode = kRenderTransAdd;
+
+	//MODDD - experiment.  Some things set for the egon hit-cloud effect.
+	//pev->rendermode = kRenderGlow;
+	//pev->renderfx = kRenderFxNoDissipation;
+
+	//MODDD - would any other rendercolor choices make a difference?  unsure.
 	pev->rendercolor.x = 255;
 	pev->rendercolor.y = 255;
 	pev->rendercolor.z = 255;
 	pev->renderamt = 255;
+
 	//MODDD - NEW.  timeOpacity fades at the same rate as renderamt (true render opacity) with time,
 	// but isn't affected by the opacity lost due to taking damage.
 	timeOpacity = 255;
@@ -126,12 +138,12 @@ void CControllerHeadBall::HuntThink( void  )
 		// Done maybe?
 
 		Vector pointDelta = (m_hEnemy->Center() - pev->origin);
-		float distToEnemy = DistanceFromDelta(pointDelta);
+		//float distToEnemy = DistanceFromDelta(pointDelta);
 		float dist2DToEnemy = Distance2DFromDelta(pointDelta);
-
+		float distZToEnemy = fabs(pointDelta.z);
 
 		//if ((m_hEnemy->Center() - pev->origin).Length() < 54) // 42? 50?
-		if(distToEnemy < m_hEnemy->pev->size.x + 16 && dist2DToEnemy < m_hEnemy->pev->size.z + 16)
+		if(dist2DToEnemy < m_hEnemy->pev->size.x * 0.83 + 16 && distZToEnemy < m_hEnemy->pev->size.z * 0.78 + 16)
 		{
 			TraceResult tr;
 
@@ -610,3 +622,21 @@ void CControllerHeadBall::AdministerZap(CBaseEntity* pEntity, TraceResult& tr){
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }//AdministerZap
+
+// In case any pathfinding is needed, mostly for the kingpin ball.
+int CControllerHeadBall::getNodeTypeAllowed(void){
+	if(map_anyAirNodes){
+		// try those.
+		// (although, MODDD - TODO:
+		//  if making a path with air nodes from a point isn't possible, it is fine to try
+		//  making a route from land nodes instead then)
+		return bits_NODE_AIR;
+	}else{
+		return bits_NODE_LAND;
+	}
+}
+
+int CControllerHeadBall::getHullIndexForNodes(void){
+	return NODE_LARGE_HULL;  //...ya think?
+}
+

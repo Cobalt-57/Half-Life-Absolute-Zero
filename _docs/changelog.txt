@@ -425,6 +425,8 @@ NEW CVAR: gauss_mode, defaults to 1.  0 is retail-based, 1 is pre-release/alpha 
 - Gauss reflect/hit logic stops on hitting the skybox.  Glow effects nor sparks can be made from hitting the skybox, and it can not be reflected off of.
 - changing weapons by quickswap while the gauss is charging is no longer as glitchy.   (but why would you do this)
 - Gauss automatic discharge from charging for too long shows properly clientside; visible like a normal charged shot and doesn't continue playing the pitch.
+- Can't interrupt the deploy anim by firing too soon after picking it from weapon select.
+
 
 GAUSS MODE 0:
 - Minimum ammo used for charge (1) no longer surpasses primary fire damage (20).  Instead, a charged shot of 1 ammo deals only 8 damage but becomes increasingly more efficient with more ammo used (already better than primary slightly at 2).
@@ -610,7 +612,8 @@ GARGANTUA
 - New throw attack (CVar sv_gargantua_throwattack)!  Defaults to 1, for a 20% chance on any melee (may still revert to normal melee on not finding enough empty space nearby)
 - Falling death anim can also deal insta-death damage to things that are not monsters or players (breakables).
 - Faces the player while standing more often.
-
+- Contact with the stomp attack effect does 40% damage compared to the skill value.  Seemed punishing for how quickly it deals damage in a short amount of time touching it.
+- melee hit and miss sound pitches increased, particularly miss sounds.  Randomness of several other pitches tightened slightly.
 
 SLIGHT RESTORE BUG: Fixed monsters needing to change from the default blend (such as the torso bending to look straight down) to the one the game was saved with.
 
@@ -700,6 +703,12 @@ View-model animation/event skipped on firing immediately after loading a saved-g
 Many melee attacks are less likely to hit nearby level geometry when attacking from odd places (extra check for the enemy being nearby).
 
 Revision to how the AI determines the elevation between points.  Panthereye no longer endlessly runs against a box the player is standing on in a1a1b.
+
+Fixed bug in some entities forcing bounds to human-size and keeping that persistently, more common on loading games.
+
+Animations less likely to reset or get re-picked due to being changed in the middle of tasks/schedules completed in the same frame.
+
+Pre-disaster scientists can no longer be tricked into teleporting by going off-course of their destination if the player persistently gets in the way sometimes.  Don't you hate it when that happens.
 
 
 IN PROGRESS:

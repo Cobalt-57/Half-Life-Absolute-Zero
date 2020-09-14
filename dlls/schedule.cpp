@@ -160,6 +160,11 @@ void CBaseMonster::ChangeSchedule ( Schedule_t *pNewSchedule )
 	this->usingCustomSequence = FALSE;
 
 	// if this was turned on, forget.
+	// Could be reset by other pathfinding methods (FRefreshRoute) at some point instead.
+	// Nevermind, that would be really tricky to pull off.  All kinds of cases of Refresh getting called, RouteNew,
+	// RouteClear, etc.  Best to leave this on the whole schedule once it's needed (or have a task to take it off
+	// if ever necessary).  Checking to see if the current task prefers 'strict' versions is kindof the same idea
+	// anyway.
 	strictNodeTolerance = FALSE;
 
 
@@ -447,6 +452,8 @@ void CBaseMonster::MaintainSchedule ( void )
 	// Run through the 2nd picked schedule but end as soon as it wants to change the
 	// schedule for any reason?   'break' as soon as the 2nd same schedule is picked?
 
+	// And m_iTaskStatus isn't used when a task failed, right?  Be sure of that.
+
 
 	Schedule_t* pNewSchedule;
 	Schedule_t* pPrevSchedule;
@@ -535,7 +542,7 @@ void CBaseMonster::MaintainSchedule ( void )
 						easyPrintLine("OOPS A PLENTY 3 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 					}
 					
-					// MODDD
+					//MODDD
 					// WAIT.
 					// What's this?
 					// We... call a method.  That returns something.
@@ -557,7 +564,7 @@ void CBaseMonster::MaintainSchedule ( void )
 			//if ( hardSetFailSchedule ||  (HasConditions( bits_COND_TASK_FAILED ) && ( m_MonsterState == m_IdealMonsterState)) )
 			if ( HasConditions( bits_COND_TASK_FAILED ) && ( hardSetFailSchedule || ( m_MonsterState == m_IdealMonsterState)) )
 			{
-				//Keep track of whether this was set by a hard fail schedule or not. The schedule changes below can do some freaky things.
+				// Keep track of whether this was set by a hard fail schedule or not. The schedule changes below can do some freaky things.
 				BOOL wasSetByHardFail = hardSetFailSchedule;
 				
 				// remember this
@@ -602,8 +609,8 @@ void CBaseMonster::MaintainSchedule ( void )
 					easyPrintLine("OOPS A PLENTY 7 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 				}
 
-				//"hardSetFailSchedule" gets affected by the ChangeSchedule above unfortunately.  Its value before that change is what matters.
-				//If so, this schedule needs to resist changing from a desire to change states.
+				// "hardSetFailSchedule" gets affected by the ChangeSchedule above unfortunately.  Its value before that change is what matters.
+				// If so, this schedule needs to resist changing from a desire to change states.
 				if(wasSetByHardFail){
 					//This schedule must survive state changes.
 					scheduleSurvivesStateChange = TRUE;
@@ -650,8 +657,6 @@ void CBaseMonster::MaintainSchedule ( void )
 				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 					easyPrintLine("OOPS A PLENTY 9 %d:::new sched: %s", HasConditions(bits_COND_CAN_MELEE_ATTACK1), pNewSchedule->pName);
 				}
-				//YOU STUPID LITTLE man, I WILL OBLITERATE YOUR VERY WILL TO LIVE AND PLAY IN THE ASHES.
-				//~what is this, Dilbert?    Damn, the rage is real yo.
 				
 				if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts))easyForcePrintLine("MaintainSchedule: NEW SCHEDULE WILL BE %s", pNewSchedule->pName);
 
@@ -717,11 +722,28 @@ void CBaseMonster::MaintainSchedule ( void )
 		}
 		// UNDONE: Twice?!!!
 
+		
 		//MODDD TODO - add a check for " || signalActivityUpdate" too? may cause things to break, careful.
+		// Wait, why change the activity to the ideal one in the middle of the activity to begin with?
+		// In case of a schedule that starts/stops and changes the ideal from say, WALK to IDLE to WALK
+		// within this loop, it's unnecessary to have the WALK to IDLE setting reset the frame and
+		// animtime/interval when the user would just see it go from WALK to WALK, no change.
+		// NOPE, sadly.  Disabling this section can horrifically break AI in some cases, most often
+		// in simple attack schedules.
+		// Just watch the hgrunt in a2a1.bsp.
+		// Pretty sure what happens is, it picks the ACT_MELEE_ATTACK1,
+		// it runs, it finishes, then on picking the exact same schedule again, it never gets a chance 
+		// to reset the frame so it finishes again in the same frame.  So you're left with dead AI, at least
+		// while something is standing in front of it.  Any reportai gets it with the NULL task?
+		// Biggest issue is breaking when a lot of the scripted stuff works, I don't really get that.
+		// Maybe it's on the hgrunts side instead in there for the most part, they just ignore the reaction
+		// animations more often.
 		if ( m_Activity != m_IdealActivity )
 		{
 			SetActivity ( m_IdealActivity );
 		}
+		////////////////////////////////////////////////////////////////////////
+		
 		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 			easyPrintLine("OOPS A PLENTY 13 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 		}
@@ -834,7 +856,9 @@ void CBaseMonster::MaintainSchedule ( void )
 //=========================================================
 void CBaseMonster::RunTask ( Task_t *pTask )
 {
-
+	if(monsterID == 2){
+		int x = 45;
+	}
 	
 	//if(m_pSchedule == slPathfindStumped){
 	//	easyForcePrintLine("STUMPED RunTask: %s:%d task: %d", getClassname(), monsterID, pTask->iTask);
@@ -988,23 +1012,44 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 			TaskComplete();
 		}
 
-		
-
-
-
 	break;}
 
 	case TASK_WAIT:
 	case TASK_WAIT_RANDOM:
+		{
+			//MODDD NOTE - it may seem like a good idea to make any case of TASK_WAIT face
+			// m_vecEnemyLKP, but it's hard to generalize when that is a good idea, best leave
+			// up to being a more specific task like TASK_WAIT_LOOK or something, I forget what.
+			// Anyway, there could be other times something is waiting, like hgrunts going
+			// behind cover.
+			// Turning to the direction of enemyLKP could lead them to staring at a wall for a bit.
+
+			/*
+			//MODDD - !!! Don't leave this on for much, testing.
+			///////////////////////////////////////////////////////////////
+			//if(m_fEnemyLKP_EverSet){
+				// assume I'm trying to face that.
+				MakeIdealYaw ( m_vecEnemyLKP );
+				ChangeYaw( pev->yaw_speed );
+			//}
+			///////////////////////////////////////////////////////////////
+			*/
+
+			if ( gpGlobals->time >= m_flWaitFinished )
+			{
+				TaskComplete();
+			}
+			break;
+		}
 	case TASK_WAIT_STUMPED:
 		{
-
 			// (TASK_FACE_ENEMY)  Why not look at the LKP in the meantime?  Most likely place for the enemy to pop back in, right?
 			///////////////////////////////////////////////////////////////
-			MakeIdealYaw( m_vecEnemyLKP );
-			ChangeYaw( pev->yaw_speed );
+			if(m_fEnemyLKP_EverSet){
+				// assume I'm trying to face that.
+				ChangeYaw( pev->yaw_speed );
+			}
 			///////////////////////////////////////////////////////////////
-
 
 			if ( gpGlobals->time >= m_flWaitFinished )
 			{
@@ -2564,7 +2609,9 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		{
 			// from TASK_FACE_ENEMY
 			///////////////////////////////////////
-			MakeIdealYaw ( m_vecEnemyLKP );
+			if(m_fEnemyLKP_EverSet){
+				MakeIdealYaw ( m_vecEnemyLKP );
+			}
 
 			//MODDD - added, if we can complete early we can move on with thinking in the same frame
 			if (FacingIdeal())
@@ -2758,11 +2805,6 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 				}
 
 
-				// Want that strictness
-				strictNodeTolerance = TRUE;
-
-
-
 				// This monster can't do this!
 				if (LookupActivity(newActivity) == ACTIVITY_NOT_AVAILABLE) {
 					// Let's have a descriptive error message if you please!
@@ -2777,11 +2819,19 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 				}
 				else
 				{
-					if ( m_hTargetEnt == NULL || !MoveToTarget( newActivity, 2 ) )
+					if ( m_hTargetEnt == NULL )
 					{
 						TaskFail();
-						ALERT( at_aiconsole, "%s Failed to reach target!!!\n", STRING(pev->classname) );
+						ALERT( at_aiconsole, "%s Null target?!!!\n", STRING(pev->classname) );
 						RouteClear();
+					}else{
+						BOOL daTest = MoveToTargetStrict(newActivity, 2);
+						if(!daTest){
+
+							TaskFail();
+							ALERT( at_aiconsole, "%s Failed to reach target!!!\n", STRING(pev->classname) );
+							RouteClear();
+						}
 					}
 				}
 			}
@@ -3425,6 +3475,8 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 				}
 				else {
 					// obstruction?  no.
+					// And yes, it's ok to TaskFil and TaskComplete in the same run, the TaskFail gets precedence
+					// regardless of order.
 					TaskFail(); 
 				}
 			}

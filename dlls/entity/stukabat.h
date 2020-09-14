@@ -119,6 +119,79 @@ public:
 
 	StukaPrintQueueManager stukaPrint;
 
+	
+	BOOL wakeUp;
+	BOOL eating;
+	float eatingAnticipatedEnd;
+	BOOL turnThatOff;
+
+	BOOL tempCheckTraceLineBlock;
+
+
+	float blockSetActivity;
+	Activity lastSetActivitySetting;
+	BOOL lastSetActivityforceReset;
+
+	float moveFlyNoInterrupt;
+
+	int iPoisonSprite;
+
+	Vector m_vecEstVelocity;
+
+	Vector m_velocity;
+	int m_fInCombat;
+
+	int tempThing;
+	BOOL landBrake;
+	Vector scentLocationMem;
+
+	Activity recentActivity;
+	int attackIndex;
+
+	float attackEffectDelay;
+	float attackAgainDelay;
+	float maxDiveTime;
+
+	float timeToIdle;
+
+	int m_iSpawnLoc;
+
+	BOOL combatCloseEnough;
+
+	BOOL onGround;
+	BOOL queueToggleGround;
+	BOOL snappedToCeiling;
+	BOOL queueToggleSnappedToCeiling;
+	BOOL queueAbortAttack;
+
+	int queueActionIndex;
+
+	BOOL seekingFoodOnGround;
+	float lastVelocityChange;
+
+	BOOL rotationAllowed;
+	BOOL dontResetActivity;
+
+	float suicideAttackCooldown;
+
+	float lastEnemey2DDistance;
+	//int movementHint;
+
+	int chargeIndex;
+	int m_voicePitch;
+
+
+
+	static const char *pAttackHitSounds[];
+	static const char *pAttackMissSounds[];
+	static const char *pAttackSounds[];
+	static const char *pIdleSounds[];
+	static const char *pAlertSounds[];
+	static const char *pPainSounds[];
+	static const char *pDeathSounds[];
+
+
+
 	CStukaBat(void);
 	
 	float getMeleeAnimScaler(void);
@@ -129,11 +202,6 @@ public:
 	void DefaultSpawnNotice(void);
 	void ForceSpawnFlag(int arg_spawnFlag);
 
-
-	BOOL wakeUp;
-	BOOL eating;
-	float eatingAnticipatedEnd;
-	BOOL turnThatOff;
 
 
 	void MakeIdealYaw( Vector vecTarget );
@@ -146,7 +214,7 @@ public:
 
 	void CallForHelp( char *szClassname, float flDist, EHANDLE hEnemy, Vector &vecLocation );
 
-	int  IRelationship( CBaseEntity *pTarget );
+	int IRelationship( CBaseEntity *pTarget );
 	void Spawn( void );
 	void Precache( void );
 	void SetYawSpeed( void );
@@ -163,16 +231,6 @@ public:
 	BOOL getHasPathFindingModA();
 	BOOL getHasPathFindingMod();
 
-	BOOL tempCheckTraceLineBlock;
-
-
-	float blockSetActivity;
-	Activity lastSetActivitySetting;
-	BOOL lastSetActivityforceReset;
-
-	float moveFlyNoInterrupt;
-
-	int iPoisonSprite;
 
 
 	//NOTE: confirm that the original "setObjectCollisionBox" method (default for monsters) is inadequate before using this override.
@@ -208,8 +266,6 @@ public:
 		}
 	}
 
-
-
 	Schedule_t* GetSchedule ( void );
 	Schedule_t* GetScheduleOfType ( int Type );
 	void StartTask ( Task_t *pTask );
@@ -217,13 +273,11 @@ public:
 	CUSTOM_SCHEDULES;
 
 	void Stop( void );
-	
 	void Move ( float flInterval );
 
 	int CheckLocalMove( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist );
 	
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
-
 	
 	virtual BOOL allowedToSetActivity(void);
 	virtual void SetActivity ( Activity NewActivity );
@@ -232,37 +286,23 @@ public:
 	BOOL ShouldAdvanceRoute( float flWaypointDist, float flInterval );
 	int LookupFloat( );
 	
-	int  ISoundMask( void );
+	int ISoundMask( void );
 	
 	void RadiusDamageNoFriendly(entvars_t* pevInflictor, entvars_t*	pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType );
 	
-	
 	void safeSetMoveFlyNoInterrupt(float timer);
 	void safeSetBlockSetActivity(float timer);
-					
 
 
 	//???
 	//float m_flShootTime;
 	//float m_flShootEnd;
 
-
 	void PainSound( void );
 	void AlertSound( void );
 	void IdleSound( void );
 	void AttackSound( void );
 	void DeathSound( void );
-
-
-
-	static const char *pAttackHitSounds[];
-	static const char *pAttackMissSounds[];
-	static const char *pAttackSounds[];
-	static const char *pIdleSounds[];
-	static const char *pAlertSounds[];
-	static const char *pPainSounds[];
-	static const char *pDeathSounds[];
-
 
 	
 	GENERATE_TRACEATTACK_PROTOTYPE
@@ -301,13 +341,6 @@ public:
 	int tryActivitySubstitute(int activity);
 
 
-	Vector m_vecEstVelocity;
-
-	Vector m_velocity;
-	int m_fInCombat;
-
-	int tempThing;
-
 	//MODDD - extra.
 	void MonsterThink();
 
@@ -316,7 +349,6 @@ public:
 	void SetTurnActivityCustom();
 
 
-	BOOL landBrake;
 
 	void updateMoveAnim();
 	void getPathToEnemyCustom();
@@ -348,46 +380,12 @@ public:
 	Activity getIdleActivity(void);
 
 
-	Vector scentLocationMem;
 
-	Activity recentActivity;
-	int attackIndex;
 
-	float attackEffectDelay;
-	float attackAgainDelay;
-	float maxDiveTime;
-
-	float timeToIdle;
-
-	int m_iSpawnLoc;
-	
-	BOOL combatCloseEnough;
-
-	BOOL onGround;
-	BOOL queueToggleGround;
-	BOOL snappedToCeiling;
-	BOOL queueToggleSnappedToCeiling;
-	BOOL queueAbortAttack;
-	
-	int queueActionIndex;
-	
-	BOOL seekingFoodOnGround;
-	float lastVelocityChange;
-
-	BOOL rotationAllowed;
-	BOOL dontResetActivity;
-
-	float suicideAttackCooldown;
-
-	float lastEnemey2DDistance;
-
-	
 	float HearingSensitivity( );
 
-	//int movementHint;
+	int getNodeTypeAllowed(void);
 
-	int chargeIndex;
-	int m_voicePitch;
 };
 
 

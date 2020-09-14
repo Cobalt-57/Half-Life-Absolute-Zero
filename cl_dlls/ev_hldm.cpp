@@ -1447,8 +1447,10 @@ void EV_FireGauss(event_args_t* args)
 	if (args->bparam2)
 	{
 		EV_StopPreviousGauss(idx);
+		//easyForcePrintLine("GAUSS: FireGauss: redirect to StopPrevious");
 		return;
 	}
+	//easyForcePrintLine("GAUSS: FireGauss");
 
 	//	Con_Printf( "Firing gauss with %f\n", flDamage );
 	EV_GetGunPosition(args, vecSrc, origin);
@@ -1690,9 +1692,6 @@ void EV_FireGauss(event_args_t* args)
 		////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-
-
 		if (fFirstBeam){
 			if (EV_IsLocal(idx))
 			{
@@ -1707,6 +1706,12 @@ void EV_FireGauss(event_args_t* args)
 			// Thanks Nikita Butorin / @vasiavasiavasia95 !
 
 			if (EASY_CVAR_GET(cl_gaussFollowAttachment) == 1) {
+
+				cl_entity_t* viewModelRef = GetViewEntity();
+				Vector daPos = viewModelRef->attachment[0];
+				//easyForcePrintLine("Dapos: idx:%d %.2f %.2f %.2f - %.2f %.2f %.2f, fr:%.2f spr:%d w:%.2f br:%.2f, rgb:%.1f %.1f %.1f", idx, daPos.x, daPos.y, daPos.z, tr.endpos.x, tr.endpos.y, tr.endpos.z, tr.fraction, m_iBeam, beamWidth, beamBrightness, beamColor_r, beamColor_g, beamColor_b);
+				//easyForcePrintLine("===============================");
+
 				gEngfuncs.pEfxAPI->R_BeamEntPoint(idx | 0x1000, tr.endpos, m_iBeam, 0.1, beamWidth, 0.0, beamBrightness, 0, 0, 0, beamColor_r, beamColor_g, beamColor_b);
 
 			}else{
@@ -1760,7 +1765,6 @@ void EV_FireGauss(event_args_t* args)
 					}
 
 					//Vector fireOrigin = viewModelRef->attachment[0];
-
 					Vector vecDir = (tr.endpos - fireOrigin).Normalize();
 
 					gEngfuncs.pEfxAPI->R_BeamPoints(fireOrigin - (vecDir * 8), tr.endpos, m_iBeam, beamLife, beamWidth, 0.0, beamBrightness, 0, 0, 0, beamColor_r, beamColor_g, beamColor_b);
@@ -1777,7 +1781,6 @@ void EV_FireGauss(event_args_t* args)
 			// Just end.  No reflecting off of that, no persistent glow, no sparks.  None of that makes sense.
 			break;
 		}
-
 
 
 		// !!! CLIENTSIDE TRACE ENTITY-FROM-INDEX DEBUG

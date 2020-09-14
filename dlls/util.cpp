@@ -1504,6 +1504,21 @@ void UTIL_SetSizeAlt( entvars_t* pev, const Vector &vecMin, const Vector &vecMax
 
 void UTIL_SetSize( entvars_t *pev, const Vector &vecMin, const Vector &vecMax )
 {
+
+	/*
+	// what
+	if(pev != NULL){
+		const char* daClassname = STRING(pev->classname);
+		CBaseEntity* theInst = CBaseEntity::Instance(pev);
+		CBaseMonster* monTest = theInst->GetMonsterPointer();
+		if(monTest != NULL){
+			if(monTest->monsterID != -1){
+				int x = 45;
+			}
+		}
+	}
+	*/
+
 	SET_SIZE( ENT(pev), vecMin, vecMax );
 }
 

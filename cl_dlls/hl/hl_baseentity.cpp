@@ -106,6 +106,7 @@ BOOL CBaseEntity::isMovetypeFlying(void){return FALSE;}
 BOOL CBaseEntity::isSizeGiant(void){return FALSE;}
 BOOL CBaseEntity::isOrganic(void){return FALSE;}
 int CBaseEntity::getHullIndexForNodes(void){return 0;}
+int CBaseEntity::getNodeTypeAllowed(void) {return 0;}
 
 //MODDD - moved from CBaseAnimating, serverside territority, to CBaseEntity, shared, so
 // these have to be dummied now.
@@ -390,6 +391,9 @@ int CBaseMonster::IgnoreConditions ( void ) { return 0; }
 void CBaseMonster::RouteClear ( void ) { }
 void CBaseMonster::RouteNew ( void ) { }
 BOOL CBaseMonster::FRouteClear ( void ) { return FALSE; }
+
+
+BOOL CBaseMonster::FRefreshRouteStrict ( void ) { return 0; }
 BOOL CBaseMonster::FRefreshRoute ( void ) { return 0; }
 BOOL CBaseMonster::FRefreshRouteCheap ( void ) { return 0; }
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmart ( void ) { return 0; }
@@ -397,6 +401,7 @@ BOOL CBaseMonster::MoveToEnemy( Activity movementAct, float waitTime ) { return 
 BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
 BOOL CBaseMonster::MoveToLocationCheap( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
 BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime ) { return FALSE; }
+BOOL CBaseMonster::MoveToTargetStrict( Activity movementAct, float waitTime ) { return FALSE; }
 BOOL CBaseMonster::MoveToNode( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
 int ShouldSimplify( int routeType ) { return TRUE; }
 void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt ) { }
@@ -420,14 +425,13 @@ BOOL CBaseMonster::PopEnemy( ) { return FALSE; }
 void CBaseMonster::DrawFieldOfVision(void){}
 
 void CBaseMonster::SetActivity ( Activity NewActivity ) { }
+void CBaseMonster::RefreshActivity(void){}
 
 //MODDD - new
 BOOL CBaseMonster::allowedToSetActivity(void){ return FALSE;}
 BOOL CBaseMonster::tryGetTaskID(void){ return FALSE;}
 const char* CBaseMonster::tryGetScheduleName(void){ return NULL;}
 
-//MODDD - YEE
-//void CBaseMonster::SetActivity ( Activity NewActivity, BOOL forceReset  ) { }
 void CBaseMonster::setModel(void){}
 void CBaseMonster::setModel(const char* m){} //empty.
 BOOL CBaseMonster::getMonsterBlockIdleAutoUpdate(){return FALSE;}

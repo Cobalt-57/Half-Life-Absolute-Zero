@@ -146,6 +146,7 @@ public:
 	Vector BodyTargetMod(const Vector &posSrc);
 
 	void onDeathAnimationEnd(void);
+	int getNodeTypeAllowed(void);
 
 
 	
