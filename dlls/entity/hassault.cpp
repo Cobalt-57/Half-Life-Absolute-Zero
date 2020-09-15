@@ -92,9 +92,44 @@ extern BOOL globalPSEUDO_germanModel_hassaultFound;
 const Vector vecHAssaultGrenadeSpawnPos = Vector(-7.8, 35, 54);
 
 
+extern void HGRUNTRELATED_letAlliesKnowOfKilled(CBaseMonster* thisMon);
+
+extern float g_hgrunt_allyDeadRecentlyExpireTime;
+extern float g_hgrunt_allyDeadRecentlyAgainTime;
 
 
+// Sadly this must be cloned from hgrunt for now, see more notes on that in there.
+// Only difference is the volume/attn I play the line at (HASSAULT_SENTENCE_VOLUME, ...).
+void SELF_checkSayRecentlyKilledAlly(CHAssault* thisMon){
+	
+	if(
+		thisMon->allyDeadRecentlyExpireTimeSet != -1 &&
+		gpGlobals->time < g_hgrunt_allyDeadRecentlyExpireTime &&
 
+		// and a minimum time too.
+		//( 30 - (g_hgrunt_allyDeadRecentlyExpireTime - gpGlobals->time) ) > 4
+		( (gpGlobals->time+30) - g_hgrunt_allyDeadRecentlyExpireTime ) > 4
+	){
+		// I have my 'allyDeadRecentlyExpireTimeSet' set, and the global one hasn't expired yet?  Proceed
+
+		if(thisMon->allyDeadRecentlyExpireTimeSet == g_hgrunt_allyDeadRecentlyExpireTime){
+			// My record of the expire-time is the same as when it was set?  I'm saying it for that time then still, this is ok.
+			if(thisMon->FOkToSpeak() && RANDOM_LONG(0, 30) == 0){
+				thisMon->JustSpoke();
+				SENTENCEG_PlaySingular(ENT(thisMon->pev), CHAN_VOICE, "HG_CASUALTIES", HASSAULT_SENTENCE_VOLUME + 0.13, HASSAULT_ATTN - 0.08, 0, thisMon->m_voicePitch);
+				// and no one else should this time then.
+				g_hgrunt_allyDeadRecentlyExpireTime = -1;
+				// Also, once this line has been said, forbid this process from happening again for a while.
+				g_hgrunt_allyDeadRecentlyAgainTime = gpGlobals->time + 24;
+			}
+
+		}else{
+			// Got changed by expiring or something else said it already?  Can't do anything this time.
+			thisMon->allyDeadRecentlyExpireTimeSet = -1;
+		}
+	}//allyDeadRecentlyExpireTimeSet check
+
+}//SELF_checkSayRecentlyKilledAlly
 
 
 
@@ -1048,6 +1083,7 @@ CHAssault::CHAssault(void){
 
 	recentChaseFailedAtDistance = FALSE;
 
+	allyDeadRecentlyExpireTimeSet = -1;
 }
 
 
@@ -3763,6 +3799,9 @@ GENERATE_KILLED_IMPLEMENTATION(CHAssault){
 		}
 	}
 
+	HGRUNTRELATED_letAlliesKnowOfKilled(this);
+
+
 	GENERATE_KILLED_PARENT_CALL(CSquadMonster);
 }
 
@@ -3846,6 +3885,10 @@ void CHAssault::MonsterThink ( void )
 	}
 	//EASY_CVAR_PRINTIF_PRE(hassaultPrintout, easyPrintLine( "MOVEMENT WAIT COND: %d %d %d" , HasConditions(bits_COND_SEE_ENEMY), !HasConditions(bits_COND_ENEMY_OCCLUDED), HasConditions(HasConditionsEither(bits_COND_CAN_RANGE_ATTACK1) ) ));
 	
+
+	SELF_checkSayRecentlyKilledAlly(this);
+
+
 	//UTIL_drawLineFrameBoxAround(pev->origin, 3, 326, 255, 255, 0);
 	
 	//bits_COND_SEE_ENEMY |
@@ -4330,9 +4373,7 @@ float CHAssault::getDistTooFar(void){
 
 // See comments in hgrunt.cpp
 void CHAssault::setEnemyLKP(CBaseEntity* theEnt){
-	m_vecEnemyLKP = theEnt->pev->origin;
-	m_fEnemyLKP_EverSet = TRUE;
-	investigatingAltLKP = FALSE; //this is the real deal.
+	CSquadMonster::setEnemyLKP(theEnt);
 
 	//m_flLastEnemySightTime = gpGlobals->time;
 }

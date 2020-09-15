@@ -79,6 +79,7 @@ public:
 	BOOL shootpref_eyes;
 
 	BOOL recentChaseFailedAtDistance;
+	float allyDeadRecentlyExpireTimeSet;
 
 
 

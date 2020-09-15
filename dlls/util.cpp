@@ -237,6 +237,10 @@ GibInfo_t aryGibInfo[aryGibInfo_MAX_SIZE] = {
 
 
 
+// grunt stuff
+extern int g_fGruntQuestion;
+extern float g_hgrunt_allyDeadRecentlyExpireTime;
+extern float g_hgrunt_allyDeadRecentlyAgainTime;
 
 extern float g_scientist_PredisasterSuitMentionAllowedTime;
 extern float g_scientist_HeadcrabMentionAllowedTime;
@@ -248,6 +252,11 @@ extern float g_sayBulletHitCooldown;
 // (that is, going to a map that has a far higher gpGlobals->time saved will require that to be reached before
 // these vars expire).
 void resetGlobalVars(void) {
+
+
+	g_fGruntQuestion = 0;
+	g_hgrunt_allyDeadRecentlyExpireTime = -1;
+	g_hgrunt_allyDeadRecentlyAgainTime = -1;
 
 	g_nextCVarUpdate = -1;
 

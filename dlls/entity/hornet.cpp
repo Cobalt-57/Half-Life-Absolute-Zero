@@ -597,7 +597,7 @@ void CHornet::TrackTarget ( void )
 			// CBaseMonster:: in front is necessary because we overrided setEnemyLKP
 			// for taking an entity, but none of the other ways?
 			// ... what?     oooookie C++
-			CBaseMonster::setEnemyLKP(m_vecEnemyLKP, vecFlightDirTrue * m_flFlySpeed * 0.1);
+			CBaseMonster::setEnemyLKP(m_vecEnemyLKP, m_flEnemyLKP_zOffset, vecFlightDirTrue * m_flFlySpeed * 0.1);
 		}
 
 		vecDirToEnemy = ( m_vecEnemyLKP - pev->origin ).Normalize();
@@ -1234,6 +1234,8 @@ void CHornet::OnDeflected(CBaseEntity* arg_entDeflector){
 // not the pev->origin (often the bottom of the bounding box)
 void CHornet::setEnemyLKP(CBaseEntity* theEnt){
 	m_vecEnemyLKP = theEnt->BodyTarget(pev->origin);
+	// do I care about zoffset?
+	m_flEnemyLKP_zOffset = 0; //theEnt->pev->mins.z;
 	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = FALSE;
 }//

@@ -27,6 +27,8 @@
   3 - Gun
 */
 
+// Not one mention of 'FindLateralCover',  huh.    UHhhhh.   Whoopsie.
+
 
 //MODDD TODO - should the deathSound be cutoff if gibbed? Shouting "Medic!" shortly after exploding does not make much sense.
 //             Could make cutting off the deathsounud a general thing for all monsters too, or something to enable / disable for monsters per type.
@@ -53,6 +55,8 @@
 // temporary for debugging.
 #include "player.h"
 #include "util_debugdraw.h"
+#include "hassault.h"
+
 
 
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntBrassEjectForwardOffset)
@@ -90,14 +94,6 @@ EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
 
 // DEBUG FEATURE.  Good for testing friendly fire or grenade-tossing without the annoyance of the hgrunt moving all over the place.
 #define HGRUNT_NOMOVE 0
-
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////
-
 
 
 
@@ -194,9 +190,221 @@ EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
 
 
 
+
+
 extern DLL_GLOBAL int g_iSkillLevel;
 
-int g_fGruntQuestion;				// true if an idle grunt asked a question. Cleared when someone answers.
+//MODDD - why not default to 0?
+int g_fGruntQuestion = 0;				// true if an idle grunt asked a question. Cleared when someone answers.
+// NEW
+float g_hgrunt_allyDeadRecentlyExpireTime = -1;
+float g_hgrunt_allyDeadRecentlyAgainTime = -1;
+
+
+
+extern Schedule_t slGruntWalkToDeadAlly[];
+
+// Luckily this doesn't need anything particular to HGrunts, so hassaults can use this too
+void HGRUNTRELATED_letAlliesKnowOfKilled(CBaseMonster* thisMon){
+	
+
+	CBaseEntity *pEntityTemp = NULL;
+
+	// Within 20 seconds, a nearby grunt should want to say something about this one being killed when
+	// it is ok to.
+	// Any one speaking stops the others from needing to.
+	g_hgrunt_allyDeadRecentlyExpireTime = gpGlobals->time + 30;
+
+	while ((pEntityTemp = UTIL_FindEntityInSphere( pEntityTemp, thisMon->pev->origin, 1000 )) != NULL){
+
+		if(pEntityTemp->edict() == thisMon->edict()){
+			// it's me?  oops
+			continue;
+		}
+		if(pEntityTemp->pev->deadflag != DEAD_NO || !(pEntityTemp->pev->flags & FL_MONSTER)){
+			// unusual deadflag or lacking the FL_MONSTER flag?  don't bother
+			continue;
+		}
+
+		// Also reject monsters that are barnacl'd or scripted, not good to mess with those.
+		CBaseMonster* monRef = pEntityTemp->GetMonsterPointer();
+		if(monRef == NULL || (monRef->m_MonsterState == MONSTERSTATE_PRONE || monRef->m_MonsterState == MONSTERSTATE_SCRIPT) ){
+			continue;
+		}
+
+		CHGrunt* hgruntRef = NULL;
+		CHAssault* hassaultRef = NULL;
+
+		BOOL classPass = FALSE;
+
+		//MODDD TODO - check for hassault too?  Have its own 'onAllyKilled' line?
+		// Make that a overridable method for all monsters?
+		const char* itsClassname;
+		if(pEntityTemp->pev->classname != NULL){
+			itsClassname = STRING(pEntityTemp->pev->classname);
+
+			if(FStrEq(itsClassname, "monster_human_grunt")){
+				// go ahead and cast it.
+				hgruntRef = static_cast<CHGrunt*>(pEntityTemp);
+				// can mention this when there's time to talk.
+				//hgruntRef->allyDeadRecently = TRUE;
+				// If there is a difference between 'allyDeadRecentlyExpireTimeSet' and the 'g_allyDeadRecentlyExpireTime' when
+				// I find time to say it, forget it.  A change in that means it's already been said.
+				// If g_allyDeadRecentlyExpireTime is surpassed by the current time, that also means don't say anything.
+				// Don't set anything the 'recentlyExpireTimeSet' yet though, want to see if we're
+				// close enough or have the enemy in sight to say something
+				classPass = TRUE;
+			}else if(FStrEq(itsClassname, "monster_human_assault")){
+				hassaultRef = static_cast<CHAssault*>(pEntityTemp);
+				classPass = TRUE;
+			}
+
+		}else{
+			// ???
+		}
+
+		if(classPass){
+			// Recently found a hgrunt or hassault?  Proceed.
+			// (monRef is the most relevant pointer common to both, besides a squadmonster-one but that doesn't have
+			//  anything new)
+
+			BOOL canComment = FALSE;
+			// Can I see this dead one, or was close to it when it happened?
+			// 0 means no change in angles/place, 1 is face the dead, 2 is route to the point.
+			int canInvestigate = 0;
+				
+			// One other check before the classnames.  If this monster isn't in a combat state and didn't
+			// see this get killed, it can't be picked.  In combat, assume better awareness of this.
+			if(monRef->m_MonsterState == MONSTERSTATE_COMBAT){
+				// always pass for the comment, don't investigate.  Too busy.
+				canComment = TRUE;
+				canInvestigate = 0;
+			}else{
+				// any other monster state that made it (IDLE, ALERT)
+					
+				float theDista = Distance(monRef->pev->origin, thisMon->pev->origin);
+
+				//goalDistTolerance
+
+				if(monRef->FVisible(thisMon)){
+					// Is there a line from monRef to the dead, regardless of whether it's facing the right way?
+
+					if(monRef->FInViewCone( thisMon ) ){
+						// in my sight?  Willing to walk up from further away
+						if(theDista < 580){
+							canInvestigate = 2;
+						}else{
+							// at least face the direction
+							canInvestigate = 1;
+						}
+						// saw it at this search-sphere's max distance?  Comment at least.
+						canComment = TRUE;
+					}else{
+						// not in view?  Reduce
+						if(theDista < 400){
+							canComment = TRUE;
+							canInvestigate = 2;
+						}else if(theDista < 550){
+							canComment = TRUE;
+							canInvestigate = 1;
+						}
+					}
+
+				}else{
+					// No direct line of sight at all possible?  Only happens if close.
+					if(theDista < 270){
+						canComment = TRUE;
+						canInvestigate = 2;
+					}else if(theDista < 460){
+						canComment = TRUE;
+					}
+				}
+					
+					
+			}// monsterstate check
+
+
+			
+			if(canComment){
+				if(monRef->m_MonsterState == MONSTERSTATE_IDLE){
+					// make it ALERT then, we gotta show concern
+					monRef->SetState(MONSTERSTATE_ALERT);
+				}
+				// Only do if the 'casualties' line hasn't been said too soon already.
+				if(gpGlobals->time >= g_hgrunt_allyDeadRecentlyAgainTime){
+
+				if(hgruntRef!=NULL)hgruntRef->allyDeadRecentlyExpireTimeSet = g_hgrunt_allyDeadRecentlyExpireTime;
+				if(hassaultRef!=NULL)hassaultRef->allyDeadRecentlyExpireTimeSet = g_hgrunt_allyDeadRecentlyExpireTime;
+				}
+			}
+			if(canInvestigate == 1){
+				// Face me.
+				monRef->MakeIdealYaw(thisMon->pev->origin);
+				monRef->ChangeSchedule(monRef->GetScheduleOfType(SCHED_ALERT_FACE));
+			}else if(canInvestigate == 2){
+				// need to raise it maybe?
+				monRef->m_vecMoveGoal = thisMon->pev->origin;
+				// Making this the ideal yaw in case the pathfind fails, to face the direction at least
+				// (if there is a clear line of sight)
+				// This works, right?
+				monRef->MakeIdealYaw(thisMon->pev->origin);
+
+				monRef->ChangeSchedule(slGruntWalkToDeadAlly);
+			}
+
+		}//classPass
+
+
+			
+	}//loop through nearby entities
+
+}//HGRUNTRELATED_letAlliesKnowOfKilled
+
+
+
+
+
+
+
+// This will be cloned for the hassault.  If SquadMonster is turned to composition instead, for hgrunts / hassaults to be able
+// to inherit from some other more complex TalkMonster, perhaps 'CombatMonster' instead of SquadMonster, this would be common
+// between them instead.
+void SELF_checkSayRecentlyKilledAlly(CHGrunt* thisMon){
+	
+	if(
+		thisMon->allyDeadRecentlyExpireTimeSet != -1 &&
+		gpGlobals->time < g_hgrunt_allyDeadRecentlyExpireTime &&
+
+		// and a minimum time too.
+		//( 30 - (g_hgrunt_allyDeadRecentlyExpireTime - gpGlobals->time) ) > 4
+		( (gpGlobals->time+30) - g_hgrunt_allyDeadRecentlyExpireTime ) > 4
+	){
+		// I have my 'allyDeadRecentlyExpireTimeSet' set, and the global one hasn't expired yet?  Proceed
+
+		if(thisMon->allyDeadRecentlyExpireTimeSet == g_hgrunt_allyDeadRecentlyExpireTime){
+			// My record of the expire-time is the same as when it was set?  I'm saying it for that time then still, this is ok.
+			if(thisMon->FOkToSpeak() && RANDOM_LONG(0, 30) == 0){
+				thisMon->JustSpoke();
+				SENTENCEG_PlaySingular(ENT(thisMon->pev), CHAN_VOICE, "HG_CASUALTIES", HGRUNT_SENTENCE_VOLUME + 0.13, GRUNT_ATTN - 0.08, 0, thisMon->m_voicePitch);
+				// and no one else should this time then.
+				g_hgrunt_allyDeadRecentlyExpireTime = -1;
+				// Also, once this line has been said, forbid this process from happening again for a while.
+				g_hgrunt_allyDeadRecentlyAgainTime = gpGlobals->time + 24;
+			}
+
+		}else{
+			// Got changed by expiring or something else said it already?  Can't do anything this time.
+			thisMon->allyDeadRecentlyExpireTimeSet = -1;
+		}
+	}//allyDeadRecentlyExpireTimeSet check
+
+}//SELF_checkSayRecentlyKilledAlly
+
+
+
+
+
+
 
 
 
@@ -1033,6 +1241,54 @@ Schedule_t slGruntChaseEnemySmart[] =
 
 
 
+// clone of the new 'slWalkToPoint'.  Mainly a delay before starting to move,
+// and a higher distance from the goal.
+Task_t tlWalkToDeadAlly[] =
+{
+	//MODDD - NEW.  HAssassins should not sit in place simply because there isn't a route to the sound heard.
+	// At least face it, might see something.
+	{ TASK_SET_FAIL_SCHEDULE_HARD,	(float)SCHED_ALERT_FACE_IF_VISIBLE	},
+
+	{ TASK_FACE_IDEAL_IF_VISIBLE,	(float)0				},
+	{ TASK_WAIT,					(float)2.5				},
+	{ TASK_WAIT_RANDOM,				(float)1.75				},
+
+
+	{ TASK_STOP_MOVING,				(float)0				},
+	//{ TASK_STORE_LASTPOSITION,	(float)0				},
+	{ TASK_GET_PATH_TO_GOALVEC,		(float) 150				},
+	{ TASK_FACE_IDEAL,				(float)0				},
+	{ TASK_WALK_PATH,				(float)0				},
+	//{ TASK_WAIT_FOR_MOVEMENT,		(float)0				},
+	{ TASK_WAIT_FOR_MOVEMENT_RANGE,  (float) 150				},
+	{ TASK_PLAY_SEQUENCE,			(float)ACT_IDLE			},
+	//{ TASK_WAIT,					(float)10				},
+	//{ TASK_GET_PATH_TO_LASTPOSITION,(float)0				},
+	//{ TASK_WALK_PATH,				(float)0				},
+	//{ TASK_WAIT_FOR_MOVEMENT,		(float)0				},
+	//{ TASK_CLEAR_LASTPOSITION,		(float)0				},
+};
+
+Schedule_t	slGruntWalkToDeadAlly[] =
+{
+	{ 
+		tlWalkToDeadAlly,
+		ARRAYSIZE ( tlWalkToDeadAlly ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_SEE_FEAR			|
+		bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+		bits_COND_HEAR_SOUND,
+		
+		bits_SOUND_DANGER,
+		"GruntWalkToDeadAlly"
+	},
+};
+
+
+
+
+
 
 
 
@@ -1150,6 +1406,8 @@ DEFINE_CUSTOM_SCHEDULES( CHGrunt )
 	slGruntRepelLand,
 	slhgruntStrafeToLocation,
 	slGruntChaseEnemySmart,
+	slGruntWalkToDeadAlly
+
 };
 
 IMPLEMENT_CUSTOM_SCHEDULES( CHGrunt, CSquadMonster );
@@ -1263,6 +1521,8 @@ CHGrunt::CHGrunt(void){
 
 	recentChaseFailedAtDistance = FALSE;
 	shootpref_eyes = FALSE;
+
+	allyDeadRecentlyExpireTimeSet = -1;
 
 }
 
@@ -1973,6 +2233,10 @@ GENERATE_KILLED_IMPLEMENTATION(CHGrunt){
 	//head or helmet?
 	checkHeadGore(iGib);
 
+	//if ( InSquad() )
+	// no, no squad checks.  Anything within a short radius can comment on this.
+
+	HGRUNTRELATED_letAlliesKnowOfKilled(this);
 
 	GENERATE_KILLED_PARENT_CALL(CSquadMonster);
 }
@@ -2473,23 +2737,33 @@ void CHGrunt::IdleSound( void )
 {
 	if (FOkToSpeak() && (g_fGruntQuestion || RANDOM_LONG(0,1)))
 	{
-		if (!g_fGruntQuestion)
+		if (g_fGruntQuestion == 0)
 		{
 			// ask question or make statement
-			switch (RANDOM_LONG(0,2))
-			{
-			case 0: // check in
+			//MODDD - greater chance of check-in and idle.  Was an equal chance of HG_CHECK, HG_QUEST, and HG_IDLE.
+			float theRandom = RANDOM_FLOAT(0, 1);
+
+
+			if(theRandom < 0.35){
+				// check in
 				SENTENCEG_PlayRndSz(ENT(pev), "HG_CHECK", HGRUNT_SENTENCE_VOLUME, ATTN_NORM, 0, m_voicePitch);
 				g_fGruntQuestion = 1;
-				break;
-			case 1: // question
+			}else if(theRandom < 0.35 + 0.25){
+				// question
 				SENTENCEG_PlayRndSz(ENT(pev), "HG_QUEST", HGRUNT_SENTENCE_VOLUME, ATTN_NORM, 0, m_voicePitch);
 				g_fGruntQuestion = 2;
-				break;
-			case 2: // statement
-				SENTENCEG_PlayRndSz(ENT(pev), "HG_IDLE", HGRUNT_SENTENCE_VOLUME, ATTN_NORM, 0, m_voicePitch);
-				break;
+			}else{ // 40%
+				// statement
+				//MODDD - involve some other sentences very rarely
+				if(theRandom < 0.35 + 0.25 + 0.35){
+					SENTENCEG_PlayRndSz(ENT(pev), "HG_IDLE", HGRUNT_SENTENCE_VOLUME, ATTN_NORM, 0, m_voicePitch);
+				}else if(theRandom < 0.35 + 0.25 + 0.35 + 0.025){
+					SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_SUCKS", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch);
+				}else{ // last 0.025 to 1.0
+					SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_CIVVIES", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch);
+				}
 			}
+
 		}
 		else
 		{
@@ -2901,6 +3175,9 @@ void CHGrunt::MonsterThink ( void ){
 		}
 	//MODDD - see if we can use the strafing anim.
 
+
+
+	SELF_checkSayRecentlyKilledAlly(this);
 
 
 	BOOL noStrafeForYou = FALSE;
@@ -3515,13 +3792,20 @@ void CHGrunt::HandleAnimEvent( MonsterEvent_t *pEvent )
 
 		case HGRUNT_AE_CAUGHT_ENEMY:
 		{
+			//MODDD - HG_ALERT is only for noticing the player!  Why was this always playing here?
+			// And why is this an anim event anyway?  Seems like an odd thing to be compared to anything else,
+			// but it works.
+			/*
 			if ( FOkToSpeak() )
 			{
 				SENTENCEG_PlayRndSz(ENT(pev), "HG_ALERT", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
-				 JustSpoke();
+				JustSpoke();
 			}
+			*/
+			AlertSound();
 
 		}
+		break;
 
 		default:
 			CSquadMonster::HandleAnimEvent( pEvent );
@@ -4647,6 +4931,113 @@ void CHGrunt::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 
 
 
+void CHGrunt::SayAlert(void) {
+
+	//MODDD - little adjustment, now generic lines for being the PLAYER_ALLY, MACHINE, etc. too
+	
+	/*
+	if ((m_hEnemy != NULL) && m_hEnemy->IsPlayer()){
+		// player
+		SENTENCEG_PlayRndSz( ENT(pev), "HG_ALERT", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
+	}else if (
+		(m_hEnemy != NULL) &&
+		(m_hEnemy->Classify() != CLASS_PLAYER_ALLY) &&
+		(m_hEnemy->Classify() != CLASS_HUMAN_PASSIVE) &&
+		(m_hEnemy->Classify() != CLASS_MACHINE)
+		){
+		// monster
+		SENTENCEG_PlayRndSz( ENT(pev), "HG_MONST", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
+	}
+	*/
+	int enemyClassify;
+
+	if (m_hEnemy != NULL) {
+		enemyClassify = m_hEnemy->Classify();
+	}else{
+		// what.
+		enemyClassify = CLASS_NONE;
+	}
+
+	
+
+	// If my enemy is the player, always use specific lines
+	if(enemyClassify == CLASS_PLAYER){
+		switch(RANDOM_LONG(0, 2)){
+		case 0:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT0", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 1:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT4", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 2:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT5", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		}
+	}else if(enemyClassify == CLASS_NONE || enemyClassify == CLASS_PLAYER_ALLY || RANDOM_FLOAT(0, 0.15)){
+		// generic lines, also for vs. player ally (pick from 15% of the time anyway if not the player or player-ally).
+		switch(RANDOM_LONG(0, 5)){
+		case 0:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_MONST0", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 1:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_MONST1", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 2:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT1", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 3:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT2", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 4:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT3", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 5:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT6", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		}
+	}else if(
+		enemyClassify == CLASS_ALIEN_MILITARY ||
+		enemyClassify == CLASS_ALIEN_PASSIVE ||
+		enemyClassify == CLASS_ALIEN_MONSTER
+	){
+		// smarter aliens, but call em' 'bogies' too (all sentences from this).  'We got hostiles' is also fitting.
+		float theRando = RANDOM_FLOAT(0, 1);
+		if(theRando < 0.17){
+			SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT3", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch);
+		}else{
+			SENTENCEG_PlayRndSz( ENT(pev), "HG_MONST", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
+		}
+	}else if (
+		enemyClassify == CLASS_ALIEN_PREY ||
+		enemyClassify == CLASS_ALIEN_PREDATOR ||
+		enemyClassify == CLASS_BARNACLE ||
+		enemyClassify == CLASS_ALIEN_BIOWEAPON ||
+		enemyClassify == CLASS_PLAYER_BIOWEAPON
+	){
+		// ones about 'aliens' only, but throw in some generic ones too (after the first two here)
+		switch(RANDOM_LONG(0, 4)){
+		case 0:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_MONST2", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 1:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_MONST3", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 2:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT2", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 3:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT1", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 4:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT6", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		}
+	}else{
+		// what else?  machine?  Don't talk about movement
+		switch(RANDOM_LONG(0, 1)){
+		case 0:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT1", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		case 1:SENTENCEG_PlaySingular(ENT(pev), CHAN_VOICE, "HG_ALERT6", HGRUNT_SENTENCE_VOLUME + 0.05, GRUNT_ATTN - 0.05, 0, m_voicePitch); break;
+		}
+	}
+
+}//SayAlert
+
+// Rather, a filter for whether to really play the Alert sound.  See 'SayAlert' for what must
+// play something when called.
+void CHGrunt::AlertSound( void ){
+	
+		//!!!KELLY - the leader of a squad of grunts has just seen the player or a
+		// monster and has made it the squad's enemy. You
+		// can check pev->flags for FL_CLIENT to determine whether this is the player
+		// or a monster. He's going to immediately start
+		// firing, though. If you'd like, we can make an alternate "first sight"
+		// schedule where the leader plays a handsign anim
+		// that gives us enough time to hear a short sentence or spoken command
+		// before he starts pluggin away.
+		if (FOkToSpeak())// && RANDOM_LONG(0,1))
+		{
+			SayAlert();
+			
+			JustSpoke();
+		}
+
+
+}//AlertSound
+
+
+
 
 //=========================================================
 // PainSound
@@ -4655,8 +5046,6 @@ void CHGrunt::PainSound ( void )
 {
 	if ( gpGlobals->time > m_flNextPainTime )
 	{
-
-
 		//MODDD NOTE - looks like this HG_PAIN sentence got canned.
 #if 0
 		if ( RANDOM_LONG(0,99) < 5 )
@@ -5055,28 +5444,8 @@ Schedule_t *CHGrunt::GetSchedule( void )
 					}
 					else
 					{
-						//!!!KELLY - the leader of a squad of grunts has just seen the player or a
-						// monster and has made it the squad's enemy. You
-						// can check pev->flags for FL_CLIENT to determine whether this is the player
-						// or a monster. He's going to immediately start
-						// firing, though. If you'd like, we can make an alternate "first sight"
-						// schedule where the leader plays a handsign anim
-						// that gives us enough time to hear a short sentence or spoken command
-						// before he starts pluggin away.
-						if (FOkToSpeak())// && RANDOM_LONG(0,1))
-						{
-							if ((m_hEnemy != NULL) && m_hEnemy->IsPlayer())
-								// player
-								SENTENCEG_PlayRndSz( ENT(pev), "HG_ALERT", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
-							else if ((m_hEnemy != NULL) &&
-									(m_hEnemy->Classify() != CLASS_PLAYER_ALLY) &&
-									(m_hEnemy->Classify() != CLASS_HUMAN_PASSIVE) &&
-									(m_hEnemy->Classify() != CLASS_MACHINE))
-								// monster
-								SENTENCEG_PlayRndSz( ENT(pev), "HG_MONST", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
-
-							JustSpoke();
-						}
+						//MODDD - alert sound logic moved to 'AlertSound'.
+						AlertSound();
 
 						if ( HasConditions ( bits_COND_CAN_RANGE_ATTACK1 ) )
 						{
@@ -5955,9 +6324,7 @@ float CHGrunt::getDistTooFar(void){
 // 'm_flLastEnemySightTime' is part of CSquadMonster, so leave it up to there anyway for squadie-to-squadie
 // updates.
 void CHGrunt::setEnemyLKP(CBaseEntity* theEnt){
-	m_vecEnemyLKP = theEnt->pev->origin;
-	m_fEnemyLKP_EverSet = TRUE;
-	investigatingAltLKP = FALSE; //this is the real deal.
+	CSquadMonster::setEnemyLKP(theEnt);
 
 	//m_flLastEnemySightTime = gpGlobals->time;
 }

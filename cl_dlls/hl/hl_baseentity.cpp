@@ -397,8 +397,13 @@ BOOL CBaseMonster::FRefreshRouteStrict ( void ) { return 0; }
 BOOL CBaseMonster::FRefreshRoute ( void ) { return 0; }
 BOOL CBaseMonster::FRefreshRouteCheap ( void ) { return 0; }
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmart ( void ) { return 0; }
+BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe ( void ) { return 0; }
+
+
 BOOL CBaseMonster::MoveToEnemy( Activity movementAct, float waitTime ) { return FALSE; }
 BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
+BOOL CBaseMonster::MoveToLocationStrict( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
+//BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const Vector &goal, float argGoalDistTolerance ) { return FALSE; }
 BOOL CBaseMonster::MoveToLocationCheap( Activity movementAct, float waitTime, const Vector &goal ) { return FALSE; }
 BOOL CBaseMonster::MoveToTarget( Activity movementAct, float waitTime ) { return FALSE; }
 BOOL CBaseMonster::MoveToTargetStrict( Activity movementAct, float waitTime ) { return FALSE; }
@@ -458,8 +463,8 @@ BOOL CBaseMonster::getMovementCanAutoTurn(void){return FALSE;}
 
 
 void CBaseMonster::updateEnemyLKP(void){}
-void CBaseMonster::setEnemyLKP(const Vector& argNewVector){}
-void CBaseMonster::setEnemyLKP(const Vector& argNewVector, const Vector& extraAddIn){}
+void CBaseMonster::setEnemyLKP(const Vector& argNewVector, float zOffset){};
+void CBaseMonster::setEnemyLKP(const Vector& argNewVector, float zOffset, const Vector& extraAddIn){};
 void CBaseMonster::setEnemyLKP(CBaseEntity* theEnt){}
 void CBaseMonster::setEnemyLKP(CBaseEntity* theEnt, const Vector& extraAddIn){}
 void CBaseMonster::setEnemyLKP(entvars_t* theEntPEV){}
@@ -542,7 +547,8 @@ int CBaseMonster::MovementGoalToMoveFlag(int iMoveGoal){return 0;}
 BOOL CBaseMonster::attemptRampFix(const Vector& vecGoal, int iMoveFlag, CBaseEntity* pTarget) {return FALSE;}
 
 BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget ) { return FALSE; }
-BOOL CBaseMonster::BuildRouteCheap(const Vector& vecGoal, int iMoveFlag, CBaseEntity* pTarget) {return FALSE;}
+BOOL CBaseMonster::BuildRouteSafe ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget ) { return FALSE; }
+
 
 BOOL CBaseMonster::NoFriendlyFireImp(const Vector& startVec, const Vector& endVec){return FALSE;}
 

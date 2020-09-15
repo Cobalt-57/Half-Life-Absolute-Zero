@@ -3295,6 +3295,8 @@ void CArcher::setEnemyLKP(CBaseEntity* theEnt){
 	// Wait, how about like the hornet does, 'BodyTarget' for even more control from the entity?
 	//m_vecEnemyLKP = theEnt->Center();
 	m_vecEnemyLKP = theEnt->BodyTarget(pev->origin);
+	// do I care about zoffset?
+	m_flEnemyLKP_zOffset = 0; //theEnt->pev->mins.z;
 	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = FALSE;
 }//

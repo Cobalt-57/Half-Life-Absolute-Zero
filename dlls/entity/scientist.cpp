@@ -2212,7 +2212,7 @@ void CScientist::AlertSound(void) {
 		if (FOkToSpeakAllowCombat(CTalkMonster::g_talkWaitTime)) {
 			SayAlert();
 		}
-	}
+	}//m_hEnemy check
 
 }//AlertSound
 

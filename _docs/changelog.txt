@@ -710,6 +710,11 @@ Animations less likely to reset or get re-picked due to being changed in the mid
 
 Pre-disaster scientists can no longer be tricked into teleporting by going off-course of their destination if the player persistently gets in the way sometimes.  Don't you hate it when that happens.
 
+CVar pathfindIgnoreIsolatedNodes also applies to searching for random or cover nodes.
+
+hgrunts also better comment on the enemy they've seen on 'alert' noises.
+
+
 
 IN PROGRESS:
 Panthereye jump:  although not failing to jump at all, it is odd it picks a position it cannot reach jumping as far as possible.

@@ -346,7 +346,6 @@ public:
 	static Schedule_t* m_scheduleList[];
 
 
-	Vector m_vecEnemyLKP_prev;
 
 	// these fields have been added in the process of reworking the state machine. (sjb)
 	EHANDLE				m_hEnemy;		 // the entity that the monster is fighting.
@@ -354,8 +353,10 @@ public:
 
 	EHANDLE				m_hOldEnemy[MAX_OLD_ENEMIES];
 	Vector				m_vecOldEnemy[MAX_OLD_ENEMIES];
-	//It shall use the stack!
-	//Use this variable to record the most recent addition to take instead.
+	// NEW.  Have the zoffsets too.
+	float				m_flOldEnemy_zOffset[MAX_OLD_ENEMIES];
+	// It shall use the stack!
+	// Use this variable to record the most recent addition to take instead.
 	int m_intOldEnemyNextIndex;
 
 
@@ -405,7 +406,14 @@ public:
 
 	int				m_iMaxHealth;// keeps track of monster's maximum health value (for re-healing, etc)
 
-	Vector				m_vecEnemyLKP;// last known position of enemy. (enemy's origin)
+	Vector			m_vecEnemyLKP;// last known position of enemy. (enemy's origin)
+
+	//MODDD - NEW.  Good to keep in mind for pathfinding, easier to get the bottom of the entity's bounds fast.
+	// (it will be the pev->mins.z; add it to the LKP to get the location of the bottom bound, consistently
+	// gets the bottom bound of players too)
+	float m_flEnemyLKP_zOffset;
+	Vector m_vecEnemyLKP_ViewOFS;  //record they eyepos too...
+
 	// NEW.  Has m_vecEnemyLKP ever set before?  If not, don't try to use it (defalts to origin of the map, an odd place
 	// to look at for no apparent reason).
 	BOOL m_fEnemyLKP_EverSet;
@@ -456,14 +464,26 @@ public:
 
 
 
+	float nextDirectRouteAttemptTime;
 
 	//new
 	BOOL disableEnemyAutoNode;
 	BOOL waitForMovementTimed_Start;
 
 	BOOL investigatingAltLKP;
+
 	Vector m_vecEnemyLKP_Real;
+	float m_flEnemyLKP_Real_zOffset;
+	Vector m_vecEnemyLKP_Real_ViewOFS;
 	BOOL m_fEnemyLKP_Real_EverSet;
+
+	// Should these be saved?
+	Vector m_vecEnemyLKP_prev;
+	float m_flEnemyLKP_prev_zOffset;
+	Vector m_vecEnemyLKP_prev_ViewOFS;
+	BOOL m_fEnemyLKP_prev_EverSet;
+
+
 
 	BOOL canSetAnim;
 	BOOL m_fNewScheduleThisFrame;
@@ -525,6 +545,7 @@ public:
 
 
 	BOOL strictNodeTolerance;
+	float goalDistTolerance;
 	BOOL recentTimedTriggerDamage;
 
 	Vector respawn_origin;
@@ -601,8 +622,8 @@ public:
 	virtual BOOL getMovementCanAutoTurn(void);
 
 	void updateEnemyLKP(void);
-	void setEnemyLKP(const Vector& argNewVector);
-	void setEnemyLKP(const Vector& argNewVector, const Vector& extraAddIn);
+	void setEnemyLKP(const Vector& argNewVector, float zOffset);
+	void setEnemyLKP(const Vector& argNewVector, float zOffset, const Vector& extraAddIn);
 	virtual void setEnemyLKP(CBaseEntity* theEnt);
 	virtual void setEnemyLKP(CBaseEntity* theEnt, const Vector& extraAddIn);
 	void setEnemyLKP(entvars_t* theEntPEV);
@@ -923,6 +944,9 @@ public:
 	virtual BOOL FRefreshRoute(void);
 	virtual BOOL FRefreshRouteCheap( void );
 	virtual BOOL FRefreshRouteChaseEnemySmart(void);
+	virtual BOOL FRefreshRouteChaseEnemySmartSafe(void);
+	
+
 	BOOL FRouteClear ( void );
 
 	void RouteSimplify( CBaseEntity *pTargetEnt );
@@ -943,9 +967,9 @@ public:
 
 	virtual BOOL attemptRampFix(const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget);
 
-	//MODDD - made virtual like BuildNearestRoute was. If something overrides this we should probably use their version.
+	//MODDD - made virtual like BuildNearestRoute was. If something overrides this we should probably use its version.
 	virtual BOOL BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget );
-	virtual BOOL BuildRouteCheap ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget );
+	virtual BOOL BuildRouteSafe(const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget);
 
 	//MODDD - now accepts an optional moveflag and optional target entity just like BuildRoute does. To whatever route it makes with BuildRoute,
 	//        it should be able to pass that information along just as if BuildRoute were called plainly.
@@ -1108,6 +1132,8 @@ public:
 	BOOL MoveToTarget( Activity movementAct, float waitTime );
 	BOOL MoveToTargetStrict( Activity movementAct, float waitTime );
 	BOOL MoveToLocation( Activity movementAct, float waitTime, const Vector &goal );
+	BOOL MoveToLocationStrict( Activity movementAct, float waitTime, const Vector &goal );
+	//BOOL MoveToLocation( Activity movementAct, float waitTime, const Vector &goal, float argGoalDistTolerance );
 	BOOL MoveToLocationCheap( Activity movementAct, float waitTime, const Vector &goal );
 	BOOL MoveToEnemy( Activity movementAct, float waitTime );
 

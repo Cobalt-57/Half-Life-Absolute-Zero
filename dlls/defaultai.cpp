@@ -440,6 +440,43 @@ Schedule_t	slAlertFace[] =
 
 
 
+//MODDD - clone of... you guessed it, but don't do anything if the target point isn't visible.
+// Might consider skipping the ACT_IDLE change then (TaskFail() before, but that breaks other places),
+// so unsure what's best here.
+Task_t	tlAlertFaceIfVisible[] =
+{
+	{ TASK_STOP_MOVING,				0				},
+	{ TASK_SET_ACTIVITY,			(float)ACT_IDLE	},
+	{ TASK_FACE_IDEAL_IF_VISIBLE,	(float)0		},
+};
+
+//MODDD MAJOR - ignores damage conditions to guarantee at least looking someplace.
+Schedule_t	slAlertFaceIfVisible[] =
+{
+	{ 
+		tlAlertFaceIfVisible,
+		ARRAYSIZE ( tlAlertFaceIfVisible ),
+		bits_COND_NEW_ENEMY		|
+		//MODDD - why wasn't SEE_ENEMY here??
+		bits_COND_SEE_ENEMY |
+
+		bits_COND_SEE_FEAR		|
+		//bits_COND_LIGHT_DAMAGE	|
+		//bits_COND_HEAVY_DAMAGE	|
+		bits_COND_PROVOKED |
+		bits_COND_SCHEDULE_DONE,   //MODDD -  NEW. To let the monsterstate change immediaetly at the end of finishing
+								   // this schedule.
+	                               // That's still a good idea right?  Should more things do that like idle-related methods?
+		//0,
+		//MODDD - now interruptible by bait?
+		bits_SOUND_BAIT,
+		"Alert Face (If Vis)"
+	},
+};
+
+
+
+
 
 //=========================================================
 // CombatFace Schedule
@@ -609,6 +646,48 @@ Schedule_t	slInvestigateSound[] =
 		"InvestigateSound"
 	},
 };
+
+
+
+// Get a path to this point, that's all.
+// (The tolerance of '20' here is an exception)
+Task_t tlWalkToPoint[] =
+{
+	//MODDD - NEW.  HAssassins should not sit in place simply because there isn't a route to the sound heard.
+	// At least face it, might see something.
+	{ TASK_SET_FAIL_SCHEDULE_HARD,	(float)SCHED_ALERT_FACE	},
+
+	{ TASK_STOP_MOVING,				(float)0				},
+	//{ TASK_STORE_LASTPOSITION,		(float)0				},
+	{ TASK_GET_PATH_TO_GOALVEC,		(float) 20				},
+	{ TASK_FACE_IDEAL,				(float)0				},
+	{ TASK_WALK_PATH,				(float)0				},
+	//{ TASK_WAIT_FOR_MOVEMENT,		(float)0				},
+	{ TASK_WAIT_FOR_MOVEMENT_RANGE,  (float) 20				},
+	{ TASK_PLAY_SEQUENCE,			(float)ACT_IDLE			},
+	//{ TASK_WAIT,					(float)10				},
+	//{ TASK_GET_PATH_TO_LASTPOSITION,(float)0				},
+	//{ TASK_WALK_PATH,				(float)0				},
+	//{ TASK_WAIT_FOR_MOVEMENT,		(float)0				},
+	//{ TASK_CLEAR_LASTPOSITION,		(float)0				},
+};
+
+Schedule_t	slWalkToPoint[] =
+{
+	{ 
+		tlWalkToPoint,
+		ARRAYSIZE ( tlWalkToPoint ), 
+		bits_COND_NEW_ENEMY			|
+		bits_COND_SEE_FEAR			|
+		bits_COND_LIGHT_DAMAGE		|
+		bits_COND_HEAVY_DAMAGE		|
+		bits_COND_HEAR_SOUND,
+		
+		bits_SOUND_DANGER,
+		"WalkToPoint"
+	},
+};
+
 
 
 
@@ -1949,15 +2028,17 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slActiveIdle,
 	slWakeAngry,
 	slAlertFace,
+	slAlertFaceIfVisible, //new
 	slAlertSmallFlinch,
-	slAlertBigFlinch, //MODDD
+	slAlertBigFlinch, //new
 	slAlertStand,
 	slInvestigateSound,
+	slWalkToPoint,  //new
 	slCombatStand,
 	slCombatFace,
 	slCombatFaceNoStump,
 	slCombatLook,
-	slWaitForEnemyToEnterWater, //MODDD
+	slWaitForEnemyToEnterWater, //new
 	slCombatFaceSound,
 	slStandoff,
 	slArmWeapon,
@@ -1973,11 +2054,11 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slChaseEnemySmart_StopSight,
 	slChaseEnemyFailed,
 	slSmallFlinch,
-	slBigFlinch,  //MODDD
+	slBigFlinch,  //new
 	slDie,
-	slDieLoop,  //MODDD - new
-	slDieFallLoop, //MODDD
-	slDieWaterFloat,  //MODDD - new
+	slDieLoop,  //new
+	slDieFallLoop, //new
+	slDieWaterFloat,  // new
 	slVictoryDance,
 	slBarnacleVictimGrab,
 	slBarnacleVictimChomp,
@@ -1992,7 +2073,7 @@ Schedule_t *CBaseMonster::m_scheduleList[] =
 	slTakeCoverFromEnemy,
 	slFail,
 
-	//MODDD - additions
+	//MODDD - other additions
 	slFailQuick,
 	slWaitForSequence,
 	slWaitForReviveSequence,
@@ -2058,6 +2139,9 @@ Schedule_t* CBaseMonster::GetScheduleOfType ( int Type )
 //	ALERT ( at_console, "Sched Type:%d\n", Type );
 	switch	( Type )
 	{
+	case SCHED_WALK_TO_POINT:{
+		return slWalkToPoint;
+	}break;
 	// This is the schedule for scripted sequences AND scripted AI
 	case SCHED_AISCRIPT:
 		{
@@ -2126,6 +2210,9 @@ Schedule_t* CBaseMonster::GetScheduleOfType ( int Type )
 		{
 			return &slAlertFace[ 0 ];
 		}
+	case SCHED_ALERT_FACE_IF_VISIBLE:{
+		return &slAlertFaceIfVisible[0];
+	}break;
 	case SCHED_ALERT_STAND:
 		{
 			return &slAlertStand[ 0 ];

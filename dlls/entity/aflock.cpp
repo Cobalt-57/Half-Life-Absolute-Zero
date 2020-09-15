@@ -870,7 +870,7 @@ void CFlockingFlyer::SquadRemove( CFlockingFlyer *pRemove )
 			CFlockingFlyer *pLeader = m_pSquadNext;
 			
 			// copy the enemy LKP to the new leader
-			pLeader->setEnemyLKP(m_vecEnemyLKP);
+			pLeader->setEnemyLKP(m_vecEnemyLKP, m_flEnemyLKP_zOffset);
 
 			if ( pLeader )
 			{

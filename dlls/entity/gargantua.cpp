@@ -327,7 +327,7 @@ Task_t tlGargChaseEnemySmart[] =
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_CHASE_ENEMY_FAILED	},
 	//{ TASK_GET_PATH_TO_ENEMY,	(float)0		},
 	//{ TASK_RUN_PATH,			(float)0		},
-	{ TASK_MOVE_TO_ENEMY_RANGE,	(float)0		},
+	{ TASK_MOVE_TO_ENEMY_RANGE,	(float)100		},
 	{ TASK_CHECK_STUMPED,		(float)0		},
 	{ TASK_STOP_MOVING, 0},
 };
@@ -3229,6 +3229,11 @@ int CGargantua::LookupActivityHard(int activity){
 
 	switch(activity){
 		case ACT_IDLE:
+			if(m_IdealMonsterState == MONSTERSTATE_SCRIPT || m_MonsterState == MONSTERSTATE_SCRIPT){
+				// Also, only use idle3 for idles, likely going between different animations soon.
+				return LookupSequence("idle3");
+			}
+
 			if(m_pSchedule == slGargFlamePreAttack){
 				// In the pre-attack delay, likely won't last idle for very long, only pick the most basic one.
 				return LookupSequence("idle3");

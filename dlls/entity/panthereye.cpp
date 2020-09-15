@@ -320,15 +320,17 @@ Schedule_t	slPanthereyeJumpAtEnemyUnstuck[] =
 // Chase enemy schedule
 Task_t tlPanthereyeChaseEnemy[] = 
 {
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE},   //MODDD is this okay?
+
 	// If this fails, move a random point away
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_MOVE_FROM_ORIGIN	},
 	//{ TASK_GET_PATH_TO_ENEMY,	(float)0		},
 	//{ TASK_RUN_PATH,			(float)0		},
 	//{ TASK_WAIT_FOR_MOVEMENT,	(float)0		},
 	
-	//is this ok?
-	{TASK_MOVE_TO_ENEMY_RANGE, (float)0					},
-	{TASK_CHECK_STUMPED, (float)0						},
+	// is this ok?
+	{TASK_MOVE_TO_ENEMY_RANGE, (float)60			},
+	{TASK_CHECK_STUMPED, (float)0					},
 };
 
 Schedule_t slPanthereyeChaseEnemy[] =
@@ -1726,7 +1728,7 @@ BOOL CPantherEye::CheckMeleeAttack1 ( float flDot, float flDist )
 	}
 
 
-	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 90 && zDist < 40 && 
+	if ( !HasConditions( bits_COND_ENEMY_OCCLUDED ) && flDist <= 80 && zDist < 40 && 
 	 m_hEnemy != NULL &&
 	 m_hEnemy ->Classify() != CLASS_ALIEN_BIOWEAPON &&
 	 m_hEnemy ->Classify() != CLASS_PLAYER_BIOWEAPON   )

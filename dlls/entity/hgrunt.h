@@ -102,6 +102,9 @@ public:
 	BOOL recentChaseFailedAtDistance;
 	BOOL shootpref_eyes;
 
+	float allyDeadRecentlyExpireTimeSet;
+
+
 
 	CHGrunt(void);
 
@@ -173,6 +176,10 @@ public:
 	void SetActivity ( Activity NewActivity );
 	void StartTask ( Task_t *pTask );
 	void RunTask ( Task_t *pTask );
+
+	void SayAlert(void);
+	void AlertSound(void);
+
 	void DeathSound( void );
 	void PainSound( void );
 	void IdleSound ( void );

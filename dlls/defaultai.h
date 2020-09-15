@@ -42,7 +42,8 @@ extern Schedule_t slWakeAngry[];
 //=========================================================
 // AlertTurn Schedules
 //=========================================================
-extern Schedule_t	slAlertFace[];
+extern Schedule_t slAlertFace[];
+extern Schedule_t slAlertFaceIfVisible[];
 
 //=========================================================
 // AlertIdle Schedules

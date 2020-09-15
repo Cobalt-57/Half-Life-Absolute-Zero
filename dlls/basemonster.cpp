@@ -20,6 +20,10 @@
 
 */
 
+// !!!
+// TODO.  CheckLocalMove calls.  Send that enemyLKP + the zOffset!
+
+
 // NOTE!!! Bad change I made a long while ago.
 // BuildNearestRoute should NOT give the 'bits_MF_TO_ENEMY' moveflag.
 // This tricks other areas of pathfinding into thinking the route is directly to the enemy
@@ -102,6 +106,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 
 
 
+/*
 #define USE_MOVEMENT_BOUND_FIX
 
 // ok... don't know what I was smoking there.  AdvanceRoute as a respose to failing in MoveExecute?...   uhhhhhh.   wat.
@@ -113,7 +118,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 // See the 'undef' lines that turn off these constants before MoveExecute
 #define USE_MOVEMENT_BOUND_FIX_ALT
 
-
+*/
 //=========================================================
 // Move - take a single step towards the next ROUTE location
 //=========================================================
@@ -184,8 +189,8 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, m_hTargetEnt, FIELD_EHANDLE ),
 	DEFINE_ARRAY( CBaseMonster, m_hOldEnemy, FIELD_EHANDLE, MAX_OLD_ENEMIES ),
 	DEFINE_ARRAY( CBaseMonster, m_vecOldEnemy, FIELD_POSITION_VECTOR, MAX_OLD_ENEMIES ),
-
 	//MODDD - new
+	DEFINE_ARRAY( CBaseMonster, m_flOldEnemy_zOffset, FIELD_FLOAT, MAX_OLD_ENEMIES ),
 	DEFINE_FIELD( CBaseMonster, m_intOldEnemyNextIndex, FIELD_INTEGER),
 
 
@@ -228,12 +233,22 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, m_iMaxHealth, FIELD_INTEGER ),
 
 	DEFINE_FIELD( CBaseMonster, m_vecEnemyLKP, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( CBaseMonster, m_flEnemyLKP_zOffset, FIELD_FLOAT),
+	DEFINE_FIELD( CBaseMonster, m_vecEnemyLKP_ViewOFS, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CBaseMonster, m_fEnemyLKP_EverSet, FIELD_BOOLEAN),
 	//MODDD - new
 	DEFINE_FIELD( CBaseMonster, m_vecEnemyLKP_Real, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( CBaseMonster, m_flEnemyLKP_Real_zOffset, FIELD_FLOAT),
+	DEFINE_FIELD( CBaseMonster, m_vecEnemyLKP_Real_ViewOFS, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CBaseMonster, m_fEnemyLKP_Real_EverSet, FIELD_BOOLEAN),
+
+	DEFINE_FIELD( CBaseMonster, m_vecEnemyLKP_prev, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( CBaseMonster, m_flEnemyLKP_prev_zOffset, FIELD_FLOAT),
+	DEFINE_FIELD( CBaseMonster, m_vecEnemyLKP_prev_ViewOFS, FIELD_POSITION_VECTOR ),
+	DEFINE_FIELD( CBaseMonster, m_fEnemyLKP_prev_EverSet, FIELD_BOOLEAN),
+
 	DEFINE_FIELD( CBaseMonster, investigatingAltLKP, FIELD_BOOLEAN),
-	
+
 	
 	DEFINE_FIELD( CBaseMonster, m_cAmmoLoaded, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, m_afCapability, FIELD_INTEGER ),
@@ -270,7 +285,8 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	//MODDD - is this a good idea?
 	DEFINE_FIELD( CBaseMonster, monsterID, FIELD_INTEGER ),
 	DEFINE_FIELD( CBaseMonster, strictNodeTolerance, FIELD_BOOLEAN),
-
+	DEFINE_FIELD( CBaseMonster, goalDistTolerance, FIELD_FLOAT),
+	
 	DEFINE_FIELD( CBaseMonster, floatSinkSpeed, FIELD_FLOAT),
 	DEFINE_FIELD( CBaseMonster, floatEndTimer, FIELD_TIME),
 
@@ -498,6 +514,7 @@ CBaseMonster::CBaseMonster(void){
 	fApplyTempVelocity = FALSE;
 
 	strictNodeTolerance = FALSE;
+	goalDistTolerance = 0;
 	recentTimedTriggerDamage = FALSE;
 	
 }
@@ -1471,7 +1488,8 @@ void CBaseMonster::heardBulletHit(entvars_t* pevShooter){
 			{
 				//MODDD - sent the ent itself for custom handling, and the extra offset
 				//monListener->setEnemyLKP(monListener->pev->origin + ( g_vecAttackDir * 64 )); 
-				monListener->setEnemyLKP(monListener->pev->origin, ( g_vecAttackDir * 64 )); 
+				//monListener->setEnemyLKP(monListener->pev->origin, monListener->pev->mins.z, ( g_vecAttackDir * 64 )); 
+				monListener->setEnemyLKP(monListener, ( g_vecAttackDir * 64 )); 
 			}
 
 			//want to face your LKP, yes?
@@ -2591,74 +2609,77 @@ BOOL CBaseMonster::FRefreshRouteStrict ( void )
 
 	switch( m_movementGoal )
 	{
-		case MOVEGOAL_PATHCORNER:
+		case MOVEGOAL_PATHCORNER:{
+			// monster is on a path_corner loop
+			pPathCorner = m_pGoalEnt;
+			i = 0;
+
+			while ( pPathCorner && i < ROUTE_SIZE )
 			{
-				// monster is on a path_corner loop
-				pPathCorner = m_pGoalEnt;
-				i = 0;
+				m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
+				m_Route[ i ].vecLocation = pPathCorner->pev->origin;
 
-				while ( pPathCorner && i < ROUTE_SIZE )
-				{
-					m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
-					m_Route[ i ].vecLocation = pPathCorner->pev->origin;
+				pPathCorner = pPathCorner->GetNextTarget();
 
-					pPathCorner = pPathCorner->GetNextTarget();
-
-					// Last path_corner in list?
-					if ( !pPathCorner )
-						m_Route[i].iType |= bits_MF_IS_GOAL;
+				// Last path_corner in list?
+				if ( !pPathCorner )
+					m_Route[i].iType |= bits_MF_IS_GOAL;
 					
-					i++;
-				}
-				//MODDD - looks safe to treat 'i' as the route length then.
-				// If there is no GoalEnt (first pPathCorner choice), there is no route (0 length).
-				// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
-				// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
-				m_iRouteLength = i;
+				i++;
 			}
+			//MODDD - looks safe to treat 'i' as the route length then.
+			// If there is no GoalEnt (first pPathCorner choice), there is no route (0 length).
+			// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
+			// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
+			m_iRouteLength = i;
 			returnCode = TRUE;
-			break;
-
-		case MOVEGOAL_ENEMY:
+		}break;
+		case MOVEGOAL_ENEMY:{
 			setEnemyLKP(m_hEnemy);
-			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
+
+			Vector vecEnemyLKP_LowerCenter = m_vecEnemyLKP;
+			vecEnemyLKP_LowerCenter.z += m_flEnemyLKP_zOffset;
+
+			returnCode = BuildRoute( vecEnemyLKP_LowerCenter, bits_MF_TO_ENEMY, m_hEnemy );
 
 			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
+			// Think so, a successful 'FGetNodeRoute' call leads to that.
 			if(returnCode){
-				m_vecMoveGoal = m_vecEnemyLKP;
+				m_vecMoveGoal = vecEnemyLKP_LowerCenter;
 			}
 
-			break;
-
-		case MOVEGOAL_LOCATION:
+		}break;
+		case MOVEGOAL_LOCATION:{
 			returnCode = BuildRoute( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
 
-			break;
-		case MOVEGOAL_TARGETENT:
+		}break;
+		case MOVEGOAL_TARGETENT:{
 			if (m_hTargetEnt != NULL)
 			{
-				returnCode = BuildRoute( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
+				Vector vecTarget_LowerCenter = m_hTargetEnt->pev->origin;
+				vecTarget_LowerCenter.z += m_hTargetEnt->pev->mins.z;
+
+				returnCode = BuildRoute( vecTarget_LowerCenter, bits_MF_TO_TARGETENT, m_hTargetEnt );
+
+				if(returnCode){
+					//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
+					if(returnCode){
+						m_vecMoveGoal = vecTarget_LowerCenter;
+					}
+				}
 
 			}else{
 				returnCode = FALSE;
 			}
 
-			if(returnCode){
-				//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
-				if(returnCode){
-					m_vecMoveGoal = m_hTargetEnt->pev->origin;
-				}
-			}
-
-			break;
-
-		case MOVEGOAL_NODE:
+		}break;
+		case MOVEGOAL_NODE:{
 			returnCode = FGetNodeRoute( m_vecMoveGoal );
 			//MODDD - NOTE.  Found commented out as-is.  Is simplifying a node-route really that bad, or it's just not done this soon?
 			// Maybe that's already part of FGetNodeRoute.
 //			if ( returnCode )
 //				RouteSimplify( NULL );
-			break;
+		}break;
 	}//movegoal?
 
 
@@ -2712,66 +2733,67 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 
 	switch( m_movementGoal )
 	{
-		case MOVEGOAL_PATHCORNER:
+		case MOVEGOAL_PATHCORNER:{
+			// monster is on a path_corner loop
+			pPathCorner = m_pGoalEnt;
+			i = 0;
+
+			while ( pPathCorner && i < ROUTE_SIZE )
 			{
-				// monster is on a path_corner loop
-				pPathCorner = m_pGoalEnt;
-				i = 0;
+				m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
+				m_Route[ i ].vecLocation = pPathCorner->pev->origin;
 
-				while ( pPathCorner && i < ROUTE_SIZE )
-				{
-					m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
-					m_Route[ i ].vecLocation = pPathCorner->pev->origin;
+				pPathCorner = pPathCorner->GetNextTarget();
 
-					pPathCorner = pPathCorner->GetNextTarget();
-
-					// Last path_corner in list?
-					if ( !pPathCorner )
-						m_Route[i].iType |= bits_MF_IS_GOAL;
+				// Last path_corner in list?
+				if ( !pPathCorner )
+					m_Route[i].iType |= bits_MF_IS_GOAL;
 					
-					i++;
-				}
-				//MODDD - looks safe to treat 'i' as the route length then.
-				// If there is no GoalEnt (first pPathCorner choice), there is no route (0 length).
-				// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
-				// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
-				m_iRouteLength = i;
+				i++;
 			}
+			//MODDD - looks safe to treat 'i' as the route length then.
+			// If there is no GoalEnt (first pPathCorner choice), there is no route (0 length).
+			// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
+			// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
+			m_iRouteLength = i;
 			returnCode = TRUE;
-			break;
-
-		case MOVEGOAL_ENEMY:
-
+		}break;
+		case MOVEGOAL_ENEMY:{
 			/*
 			if(m_hEnemy == FALSE){
-				//what's the point?
-				//...but we can still follow the existing LKP? I don't know.
+				// what's the point?
+				// but we can still follow the existing LKP? I don't know.
 				return FALSE;
 			}
 			*/
 
+			Vector vecEnemyLKP_LowerCenter = m_vecEnemyLKP;
+			vecEnemyLKP_LowerCenter.z += m_flEnemyLKP_zOffset;
+
 			setEnemyLKP(m_hEnemy);
-			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
+			returnCode = BuildRoute( vecEnemyLKP_LowerCenter, bits_MF_TO_ENEMY, m_hEnemy );
 
 
 			//MODDD - why wasn't there a BuildNearestRoute attempt if above failed?
 			if (returnCode == FALSE)
 			{
+				Vector vecEnemyEyePosFromBottom = m_vecEnemyLKP_ViewOFS;
+				vecEnemyEyePosFromBottom.z -= m_flEnemyLKP_zOffset;
+
 				// ?????   so sending the enemy-goal moveflag is bad (reasons why at the top of this file).
 				// can we send the m_hEnemy anyway?
 				// Go ahead and send both, but the method will know not to use the moveflag.
-				returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, m_hEnemy );
-				//returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), DEFAULT_randomNodeSearchStart, 0, m_hEnemy);
+				returnCode = BuildNearestRoute( vecEnemyLKP_LowerCenter, vecEnemyEyePosFromBottom, 0, (vecEnemyLKP_LowerCenter - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, m_hEnemy );
+				//returnCode = BuildNearestRoute( vecEnemyLKP_LowerCenter, m_hEnemy->pev->view_ofs, 0, (vecEnemyLKP_LowerCenter - pev->origin).Length(), DEFAULT_randomNodeSearchStart, 0, m_hEnemy);
 			}
 
 			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
 			if(returnCode){
-				m_vecMoveGoal = m_vecEnemyLKP;
+				m_vecMoveGoal = vecEnemyLKP_LowerCenter;
 			}
 
-			break;
-
-		case MOVEGOAL_LOCATION:
+		}break;
+		case MOVEGOAL_LOCATION:{
 			returnCode = BuildRoute( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
 
 			//MODDD - can we do a nearest instead?
@@ -2779,38 +2801,38 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 				returnCode = BuildNearestRoute(m_vecMoveGoal, pev->view_ofs, 0, (m_vecMoveGoal - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_LOCATION, NULL );
 			}
 
-			break;
-
-		case MOVEGOAL_TARGETENT:
+		}break;
+		case MOVEGOAL_TARGETENT:{
 			if (m_hTargetEnt != NULL)
 			{
-				returnCode = BuildRoute( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
+				//MODDD - route to the lower bounds.  Mainly makes a difference for the player as a target.
+				Vector vecTarget_LowerCenter = m_hTargetEnt->pev->origin;
+				vecTarget_LowerCenter.z += m_hTargetEnt->pev->mins.z;
+
+				returnCode = BuildRoute( vecTarget_LowerCenter, bits_MF_TO_TARGETENT, m_hTargetEnt );
 
 				if(!returnCode){
-					//is this okay?
-					returnCode = BuildNearestRoute( m_hTargetEnt->pev->origin, m_hTargetEnt->pev->view_ofs, 0, (m_hTargetEnt->pev->origin - this->pev->origin).Length() + 500, DEFAULT_randomNodeSearchStart, bits_MF_TO_TARGETENT, m_hTargetEnt  );
+					// is this okay?
+					returnCode = BuildNearestRoute( vecTarget_LowerCenter, m_hTargetEnt->pev->view_ofs, 0, (vecTarget_LowerCenter - this->pev->origin).Length() + 500, DEFAULT_randomNodeSearchStart, bits_MF_TO_TARGETENT, m_hTargetEnt  );
+				}
+
+				if(returnCode){
+					m_vecMoveGoal = vecTarget_LowerCenter;
 				}
 
 			}else{
 				returnCode = FALSE;
 			}
 
-			if(returnCode){
-				//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
-				if(returnCode){
-					m_vecMoveGoal = m_hTargetEnt->pev->origin;
-				}
-			}
 
-			break;
-
-		case MOVEGOAL_NODE:
+		}break;
+		case MOVEGOAL_NODE:{
 			returnCode = FGetNodeRoute( m_vecMoveGoal );
 			//MODDD - NOTE.  Found commented out as-is.  Is simplifying a node-route really that bad, or it's just not done this soon?
 			// Maybe that's already part of FGetNodeRoute.
 //			if ( returnCode )
 //				RouteSimplify( NULL );
-			break;
+		}break;
 	}//movegoal?
 
 
@@ -2833,6 +2855,9 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 //MODDD - NEW.  Like FRefreshRoute but doesn't use 'BuildNearestRoute'.  Either we can reach a given node or don't.
 // Checks for picking the best randon nearby node will go through many BuildRoute calls and BuildNearest route could end
 // up being very expensive and redundant on top of that.
+// Note that FRefreshRouteStrict also skips BuildNearestRoute calls.   However, the strict version prevents other Refresh
+// calls from ever calling BuildNearestRoute either, any pathfinding leading off RefreshRouteCheap may still call
+// BuildNearestRoute later if interrupted.
 BOOL CBaseMonster::FRefreshRouteCheap ( void )
 {
 	CBaseEntity *pPathCorner;
@@ -2850,8 +2875,7 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 
 	switch( m_movementGoal )
 	{
-		case MOVEGOAL_PATHCORNER:
-			{
+		case MOVEGOAL_PATHCORNER:{
 				// monster is on a path_corner loop
 				pPathCorner = m_pGoalEnt;
 				i = 0;
@@ -2874,12 +2898,9 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 				// If it ends after one iteration of the loop, there is 1 node (i++ makes that 0 -> 1, fitting length).
 				// Any other reason it ends (no pPathCorner choice, out of ROUTE_SIZE), i is also left as a good choice.
 				m_iRouteLength = i;
-			}
-			returnCode = TRUE;
-			break;
-
-		case MOVEGOAL_ENEMY:
-
+				returnCode = TRUE;
+		}break;
+		case MOVEGOAL_ENEMY:{
 			/*
 			if(m_hEnemy == FALSE){
 				//what's the point?
@@ -2888,61 +2909,62 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 			}
 			*/
 
+			Vector vecEnemyLKP_LowerCenter = m_vecEnemyLKP;
+			vecEnemyLKP_LowerCenter.z += m_flEnemyLKP_zOffset;
+
 			//setEnemyLKP(m_hEnemy);
-			returnCode = BuildRouteCheap( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
+			returnCode = BuildRoute( vecEnemyLKP_LowerCenter, bits_MF_TO_ENEMY, m_hEnemy );
 
 
 			//if (returnCode == FALSE)
 			//{
-			//	returnCode = BuildNearestRoute( m_vecEnemyLKP, m_hEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, m_hEnemy );
+			//	returnCode = BuildNearestRoute( vecEnemyLKP_LowerCenter, m_hEnemy->pev->view_ofs, 0, (vecEnemyLKP_LowerCenter - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_ENEMY, m_hEnemy );
 			//}
 
 			//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
 			if(returnCode){
-				m_vecMoveGoal = m_vecEnemyLKP;
+				m_vecMoveGoal = vecEnemyLKP_LowerCenter;
 			}
 
-			break;
-
-		case MOVEGOAL_LOCATION:
-			returnCode = BuildRouteCheap( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
+		}break;
+		case MOVEGOAL_LOCATION:{
+			returnCode = BuildRoute( m_vecMoveGoal, bits_MF_TO_LOCATION, NULL );
 
 			//MODDD - can we do a nearest instead?              no
 			//if(returnCode == FALSE){
 			//	returnCode = BuildNearestRoute(m_vecMoveGoal, pev->view_ofs, 0, (m_vecMoveGoal - pev->origin).Length(), DEFAULT_randomNodeSearchStart, bits_MF_TO_LOCATION, NULL );
 			//}
 
-			break;
-
-		case MOVEGOAL_TARGETENT:
+		}break;
+		case MOVEGOAL_TARGETENT:{
 			if (m_hTargetEnt != NULL)
 			{
-				returnCode = BuildRouteCheap( m_hTargetEnt->pev->origin, bits_MF_TO_TARGETENT, m_hTargetEnt );
+				//MODDD - route to the lower bounds.  Mainly makes a difference for the player as a target.
+				Vector vecTarget_LowerCenter = m_hTargetEnt->pev->origin;
+				vecTarget_LowerCenter.z += m_hTargetEnt->pev->mins.z;
+
+				returnCode = BuildRoute( vecTarget_LowerCenter, bits_MF_TO_TARGETENT, m_hTargetEnt );
 
 				//if(!returnCode){
 				//	//is this okay?             no
-				//	returnCode = BuildNearestRoute( m_hTargetEnt->pev->origin, m_hTargetEnt->pev->view_ofs, 0, (m_hTargetEnt->pev->origin - this->pev->origin).Length() + 500, DEFAULT_randomNodeSearchStart, bits_MF_TO_TARGETENT, m_hTargetEnt  );
+				//	returnCode = BuildNearestRoute( vecTarget_LowerCenter, m_hTargetEnt->pev->view_ofs, 0, (vecTarget_LowerCenter - this->pev->origin).Length() + 500, DEFAULT_randomNodeSearchStart, bits_MF_TO_TARGETENT, m_hTargetEnt  );
 				//}
+
+				if(returnCode){
+					m_vecMoveGoal = vecTarget_LowerCenter;
+				}
 
 			}else{
 				returnCode = FALSE;
 			}
 
-			if(returnCode){
-				//MODDD - CHECK. Is automatically setting "m_vecMoveGoal" to the goal of this path ok? m_vecMoveGoal is usually an input.
-				if(returnCode){
-					m_vecMoveGoal = m_hTargetEnt->pev->origin;
-				}
-			}
-
-			break;
-
-		case MOVEGOAL_NODE:
+		}break;
+		case MOVEGOAL_NODE:{
 			returnCode = FGetNodeRoute( m_vecMoveGoal );
 //			if ( returnCode )
 //				RouteSimplify( NULL );
-			break;
-	}
+		}break;
+	}//end of switch
 
 	if (returnCode != FALSE && usesSegmentedMove()) {
 		returnCode = CheckPreMove();
@@ -2958,9 +2980,7 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 //MODDD - new. Clone of FRefreshRoute that better incorporates the method calls done in "CHASE_ENEMY"'s schedule.
 // This ends up being similar to a call to MoveToEnemy followed by FRefreshRoute.
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
-	//WHUT
-	//return FRefreshRoute();
-
+	
 	BOOL m1 = disableEnemyAutoNode;
 	Activity m2 = m_movementActivity;
 	float m3 = m_moveWaitTime;
@@ -3018,27 +3038,41 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 	setEnemyLKP(m_hEnemy);
 	*/
 
-	m_vecMoveGoal = m_vecEnemyLKP;
+	Vector vecEnemyLKP_LowerCenter = m_vecEnemyLKP;
+	vecEnemyLKP_LowerCenter.z += m_flEnemyLKP_zOffset;
 
+	//Vector vecEnemyEyePosFromBottom = pEnemy->pev->view_ofs;
+	//vecEnemyEyePosFromBottom.z -= pEnemy->pev->mins.z;
+
+	//Vector vecEnemyEyePosFromBottom = pEnemy->pev->view_ofs;
+	//vecEnemyEyePosFromBottom.z -= pEnemy->pev->mins.z;
+
+
+
+	// wait, not just yet
+	//m_vecMoveGoal = vecEnemyLKP_LowerCenter;
 	
 	//MODDD - used to have "pEnemy->pev->origin" as the first argument for BuildRoute and BuildNearestRoute. Now just pipes along the set "m_vecMoveGoal" above, no problem.
-	if ( BuildRoute ( m_vecMoveGoal, iMoveFlaggg, pEnemy ) )
-	{
-		//TaskComplete();
-		returnCode = TRUE;
+	
+	returnCode = BuildRoute(vecEnemyLKP_LowerCenter, iMoveFlaggg, pEnemy);
+	
+	if(!returnCode){
+		// try this
+		Vector vecEnemyEyePosFromBottom = m_vecEnemyLKP_ViewOFS;
+		vecEnemyEyePosFromBottom.z -= m_flEnemyLKP_zOffset;
+		
+		returnCode = BuildNearestRoute(vecEnemyLKP_LowerCenter, vecEnemyEyePosFromBottom, 0, (vecEnemyLKP_LowerCenter - pev->origin).Length(), DEFAULT_randomNodeSearchStart, iMoveFlaggg, pEnemy);
 	}
-	//else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length() ))
-	else if (BuildNearestRoute( m_vecMoveGoal, pEnemy->pev->view_ofs, 0, (m_vecEnemyLKP - pev->origin).Length(), DEFAULT_randomNodeSearchStart, iMoveFlaggg, pEnemy ))
-	{
-		//TaskComplete();
-		returnCode = TRUE;
-	}
-	else
-	{
+
+
+
+	if(returnCode){
+		// ok
+		m_vecMoveGoal = vecEnemyLKP_LowerCenter;
+	}else{
 		// no way to get there =(
 		//ALERT ( at_aiconsole, "GetPathToEnemy failed!!\n" );
 		//TaskFail();
-		returnCode = FALSE;
 	}
 
 	
@@ -3073,6 +3107,133 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 
 
 
+//MODDD - new.  Like FRefreshRouteChaseEnemySmart, but can't use BuildNearestRoute and doesn't affect
+// the current route if it fails to find a better direct one (implied that this is called while going to 
+// a BuildNearestRoute-provided node and the enemy is in sight, to see if routing straight to the enemy
+// is possible)
+BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe(void){
+	
+	BOOL m1 = disableEnemyAutoNode;
+	Activity m2 = m_movementActivity;
+	float m3 = m_moveWaitTime;
+	int m4 = m_movementGoal;
+	Vector m5 = m_vecMoveGoal;
+
+
+	if(monsterID == 3){
+		int x = 45;
+	}
+
+	
+	BOOL returnCode;
+	
+	/*	
+	if(m_hEnemy == NULL){
+		//what's the point?
+		//...but we can still follow the existing LKP? I don't know.
+		return FALSE;
+	}
+	*/
+
+	
+	//case TASK_GET_PATH_TO_ENEMY:
+	CBaseEntity *pEnemy = m_hEnemy;
+
+
+	disableEnemyAutoNode = TRUE;
+	//probably unnecessary. no harm.
+	m_movementActivity = ACT_RUN; //is that safe to assume?
+	m_moveWaitTime = 2; //same?
+
+	//HACKER SACKS!!!!!    was MOVEGOAL_ENEMY;
+	//m_movementGoal = MOVEGOAL_LOCATION;
+	//int iMoveFlaggg = bits_MF_TO_LOCATION;
+	
+	m_movementGoal = MOVEGOAL_ENEMY;
+	int iMoveFlaggg = bits_MF_TO_ENEMY;
+
+
+
+	//was this... missing?
+	RouteNew();
+
+
+	//Mainly just to keep track of where the enemy is since last calling for a new route.
+	//As in, if the enemy moves too far from the last place a path found a route TO, we need to re-route to keep the destination accurate.
+	
+
+
+	/*
+	m_vecMoveGoal = m_hEnemy->pev->origin;
+
+	//MODDD - new?  No need, rely on the existing LKP for now
+	setEnemyLKP(m_hEnemy);
+	*/
+
+	Vector vecEnemyLKP_LowerCenter = m_vecEnemyLKP;
+	vecEnemyLKP_LowerCenter.z += m_flEnemyLKP_zOffset;
+
+	//Vector vecEnemyEyePosFromBottom = pEnemy->pev->view_ofs;
+	//vecEnemyEyePosFromBottom.z -= pEnemy->pev->mins.z;
+
+	//Vector vecEnemyEyePosFromBottom = pEnemy->pev->view_ofs;
+	//vecEnemyEyePosFromBottom.z -= pEnemy->pev->mins.z;
+
+
+
+	// wait, not just yet
+	//m_vecMoveGoal = vecEnemyLKP_LowerCenter;
+	
+	//MODDD - used to have "pEnemy->pev->origin" as the first argument for BuildRoute and BuildNearestRoute. Now just pipes along the set "m_vecMoveGoal" above, no problem.
+	
+	returnCode = BuildRouteSafe(vecEnemyLKP_LowerCenter, iMoveFlaggg, pEnemy);
+	
+
+	if(returnCode){
+		// ok
+		m_vecMoveGoal = vecEnemyLKP_LowerCenter;
+	}else{
+		// leave the route the way it is.
+		// any cleanup needed?
+
+
+
+		// !!!
+
+
+
+	}//returnCode checl
+
+	
+
+	/*
+	// As of yet, can't use 'CheckPreMove' on this.  Have to assume what was picked was good,
+	// unless the old route remained in some temporary state so that it could be restored
+	// while this new one turned out to fail at one trial.
+	//
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	if (returnCode != FALSE && usesSegmentedMove()) {
+		returnCode = CheckPreMove();
+	}
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	*/
+
+	if(returnCode == FALSE){
+		// revert here too?
+		disableEnemyAutoNode = m1;
+		m_movementActivity = m2;
+		m_moveWaitTime = m3;
+		m_movementGoal = m4;
+		m_vecMoveGoal = m5;
+	}
+
+	return returnCode;
+}//END OF FRefreshRouteChaseEnemySmart
+
+
+
+
+
 
 BOOL CBaseMonster::MoveToEnemy( Activity movementAct, float waitTime )
 {
@@ -3095,7 +3256,17 @@ BOOL CBaseMonster::MoveToEnemy( Activity movementAct, float waitTime )
 }
 
 
-BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const Vector &goal )
+/*
+// EXPERIMENTAL: supply a tolerance to use when approaching the goal?
+// MODDD - TODO - finish this 'argGoalDistTolerance' goes nowhere else
+// NEVERMIND, reading this ent's 'goalDistTolerance' should be good enough when it's needed.
+BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const Vector &goal ){
+	MoveToLocation(movementAct, waitTime, goal, 0);
+}
+*/
+
+//, float argGoalDistTolerance 
+BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const Vector &goal)
 {
 	Activity m1 = m_movementActivity;
 	float m2 = m_moveWaitTime;
@@ -3118,6 +3289,29 @@ BOOL CBaseMonster::MoveToLocation( Activity movementAct, float waitTime, const V
 	return theResult;
 }
 
+
+BOOL CBaseMonster::MoveToLocationStrict( Activity movementAct, float waitTime, const Vector &goal)
+{
+	Activity m1 = m_movementActivity;
+	float m2 = m_moveWaitTime;
+	int m3 = m_movementGoal;
+	Vector m4 = m_vecMoveGoal;
+
+	m_movementActivity = movementAct;
+	m_moveWaitTime = waitTime;
+	m_movementGoal = MOVEGOAL_LOCATION;
+	m_vecMoveGoal = goal;
+
+	//MODDD - only keep movement activity if this passes
+	BOOL theResult = FRefreshRouteStrict();
+	if (!theResult) {
+		m_movementActivity = m1;
+		m_moveWaitTime = m2;
+		m_movementGoal = m3;
+		m_vecMoveGoal = m4;
+	}
+	return theResult;
+}
 
 BOOL CBaseMonster::MoveToLocationCheap( Activity movementAct, float waitTime, const Vector &goal )
 {
@@ -3752,7 +3946,8 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 			// ...WAIT.  The LKP was already set with the entity in mind above (setEnemyLKP(pEnemy)).
 			// Go ahead and shift this plainly.
 			//setEnemyLKP(m_vecEnemyLKP - pEnemy->pev->velocity * RANDOM_FLOAT( -0.05, 0 ));
-			setEnemyLKP(m_vecEnemyLKP, pEnemy->pev->velocity * RANDOM_FLOAT( -0.05, 0 ));
+			//setEnemyLKP(m_vecEnemyLKP, pEnemy->pev->mins.z, pEnemy->pev->velocity * RANDOM_FLOAT( -0.05, 0 ));
+			setEnemyLKP(pEnemy, pEnemy->pev->velocity * RANDOM_FLOAT( -0.05, 0 ));
 		}
 		else
 		{
@@ -3773,7 +3968,6 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 		iUpdatedLKP = TRUE;
 		//MODDD - involve the ent
 		setEnemyLKP(pEnemy);
-		
 	}
 	
 	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
@@ -3824,6 +4018,9 @@ int CBaseMonster::CheckEnemy ( CBaseEntity *pEnemy )
 			// This means, the two bits MUST be within iType. Not only one or the other.
 			if ( (m_Route[ i ].iType & (bits_MF_IS_GOAL|bits_MF_TO_ENEMY)) == (bits_MF_IS_GOAL|bits_MF_TO_ENEMY) )
 			{
+				//MODDD - TODO - should this involve goalDistTolerance?  Then again most modern pathfinding, if not all,
+				// skips this area completey anyway
+
 				// UNDONE: Should we allow monsters to override this distance (80?)
 				if ( (m_Route[ i ].vecLocation - m_vecEnemyLKP).Length() > 80 )
 				{
@@ -3877,6 +4074,7 @@ void CBaseMonster::refreshStack() {
 			for (int i2 = i + 1; i2 < m_intOldEnemyNextIndex; i2++) {
 				m_hOldEnemy[i2 - 1] = m_hOldEnemy[i2];
 				m_vecOldEnemy[i2 - 1] = m_vecOldEnemy[i2];
+				m_flOldEnemy_zOffset[i2 - 1] = m_flOldEnemy_zOffset[i2];
 			}
 			//clearly, one less enemy to remember.
 			m_intOldEnemyNextIndex--;
@@ -3943,6 +4141,7 @@ void CBaseMonster::PushEnemy( CBaseEntity *pEnemy, Vector &vecLastKnownPos )
 
 		m_hOldEnemy[m_intOldEnemyNextIndex] = pEnemy;
 		m_vecOldEnemy[m_intOldEnemyNextIndex] = vecLastKnownPos;
+		m_flOldEnemy_zOffset[m_intOldEnemyNextIndex] = pEnemy->pev->mins.z;
 
 		m_intOldEnemyNextIndex++;
 		return;
@@ -3988,7 +4187,8 @@ BOOL CBaseMonster::PopEnemy()
 		m_hEnemy = m_hOldEnemy[m_intOldEnemyNextIndex - 1];
 
 		//m_vecEnemyLKP = m_vecOldEnemy[m_intOldEnemyNextIndex];
-		setEnemyLKP(m_vecOldEnemy[m_intOldEnemyNextIndex]);
+		// Now, send the recorded zOffset as well
+		setEnemyLKP(m_vecOldEnemy[m_intOldEnemyNextIndex], m_flOldEnemy_zOffset[m_intOldEnemyNextIndex]);
 
 		m_intOldEnemyNextIndex--;
 		return TRUE;
@@ -4485,6 +4685,21 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 
 //MODDD - NEW.  Accepts whether to do the Z-check at the end on a successful route (can change its mind
 // if the intended end point is too high/low of where WALK_MOVE against the ground put me)
+// Also. For now, assume 'doZCheck' being on means this is to an important point (the goal).
+// Being within 'goalDistTolerance' of it 2D-wise and passing the Z check means we can call this route
+// 'good enough' at where WALK_MOVE was blocked at anyway.
+
+// Unfortunately, there are some times when USE_MOVEMENT_BOUND_FIX/ALT can allow a route that shouldn't be possible,
+// but it is very very rare.  It lets going up/down ramps work far better for larger entities (they re-do the 
+// WALK_MOVE call with a HUMAN_HULL size, which has an easier time working with elevation changes for whatever reason).
+// Unsure how to detect a WALK_MOVE failure coming from colliding with nearby map geometry properly (like running into a 
+// wall it's too big to go through in a straight-line path), instead of not liking going up an incline it can move up
+// perfectly fine.
+// One good compromise is to disable the fix for MoveExecute, or else moving while the enemy is close can lead to
+// clipping issues.  It moves forward while its bounds are temp-set to the HUMAN size, and expands back to normal bounds
+// after the move in that case, although that isn't a 'pretend' scenario like CheckLocalMove; it actually happens and
+// leaves both things stuck in each other.  Not great.
+
 //=========================================================
 // CheckLocalMove - returns TRUE if the caller can walk a 
 // straight line from its current origin to the given 
@@ -4638,6 +4853,17 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 		//UTIL_SetSize( pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX );
 	}
 #endif
+	
+	// records the name of the most recent blocking entity for breakpoints.
+	const char* hitClassname = "NULL";
+	int hitEntityID = -1;
+	int hitMonsterID = -1;
+	// placed here for hitpoints to access, but relevant to the logic.
+	// If the loop is broken out of, tells whether what was hit matched the target or not.
+	// Remains false if nothing was hit, still success
+	BOOL hitTargetException = FALSE;
+
+
 
 	// this loop takes single steps to the goal.
 	for ( flStep = 0 ; flStep < flDist ; flStep += LOCAL_STEP_SIZE )
@@ -4671,7 +4897,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 #ifdef USE_MOVEMENT_BOUND_FIX_ALT
 			if( EASY_CVAR_GET_DEBUGONLY(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ){
 				// A... NULL trace_ent is valid to take the Instance of?
-				// Guess so, look so the the 'World' itself.
+				// Guess so, leads to the 'World' itself.
 				CBaseEntity* whut = CBaseEntity::Instance(gpGlobals->trace_ent);
 
 				if(whut != NULL){
@@ -4701,7 +4927,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 						continue;
 						*/
 					}else{
-						//success? no, allowed to keep going.
+						// success? no, allowed to keep going.
 						UTIL_SetSize(pev, oldMins, oldMaxs);
 						continue;
 					}
@@ -4716,98 +4942,136 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 				*pflDist = flStep;
 			}
 
-			const char* debugStuff;
 			//const char* daClassname = STRING(gpGlobals->trace_ent->v.classname);
 			
-			if(gpGlobals->trace_ent!=NULL){
+
+
+
+
+			if(gpGlobals->trace_ent != NULL){
+
+				hitTargetException = (pTarget && pTarget->edict() == gpGlobals->trace_ent);
+
+				// NOTICE!  This entire area used to run outside the 'gpGlobals->trace_ent != NULL' check above.
+				// Keep that in mind when looking through commented-out script
+
+				if ( hitTargetException ){
+					// if this step hits target ent, the move is legal.
+					iReturn = LOCALMOVE_VALID;
+				}else{
+
+					/*
+					// TEST, not a fantatic idea.
+					// Now wait just a minute.
+					TraceResult temp_tr;
+					Vector vecStartah = pev->origin + Vector(0, 0, 2);
+					Vector vecEndah = vecStartah + (vecEndFiltered - vecStartFiltered).Normalize() * LOCAL_STEP_SIZE;
+					UTIL_TraceLine(vecStartah, vecEndah, dont_ignore_monsters, ENT(pev), &temp_tr);
+
+					if (!temp_tr.fAllSolid && !temp_tr.fStartSolid && temp_tr.flFraction >= 1.0) {
+						// yay.
+						iReturn = LOCALMOVE_VALID;
+						break;
+					}
+					else {
+						// what???
+						CBaseEntity* hittTester = CBaseEntity::Instance(temp_tr.pHit);
+						const char* classYetAgain = hittTester!=NULL?hittTester->getClassname():"NULL";
+						int x = 45;
+
+						UTIL_drawLineFrame(vecStartah, vecEndah, 255, 0, 0);
+					}
+					*/
+
+					//MODDD - Found commented out as-is.
+					// If we're going toward an entity, and we're almost getting there, it's OK.
+	//				if ( pTarget && fabs( flDist - iStep ) < LOCAL_STEP_SIZE )
+	//					fReturn = TRUE;
+	//				else
+
+					iReturn = LOCALMOVE_INVALID;
+				}//END OF check for trace-hit matching target
+
+			}else{
+				// Didn't hit anything, still failed?  Likely tried going over some impassable change in elevation (cliff?).
+				// Or is a NULL trace_ent the world itself regardless (like hitting a BSP wall, not worldbrush entity)?
+				// no idea, VERIFY.
+				iReturn = LOCALMOVE_INVALID;
+			}//gpGlobals->trace_ent NULL check
+			
+
+
+
+				
+			// DEBUG INFO.  Should have no influence on the logic, but it is spammy.
+			///////////////////////////////////////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////
+
+			hitEntityID = -1;
+			hitMonsterID = -1;  // unless there is one?
+
+			if(gpGlobals->trace_ent != NULL){
 				CBaseEntity* tempEntt = CBaseEntity::Instance(gpGlobals->trace_ent);
 				if(tempEntt != NULL){
-					debugStuff = tempEntt->getClassname();
-				}else{
-					debugStuff = "WHUT";
-				}
-			}else{
-				debugStuff = "WHUT";
-			}
-			
-			if ( pTarget && pTarget->edict() == gpGlobals->trace_ent )
-			{
-				// if this step hits target ent, the move is legal.
-				iReturn = LOCALMOVE_VALID;
-				break;
-			}
-			else
-			{
-				//DebugLine_Setup(vecStartFiltered, vecEndFiltered, 255, 0, 0);
+					hitClassname = tempEntt->getClassname();
+					hitEntityID = ENTINDEX(gpGlobals->trace_ent);
+					if(tempEntt->pev->flags & FL_MONSTER){
+						CBaseMonster* monTest = tempEntt->GetMonsterPointer();
+						if(monTest != NULL){
+							hitMonsterID = monTest->monsterID;
+						}
+					}
 
-				// any other info on it?
-				if (gpGlobals->trace_ent != NULL) {
-					CBaseEntity* testRef = CBaseEntity::Instance(gpGlobals->trace_ent);
-					int daInd = ENTINDEX(gpGlobals->trace_ent);
 
-					if(testRef != NULL){
+					if ( hitTargetException ){
+						// woohoo
+
+					}else{
+
 						// draw the bounds of the thing that blocked me
 						// Way too spammy, need to do this only on MoveExecute calls.  In fact...
 						if(g_CheckLocalMoveCanReportBlocker){
 							if(this->drawPathConstant){
-								easyForcePrintLine("drawpathconstant, %s:%d: There was a %s in the way. entindex:%d", this->getClassname(), this->monsterID, debugStuff, daInd);
+								easyForcePrintLine("drawpathconstant, %s:%d: There was a %s in the way. Hit entindex:%d monsterID:%d", this->getClassname(), this->monsterID, hitClassname, hitEntityID, hitMonsterID);
 
-								if(!testRef->IsWorld()){
+								if(!tempEntt->IsWorld()){
 									// don't bother drawing the world, no point
-									UTIL_drawBoxFrame(testRef->pev->absmin, testRef->pev->absmax, 12, 300, 255, 255, 255);
+									UTIL_drawBoxFrame(tempEntt->pev->absmin, tempEntt->pev->absmax, 12, 300, 255, 255, 255);
 								}
 							}
 						}
-						
+
 						//const char* mahName = testRef->getClassname();
 						if( FClassnameIs(gpGlobals->trace_ent, "func_monsterclip")){
 							int x = 45;
 							//continue; // SKIIIIIIIP IT
 						}
+
 					}
 
-					if(monsterID == 3 && strcmp(debugStuff, "monster_generic") == 0){
-						int x = 45;
-						// PRINT THIS stuff OUT
-						//DebugLine_SetupPoint(7, vecEndFiltered, 255, 255, 0);
-					}
 
+				}else{
+					hitClassname = "NULL; hit not castable to CBaseEntity?";
 				}
+			}else{
+				hitClassname = "NULL; nothing hit (world?)";
+			}
 
 
-				/*
-				// TEST, not a fantatic idea.
-				// Now wait just a minute.
-				TraceResult temp_tr;
-				Vector vecStartah = pev->origin + Vector(0, 0, 2);
-				Vector vecEndah = vecStartah + (vecEndFiltered - vecStartFiltered).Normalize() * LOCAL_STEP_SIZE;
-				UTIL_TraceLine(vecStartah, vecEndah, dont_ignore_monsters, ENT(pev), &temp_tr);
-
-				if (!temp_tr.fAllSolid && !temp_tr.fStartSolid && temp_tr.flFraction >= 1.0) {
-					// yay.
-					iReturn = LOCALMOVE_VALID;
-					break;
-				}
-				else {
-					// what???
-					CBaseEntity* hittTester = CBaseEntity::Instance(temp_tr.pHit);
-					const char* classYetAgain = hittTester!=NULL?hittTester->getClassname():"NULL";
-					int x = 45;
-
-					UTIL_drawLineFrame(vecStartah, vecEndah, 255, 0, 0);
-				}
-				*/
-
-				// If we're going toward an entity, and we're almost getting there, it's OK.
-//				if ( pTarget && fabs( flDist - iStep ) < LOCAL_STEP_SIZE )
-//					fReturn = TRUE;
-//				else
-				iReturn = LOCALMOVE_INVALID;
-				break;
-			}//END OF check for trace-hit matching target
+			///////////////////////////////////////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////
+			///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+			//DebugLine_Setup(vecStartFiltered, vecEndFiltered, 255, 0, 0);
+
+			// Failing WALK_MOVE always leads to breaking out of the loop that iteration.
+			// It was this way too in retail.
+			break;
 		}//WALK_MOVE check
+
+
 	}//FOR LOOP through flDist
 
 #if defined(USE_MOVEMENT_BOUND_FIX)
@@ -4818,18 +5082,81 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 #endif
 
 
+	//MODDD - below this point, keep in mind that references to 'pev->origin' are to the position of the entity called for CheckLocalMove
+	// (the one doing the 'can I get there test) at the end of the pathfind.  It should end very close to the target position, especially
+	// floor(2D)-wise in typical success, or the thing hit matches the target entity.
+
+
+	//MODDD - another check after the above runs:  within goalDistTolerance 2D-wise.
+	// Would be better to have its own yes/no var (or bitmask into doZCheck, like require 'doZCheck & 1', but this check needs 'doZCheck & 2'),
+	// but for now assuming alongside doZCheck.
+	
+
+
+
+	float distToGoal2D;
+	float distToVecEnd;
+
+	// Do all the time for breakpoints to see, for now
+	distToGoal2D = Distance2D(pev->origin, m_vecMoveGoal);
+	distToVecEnd = Distance2D(pev->origin, vecEndFiltered);
+
+
+	// UP TO DATE: Nope, all the time but compare to m_vecMoveGoal instead.
+	//if(doZCheck){
+
+		// If I got blocked by something that wasn't the target above (or there isn't a target at all to check against),
+		// and the goalDistTolerance is set, see if I got close enough 2D-wise.  Force this to a VALID if so.
+		// We'll trust other pathfinding knows to stop ahead of time when close enough to the goal 2D-wise, or else this will
+		// keep moving against something impassible because it isn't 'done moving yet' and never thought to fail or 'MoveComplete'
+		// to get out of movement.
+
+		if(iReturn == LOCALMOVE_INVALID && goalDistTolerance > 0){
+			//float disa2D = Distance2D(pev->origin, vecEndFiltered);
+			if(distToGoal2D <= goalDistTolerance){
+				// woohoo.  Change your mind.
+				iReturn = LOCALMOVE_VALID;
+			}
+		}
+	//}//doZCheck (do better)
+
+
+
+
+
+	//MODDD - the real Z-check below changed a bit.  The target not being on the ground shouldn't be important, it's just as 
+	// unhittable from being too far above/below my reach.
+	// ALSO. Removing the 'LOCALMOVE_VALID' requirement.  This check should happen even if WALK_MOVE failed to reach
+	// its point for any other reason already (something in the way that wasn't my target or trying to go over some
+	// otherwise impassible area) so that triangulation doesn't happen to try and fool us into thinking this is still
+	// a good idea.  Triangulate doesn't use the Z check, and no sense doing that when this point should've realized
+	// that once.
+	// To be clear, this check has to run to be able to see that the enemy is too far away Z-wise and explicitly forbid
+	// trying to triangulate up a better path.  Yes, I said that.
+
+	// IDEA: be between the target ent's position and the vecEnd instead.
+	// If vecEnd is close enough to the target's position, this route is clearly
+	// leading to that ent itself and so needs this Z check.
+	// If this route would end up with me far below the target, do not take it,
+	// that would be mad silly.
+
+	// ANOTHER IDEA: If my pTarget is a ground-mover and currently mid-air, snap em' to the ground.
+	// After all, why should jumping break where I can/can't go, they'll be on the ground soon enough.
+	// Unfortunately this doesn't have an easy answer, I don't know if grabbing the pEntity (player)
+	// and doing a DROP_TO_FLOOR in the same frame to see what it would be against the ground would be
+	// a good idea, but that would lead to the best answer.  Otherwise linetraces that would still be flimsy:
+	// corners?  Stand on a tight-rope and it thinks the payer could snap to underneath that (traces miss the
+	// thing blocking the player from hitting the ground).  Same for doing a traceline from the player center
+	// to the ground:  stand on the edge of a box as much as possible without falling, center as a straight-
+	// line path to the ground but the player is blocked by the box.
+
+	// *** Much of the above is out of date.  The approach below has been replaced with something a lot simpler.
+
+
+	/*
 	//MODDD - NEW.  Skip if told to.
 	if(doZCheck){
-		//MODDD - also, changed a bit.  The target not being on the ground shouldn't be important, it's just as 
-		// unhittable from being too far above/below my reach.
-		// ALSO. Removing the 'LOCALMOVE_VALID' requirement.  This check should happen even if WALK_MOVE failed to reach
-		// its point for any other reason already (something in the way that wasn't my target or trying to go over some
-		// otherwise impassible area) so that triangulation doesn't happen to try and fool us into thinking this is still
-		// a good idea.  Triangulate doesn't use the Z check, and no sense doing that when this point should've realized
-		// that once.
-		// To be clear, this check has to run to be able to see that the enemy is too far away Z-wise and explicitly forbid
-		// trying to triangulate up a better path.  Yes, I said that.
-
+		
 		//if ( iReturn == LOCALMOVE_VALID && 	!(pev->flags & (FL_FLY|FL_SWIM) ) && (!pTarget || (pTarget->pev->flags & FL_ONGROUND)) )
 		if(
 			//iReturn == LOCALMOVE_VALID &&
@@ -4864,7 +5191,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 				float theDisto2D = Distance2D(myCenter, targetCenter);
 
 				// was 0.63, 0.63 ?
-				if(theDisto2D < this->pev->size.x * 0.83 + pTarget->pev->size.x*0.83){
+				if(theDisto2D < this->pev->size.x*0.83 + pTarget->pev->size.x*0.83){
 					// Close enough to the target ent?  Go ahead, snap to its center for more accuracy
 					vecEndFiltered = targetCenter;
 					// !
@@ -4893,6 +5220,13 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 					UTIL_TraceLine(t_vecStart, t_vecEnd, ignore_monsters, ENT(pev), &t_tr);
 
 					vecEndFiltered = t_tr.vecEndPos;
+
+					if(t_tr.flFraction >= 1.0){
+						// ????????
+						//easyPrintLine("WHGAAGREJGERIGJE %.2f %.2f %.2f", t_tr.vecEndPos.x, t_tr.vecEndPos.y, t_tr.vecEndPos.z);
+						//DebugLine_SetupPoint(t_tr.vecEndPos, 255, 0, 0);
+					}
+
 				}else{
 					// rise above the ground?
 					// And uh.  Not going to stop on reaching the exit point?   Yeah yeah uh,  okay then.
@@ -4973,6 +5307,52 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 				iReturn = LOCALMOVE_INVALID_DONT_TRIANGULATE;
 			}
 		}//localmove check, 
+	}//doZCheck
+	*/
+
+
+	
+
+	if(doZCheck){
+		if(!(pev->flags & (FL_FLY|FL_SWIM) )){
+			
+			// WAIT.  No need for this.  Will be given the target snapped to its bottom bound of where it is now,
+			// fairest for comparisons (not the vertical-center of players that can trip it up)
+			/*
+			if(pTarget != NULL){
+				float distanceBetweenTargetEntAndEndPos = Distance2D(pTarget->pev->origin, vecEndFiltered);
+				if(distanceBetweenTargetEntAndEndPos < 16){
+					// check for the bottom bound of this ent instead
+				}
+			}
+			*/
+
+			float maxZ_DistAllowed = pev->size.z * 0.65 + 6; //pev->size.z * 1.25;
+
+			float zDist;
+			
+			float myLowerBoundPointZ = this->pev->origin.z + this->pev->mins.z;
+
+			//zDist = fabs(vecEndFiltered.z - pev->origin.z);
+			zDist = fabs(vecEndFiltered.z - (myLowerBoundPointZ) );
+
+			//if ( forcePass || zDist > maxZ_DistAllowed )
+			if ( zDist > maxZ_DistAllowed )
+			{
+
+				DebugLine_SetupPoint(4, vecEndFiltered, 0, 255, 0);
+				Vector tempVect = vecEndFiltered;
+				tempVect.z = myLowerBoundPointZ;
+				DebugLine_SetupPoint(4, tempVect , 255, 0, 255);
+
+				// too spammy in any map with lots of vertical level space (a2a1a).
+				//easyPrintLine("!!! ROUTE DEBUG %s:%d NOTICE!  Route failed from reaching a point too far from the goal in Z compared to my height.  Difference in Z is: %.2f.  Most allowed: %.2f.", getClassname(), monsterID, zDist, maxZ_DistAllowed);
+
+				iReturn = LOCALMOVE_INVALID_DONT_TRIANGULATE;
+			}
+
+
+		}//not fly or swim check
 	}//doZCheck
 	
 
@@ -5603,11 +5983,35 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 }//BuildRoute
 
 
-// Clone, don't triangulate.
-// WAIT!  No, still triangulate.  Even getting between some pre-placed map nodes requires triangulation
-// to work right.   UUuuuuhhh.   alrighty then.
-BOOL CBaseMonster::BuildRouteCheap ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
+
+
+// This is a combo of 'MoveToEnemy' and 'FRefreshRoute' (smart chase enemy variant) that only 
+// tests BuildRoute (in fact that's what it is mainly), but does not affect the current route 
+// if it fails to find a better one.
+BOOL CBaseMonster::BuildRouteSafe ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
 {
+	/*
+	Activity m1 = m_movementActivity;
+	float m2 = m_moveWaitTime;
+	int m3 = m_movementGoal;
+
+	m_movementActivity = movementAct;
+	m_moveWaitTime = waitTime;
+	m_movementGoal = MOVEGOAL_ENEMY;
+
+	//MODDD - only keep movement activity if this passes
+	BOOL theResult = FRefreshRoute();
+	if (!theResult) {
+		m_movementActivity = m1;
+		m_moveWaitTime = m2;
+		m_movementGoal = m3;
+	}
+	return theResult;
+	*/
+
+
+
+
 	float flDist;
 	Vector vecApex;
 	int	iLocalMove;
@@ -6140,7 +6544,6 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 		flCheckDist = flWaypointDist;
 
 		checkTheZ = TRUE;
-
 	}
 	else
 	{
@@ -6148,10 +6551,14 @@ int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flChec
 		// incomplete dist?  Don't check the Z, 
 		// Wait!
 		if(
-			m_Route[m_iRouteIndex].iType & (bits_MF_TO_ENEMY | bits_MF_TO_TARGETENT) &&
+			// Nevermind the bits_MF_TO_ENEMY and bits_MF_TO_TARGET checks.
+			// If this is to the end of the route, do the Z check.
+			// Nope, not even here!  This isn't to the point itself, so the Z check isn't useful at all yet.
+			//m_Route[m_iRouteIndex].iType & (bits_MF_TO_ENEMY | bits_MF_TO_TARGETENT) &&
 			m_Route[m_iRouteIndex].iType & (bits_MF_IS_GOAL)
-			){
-			checkTheZ = TRUE;
+		){
+			//checkTheZ = TRUE;
+			checkTheZ = FALSE;
 		}else{
 			checkTheZ = FALSE;
 		}
@@ -6479,8 +6886,58 @@ void CBaseMonster::Move ( float flInterval )
 				else
 				{
 					//MODDD - this area is for failure, but if close enough call it success instead.
-					if(strictNodeTolerance == FALSE && EASY_CVAR_GET_DEBUGONLY(pathfindEdgeCheck) == 1){
 
+					// Also, there are two ways for failing to refresh a route to go.
+					// Pass from being close enough to the goal node (goalDistTolerance being set),
+					// OR pass from being within '(pev->size.y / 2.0f)' while pathfindEdgeCheck is on, strictNodeTolerance is off.
+					// strictNodeTolerance does not stop goalDistTolerance from working, clearly being set means it is suposed to
+					// be used.  The main point of strictNodeTolerance is to forbid letting RefreshRoute use BuildNearestRoute to
+					// route to a nearby node when that isn't wanted in this case.
+
+					// It is still up to the current schedule to do routine distance checks and end with 'MoveComplete' if the monster is close enough to its goal,  goalDistTolerance only stops for MoveComplete if pathfinding explicitly failed before reaching the point it was supposed to.
+					// (add a little + 10 or so leeway if movegoaldist is set?)
+					
+					// CHANGE? goalDistTolerance checks moved to earlier in the pathfinding.  Why bother using
+					// Triangulate and RefreshRoute calls when 'being close enough to the goal' wouldn't change
+					// whether those are successful or not?
+					// Wait.  Nevermind, keeping it here.  The assumption is, if the schedule is doing the routine range checks,
+					// it would've stopped with MoveComplete then.  It's unlikely for goalDistMoveTolerance to even save this then
+					// at this point, it's mostly for routes planned in advance to ANTICIPATE the early stopping distance we are allowed
+					// from goalDistTolerance and still allow a route from failing less than 'goalDistTolerance' units from where we
+					// want to go.
+
+					
+					/*
+					// WAIT!  Not quite.
+					if(goalDistTolerance > 0){
+						// use strictNodeTolerance instead then.
+						maxDist = goalDistTolerance;
+					}else{
+						maxDist = (pev->size.y / 2.0f) + 50.0f;
+					}
+					*/
+
+					//////////////////////////////////////////////////////////////////////////////////////////////////
+					if(goalDistTolerance > 0){
+						WayPoint_t* waypointGoalRef;
+						waypointGoalRef = GetGoalNode();
+						float distanceee = (waypointGoalRef->vecLocation - pev->origin ).Length();
+
+						if(waypointGoalRef != NULL){
+							if(distanceee <= goalDistTolerance + 10){
+								// close enough.
+								MovementComplete();
+								return;
+							}else{
+								// fall through to the pathfindEdgeCheck (maybe) for another chance or admit failure.
+							}
+						}
+					}//goalDistTolerance check
+					//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+					if((strictNodeTolerance == FALSE) && EASY_CVAR_GET_DEBUGONLY(pathfindEdgeCheck) == 1){
 						// Before admitting failure, do a check. Are we close enough to the goal to let this count as success?
 					
 						//m_iRouteIndex
@@ -6488,7 +6945,7 @@ void CBaseMonster::Move ( float flInterval )
 						waypointGoalRef = GetGoalNode();
 
 						////////////////////////////////////////////////
-						if( ( waypointGoalRef != NULL && waypointGoalRef->iType & bits_MF_IS_GOAL) )
+						if( ( waypointGoalRef != NULL) )
 						{
 							float distanceee = (waypointGoalRef->vecLocation - pev->origin ).Length();
 							
@@ -6523,7 +6980,10 @@ void CBaseMonster::Move ( float flInterval )
 							//...no, our movement speed is unimportant. Use a constant distance instead, possibly factor in this monster's own size later.
 							// ... < (m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval * 5)
 
-							float maxDist = (pev->size.y/2.0f) + 50.0f;
+							float maxDist = (pev->size.y / 2.0f) + 50.0f;
+							
+
+
 							EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("PathfindEdgeCheck: DISTANCE TO GOAL: %.2f MAX ALLOWED: %.2f", distanceee, maxDist));
 							if(distanceee <= maxDist){
 
@@ -6535,8 +6995,10 @@ void CBaseMonster::Move ( float flInterval )
 									DebugLine_ClearAll();
 								}
 
-								if( trTemp.flFraction==1 || trTemp.pHit == NULL || (m_hEnemy != NULL && trTemp.pHit == m_hEnemy.Get()) ){
-									// if nothing was hit or I happened to hit my enemy with this trace, pass.
+								CBaseEntity* myGoalEnt = GetGoalEntity();
+
+								if( trTemp.flFraction==1 || trTemp.pHit == NULL || (myGoalEnt != NULL && trTemp.pHit == myGoalEnt->edict()) ){
+									// if nothing was hit or I happened to hit my goalent (enemy? targetent?) with this trace, pass.
 									
 									MovementComplete();
 									return;
@@ -6827,6 +7289,12 @@ BOOL CBaseMonster::CheckPreMove(void){
 #undef USE_MOVEMENT_BOUND_FIX
 #undef USE_MOVEMENT_BOUND_FIX_ALT
 
+// IMPORTANT!  Monsters going up some changes in elevation like ramps can have problems snapping
+// to the surface after the ramp, at least in oddly designed cases like the top of c2a3's ramp from down to up.
+// Try making this constant larger, only used if this monster is detected stuck to try and get past something
+// in the way.
+#define UNSTUCK_STEP_SIZE 26
+
 void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
 #if defined(USE_MOVEMENT_BOUND_FIX) || defined(USE_MOVEMENT_BOUND_FIX_ALT)
@@ -6859,16 +7327,28 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 	float flStep;
 	while (flTotal > 0.001)
 	{
+
+		/*
+		// Normal way!
+		///////////////////////////////////////////////////////////////////////////
 		// don't walk more than 16 units or stairs stop working
 		flStep = min( 16.0, flTotal );
 
+		//Normal way!
+		UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
+		flTotal -= flStep;
+		continue;
+		///////////////////////////////////////////////////////////////////////////
+		*/
+
+
+
+
 #ifndef USE_MOVEMENT_BOUND_FIX_ALT
-		// Normal way!
-
-
-		//UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_STRAFE );
-
-
+		
+		
+		// don't walk more than 16 units or stairs stop working
+		flStep = min( 16.0, flTotal );
 
 		//DebugLine_SetupPoint(m_Route[m_iRouteIndex].vecLocation, 255, 255, 255);
 		
@@ -6889,25 +7369,26 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		//MODDD - could always back up by however much the '16' went overboard on the current step
 		// but I doubt this will ever happen very often, and that could land back on the issue'd
 		// area anyway.
-		if(moveDisto2D < flStep * 0.3){
-			// Couldn't cover even 30% of that step?  Try again with the full step size to try and get past this
+		if(moveDisto2D < flStep * 0.5){
+			// Couldn't cover much of the step?  Try again with the full step size to try and get past this
 
-			if(flStep == 16){
-				// Already a step size of 16??  What do I do here?
-				easyPrintLine("MoveExecute ERROR: %s:%d Could not overcome obstacle at max step size!", getClassname(), monsterID);
-				TaskFail();
-				return;
-			}else {
-				// not at the max step size?  ok, try at 16 then
+			//if(flStep == 16){
+			//	// Already a step size of 16??  What do I do here?
+			//	easyPrintLine("MoveExecute ERROR: %s:%d Could not overcome obstacle at max step size!", getClassname(), monsterID);
+			//	//TaskFail();
+			//	//return;
+			//}else
+			{
+				// not at the max step size?  ok, try at a higher step then (over 16 necessary sometimes?)
 				oldOrigin = pev->origin;
-				UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, 16, MOVE_STRAFE );
+				UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, UNSTUCK_STEP_SIZE, MOVE_STRAFE );
 			
 				originNow = pev->origin;
 				pointDeltaTE = (originNow - oldOrigin);
 				//float moveDisto = DistanceFromDelta(pointDeltaTE);
 				moveDisto2D = Distance2DFromDelta(pointDeltaTE);
 			
-				if(moveDisto2D < 16 * 0.3){
+				if(moveDisto2D < UNSTUCK_STEP_SIZE * 0.3){
 					// Still stagnating?  FAIL
 					easyPrintLine("MoveExecute ERROR: %s:%d Could not overcome obstacle at re-done step size!", getClassname(), monsterID);
 					TaskFail();
@@ -6915,14 +7396,19 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 				}
 			}
 		}// movement stagnation check
-
-
+		
 
 
 
 
 
 		/*
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// don't walk more than 16 units or stairs stop working
+		flStep = min( 16.0, flTotal );
+
+
 		float flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length2D();
 		float flCheckDist;
 		BOOL checkTheZ;
@@ -6968,8 +7454,7 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 
 		Vector oldOrigin = pev->origin;
 		// the stepsize makes the difference in overcoming some ramp edges??
-		float myStepSize = 16;
-		BOOL walkMoveResult = WALK_MOVE(ENT(pev), flYaw, myStepSize, WALKMOVE_CHECKONLY);
+		BOOL walkMoveResult = WALK_MOVE(ENT(pev), flYaw, flStep, WALKMOVE_CHECKONLY);
 
 		Vector originNow = pev->origin;
 		Vector pointDeltaTE = (originNow - oldOrigin);
@@ -6977,8 +7462,12 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		float moveDisto2D = Distance2DFromDelta(pointDeltaTE);
 
 		easyForcePrintLine("yargh %.2f %.2f", moveDisto, moveDisto2D);
+
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		*/
-		/////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 
@@ -7653,6 +8142,11 @@ BOOL CBaseMonster::FindCover ( Vector vecThreat, Vector vecViewOffset, float flM
 		*/
 
 
+
+		if(EASY_CVAR_GET_DEBUGONLY(pathfindIgnoreIsolatedNodes) == 1 && node.m_cNumLinks < 1){
+			// also a reason to drop the node
+			continue;
+		}
 		//MODDD - Also, new early check.  If this node clashes with this monster's type of movement
 		// (mid-air nodes even though I'm a walker), deny even trying them.  What good would that route be.
 		if(!(node.m_afNodeInfo & myNodeTypeAllowed)){
@@ -7859,6 +8353,12 @@ BOOL CBaseMonster::FindRandom ( Activity movementAct, Vector vecThreat, Vector v
 			continue;
 		}
 		*/
+
+		
+		if(EASY_CVAR_GET_DEBUGONLY(pathfindIgnoreIsolatedNodes) == 1 && node.m_cNumLinks < 1){
+			// also a reason to drop the node
+			continue;
+		}
 		if(!(node.m_afNodeInfo & myNodeTypeAllowed)){
 			// no types in common?  Skip it
 			continue;
@@ -8148,7 +8648,7 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 		// Don't try the node I'm already closest to as a destination if I'm already very close.
 		if (nodeNumber == iMyNode){
 			float distah = Distance(pev->origin, WorldGraph.Node(iMyNode).m_vecOrigin);
-			if(distah <= 10){
+			if(distah <= goalDistTolerance + 10){
 				continue;
 			}
 		}
@@ -8178,6 +8678,10 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 		*/
 
 
+		if(EASY_CVAR_GET_DEBUGONLY(pathfindIgnoreIsolatedNodes) == 1 && node.m_cNumLinks < 1){
+			// also a reason to drop the node
+			continue;
+		}
 		if(!(node.m_afNodeInfo & myNodeTypeAllowed)){
 			// no types in common?  Skip it
 			continue;
@@ -11017,15 +11521,19 @@ void CBaseMonster::updateEnemyLKP(void){
 // possible to let the entity setting the LKP decide what point to use (pev->origin or center).
 // Although this isn't do-able on pulling the values from some saved source like a stack, which
 // should've been retrieved with the entity's involvement to begin with so that's fine.
-void CBaseMonster::setEnemyLKP(const Vector& argNewVector){
+void CBaseMonster::setEnemyLKP(const Vector& argNewVector, float zOffset){
 	m_vecEnemyLKP = argNewVector;
 	m_fEnemyLKP_EverSet = TRUE;
+	m_flEnemyLKP_zOffset = zOffset;
+	m_vecEnemyLKP_ViewOFS = g_vecZero;  // ???
 	investigatingAltLKP = FALSE; //this is the real deal.
 }
 // uhh.  okay?
-void CBaseMonster::setEnemyLKP(const Vector& argNewVector, const Vector& extraAddIn){
+void CBaseMonster::setEnemyLKP(const Vector& argNewVector, float zOffset, const Vector& extraAddIn){
 	m_vecEnemyLKP = argNewVector + extraAddIn;
 	m_fEnemyLKP_EverSet = TRUE;
+	m_flEnemyLKP_zOffset = zOffset;
+	m_vecEnemyLKP_ViewOFS = g_vecZero;  // ???
 	investigatingAltLKP = FALSE; //this is the real deal.
 }
 
@@ -11036,8 +11544,8 @@ void CBaseMonster::setEnemyLKP(const Vector& argNewVector, const Vector& extraAd
 void CBaseMonster::setEnemyLKP(CBaseEntity* theEnt){
 	//m_vecEnemyLKP = theEnt->pev->origin;
 	m_vecEnemyLKP = theEnt->pev->origin;
-
-	//m_vecEnemyLKP.z += theEnt->pev->mins.z
+	m_flEnemyLKP_zOffset = theEnt->pev->mins.z;
+	m_vecEnemyLKP_ViewOFS = theEnt->pev->view_ofs;
 
 	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = FALSE; //this is the real deal.
@@ -11071,13 +11579,21 @@ void CBaseMonster::setEnemyLKP_Investigate(const Vector& argToInvestigate){
 	if(m_fEnemyLKP_EverSet){
 		// I can trust it.
 		m_vecEnemyLKP_Real = m_vecEnemyLKP;
+		m_flEnemyLKP_Real_zOffset = m_flEnemyLKP_zOffset;
+		m_vecEnemyLKP_Real_ViewOFS = m_vecEnemyLKP_ViewOFS;
 	}else{
 		// Never was set? ok.
 	}
 	// Say whether what is now in LKP_Real can be trusted when the time comes to decide whether
 	// to set the normal LKP To that.
 	m_fEnemyLKP_Real_EverSet = m_fEnemyLKP_EverSet;
+
+
 	m_vecEnemyLKP = argToInvestigate;
+	// should be ok to set zOffset to 0, this is to investigate a point after all
+	// (likely already snapped to ground or close)
+	m_flEnemyLKP_zOffset = 0;
+	m_vecEnemyLKP_ViewOFS = g_vecZero;
 	m_fEnemyLKP_EverSet = TRUE;
 	investigatingAltLKP = TRUE;
 }

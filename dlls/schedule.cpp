@@ -165,6 +165,8 @@ void CBaseMonster::ChangeSchedule ( Schedule_t *pNewSchedule )
 	// RouteClear, etc.  Best to leave this on the whole schedule once it's needed (or have a task to take it off
 	// if ever necessary).  Checking to see if the current task prefers 'strict' versions is kindof the same idea
 	// anyway.
+	// And reset the 'goalDistTolerance', that is to be set within a schedule for that schedule too.
+	goalDistTolerance = 0;
 	strictNodeTolerance = FALSE;
 
 
@@ -738,11 +740,27 @@ void CBaseMonster::MaintainSchedule ( void )
 		// Biggest issue is breaking when a lot of the scripted stuff works, I don't really get that.
 		// Maybe it's on the hgrunts side instead in there for the most part, they just ignore the reaction
 		// animations more often.
+
+		
 		if ( m_Activity != m_IdealActivity )
+		{
+			if(monsterID==1){
+				int x = 45;
+			}
+			SetActivity ( m_IdealActivity );
+		}
+		
+		
+		// 
+		/*
+		if(m_MonsterState != MONSTERSTATE_SCRIPT ){
+		if (m_Activity != m_IdealActivity && (m_IdealActivity == ACT_RANGE_ATTACK1 || m_IdealActivity == ACT_RANGE_ATTACK2 || m_IdealActivity == ACT_MELEE_ATTACK1 || m_IdealActivity == ACT_MELEE_ATTACK2) )
 		{
 			SetActivity ( m_IdealActivity );
 		}
-		////////////////////////////////////////////////////////////////////////
+		}
+		*/
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 		if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 			easyPrintLine("OOPS A PLENTY 13 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
@@ -941,13 +959,11 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 	case TASK_FACE_PREV_LKP:
 	case TASK_FACE_BEST_SOUND:
 		{
-			
 			if(pTask->iTask == TASK_FACE_TARGET && this->m_hTargetEnt == NULL){
 				// if told to face a target that does not / no longer exists, stop.
 				TaskFail();
 				break;
 			}  
-
 
 			ChangeYaw( pev->yaw_speed );
 
@@ -957,6 +973,30 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 			}
 			break;
 		}
+	case TASK_FACE_IDEAL_IF_VISIBLE:{
+		// Clone, but another requirement:  is the ideal 'point' visible to me?
+		// Should be set (assumed m_vecMoveGoal)
+		if(pTask->iTask == TASK_FACE_TARGET && this->m_hTargetEnt == NULL){
+			// if told to face a target that does not / no longer exists, stop.
+			// (skip in this case, nothing to face)
+			TaskComplete();
+			break;
+		}  
+
+		if(!this->FVisible(m_vecMoveGoal)){
+			// no line to the given point?  Don't fail, but don't change where you're facing.
+			TaskComplete();
+		}else{
+			ChangeYaw( pev->yaw_speed );
+
+			if ( FacingIdeal() )
+			{
+				TaskComplete();
+			}
+		}
+		break;
+	}
+
 	case TASK_CHECK_STUMPED:
 		{
 			//Nothing yet, but if this has its own delay to wait for before letting the "unstumping" commence (re-route to the updated LKP that matches the real enemy position),
@@ -1182,8 +1222,6 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 				//RouteClear();
 				//MODDD - no, restsart! If there is a case this never causes this task to end to say, re-route at an apparent dead-end, need to adjust this.
 
-
-
 				//No, just TaskComplete() as usual...
 				//BOOL test = FRefreshRoute();
 				//if(!test){if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 2"); TaskFail();}else{if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: SUCCESS 2");};
@@ -1203,8 +1241,7 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 			if ( m_hEnemy == NULL ){
 				if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyPrintLine("TASK_MOVE_TO_ENEMY_RANGE FAILED THE EMPRAH. null enemy. My ID: %d", this->monsterID);
 				TaskFail();
-			}else
-			{
+			}else{
 
 
 				//or m_hEnemy->pev->origin ???
@@ -1236,7 +1273,11 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 				//interestingly enough, "FInViewCone" does not count as a Visible check.
 				//As in, if there is a solid wall between this monster and the enemy, FInViewCone will still report "true" if this monster is facing the enemy regardless.
 				//ALSO, if any damage has been sustained, this monster will forcibly re-route. Kind of like an "OH there you are!" moment.
-				if( (FInViewCone( m_hEnemy ) && FVisible(m_hEnemy)) || HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE) ){
+
+				// how often is this the reason?
+				BOOL hasDamageCond = HasConditions(bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE);
+
+				if( (FInViewCone( m_hEnemy ) && FVisible(m_hEnemy)) || hasDamageCond ){
 
 					//setEnemyLKP(m_hEnemy);
 
@@ -1250,7 +1291,6 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 					}
 					float enemyPathGoalDistance = (m_vecMoveGoal - vecDestination).Length();
 					
-
 					/*
 					if(pTask->flData <= 1){
 						//code! Use the flexible test.
@@ -1263,17 +1303,28 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 					//easyForcePrintLine("TEST: e:%.2f m:%.2f a:%.2f", enemyRealDist, (m_vecMoveGoal - vecDestination).Length2D(), enemyRealDist*0.2);
 					//distance between the enemy and where I was told to go (position of the enemy since doing a path-find before)
 
-
 					if(this->m_movementGoal == MOVEGOAL_LOCATION){
 						// Picked a 'buildNearestRoute', do NOT refresh from being a distance.  That's kinda the point.
+						// Attempting to route every single frame an enemy is within sight but in an unreachable area 
+						// (pathfind guaranteed to fail) sound terrifically wasteful.
+						// Let routine route checks for a better direct one work at 1-second intervals, much cheaper.
+						// In fact, right here!
+
+						if(gpGlobals->time >= nextDirectRouteAttemptTime){
+							nextDirectRouteAttemptTime = gpGlobals->time + 1;
+
+							// ok, here we go.  Note that this doesn't return whether it worked or not, it only does nothing
+							// to the current route if it doesn't work.
+							//FRefreshRouteChaseEnemySmartSafe();
+
+						}//nextDirectRouteAttemptTime check
+
 						int x = 45;
 					}else{
 						// enemy got too far from the goal and we see they're goo far?   go ahead then, refresh.
 						redoPass = (enemyPathGoalDistance > enemyRealDist*0.2); //((m_vecMoveGoal - vecDestination).Length2D() > enemyRealDist*0.3);
 					}
-					
-				}
-
+				}// enemy in sight or damaged recently checks
 
 
 				if (
@@ -1286,48 +1337,8 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 					//distance = ( m_vecMoveGoal - pev->origin ).Length2D();
 					//distance = 0; //do not allow this to pass.
 
-
-
-					/*
-					
-	case TASK_GET_PATH_TO_ENEMY:
-		{
-			CBaseEntity *pEnemy = m_hEnemy;
-
-			if ( pEnemy == NULL )
-			{
-				TaskFail();
-				return;
-			}
-			
-			if ( BuildRoute ( pEnemy->pev->origin, bits_MF_TO_ENEMY, pEnemy ) )
-			{
-				TaskComplete();
-			}
-			else if (BuildNearestRoute( pEnemy->pev->origin, pEnemy->pev->view_ofs, 0, (pEnemy->pev->origin - pev->origin).Length(), DEFAULT_randomNodeSearchStart ))
-			{
-				TaskComplete();
-			}
-			else
-			{
-				// no way to get there =(
-				ALERT ( at_aiconsole, "GetPathToEnemy failed!!\n" );
-				TaskFail();
-			}
-			break;
-		}
-					*/
-
-			//fRefreshRoute:
-		/*
-
-		case MOVEGOAL_ENEMY:
-			returnCode = BuildRoute( m_vecEnemyLKP, bits_MF_TO_ENEMY, m_hEnemy );
-		*/
-
 					//COMPARe. Does refreshRoute handle the above, TASK_GET_PATH_TO_ENEMY, adequately?
 					//FRefreshRoute();
-
 
 					m_vecMoveGoal = m_vecEnemyLKP;
 					//BOOL test = FRefreshRoute();
@@ -1335,6 +1346,7 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 					// Or don't, hell if I know.
 					//  ...  FRefreshRouteChaseEnemySmart
 					BOOL test = FRefreshRouteChaseEnemySmart();
+					nextDirectRouteAttemptTime = gpGlobals->time + 1;
 					
 					if(!test){
 						if(EASY_CVAR_GET_DEBUGONLY(movementIsCompletePrintout))easyForcePrintLine("TASK_MOVE_TO_ENEMY_RANGE: FAILURE 3");
@@ -1350,14 +1362,13 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 
 				}//redoPass check
 
-				
-					//easyForcePrintLine("WHAT???!!! %.2f %.2f", distance, pTask->flData);
+
+				//easyForcePrintLine("WHAT???!!! %.2f %.2f", distance, pTask->flData);
 
 				// Set the appropriate activity based on an overlapping range
 				// overlap the range to prevent oscillation
 				if ( enemyRealDist < pTask->flData )
 				{
-
 					//TaskComplete();
 					//RouteClear();		// Stop moving
 					//MODDD - NO. This alls for a re-route.
@@ -2413,7 +2424,13 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 				return;
 			}
 
-			MakeIdealYaw(m_vecEnemyLKP_prev);
+			if(m_fEnemyLKP_prev_EverSet){
+				MakeIdealYaw(m_vecEnemyLKP_prev);
+			}else{
+				// never set.  ??? what
+				TaskComplete();
+				return;
+			}
 
 			//MODDD - added, if we can complete early we can move on with thinking in the same frame
 			if (FacingIdeal())
@@ -2438,6 +2455,27 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			SetTurnActivity();
 			break;
 		}
+
+	
+	case TASK_FACE_IDEAL_IF_VISIBLE:
+	{
+		if(!this->FVisible(m_vecMoveGoal)){
+			// no line to the given point?  Don't fail, but don't change where you're facing.
+			// Guess that means TaskComplete.
+			TaskComplete();
+		}else{
+			//MODDD - added, if we can complete early we can move on with thinking in the same frame
+			if (FacingIdeal())
+			{
+				TaskComplete();
+				return;
+			}
+
+			SetTurnActivity();
+		}
+		break;
+	}
+
 	case TASK_FACE_ROUTE:
 		{
 			if (FRouteClear())
@@ -2509,8 +2547,8 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 
 				// If I was checking out a place I took damage at instead of chasing the enemy directly and I fail to see the enem
 				if(investigatingAltLKP){
-					//no longer!  Restore the LKP to the "real" one where the enemy was last sighted. If it hasn't been updated since that is.
-					//Any changes to LKP since will change "investigatingAltLKP" to false that put it at the enemy's real location again of course.
+					// no longer!  Restore the LKP to the "real" one where the enemy was last sighted. If it hasn't been updated since that is.
+					// Any changes to LKP since will change "investigatingAltLKP" to false that put it at the enemy's real location again of course.
 					
 					// already done by setEnemyLKP now
 					//investigatingAltLKP = FALSE;
@@ -2522,12 +2560,22 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 					// the normal EverSet knows that (gets Real_EverSet being FALSE).
 					m_fEnemyLKP_EverSet = m_fEnemyLKP_Real_EverSet;
 					if(m_fEnemyLKP_Real_EverSet == TRUE){
-						setEnemyLKP(m_vecEnemyLKP_Real);
+						setEnemyLKP(m_vecEnemyLKP_Real, m_flEnemyLKP_Real_zOffset);
 
 						// Is including 'ending the task early' in this Real_EverSet requirement ok?
 						//TaskFail();
 						TaskComplete();
 						return;
+					}else{
+						// Uhhh... what?  LKP_Real was never set??
+						easyPrintLine("AI: %s:%d WARNING!  TASK_CHECK_STUMPED: EnemyLKP_Real had never been set!  Method likely called when enemy had no prior LKP.  This may be fine.");
+						// wait...  shouldn't have been an enemy, but just to be safe.
+						// Nevermind, just let the rest of the method do its work, think that's the same effect of being stumped
+						// without investigating.
+						//m_hEnemy = NULL;
+						//TaskComplete();
+						//return;
+
 					}
 				}
 
@@ -2552,7 +2600,11 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 					return;
 				}
 
-				m_vecEnemyLKP_prev = m_vecEnemyLKP; //the old to look at for a little.
+				if(m_fEnemyLKP_EverSet){
+					m_vecEnemyLKP_prev = m_vecEnemyLKP; //the old to look at for a little.
+					m_flEnemyLKP_prev_zOffset = m_flEnemyLKP_zOffset;
+					m_fEnemyLKP_prev_EverSet = TRUE;
+				}
 
 				//easyForcePrintLine("AHHH. I don\'t see the enemy. Has enemy to seek? %d", (m_hEnemy != NULL));
 				if(m_hEnemy != NULL){
@@ -2689,19 +2741,29 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			return;
 		}
 
+		// record this!  Pathfinding will allow a route that ends up to this
+		// distance from the goal floor(2D)-wise.
+		goalDistTolerance = pTask->flData;
+
+
+		float distToGoal = (m_vecEnemyLKP - pev->origin).Length();
+
 		// WAIT.  Why not allow being close enough to the enemy ahead of time to work??
 		//if ( (m_hEnemy->pev->origin - pev->origin).Length() < 1 )
 		//if ( (m_vecEnemyLKP - pev->origin).Length() < 1 ){
-		if((m_vecEnemyLKP - pev->origin).Length() < pTask->flData){
+		if(distToGoal < pTask->flData){
 			TaskComplete();
 		}else{
 			//if ( !MoveToEnemy( ACT_WALK, 2 ) )
 			//	TaskFail();
 
-			//This gets the real enemy location, which may or may not be a good idea. It can seem  like cheating if done way too often to constantly just know where you are.
-			//But that's todo.
+			// This gets the real enemy location, which may or may not be a good idea. It can seem  like cheating if done way too often to constantly just know where you are.
+			// But that's todo.
 			BOOL test = FRefreshRouteChaseEnemySmart();
-				
+			// This will be used if a 'NearestRoute' was made.  A direct route already has checks
+			// (if the enemy is too far from where I'm going on a direct route, that's a call for a re-route)
+			nextDirectRouteAttemptTime = gpGlobals->time + 1;
+
 			if(!test){
 				//easyForcePrintLine("!!! %s:%d YOU HAVE ALREADY FAILED.", this->getClassname(), this->monsterID);
 				TaskFail();
@@ -2979,6 +3041,8 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 	break;}
 
 		//MODDD - We're forcing even GET_PATH_TO_ENEMY to use the LastKnownPath instead.
+		// OBSOLETE TASK - the smart version of chase methods (new standard) uses TASK_MOVE_TO_ENEMY_RANGE instead.
+		// The same FRefreshRoute call works fine there.
 	case TASK_GET_PATH_TO_ENEMY:
 	case TASK_GET_PATH_TO_ENEMY_LKP:
 		{
@@ -3162,6 +3226,24 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 			}
 			break;
 		}
+		//MODDD - NEW.
+	case TASK_GET_PATH_TO_GOALVEC:
+		{
+			goalDistTolerance = pTask->flData;
+
+			if (MoveToLocationStrict( m_movementActivity, 2, this->m_vecMoveGoal ) )
+			{
+				TaskComplete();
+			}
+			else
+			{
+				// no way to get there =(
+				ALERT ( at_aiconsole, "GetPathToGoalVec failed!!\n" );
+				TaskFail();
+				m_movementGoal = MOVEGOAL_NONE;
+			}
+			break;
+		}
 	case TASK_RUN_PATH:
 		{
 			//MODDD SUGGESTION - would it be a good idea to clear "m_flMoveWaitFinished" here too?
@@ -3226,7 +3308,6 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 
 	case TASK_WAIT_FOR_MOVEMENT:
 		{
-			//easyPrintLine("IMA vividly do something rather foul %d", FRouteClear());
 			if (FRouteClear())
 			{
 				TaskComplete();
@@ -3247,7 +3328,11 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 	// if it would've finished the instant 'runTask' would
 	// have looked at it.
 	case TASK_WAIT_FOR_MOVEMENT_RANGE:{
-		//easyPrintLine("IMA vividly do something rather foul %d", FRouteClear());
+		//FRouteClear() ?
+
+		//EXPERIMENTAL - any CheckLocalMove checks can allow being this clsoe to the goal to still pass.
+		goalDistTolerance = pTask->flData;
+
 		if (MovementIsComplete()){
 			TaskComplete();
 			RouteClear();		// Stop moving

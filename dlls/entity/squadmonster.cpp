@@ -259,7 +259,7 @@ void CSquadMonster::SquadPasteEnemyInfo ( void )
 {
 	CSquadMonster *pSquadLeader = MySquadLeader( );
 	if (pSquadLeader){
-		pSquadLeader->setEnemyLKP(m_vecEnemyLKP);
+		pSquadLeader->setEnemyLKP(m_vecEnemyLKP, m_flEnemyLKP_zOffset);
 		pSquadLeader->OnAlertedOfEnemy();
 	}
 }
@@ -276,7 +276,7 @@ void CSquadMonster::SquadCopyEnemyInfo ( void )
 {
 	CSquadMonster *pSquadLeader = MySquadLeader( );
 	if (pSquadLeader){
-		setEnemyLKP(pSquadLeader->m_vecEnemyLKP);
+		setEnemyLKP(pSquadLeader->m_vecEnemyLKP, pSquadLeader->m_flEnemyLKP_zOffset);
 		OnAlertedOfEnemy();
 	}
 }
