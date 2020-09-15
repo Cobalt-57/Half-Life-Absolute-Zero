@@ -106,7 +106,6 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 
 
 
-/*
 #define USE_MOVEMENT_BOUND_FIX
 
 // ok... don't know what I was smoking there.  AdvanceRoute as a respose to failing in MoveExecute?...   uhhhhhh.   wat.
@@ -118,7 +117,6 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 // See the 'undef' lines that turn off these constants before MoveExecute
 #define USE_MOVEMENT_BOUND_FIX_ALT
 
-*/
 //=========================================================
 // Move - take a single step towards the next ROUTE location
 //=========================================================
