@@ -7,6 +7,8 @@
 #include "gamerules.h"
 #include "shake.h"
 
+EASY_CVAR_EXTERN_DEBUGONLY(customLogoSprayMode)
+
 
 void CSprayCan::Spawn ( entvars_t *pevOwner )
 {

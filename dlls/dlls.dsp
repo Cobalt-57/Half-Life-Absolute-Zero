@@ -395,6 +395,10 @@ SOURCE=.\entity\player.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\entity\player_extra.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\entity\rat.cpp
 # End Source File
 # Begin Source File
@@ -888,6 +892,10 @@ SOURCE=.\entity\plats.h
 # Begin Source File
 
 SOURCE=.\entity\player.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\entity\player_extra.h
 # End Source File
 # Begin Source File
 

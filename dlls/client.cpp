@@ -181,6 +181,16 @@ class CrashTest{
 
 
 
+/*
+typedef struct testStruct_s{
+	int eckz;
+	const char* someStr;
+} testStruct_t;
+
+testStruct_t aryStruct[] = { {5, "text"}, {7, "abc"}, {-16, "xyz"} };
+*/
+
+
 // (RELEASE ONLY.  No need for recording info about hidden CVars when nothing is hidden)
 #ifndef _DEBUG
 
@@ -213,7 +223,7 @@ typedef struct HiddenCVarInfo_s{
 #define HIDDEN_CVAR_INFO_LENGTH		(sizeof(aryHiddenCVarInfo)/sizeof(HiddenCVarInfo_t))
 
 
-HiddenCVarInfo_t aryHiddenCVarInfo[HIDDEN_CVAR_INFO_LENGTH] = {
+HiddenCVarInfo_t aryHiddenCVarInfo[] = {
 	// example of how an entry might look (some of these are CVar constants that derive to numbers)
 	//{"someCVar", "somecvar", someCVar_ID, 0, &global_someCVar }
 	EASY_CVAR_HIDDEN_LIST

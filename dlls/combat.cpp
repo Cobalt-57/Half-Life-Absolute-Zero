@@ -64,7 +64,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(playerWeaponTracerMode)
 EASY_CVAR_EXTERN_DEBUGONLY(monsterWeaponTracerMode)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(decalTracerExclusivity)
 EASY_CVAR_EXTERN_DEBUGONLY(cheat_iwantguts)
-
+EASY_CVAR_EXTERN_DEBUGONLY(playerUseDrawDebug)
 
 
 extern float globalPSEUDO_canApplyGermanCensorship;

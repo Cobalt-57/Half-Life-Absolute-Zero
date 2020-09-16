@@ -98,7 +98,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(flyerKilledFallingLoop)
 EASY_CVAR_EXTERN_DEBUGONLY(barnacleGrabNoInterpolation)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindMonsterclipFreshLogic)
-
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreIsolatedNodes)
 
 //MODDD - unused, now factors in the monster's current expected distance to cover this frame (groundspeed & frame time) 
 //        for a better tolerance instead.  Still a hard minimum of 8 to pass just in case it would otherwise be too small.

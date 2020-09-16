@@ -1990,7 +1990,8 @@ void CPantherEye::PrescheduleThink(void){
 			if(!HasConditions(bits_COND_SEE_ENEMY) && !HasConditions(bits_COND_NEW_ENEMY)){
 				pissedRunTime = -1;
 				ForgetEnemy();
-				return CBaseMonster::PrescheduleThink();
+				CBaseMonster::PrescheduleThink();
+				return;
 			}
 		}
 
@@ -2013,7 +2014,7 @@ void CPantherEye::PrescheduleThink(void){
 
 
 
-	return CBaseMonster::PrescheduleThink();
+	CBaseMonster::PrescheduleThink();
 }//PrescheduleThink
 
 
