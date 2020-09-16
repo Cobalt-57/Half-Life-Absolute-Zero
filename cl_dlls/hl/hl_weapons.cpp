@@ -216,7 +216,7 @@ int g_currentanim = -1;
 float sp_ClientPreviousTime = -1;
 int g_cl_frameCount = 0;
 
-extern BOOL g_firstFrameSinceRestore;
+extern int g_framesSinceRestore;
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1210,7 +1210,10 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		{
 			pWeapon->ItemPostFrame();
 		}
-		g_firstFrameSinceRestore = FALSE;  // turn off
+		//MODDD - new.  No need to keep counting after that
+		if(g_framesSinceRestore < 50){
+			g_framesSinceRestore++;
+		}
 	}
 
 	// Assume that we are not going to switch weapons

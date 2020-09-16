@@ -31,6 +31,7 @@ int CSquidSpit::iSquidSpitSprite = -1;
 
 CSquidSpit::CSquidSpit(void){
 
+	doHalfDuration = FALSE;
 }
 
 
@@ -137,11 +138,12 @@ void CSquidSpit::Animate( void )
 }
 
 
-void CSquidSpit::Shoot( CBaseMonster* argFiringEntity, Vector vecStart, Vector vecDirection, float argSpeed  ){
+// Now returns a reference to the generated squidspit object (beware, one might not have been: do a NULL check)
+CSquidSpit* CSquidSpit::Shoot( CBaseMonster* argFiringEntity, Vector vecStart, Vector vecDirection, float argSpeed  ){
 	CBaseMonster* tempMon = NULL;
 
-	//Imply a destination too.
-	CSquidSpit::Shoot(
+	// Imply a destination too.
+	return CSquidSpit::Shoot(
 		argFiringEntity->pev, vecStart, vecDirection, argSpeed,
 		(argFiringEntity->m_hEnemy!=NULL&&((tempMon=argFiringEntity->m_hEnemy->MyMonsterPointer())!=NULL))?argFiringEntity->m_vecEnemyLKP+tempMon->pev->view_ofs:argFiringEntity->m_vecEnemyLKP,
 		(tempMon!=NULL)?tempMon->pev->mins+tempMon->pev->origin: argFiringEntity->m_vecEnemyLKP,
@@ -152,7 +154,7 @@ void CSquidSpit::Shoot( CBaseMonster* argFiringEntity, Vector vecStart, Vector v
 
 
 //MODDD - new field, the enemy for location information.
-void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirection, float argSpeed, const Vector& vecDest, const Vector& vecMinBounds, const Vector& vecMaxBounds  )
+CSquidSpit* CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirection, float argSpeed, const Vector& vecDest, const Vector& vecMinBounds, const Vector& vecMaxBounds  )
 {
 	int i = 0;
 	Vector vecVelocity = vecDirection * argSpeed;
@@ -228,13 +230,13 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 		//IMPORTANT! EARLY TERMINATION HERE. Below is stuff for figuring out how to shoot to arc towards the target correctly (gravity).
 		//Clearly a bullsquidspitarc of 0 (or really non-1) tells us not to do that.
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		return;
+		return NULL;
 	}
 
 	/*
 	if(targetEnt == NULL){
 		//just rely on the "vecVelocity" already assigned?
-		return;
+		return NULL;
 	}
 	*/
 
@@ -339,7 +341,8 @@ void CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirectio
 		}
 	}
 
-}//END OF Shoot
+	return pSpit;
+}//Shoot
 
 
 
@@ -410,8 +413,32 @@ void CSquidSpit::Touch ( CBaseEntity *pOther )
 		//pOther->TakeDamage ( pev, pev, gSkillData.bullsquidDmgSpit, DMG_GENERIC );
 
 		//MODDD - why wasn't the first set to pev->owner? don't we want to tell whoever took damage who dealt it?
-		//Inspired by the hornet which does this right.
-		pOther->TakeDamage ( pev, VARS( pev->owner ), gSkillData.bullsquidDmgSpit, DMG_POISON );
+		// Inspired by the hornet which does this right.
+
+		entvars_t* theOwner;
+		if(pev->owner != NULL){
+			theOwner = VARS(pev->owner);
+		}else{
+			theOwner = NULL;
+		}
+
+		int dmgBitsNormal;
+		int dmgBitsMod;
+
+		// Note that DMG_POISON is added automatically in takedamage logic if DMG_POISONHALF is present in BitsMod, so eh.
+		if(!doHalfDuration){
+			dmgBitsNormal = DMG_POISON;
+			dmgBitsMod = 0;
+		}else{
+			// how to give half duration instead.
+			dmgBitsNormal = DMG_POISON;
+			dmgBitsMod = DMG_POISONHALF;
+		}
+
+		// lazy defaults, barely anything uses _Traceless for anything but cumulative damage anyway.
+		// And call TraceAttack_Traceless along plain TakeDamage calls!  Just keeping track of cumulative damage this frame.
+		pOther->TraceAttack_Traceless(pev, gSkillData.bullsquidDmgSpit, g_vecZero, dmgBitsNormal, dmgBitsMod),
+		pOther->TakeDamage ( pev, theOwner, gSkillData.bullsquidDmgSpit, dmgBitsNormal, dmgBitsMod );
 	}
 
 	SetThink ( &CBaseEntity::SUB_Remove );

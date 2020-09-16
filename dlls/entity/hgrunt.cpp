@@ -6241,9 +6241,6 @@ Vector CHGrunt::HGRUNT_ShootAtEnemyEyes( const Vector &shootOrigin )
 
 	if ( pEnemy )
 	{
-		//MODDD NOTE ........ what is this formula?
-		//    I'm guessing that the BodyTarget includes the enemy's pev->origin, but we subtract it out so we can substitute it with m_vecEnemyLKP.
-		//    So why not make a separate BodyTarget method that never added pev->origin in the first place? Who knows.
 		return ( (pEnemy->EyePosition() + Vector(0,0,3) - pEnemy->pev->origin) + m_vecEnemyLKP - shootOrigin ).Normalize();
 	}
 	else

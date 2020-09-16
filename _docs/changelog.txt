@@ -416,9 +416,10 @@ NEW CVAR: gauss_mode, defaults to 1.  0 is retail-based, 1 is pre-release/alpha 
 - Charged values also tied to skill values for gauss damage.
 - Glow effect no longer stacks stuck balls in entry/exit points of map geometry hit.
 - Smaller glow-effects that can be confused for stuck balls no longer generate either.
+- Larger glow effect starts at a smaller base size and grows to up to larger than retail size at max charge in gauss_mode 1.  Also brigher than retail at max charge.
 - Knockback for all gauss weapons increases less for more charge.  That is, 160 gauss damage gives less than twice the knockback of 80 gauss damage.  Knockback reduced overall.
 - CVar 'gaussRecoilSendsUpInSP' default changed from 0 to 1.  If wanted, this can depend on CVar gauss_mode instead.
-- Reflection-less and pierce-less secondary fire will also deal radial damage (like an explosion), but less so than the default ones for the same charge.
+- Reflection-less and pierce-less secondary fire will also deal radial damage.
 - Gauss charge force-fire no longer happens on running out of ammo at the moment of a full charge (starting a charge with retail gauss with 13 ammo maintains the charge when 0 ammo is reached).
 - Gauss charge force-fire from running out of charge happens at the next ammo-usage cycle that sees there isn't enough ammo instead of the instant the ammo runs out (more noticeable in gauss mode #1).
 - Primary fire bounces can no longer gib.
@@ -426,6 +427,7 @@ NEW CVAR: gauss_mode, defaults to 1.  0 is retail-based, 1 is pre-release/alpha 
 - changing weapons by quickswap while the gauss is charging is no longer as glitchy.   (but why would you do this)
 - Gauss automatic discharge from charging for too long shows properly clientside; visible like a normal charged shot and doesn't continue playing the pitch.
 - Can't interrupt the deploy anim by firing too soon after picking it from weapon select.
+
 
 
 GAUSS MODE 0:
@@ -703,6 +705,11 @@ View-model animation/event skipped on firing immediately after loading a saved-g
 Many melee attacks are less likely to hit nearby level geometry when attacking from odd places (extra check for the enemy being nearby).
 
 Revision to how the AI determines the elevation between points.  Panthereye no longer endlessly runs against a box the player is standing on in a1a1b.
+Routes that can't reach the goal but at least end close enough to put the monster in melee range (like standing barely inward on a short box) will still be allowed by pathfinding.
+That is, standing on a short box like that will still allow a panthereye to approach and attack.
+
+Players less likely to throw off pathfinding by having an origin that is vertically centered on its bounds (most monster origins are centered on the floor of their bounds).
+That makes Z-checks more accurate.  Goal points to the player that would have been denied due to its higher Z origin but fine for any other monster now pass.
 
 Fixed bug in some entities forcing bounds to human-size and keeping that persistently, more common on loading games.
 
@@ -714,13 +721,22 @@ CVar pathfindIgnoreIsolatedNodes also applies to searching for random or cover n
 
 hgrunts also better comment on the enemy they've seen on 'alert' noises.
 
+Some func_tank vars now properly saved as FIELD_POSITION_VECTOR's.  They will transfer more gracefully if caught in a map transition.
+
+Floaters now do half duration poison as well.  More forgiving given how spammy the attack is.
+
+Spawning weapons with cheats ('impulse 101', 'everything' in console) doesn't change the currently equipped weapon (unless none is, picks the crowbar).
+
 
 
 IN PROGRESS:
-Panthereye jump:  although not failing to jump at all, it is odd it picks a position it cannot reach jumping as far as possible.
+Panthereye jump:  although not failing to jump at all, it is odd it picks a position it cannot reach jumping as far as possible.  Broken 'stuck' mechanic maybe?
+-might not be happening anymore?
 Panthereye will also be more willing to jump while routing randomly around a player it can't reach to melee.
-Allowance of a node near a box on low-elevation would be good if the target would be in melee range.
 Archers: sometimes deprived-of-water killed never happens.
 
+
+LATER:
+Floater melee, anim now present in model.
 
 

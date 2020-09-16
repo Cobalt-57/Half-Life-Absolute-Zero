@@ -97,7 +97,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindLargeBoundFix)
 EASY_CVAR_EXTERN_DEBUGONLY(flyerKilledFallingLoop)
 EASY_CVAR_EXTERN_DEBUGONLY(barnacleGrabNoInterpolation)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
-
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindMonsterclipFreshLogic)
 
 
 //MODDD - unused, now factors in the monster's current expected distance to cover this frame (groundspeed & frame time) 
@@ -106,7 +106,8 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 
 
 
-#define USE_MOVEMENT_BOUND_FIX
+
+
 
 // ok... don't know what I was smoking there.  AdvanceRoute as a respose to failing in MoveExecute?...   uhhhhhh.   wat.
 // Still works so long as USE_MOVEMENT_BOUND_FIX is also on now it seems.  I got nothing.
@@ -114,17 +115,28 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindForcePointHull)
 // as it approaches.  Hard to see in normal use but much more common by getting a gargantuta to see you (make enemy), turn on autoSneaky,
 // and get close to the garg.  It might path into you and keep walking so that its bounds get stuck and neither can move away.
 // This looks to be because the fix changes the bounds of the garg before pathfinding.  Unfortunate this side effect happens.
-// See the 'undef' lines that turn off these constants before MoveExecute
-#define USE_MOVEMENT_BOUND_FIX_ALT
+// Changed into two pairs of constants: USE_MOVEMENT_BOUND_FIX_MOVEEXC + ALT, and USE_MOVEMENT_BOUND_FIX_CHKLOC + ALT.
 
-//=========================================================
-// Move - take a single step towards the next ROUTE location
-//=========================================================
+#define USE_MOVEMENT_BOUND_FIX_CHKLOC
+#define USE_MOVEMENT_BOUND_FIX_CHKLOC_ALT
+//#define USE_MOVEMENT_BOUND_FIX_MOVEEXC
+//#define USE_MOVEMENT_BOUND_FIX_MOVEEXC_ALT
+
+
+
+// IMPORTANT!  In MoveExecute, Monsters going up some changes in elevation like ramps can have problems snapping
+// to the surface after the ramp, at least in oddly designed cases like the top of c2a3's ramp from down to up.
+// Try making UNSTUCK_STEP_SIZE larger, only used if this monster is detected stuck to try and get past something
+// in the way.
+// was 24.
+#define UNSTUCK_STEP_SIZE 52
+
+
 //MODDD - changed from 200 to 300, check out a little further.
 #define DIST_TO_CHECK	300
 
-// Turned into a constant
-#define MAX_TRIANGULATION_ATTEMPTS 8
+// Turned into a constant.  (Was 8)
+#define MAX_TRIANGULATION_ATTEMPTS 6
 
 
 //extern DLL_GLOBAL	BOOL	g_fDrawLines;
@@ -189,6 +201,7 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_ARRAY( CBaseMonster, m_vecOldEnemy, FIELD_POSITION_VECTOR, MAX_OLD_ENEMIES ),
 	//MODDD - new
 	DEFINE_ARRAY( CBaseMonster, m_flOldEnemy_zOffset, FIELD_FLOAT, MAX_OLD_ENEMIES ),
+	DEFINE_ARRAY( CBaseMonster, m_vecOldEnemy_ViewOFS, FIELD_VECTOR, MAX_OLD_ENEMIES ),
 	DEFINE_FIELD( CBaseMonster, m_intOldEnemyNextIndex, FIELD_INTEGER),
 
 
@@ -288,7 +301,8 @@ TYPEDESCRIPTION	CBaseMonster::m_SaveData[] =
 	DEFINE_FIELD( CBaseMonster, floatSinkSpeed, FIELD_FLOAT),
 	DEFINE_FIELD( CBaseMonster, floatEndTimer, FIELD_TIME),
 
-
+	DEFINE_FIELD( CBaseMonster, nextDirectRouteAttemptTime, FIELD_TIME),
+	
 };
 
 
@@ -514,8 +528,13 @@ CBaseMonster::CBaseMonster(void){
 	strictNodeTolerance = FALSE;
 	goalDistTolerance = 0;
 	recentTimedTriggerDamage = FALSE;
-	
-}
+
+	nextDirectRouteAttemptTime = -1;
+	recentMoveExecuteFailureCooldown = -1;
+
+}//CBaseMonster constructor
+
+
 
 // All monsters use this feature by default. Just not necessarily all entities.
 BOOL CBaseMonster::usesSoundSentenceSave(void){
@@ -1660,7 +1679,7 @@ BYTE CBaseMonster::parse_itbd_duration(int i) {
 			return ((gSkillData.tdmg_poison_duration >= 0) ? ((BYTE)gSkillData.tdmg_poison_duration) : 255);
 		}
 		else {
-			//has DMG_POISONHALF?  Clear it,
+			//has DMG_POISONHALF?  Clear it, apply that (half duration returned)
 			m_bitsDamageTypeMod &= ~DMG_POISONHALF;
 			return ((gSkillData.tdmg_poison_duration >= 0) ? ((BYTE)(gSkillData.tdmg_poison_duration/2)) : 255);
 		}
@@ -2557,6 +2576,9 @@ void CBaseMonster::RouteNew ( void )
 	m_Route[ 0 ].iType = 0;
 	m_iRouteIndex = 0;
 	m_iRouteLength = 0;  //NEW - ...somehow?  No nodes worth counting.
+
+	// about to move?
+	recentMoveExecuteFailureCooldown = -1;
 }
 
 //=========================================================
@@ -3020,8 +3042,9 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 
 
 
-	//was this... missing?
-	RouteNew();
+	// was this... missing?
+	// Not really needed, BuildRoute already does that soon
+	//RouteNew();
 
 
 	//Mainly just to keep track of where the enemy is since last calling for a new route.
@@ -3109,13 +3132,28 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmart(void){
 // the current route if it fails to find a better direct one (implied that this is called while going to 
 // a BuildNearestRoute-provided node and the enemy is in sight, to see if routing straight to the enemy
 // is possible)
+// TODO.  Anything else route-related to be saved/restored to come back gracefully from failure?
 BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe(void){
-	
+	int i;
+
 	BOOL m1 = disableEnemyAutoNode;
 	Activity m2 = m_movementActivity;
 	float m3 = m_moveWaitTime;
 	int m4 = m_movementGoal;
 	Vector m5 = m_vecMoveGoal;
+
+
+	
+	WayPoint_t OLD_m_Route[ROUTE_SIZE];
+	int OLD_m_iRouteLength = m_iRouteLength;
+	for(i = 0; i < m_iRouteLength; i++){
+		OLD_m_Route[i].iType = m_Route[i].iType;
+		OLD_m_Route[i].vecLocation = m_Route[i].vecLocation;
+	}
+	int	OLD_m_iRouteIndex = m_iRouteIndex;
+
+
+
 
 
 	if(monsterID == 3){
@@ -3152,10 +3190,6 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe(void){
 
 
 
-	//was this... missing?
-	RouteNew();
-
-
 	//Mainly just to keep track of where the enemy is since last calling for a new route.
 	//As in, if the enemy moves too far from the last place a path found a route TO, we need to re-route to keep the destination accurate.
 	
@@ -3184,7 +3218,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe(void){
 	
 	//MODDD - used to have "pEnemy->pev->origin" as the first argument for BuildRoute and BuildNearestRoute. Now just pipes along the set "m_vecMoveGoal" above, no problem.
 	
-	returnCode = BuildRouteSafe(vecEnemyLKP_LowerCenter, iMoveFlaggg, pEnemy);
+	returnCode = BuildRoute(vecEnemyLKP_LowerCenter, iMoveFlaggg, pEnemy);
 	
 
 	if(returnCode){
@@ -3204,7 +3238,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe(void){
 
 	
 
-	/*
+	
 	// As of yet, can't use 'CheckPreMove' on this.  Have to assume what was picked was good,
 	// unless the old route remained in some temporary state so that it could be restored
 	// while this new one turned out to fail at one trial.
@@ -3214,7 +3248,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe(void){
 		returnCode = CheckPreMove();
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	*/
+	
 
 	if(returnCode == FALSE){
 		// revert here too?
@@ -3223,10 +3257,17 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe(void){
 		m_moveWaitTime = m3;
 		m_movementGoal = m4;
 		m_vecMoveGoal = m5;
+
+		m_iRouteLength = OLD_m_iRouteLength;
+		for(i = 0; i < OLD_m_iRouteLength; i++){
+			m_Route[i].iType = OLD_m_Route[i].iType;
+			m_Route[i].vecLocation = OLD_m_Route[i].vecLocation;
+		}
+		m_iRouteIndex = OLD_m_iRouteIndex;
 	}
 
 	return returnCode;
-}//END OF FRefreshRouteChaseEnemySmart
+}//END OF FRefreshRouteChaseEnemySmartSafe
 
 
 
@@ -4073,6 +4114,7 @@ void CBaseMonster::refreshStack() {
 				m_hOldEnemy[i2 - 1] = m_hOldEnemy[i2];
 				m_vecOldEnemy[i2 - 1] = m_vecOldEnemy[i2];
 				m_flOldEnemy_zOffset[i2 - 1] = m_flOldEnemy_zOffset[i2];
+				m_vecOldEnemy_ViewOFS[i2 - 1] = m_vecOldEnemy_ViewOFS[i2];
 			}
 			//clearly, one less enemy to remember.
 			m_intOldEnemyNextIndex--;
@@ -4140,6 +4182,7 @@ void CBaseMonster::PushEnemy( CBaseEntity *pEnemy, Vector &vecLastKnownPos )
 		m_hOldEnemy[m_intOldEnemyNextIndex] = pEnemy;
 		m_vecOldEnemy[m_intOldEnemyNextIndex] = vecLastKnownPos;
 		m_flOldEnemy_zOffset[m_intOldEnemyNextIndex] = pEnemy->pev->mins.z;
+		m_vecOldEnemy_ViewOFS[m_intOldEnemyNextIndex] = pEnemy->pev->view_ofs;
 
 		m_intOldEnemyNextIndex++;
 		return;
@@ -4187,6 +4230,8 @@ BOOL CBaseMonster::PopEnemy()
 		//m_vecEnemyLKP = m_vecOldEnemy[m_intOldEnemyNextIndex];
 		// Now, send the recorded zOffset as well
 		setEnemyLKP(m_vecOldEnemy[m_intOldEnemyNextIndex], m_flOldEnemy_zOffset[m_intOldEnemyNextIndex]);
+		//!!! For now, has to be set manually after:
+		m_vecEnemyLKP_ViewOFS = m_vecOldEnemy_ViewOFS[m_intOldEnemyNextIndex];
 
 		m_intOldEnemyNextIndex--;
 		return TRUE;
@@ -4687,7 +4732,7 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 // Being within 'goalDistTolerance' of it 2D-wise and passing the Z check means we can call this route
 // 'good enough' at where WALK_MOVE was blocked at anyway.
 
-// Unfortunately, there are some times when USE_MOVEMENT_BOUND_FIX/ALT can allow a route that shouldn't be possible,
+// Unfortunately, there are some times when USE_MOVEMENT_BOUND_FIX_CHKLOC/ALT can allow a route that shouldn't be possible,
 // but it is very very rare.  It lets going up/down ramps work far better for larger entities (they re-do the 
 // WALK_MOVE call with a HUMAN_HULL size, which has an easier time working with elevation changes for whatever reason).
 // Unsure how to detect a WALK_MOVE failure coming from colliding with nearby map geometry properly (like running into a 
@@ -4720,7 +4765,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 	float flDist;
 	float flStep, stepSize;
 	int	iReturn;
-#if defined(USE_MOVEMENT_BOUND_FIX) || defined(USE_MOVEMENT_BOUND_FIX_ALT)
+#if defined(USE_MOVEMENT_BOUND_FIX_CHKLOC) || defined(USE_MOVEMENT_BOUND_FIX_CHKLOC_ALT)
 	Vector oldMins;
 	Vector oldMaxs;
 #endif
@@ -4839,7 +4884,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 	}
 */
 	
-#if defined(USE_MOVEMENT_BOUND_FIX)
+#if defined(USE_MOVEMENT_BOUND_FIX_CHKLOC)
 	if(needsMovementBoundFix()){
 		//Plays better with the engine to do checks with these bounds against ramps. No clue why.
 		//UTIL_SetSize( pev, Vector(-30, -30, 0), Vector(30, 30, 40) );
@@ -4892,7 +4937,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 		if ( !walkMoveResult )
 		{// can't take the next step, fail!
 
-#ifdef USE_MOVEMENT_BOUND_FIX_ALT
+#ifdef USE_MOVEMENT_BOUND_FIX_CHKLOC_ALT
 			if( EASY_CVAR_GET_DEBUGONLY(pathfindLargeBoundFix) == 1 && needsMovementBoundFix() ){
 				// A... NULL trace_ent is valid to take the Instance of?
 				// Guess so, leads to the 'World' itself.
@@ -5072,7 +5117,7 @@ int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd,
 
 	}//FOR LOOP through flDist
 
-#if defined(USE_MOVEMENT_BOUND_FIX)
+#if defined(USE_MOVEMENT_BOUND_FIX_CHKLOC)
 	if(needsMovementBoundFix()){
 		//undo the bound change.
 		UTIL_SetSize( pev, oldMins, oldMaxs );
@@ -5986,29 +6031,14 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 // This is a combo of 'MoveToEnemy' and 'FRefreshRoute' (smart chase enemy variant) that only 
 // tests BuildRoute (in fact that's what it is mainly), but does not affect the current route 
 // if it fails to find a better one.
+// Wait!  Nevermind, made FRefreshRouteChaseEnemySmartSafe, and that handles saving the route
+// and calls ordinary BuildRoute, that should work.
+// SCRAP THIS
 BOOL CBaseMonster::BuildRouteSafe ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
 {
-	/*
-	Activity m1 = m_movementActivity;
-	float m2 = m_moveWaitTime;
-	int m3 = m_movementGoal;
+	// Save the existing route as all pathfinding methods yet want to mess with it.
 
-	m_movementActivity = movementAct;
-	m_moveWaitTime = waitTime;
-	m_movementGoal = MOVEGOAL_ENEMY;
-
-	//MODDD - only keep movement activity if this passes
-	BOOL theResult = FRefreshRoute();
-	if (!theResult) {
-		m_movementActivity = m1;
-		m_moveWaitTime = m2;
-		m_movementGoal = m3;
-	}
-	return theResult;
-	*/
-
-
-
+	//m_Route
 
 	float flDist;
 	Vector vecApex;
@@ -6181,6 +6211,11 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 	sizeZ = pev->size.z;
 	//if (sizeZ < 24.0)
 	//	sizeZ = 24.0;
+
+	//MODDD - allow trying in larger increments.
+	sizeX *= 1.25;
+	sizeZ *= 1.25;
+
 
 	vecForward = ( vecEnd - vecStart ).Normalize();
 
@@ -7283,19 +7318,9 @@ BOOL CBaseMonster::CheckPreMove(void){
 
 
 
-
-#undef USE_MOVEMENT_BOUND_FIX
-#undef USE_MOVEMENT_BOUND_FIX_ALT
-
-// IMPORTANT!  Monsters going up some changes in elevation like ramps can have problems snapping
-// to the surface after the ramp, at least in oddly designed cases like the top of c2a3's ramp from down to up.
-// Try making this constant larger, only used if this monster is detected stuck to try and get past something
-// in the way.
-#define UNSTUCK_STEP_SIZE 26
-
 void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
-#if defined(USE_MOVEMENT_BOUND_FIX) || defined(USE_MOVEMENT_BOUND_FIX_ALT)
+#if defined(USE_MOVEMENT_BOUND_FIX_MOVEEXC) || defined(USE_MOVEMENT_BOUND_FIX_MOVEEXC_ALT)
 	Vector oldMins;
 	Vector oldMaxs;
 	float flYaw;
@@ -7308,7 +7333,11 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 
 	
 
-#ifdef USE_MOVEMENT_BOUND_FIX
+	// running in place when this is uncommented, can be useful sometimes to debug activity changes conveniently maybe.
+	//return;
+
+
+#ifdef USE_MOVEMENT_BOUND_FIX_MOVEEXC
 	if(needsMovementBoundFix()){
 		oldMins = pev->mins;
 		oldMaxs = pev->maxs;
@@ -7317,7 +7346,7 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 #endif
 
 
-#ifdef USE_MOVEMENT_BOUND_FIX_ALT
+#ifdef USE_MOVEMENT_BOUND_FIX_MOVEEXC_ALT
 	flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );
 #endif
 
@@ -7342,7 +7371,7 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 
 
 
-#ifndef USE_MOVEMENT_BOUND_FIX_ALT
+#ifndef USE_MOVEMENT_BOUND_FIX_MOVEEXC_ALT
 		
 		
 		// don't walk more than 16 units or stairs stop working
@@ -7353,13 +7382,25 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		//MODDD - using MOVE_STRAFE instead of MOVE_NORMAL.
 		// Already moving in the direction I want to, and this jitters around less (if at all) when
 		// moving stuck against a ramp, better to detect stagnation that way.
+		// Wait... nevermind.  MOVE_NORMAL can still try to slide against whatever's in the way,
+		// that might be better.
+
+
+		Vector intendedLocation = pev->origin + vecDir * flStep;
 
 		Vector oldOrigin = pev->origin;
 		// the stepsize makes the difference in overcoming some ramp edges??
-		UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_STRAFE );
+		UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
+
 
 		Vector originNow = pev->origin;
-		Vector pointDeltaTE = (originNow - oldOrigin);
+		
+		// Other idea:  how about instead of how much the position changed in the origin,
+		// compare where the origin is now to where we expected it to be.  That's a better sign
+		// of failure.  Getting stuck can move greatly sideways now.
+		//Vector pointDeltaTE = (originNow - oldOrigin);
+		Vector pointDeltaTE = (originNow - intendedLocation);
+
 		//float moveDisto = DistanceFromDelta(pointDeltaTE);
 		float moveDisto2D = Distance2DFromDelta(pointDeltaTE);
 
@@ -7367,9 +7408,29 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		//MODDD - could always back up by however much the '16' went overboard on the current step
 		// but I doubt this will ever happen very often, and that could land back on the issue'd
 		// area anyway.
-		if(moveDisto2D < flStep * 0.5){
-			// Couldn't cover much of the step?  Try again with the full step size to try and get past this
 
+
+
+		// Didn't move close enough to where I wanted to?
+		if(moveDisto2D > flStep * 0.8){
+
+
+			if(recentMoveExecuteFailureCooldown == -1){
+				// first move since stopping? start the delay then.
+				recentMoveExecuteFailureCooldown = gpGlobals->time + 1;
+			}
+			if(gpGlobals->time < recentMoveExecuteFailureCooldown){
+				// Not yet, freeman!  Fail for longer.
+				flTotal -= flStep;
+				continue;
+			}
+
+
+
+		//if(moveDisto2D < flStep * 0.5){
+			// Couldn't cover much of the step?  Try again with the full step size to try and get past this
+			
+			
 			//if(flStep == 16){
 			//	// Already a step size of 16??  What do I do here?
 			//	easyPrintLine("MoveExecute ERROR: %s:%d Could not overcome obstacle at max step size!", getClassname(), monsterID);
@@ -7377,16 +7438,24 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 			//	//return;
 			//}else
 			{
+
 				// not at the max step size?  ok, try at a higher step then (over 16 necessary sometimes?)
+				// Careful about trying this the moment the monster gets stuck though, how about waiting
+				// for X seconds to pass.  X seconds of solid failed movement will allow a large step turn.
+				
+				//easyPrintLine("MoveExecute: %s:%d: movement stagnation detected, attempting unstuck step", getClassname(), monsterID);
+
 				oldOrigin = pev->origin;
-				UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, UNSTUCK_STEP_SIZE, MOVE_STRAFE );
+				UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, UNSTUCK_STEP_SIZE, MOVE_NORMAL );
 			
 				originNow = pev->origin;
-				pointDeltaTE = (originNow - oldOrigin);
+				//pointDeltaTE = (originNow - oldOrigin);
+				pointDeltaTE = (originNow - intendedLocation);
 				//float moveDisto = DistanceFromDelta(pointDeltaTE);
 				moveDisto2D = Distance2DFromDelta(pointDeltaTE);
 			
-				if(moveDisto2D < UNSTUCK_STEP_SIZE * 0.3){
+				//if(moveDisto2D < UNSTUCK_STEP_SIZE * 0.5){
+				if(moveDisto2D > UNSTUCK_STEP_SIZE * 0.8){
 					// Still stagnating?  FAIL
 					easyPrintLine("MoveExecute ERROR: %s:%d Could not overcome obstacle at re-done step size!", getClassname(), monsterID);
 					TaskFail();
@@ -7394,7 +7463,10 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 				}
 			}
 		}// movement stagnation check
-		
+		else{
+			// success?  Bump this up.
+			recentMoveExecuteFailureCooldown = gpGlobals->time + 1.0;
+		}
 
 
 
@@ -7569,7 +7641,7 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 	// ALERT( at_console, "dist %f\n", m_flGroundSpeed * pev->framerate * flInterval );
 
 	
-#ifdef USE_MOVEMENT_BOUND_FIX
+#ifdef USE_MOVEMENT_BOUND_FIX_MOVEEXC
 	if(needsMovementBoundFix()){
 		//and revert.
 		UTIL_SetSize( pev, oldMins, oldMaxs );
@@ -7649,15 +7721,6 @@ void CBaseMonster::MonsterInit ( void )
 
 
 	if (pev->spawnflags & SF_MONSTER_HITMONSTERCLIP) {
-		/*
-		if (FClassnameIs(pev, "monster_gargantua")) {
-			//MODDD - 
-			// haha, nope!  No MONSTERCLIP for you.
-			// Tell some mapper of a2a1 about this.
-		}else{
-			pev->flags |= FL_MONSTERCLIP;
-		}
-		*/
 		pev->flags |= FL_MONSTERCLIP;
 	}
 
@@ -7927,9 +7990,6 @@ int CBaseMonster::TaskIsRunning( void )
 
 	return 0;
 }
-
-
-
 
 
 
@@ -8624,10 +8684,20 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 	}
 
 
+	CBaseEntity* myGoalEnt = GetGoalEntity();
+
 	// If this has FL_MONSTERCLIP, offer using CheckLocalMove as an alternative to looking up what nodes have good routes to other nodes.
 	// The predetermined static route table was made without MONSTERCLIP in mind, so it may have paths we can't take or lack paths we can take
 	// that obviously should work fine.
-	BOOL theHardWay = (this->pev->flags & FL_MONSTERCLIP);
+	BOOL theHardWay;
+
+	if(EASY_CVAR_GET_DEBUGONLY(pathfindMonsterclipFreshLogic) != 0){
+		theHardWay = (this->pev->flags & FL_MONSTERCLIP);
+	}else{
+		// no check
+		theHardWay = FALSE;
+	}
+
 
 	int myNodeTypeAllowed = getNodeTypeAllowed();
 
@@ -8719,8 +8789,22 @@ BOOL CBaseMonster::BuildNearestRoute ( Vector vecThreat, Vector vecViewOffset, f
 				passingCondition = FALSE;
 			}
 			*/
-			passingCondition = (CheckLocalMove(WorldGraph.Node(iMyNode).m_vecOrigin, WorldGraph.Node(nodeNumber).m_vecOrigin, m_hEnemy, TRUE, NULL) == LOCALMOVE_VALID);
-		}
+
+			if(EASY_CVAR_GET_DEBUGONLY(pathfindMonsterclipFreshLogic) == 1){
+				TraceResult tr;
+				UTIL_TraceLine(WorldGraph.Node(iMyNode).m_vecOrigin, WorldGraph.Node(nodeNumber).m_vecOrigin, dont_ignore_monsters, ENT(this->pev), &tr);
+				if(tr.flFraction >= 1.0 || (tr.pHit != NULL && myGoalEnt != NULL && tr.pHit == myGoalEnt->edict())  ){
+					// uninterrupted line, or the thing hit was the goal ent?  Allow
+					passingCondition = TRUE;
+				}else{
+					// nope
+					passingCondition = FALSE;
+				}
+			}else if(EASY_CVAR_GET_DEBUGONLY(pathfindMonsterclipFreshLogic) == 2){
+				passingCondition = (CheckLocalMove(WorldGraph.Node(iMyNode).m_vecOrigin, WorldGraph.Node(nodeNumber).m_vecOrigin, m_hEnemy, TRUE, NULL) == LOCALMOVE_VALID);
+			}
+			
+		}//theHardWay
 
 
 		if (passingCondition)
@@ -10399,9 +10483,6 @@ Vector CBaseMonster::ShootAtEnemyEyes( const Vector &shootOrigin )
 
 	if ( pEnemy )
 	{
-		//MODDD NOTE ........ what is this formula?
-		//    I'm guessing that the BodyTarget includes the enemy's pev->origin, but we subtract it out so we can substitute it with m_vecEnemyLKP.
-		//    So why not make a separate BodyTarget method that never added pev->origin in the first place? Who knows.
 		return ( (pEnemy->EyePosition() - pEnemy->pev->origin) + m_vecEnemyLKP - shootOrigin ).Normalize();
 	}
 	else

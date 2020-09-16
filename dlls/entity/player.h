@@ -132,6 +132,7 @@ enum sbar_data
 
 extern BOOL gInitHUD;
 
+
 // MODDD - global method, moved from client.cpp
 extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
 
@@ -142,7 +143,6 @@ extern void respawn(entvars_t *pev, BOOL fCopyCorpse);
 class CBasePlayer : public CBaseMonster
 {
 public:
-
 
 	//MODDD - moved from CBaseEntity.  Stores ammo counts as named vars.
 	// Might not even be necessary, notice the lack of one for snark/squeak ammo, a retail weapon.
@@ -410,6 +410,9 @@ public:
 	BOOL fHolsterAnimsEnabled;
 	BOOL fBreakHolster;
 	float cl_ladder_choice;
+
+	// instance of player at serverside, global at clientside.
+	int m_framesSinceRestore;
 #endif
 
 
@@ -824,7 +827,6 @@ public:
 		}
 	}//END OF getBaseFOV
 #endif
-
 
 };
 

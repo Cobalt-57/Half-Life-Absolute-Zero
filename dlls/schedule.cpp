@@ -1312,10 +1312,12 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 
 						if(gpGlobals->time >= nextDirectRouteAttemptTime){
 							nextDirectRouteAttemptTime = gpGlobals->time + 1;
+							
+							// ok, here we go.  It applies the new route automatically if it worked.
+							// return code is more for curiosity's sake.
+							BOOL theResult = FRefreshRouteChaseEnemySmartSafe();
+							// PRINTOUT HERE MAYBE?
 
-							// ok, here we go.  Note that this doesn't return whether it worked or not, it only does nothing
-							// to the current route if it doesn't work.
-							//FRefreshRouteChaseEnemySmartSafe();
 
 						}//nextDirectRouteAttemptTime check
 
@@ -3398,10 +3400,10 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 	break;}
 	
 	case TASK_DIE_LOOP:{
-		//Starter for the task.
-		//In a monster that calls for SCHED_DIE_LOOP instead of SCHED_DIE, ensure "getLoopingDeathSequence" is overridden to refer
-		//to a fitting (falling?) sequence to loop until it has a reason to be interrupted (hit the ground)
-		//It is still up to the monster itself to tell how TASK_DIE_LOOP calls TaskComplete (on hitting the ground).
+		// Starter for the task.
+		// In a monster that calls for SCHED_DIE_LOOP instead of SCHED_DIE, ensure "getLoopingDeathSequence" is overridden to refer
+		// to a fitting (falling?) sequence to loop until it has a reason to be interrupted (hit the ground)
+		// It is still up to the monster itself to tell how TASK_DIE_LOOP calls TaskComplete (on hitting the ground).
 		this->SetSequenceByIndex(getLoopingDeathSequence(), 1.0f);
 
 		//These calls / settings are based off of "DeathAnimationStart" from basemonster.cpp.
@@ -3418,7 +3420,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		
 	break;}
 	case TASK_SET_FALL_DEAD_TOUCH:{
-		//Just set my touch to anticipate hitting the ground and moving on to the next task (TASK_DIE) for the anim for hitting the ground to finish.
+		// Just set my touch to anticipate hitting the ground and moving on to the next task (TASK_DIE) for the anim for hitting the ground to finish.
 		
 		SetTouch(&CBaseMonster::KilledFinishTouch);
 		TaskComplete();

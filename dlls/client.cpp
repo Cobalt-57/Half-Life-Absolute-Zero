@@ -1298,7 +1298,9 @@ void ClientCommand( edict_t *pEntity )
 	if (FStrEq(pcmdRefinedRef, "_mapname")) {
 		easyForcePrintLineClient(pEntity, "Map: %s", STRING(gpGlobals->mapname));
 		return;
-	}else if (FStrEq(pcmdRefinedRef, "fixnullplayer")) {
+
+		// "spawn" is an engine command, can't use it
+	}else if (FStrEq(pcmdRefinedRef, "fixnullplayer") || FStrEq(pcmdRefinedRef, "respawn") || FStrEq(pcmdRefinedRef, "forcerespawn")) {
 		// More of an experiment in how entities work.  Taking a bad transition to another map that puts the player through walls
 		// in a dead-looking state can be fixed by calling for this in console, then 'revive' in console, then 'noclip'.
 		// The map can be entered then.
@@ -1358,7 +1360,25 @@ void ClientCommand( edict_t *pEntity )
 
 			//FREE_PRIVATE(pEntity);
 			//pEntity = (void*)ALLOC_PRIVATE(ENT(pev), stAllocateBlock);
-		}
+		}else{
+			// Private data present?  ok, work normally then.
+			// like a revive but strips everything, places at the designated spawnpoint per gamemode (single/multiplayer).
+			// Like going to the map by 'map X', but doesn't reset anything else.
+			// Mimicking what the end of post-killed-think for the player (the very bottom with the 'respawn' call without the map restart on singleplayer)
+			
+			CBasePlayer* playerRef =  (CBasePlayer*)(pEntity->pvPrivateData);
+			//daPlayah->RemoveAllItems(TRUE);
+			playerRef->pev->button = 0;
+			playerRef->m_iRespawnFrames = 0;
+			playerRef->RemoveAllItems(TRUE);
+			// no need.  Just call Spawn() instead.
+			//respawn(playerRef->pev, !(m_afPhysicsFlags & PFLAG_OBSERVER) );// don't copy a corpse if we're in deathcam.
+			playerRef->Spawn();
+			playerRef->pev->nextthink = -1;
+
+		}//pvPrivateData check
+
+
 		return;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2811,9 +2831,9 @@ void ClientCommand( edict_t *pEntity )
 		//"DMG_FALL" in there so we ignore battery.
 		//tempplayer->TakeDamage(VARS(eoNullEntity), VARS(eoNullEntity), 255, DMG_FALL|DMG_ALWAYSGIB, 0);
 
-		//straight-shot the health change and Killed() call to skip possible interference from godmode and "NothingHurts".
+		// straight-shot the health change and Killed() call to skip possible interference from godmode and "NothingHurts".
 		tempplayer->pev->health = -200;
-		tempplayer->Killed(NULL, GIB_ALWAYS);
+		tempplayer->Killed(tempplayer->pev, tempplayer->pev, GIB_ALWAYS);
 
 
 		//if(godModeMem){
@@ -5305,10 +5325,10 @@ void ClientCommand( edict_t *pEntity )
 		}
 
 	}
-	else if (FStrEq(pcmdRefinedRef, "jolt") || FStrEq(pcmdRefinedRef, "boost") || (FStrEq(pcmdRefinedRef, "push"))) {
+	else if (FStrEq(pcmdRefinedRef, "jolt") || FStrEq(pcmdRefinedRef, "fling") || FStrEq(pcmdRefinedRef, "boost") || (FStrEq(pcmdRefinedRef, "push"))) {
 		const char* arg1ref = CMD_ARGV(1);
 		if (g_flWeaponCheat == 0.0) {
-			easyForcePrintLineClient(pEntity, "No violating the laws of physics without cheats.");
+			easyForcePrintLineClient(pEntity, "No summoning inexplicable forces without cheats.");
 			return;
 		}
 		
@@ -5348,14 +5368,14 @@ void ClientCommand( edict_t *pEntity )
 		}
 		else {
 			easyForcePrintLineClient(pEntity, "***Standby for changelevel (close console!)***");
-			char* booty1 = (char*)CMD_ARGV(1);
-			char* booty2 = (char*)CMD_ARGV(2);
+			char* tempstr1 = (char*)CMD_ARGV(1);
+			char* tempstr2 = (char*)CMD_ARGV(2);
 
 			// send the parameters over to temp buffers to be played soon (when the console's closed, game unpaused)
-			strcpy(&changeLevelQueuedName[0], booty1);
+			strcpy(&changeLevelQueuedName[0], tempstr1);
 
-			if (booty2 != NULL) {
-				strcpy(&changeLevelQueuedSpot[0], booty2);
+			if (tempstr2 != NULL) {
+				strcpy(&changeLevelQueuedSpot[0], tempstr2);
 			}else {
 				// whut.  Force to the empty string.
 				changeLevelQueuedSpot[0] = '\0';
@@ -5365,7 +5385,7 @@ void ClientCommand( edict_t *pEntity )
 			//changeLevelQueuedTime = gpGlobals->time + 0.1f
 			changeLevelQueuedTime = gpGlobals->time + 0.5f;
 
-			//CHANGE_LEVEL(booty1, booty2);
+			//CHANGE_LEVEL(tempstr1, tempstr2);
 		}
 	}
 	else if (FStrEq(pcmdRefinedRef, "motd_show")) {
@@ -5504,7 +5524,7 @@ void ClientCommand( edict_t *pEntity )
 	else if (FStrEq(pcmdRefinedRef, "test2")) {
 		EASY_CVAR_SET(pregame_server_cvar, 24);
 		easyForcePrintLine("pregame_server_cvar set?");
-	}else if( FStrEq(pcmd, "garbage")){
+	}else if( FStrEq(pcmdRefinedRef, "garbage")){
 
 		// 139?
 		edict_t* pEdi = g_engfuncs.pfnPEntityOfEntIndex(79);
@@ -5517,9 +5537,17 @@ void ClientCommand( edict_t *pEntity )
 			int x = 45;
 		}
 
-
+		// Because 'spawn' and 'respawn' are already engine commands?
 	}
+
 	// new stuff?
+
+
+
+
+
+
+
 
 
 	

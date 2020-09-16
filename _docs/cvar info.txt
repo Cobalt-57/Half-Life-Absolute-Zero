@@ -180,42 +180,6 @@ That includes "Use" requests for target_cdaudio or continual radius checks by th
 
 
 
-hideNodeGraphRebuildNotice (1) - BOOLEAN.  If on, hides the yellow "Node Graph out of Date. Rebuilding..." that appears on running a map without nodegraph data.
-
-
-
-
-
-pathfindIgnoreIsolatedNodes (1) - BOOLEAN.  If 1, nodes that have no outgoing connections will be ignored by pathfinding node-mapping (trying to map current start / destination points to path nodes for forming a route between).
-~ May require a map-restart or load-game to take effect!  Pathfinding caches points under the assumption nothing would change between calls under some circumstances and skips where this CVar would have made a difference.
-  Or use 'clearnodecache' in console after setting the CVar to avoid the out-of-date cache.
-  This applies to most node-related CVars.  In some cases node rebuilds may even be necesssary (saved to a file; unaffected by game or map restarts).
-  To force a node rebuild, enter 'buildnodegraph' in console.
-
-
-drawNodeAll (0) - BOOLEAN - ADJUSTABLE. Whether to draw all nodes on the map as single RED vertical lines that pass through the node's origin (generally snapped to the ground).
-~ Set to a value above 10 to become the minimum range for drawing nodes instead to preserve drawing (too much can crash the game)
-
-drawNodeSpecial (-1) - INTEGER. When above -1 (and legal), draws this particular node white instead.
-~ Does not require "drawNodeAll".
-~ IGNORED if "drawNodeAlternateTime" is above 0 and being used.
-
-drawNodeConnections (0) - MODE. 
-0: nothing.
-1: The currently designated special node will render its connections outgoing to other nodes as purple lines.
-2: Any nodes rendered (special, all, or under "drawNodeAll"'s range) will have their connections rendered.
-
-drawNodeAlternateTime (0) - DECIMAL. When above 0, will change the currently shaded white AI node every "variable" number of seconds, and print out what the currently shaded AI node is by its ID.
-~ Stare at a node until it turns white to tell what it is.
-~ OVERSHADOWS "drawSpecialNode"'s picked ID.
-~ example: a value of 2.5 means the AI node marked "special" (white) changes every 2.5 seconds.
-
-nodeSearchStartVerticalOffset (30) - DECIMAL.  A vertical offset (positive is above) to the checks done for finding the nearest node.  Being above 0 may help for movement-checks not to get snagged on terrain and give up.
-
-
-
-
-
 --------------------------------------------------------------------------------------
 SPARKS MULTI CVARS - adjust how many of the default "6" sparks appear for each spark generaiton call.  Only applies if "useAlphaSparks" is on (1).
 ~ Large numbers of particles should no longer crash the game, will simply stop generating.
@@ -1295,6 +1259,18 @@ Pathfinding CVars
 ----------------------------------------------------------------------------------------------------------------------------------
 ~also see pathfindPrintout
 
+
+
+hideNodeGraphRebuildNotice (1) - BOOLEAN.  If on, hides the yellow "Node Graph out of Date. Rebuilding..." that appears on running a map without nodegraph data.
+
+
+pathfindIgnoreIsolatedNodes (1) - BOOLEAN.  If 1, nodes that have no outgoing connections will be ignored by pathfinding node-mapping (trying to map current start / destination points to path nodes for forming a route between).
+~ May require a map-restart or load-game to take effect!  Pathfinding caches points under the assumption nothing would change between calls under some circumstances and skips where this CVar would have made a difference.
+  Or use 'clearnodecache' in console after setting the CVar to avoid the out-of-date cache.
+  This applies to most node-related CVars.  In some cases node rebuilds may even be necesssary (saved to a file; unaffected by game or map restarts).
+  To force a node rebuild, enter 'buildnodegraph' in console.
+
+
 pathfindFidgetFailTime (0.2) - FLOAT. Amount of time that failing in pathfinding allows to register as counting towards giving up (or at least waiting a few seconds before trying again).
                                Increasing the value makes it count more time (like failing in the last 0.7 seconds instead of the last 0.4 seconds) since the last failure as a reason to give up.
                                The game's true default is 0.2. Unsure how much further really helps.
@@ -1314,6 +1290,7 @@ pathfindTopRampFixDraw (0) - BOOL. If on, draws the most recent test taken bypat
 
 pathfindLooseMapNodes (0) - BOOL. If on, map nodes taken by monsters will skip the "CheckLocalMove" check and use a simpler hull trace check instead, implying a node-to-node traversal will probably be ok. May have side effects of dumb AI thinking it can go somewhere it really can't from time to time.                               
 
+NOTICE - no longer necessary, may never be helpful if on.
 pathfindRampFix (0) - BOOL. If on, the AI should have an easier time using ramps. May be helped by "pathfindLooseMapNodes" being turned on.
 
 
@@ -1321,10 +1298,46 @@ pathfindRampFix (0) - BOOL. If on, the AI should have an easier time using ramps
 pathfindNodeToleranceMulti (1) - ADJUSTABLE. How much / less distance must be between a monster and a target node to satisfy "reaching" the node? This is a multiple on that. 1 is no change. Under 1 is less (strict: dangerous!), over 1 is more (tolerant).
 
 
-
 pathfindLargeBoundFix (1) - BOOL. For NPCs that have trouble going up or down inclines, this may help.
 ~ Re-does straight line path-find checks to see if they would work for typical human-sized bounds, which work properly with ramps.
 ~ Only applies to monsters selected for trying this extra check, such as panthereyes and agrunts.
+
+pathfindMonsterclipFreshLogic (2) - MODEVAR.  If over 0, monsters with the FL_MONSTERCLIP flag will avoid using stored/cached pathfinding information.
+~ This is because pre-made route information is made with monsters without the FL_MONSTERCLIP flag in mind (makes some areas passable/impassable compared to monsters without the flag).
+~ Noteworthy example: gargantua in a2a1.bsp, AI is much better with choice #2 compared to 0.
+~ WARNING: may lag in some maps more than others in some circumstances.
+0: off; may often respond poorly to 'nearest route' or 'map node route' calls.
+1: Uses a line-trace between nodes to see if there is a valid straight-line between them.  Lacks some of CheckLocalMove's accuracy but may be cheaper if it still works.
+2: Uses the full CheckLocalMove call to see if nodes can be taken.  Potentially expensive done often.
+
+
+
+drawNodeAll (0) - BOOLEAN - ADJUSTABLE. Whether to draw all nodes on the map as single RED vertical lines that pass through the node's origin (generally snapped to the ground).
+~ Set to a value above 10 to become the minimum range for drawing nodes instead to preserve drawing (too much can crash the game)
+
+drawNodeSpecial (-1) - INTEGER. When above -1 (and legal), draws this particular node white instead.
+~ Does not require "drawNodeAll".
+~ IGNORED if "drawNodeAlternateTime" is above 0 and being used.
+
+drawNodeConnections (0) - MODE. 
+0: nothing.
+1: The currently designated special node will render its connections outgoing to other nodes as purple lines.
+2: Any nodes rendered (special, all, or under "drawNodeAll"'s range) will have their connections rendered.
+
+drawNodeAlternateTime (0) - DECIMAL. When above 0, will change the currently shaded white AI node every "variable" number of seconds, and print out what the currently shaded AI node is by its ID.
+~ Stare at a node until it turns white to tell what it is.
+~ OVERSHADOWS "drawSpecialNode"'s picked ID.
+~ example: a value of 2.5 means the AI node marked "special" (white) changes every 2.5 seconds.
+
+nodeSearchStartVerticalOffset (30) - DECIMAL.  A vertical offset (positive is above) to the checks done for finding the nearest node.  Being above 0 may help for movement-checks not to get snagged on terrain and give up.
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------
+
 
 
 flyerKilledFallingLoop (1) - BOOL. Fliers (flying NPCs/monsters) that have a looping animation for falling while killed mid-air will use this animation instead of skipping straight to a death animation that assumes the ground has been touched.
@@ -1333,10 +1346,6 @@ flyerKilledFallingLoop (1) - BOOL. Fliers (flying NPCs/monsters) that have a loo
 NOTICE - there is an as-is command, "interp", that claims to turn interpolation off too.
 It might in a different way.  It seems to cause clientside events like hgrunt muzzle flashes to stay frozen in the whole 1/10th second timeframe they occupy.  Maybe longer? unsure.
 
-
-----------------------------------------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------------------------------------
-----------------------------------------------------------------------------------------------------------------------------------
 
 
 crossbowFirePlaysReloadSound (0) - BOOL. Whether to play weapons/xbow_reload1.wav at the moment of firing clientside.
@@ -1619,6 +1628,7 @@ sv_gargantua_throwattack (1) - MODEVAR.  If above 0, the throw attack may be use
 0: no effect.
 1: There is a 20% chance any gargantua melee attempts to pick up the entity in front and toss it.
 2: The throw-attempt replaces all melee.  (still goes back to normal melee if nearby empty-space checks fail)
+
 
 
 

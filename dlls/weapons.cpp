@@ -79,8 +79,9 @@ BOOL g_isNewWeapon = FALSE;
 
 
 
-// oops, not used here. see player.cpp
-extern BOOL g_firstFrameSinceRestore;
+// oops, not used here. see player.cpp.
+// Not even global serverside (for the player now)
+//extern int g_framesSinceRestore;
 
 
 
@@ -458,7 +459,7 @@ void CBasePlayerWeapon::stopBlockLooping(void){
 
 
 
-CBasePlayerWeapon::CBasePlayerWeapon(){
+CBasePlayerWeapon::CBasePlayerWeapon(void){
 	//Starts as 0, not a garbage value, for ALL weapons.
 	m_chargeReady = 0;
 	
@@ -2246,11 +2247,16 @@ void CBasePlayerWeapon::OnAddPrimaryAmmoAsNewWeapon(void) {
 float CBasePlayerWeapon::getPlayerBaseFOV(void){
 	//FOV info is stored in the player.
 	return m_pPlayer->getBaseFOV();
-}//END OF getPlayerBaseFOV
+}
+
+int CBasePlayerWeapon::getFramesSinceRestore(void){
+	// instance var here
+	return m_pPlayer->m_framesSinceRestore;
+}
 
 
 
 
 //MODDD - NOTE.  SaveData for weapons moved to their own files, surrounded by 'ifndef CLIENT_DLL',
-// since this file (weapons.cpp) has always been serverside only, and specific weapons files like glock.cpp are
-// shared (need to specify being for only either side).
+// since this file (weapons.cpp) has always been serverside only, and specific weapons files like
+// glock.cpp are shared (need to specify being for only clientside).

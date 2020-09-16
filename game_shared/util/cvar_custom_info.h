@@ -723,7 +723,7 @@
 #define DEFAULT_sv_gargantua_throwattack 1
 #define DEFAULT_cl_viewpunch_mod 1
 #define DEFAULT_cl_gauss_viewpunch_mod 1
-
+#define DEFAULT_pathfindMonsterclipFreshLogic 2
 
 
 

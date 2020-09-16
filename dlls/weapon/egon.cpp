@@ -55,7 +55,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonHitCloud);
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonRadiusDamageMode)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(egonFireRateMode)
 
-extern BOOL g_firstFrameSinceRestore;
+
 
 //MODDD - several things moved to the new egon.h for commonly including client/serverside
 // (less redundancy in ev_hldm.cpp)
@@ -398,13 +398,20 @@ void CEgon::Attack( void )
 			m_flAmmoUseTime = gpGlobals->time;// start using ammo ASAP.
 
 
-			easyPrintLine("PLAYBACK_EVENT_FULL egstar");
+			easyPrintLine("PLAYBACK_EVENT_FULL egstar IgnoreIdleTime over? %d", (gpGlobals->time >= ignoreIdleTime) );
 			if(gpGlobals->time >= ignoreIdleTime){
 				// ok
 				PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 1, 0 );
 			}else{
+				/*
 				// coming from transition, use the other flag ya hooligan
 				PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 0, 1 );
+				// ALSO.  Don't play the continual fire sound later like normal logic would, it's meant 
+				// to play after the startup sound ends but since this is starting with the cointonual 
+				// sound it just overlaps with the one already playing and sounds odd.
+				easyPrintLine("***BEEPO***");
+				pev->fuser1 = UTIL_WeaponTimeBase() + 1000;
+				*/
 			}
 				
 #ifdef CLIENT_DLL
@@ -456,7 +463,7 @@ void CEgon::Attack( void )
 			
 			//if ( m_flReleaseThrow <= UTIL_WeaponTimeBase() )
 			//if(gpGlobals->time >= m_flReleaseThrow)
-			if(pev->fuser1 <= UTIL_WeaponTimeBase())
+			if(!blockContinualFireSound && pev->fuser1 <= UTIL_WeaponTimeBase())
 			{
 				easyPrintLine("PLAYBACK_EVENT_FULL egloop");
 				PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 0, 0 );
@@ -535,8 +542,6 @@ CEgon::CEgon(void){
 	
 	canStartSecondary = TRUE;
 	secondarySwitched = FALSE;
-	holdingPrimary = FALSE;
-	holdingSecondary = TRUE;
 
 	queueAnim = -1;
 
@@ -605,6 +610,9 @@ CEgon::CEgon(void){
 	previousScorchLocSet = FALSE;
 	recentlyDamagedEntity = NULL;
 	ignoreIdleTime = -1;
+
+	blockContinualFireSound = FALSE;
+
 
 }//END OF CEgon constructor
 
@@ -679,12 +687,7 @@ int CEgon::Restore(CRestore& restore){
 		setchargeReady(5 + -4);
 	}
 
-	// HACK: is forcing m_fireState to off a good idea to force resending the 'startfire' playback?
-	// TEST THAT
-
 	pev->fuser1 = fuser1_store;
-
-	g_firstFrameSinceRestore = TRUE;
 
 
 	return result;
@@ -694,54 +697,75 @@ int CEgon::Restore(CRestore& restore){
 
 void CEgon::onFreshFrame(void){
 
-	ignoreIdleTime = gpGlobals->time + 0.8;
+	BOOL holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
+	BOOL holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 
-	//easyForcePrintLine("IM rather MAD");
+	float framesSinceRestore = getFramesSinceRestore();
 
-	m_fireState = FIRE_OFF;
-	fireStatePrev = FIRE_OFF;
-	lockedFireState = FALSE;
-
-
-
-	/*
-	effectsExist = FALSE;
-	DestroyEffect();
-
-
-	if(m_pPlayer != NULL){
-	BOOL bMakeNoise = FALSE;
-	if ( m_fireState != FIRE_OFF ) //Checking the button just in case!.
-	bMakeNoise = TRUE;
-	PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, m_pPlayer->edict(), m_usEgonStop, 0, (float *)&m_pPlayer->pev->origin, (float *)&m_pPlayer->pev->angles, 0.0, 0.0, bMakeNoise, 0, 0, 0 );
+	if(framesSinceRestore == 0 || holdingSecondary || holdingPrimary){
+		easyPrintLine("EGON: ignoreIdleTime");
+		ignoreIdleTime = gpGlobals->time + 0.3;
 	}
-	*/
 
-	if(getchargeReady() == 5 + 1){
+	if(framesSinceRestore == 0){
+
+		//easyForcePrintLine("IM rather MAD");
+
+		m_fireState = FIRE_OFF;
+		fireStatePrev = FIRE_OFF;
+		lockedFireState = FALSE;
+
+		/*
+		effectsExist = FALSE;
+		DestroyEffect();
+
+
 		if(m_pPlayer != NULL){
-			BOOL bMakeNoise = FALSE;
-			if ( m_fireState != FIRE_OFF ) //Checking the button just in case!.
-				bMakeNoise = TRUE;
-
-			int flags;
-#if defined( CLIENT_WEAPONS )
-			flags = FEV_NOTHOST;
-#else
-			flags = 0;
-#endif
-
-#ifdef CLIENT_DLL
-			fuckfuckfuckfuckfuck = 5;
-			FuckFlag = TRUE;
-#endif
-			flags |= FEV_GLOBAL | FEV_RELIABLE;
-			// 2nd bool used instead.  That means, create the effect but use the running-sound instead of the startup sound.
-			PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 0, 1 );
+		BOOL bMakeNoise = FALSE;
+		if ( m_fireState != FIRE_OFF ) //Checking the button just in case!.
+		bMakeNoise = TRUE;
+		PLAYBACK_EVENT_FULL( FEV_GLOBAL | FEV_RELIABLE, m_pPlayer->edict(), m_usEgonStop, 0, (float *)&m_pPlayer->pev->origin, (float *)&m_pPlayer->pev->angles, 0.0, 0.0, bMakeNoise, 0, 0, 0 );
 		}
-	}
+		*/
 
 
-	m_chargeReady |= 32;  // let me fire damn you
+		int maCharge = getchargeReady();
+
+		easyPrintLine("HOW GOES IT MY MAN %d", maCharge);
+
+		// firing in primary or secondary?
+		if(maCharge == 5 + 1 || maCharge == 6 + 1){
+			if(m_pPlayer != NULL){
+
+				BOOL bMakeNoise = FALSE;
+				if ( m_fireState != FIRE_OFF ) //Checking the button just in case!
+					bMakeNoise = TRUE;
+
+				int flags;
+	#if defined( CLIENT_WEAPONS )
+				flags = FEV_NOTHOST;
+	#else
+				flags = 0;
+	#endif
+
+	#ifdef CLIENT_DLL
+				fuckfuckfuckfuckfuck = 5;
+				FuckFlag = TRUE;
+	#endif
+				flags |= FEV_GLOBAL | FEV_RELIABLE;
+				// 2nd bool used instead.  That means, create the effect but use the running-sound instead of the startup sound.
+				PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usEgonFire, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, 0.0, 0.0, m_fireState, m_fInAttack, 0, 1 );
+
+				blockContinualFireSound = TRUE;
+				// don't play the continual sound later, it's already the first playing for firing while going over a transition
+				// Why isn't setting it here working??  No blimey idea
+				//pev->fuser1 = UTIL_WeaponTimeBase() + 1000;
+			}
+		}
+
+
+		m_chargeReady |= 32;  // let me fire damn you
+	}//framesSinceRestore check
 }
 
 
@@ -823,13 +847,12 @@ void CEgon::ItemPostFrameThink(void){
 
 	BOOL sendFidgetOnOff = TRUE;
 
-	if(g_firstFrameSinceRestore){
+	if(getFramesSinceRestore() < 3){
 		onFreshFrame();
 	}
 
-
-	holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
-	holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
+	BOOL holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
+	BOOL holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 	
 	BOOL fireException = (m_fireState == FIRE_CHARGE && !(m_chargeReady & 32) && HasAmmo());
 

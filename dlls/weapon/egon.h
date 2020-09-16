@@ -62,9 +62,9 @@ public:
 
 private:
 	float			m_shootTime;
-	EGON_FIREMODE		m_fireMode;
+	EGON_FIREMODE	m_fireMode;
 	float			m_shakeTime;
-	BOOL				m_deployed;
+	BOOL			m_deployed;
 
 	unsigned short m_usEgonFire;
 
@@ -76,8 +76,6 @@ public:
 
 	BOOL canStartSecondary;
 	BOOL secondarySwitched;
-	BOOL holdingPrimary;
-	BOOL holdingSecondary;
 
 	//BOOL waitForAnimReset;
 	int queueAnim;
@@ -102,7 +100,7 @@ public:
 
 	float timeDelta;
 	int lastSentAnim;
-
+	BOOL blockContinualFireSound;
 
 
 

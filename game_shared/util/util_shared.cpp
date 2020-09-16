@@ -116,7 +116,10 @@ extern char GET_GAME_PATH_VAR[];
 EASY_CVAR_EXTERN_MASS
 
 
-BOOL g_firstFrameSinceRestore = FALSE;;
+// Now for client only (serverside uses a player instance var)
+#ifdef CLIENT_DLL
+int g_framesSinceRestore = 0;
+#endif
 
 
 

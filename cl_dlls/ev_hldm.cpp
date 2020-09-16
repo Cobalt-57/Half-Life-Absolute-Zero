@@ -1316,8 +1316,6 @@ void EV_FirePython(event_args_t* args)
 
 	if (EV_IsLocal(idx))
 	{
-
-
 		// Python uses different body in multiplayer versus single player
 		//MODDD - this will be handled by the sender, python.cpp, instead of right here.  Rely on "InAttack" as a received parameter.
 		//int multiplayer = gEngfuncs.GetMaxClients() == 1 ? 0 : 1;
@@ -1447,7 +1445,7 @@ void EV_FireGauss(event_args_t* args)
 	if (args->bparam2)
 	{
 		EV_StopPreviousGauss(idx);
-		//easyForcePrintLine("GAUSS: FireGauss: redirect to StopPrevious");
+		//easyPrintLine("GAUSS: FireGauss: redirect to StopPrevious");
 		return;
 	}
 	//easyForcePrintLine("GAUSS: FireGauss");
@@ -1619,12 +1617,12 @@ void EV_FireGauss(event_args_t* args)
 	}
 
 
-
-
+	//easyForcePrintLine("HERE COMES MAH BEAM");
 
 //NOTE: on any changes, sync me up with gauss.cpp (server-side)'s "Fire" method with a similar loop.
 	while (fFirstBeam || flDamage >= 10 && nMaxHits > 0)
 	{
+		//easyForcePrintLine("beamo...");
 
 		nMaxHits--;
 
@@ -1760,7 +1758,6 @@ void EV_FireGauss(event_args_t* args)
 						// BETTER: just use the gun origin at this point dangit.
 						// Or not even it maps to the barrel.  Oooookay.
 						//fireOrigin = gunOrig;
-						int i = 0;
 						fireOrigin = vecSrc + 16 * forward + 8 * right + -12 * up;
 					}
 
@@ -1892,18 +1889,28 @@ void EV_FireGauss(event_args_t* args)
 			}
 			else
 			{
+				int itr = 0;
+
 				//MODDD - factors in the max damage of 600 now, if that comes up.
 				float glowEffectOpacity;
+				float glowEffectScale;
 				// used to be this:    flDamage / 255.0
 				if (flDamage <= 10) {
-					glowEffectOpacity = 0.2;
+					glowEffectOpacity = 0.30;
+					glowEffectScale = 0.70;
 				}
-				else if (flDamage <= 180) {
-					glowEffectOpacity = 0.2 + (flDamage - 10)/(180.0-10.0) * 0.53;
+				else if (flDamage <= 200) {
+					// to 1.2
+					glowEffectOpacity = 0.30 + (flDamage - 10)/(200.0-10.0) * 0.90;  //0.53
+					// to 0.9
+					glowEffectScale = 0.70 + (flDamage - 10)/(200.0-10.0) * 0.20;
 				}
 				else {
 					// deminishing returns towards 1.0
-					glowEffectOpacity = min(0.2 + (180.0 - 10)/ (180.0 - 10.0) * 0.53 + (flDamage - 180)/(600.0-180.0) * 0.27, 1);
+					// NOW towards 2.3 instead (going over 1 draws the image the whole-number of times in place, another partial
+					// for the decimal)
+					glowEffectOpacity = min(0.30 + 1 * 0.90 + (flDamage - 200.0)/(600.0-200.0) * 1.1, 2.3);
+					glowEffectScale = min(0.70 + 1 * 0.20 + (flDamage - 200.0)/(600.0-200.0) * 0.30, 1.2);
 				}
 
 
@@ -1912,10 +1919,26 @@ void EV_FireGauss(event_args_t* args)
 
 
 #if DISABLE_GAUSS_GLOW != 1
-				gEngfuncs.pEfxAPI->R_TempSprite(tr.endpos, vec3_origin, 1.0, m_iGlow, kRenderGlow, kRenderFxNoDissipation, glowEffectOpacity, 6.0, FTENT_FADEOUT);
+				while(glowEffectOpacity >= 1){
+					// Draw at opacity 1 each whole time that ifts.
+					// Unsure why but fudging the positions of overlaying sprites ever so slightly
+					// reduces the chances of some of them failing to redner at times.
+					gEngfuncs.pEfxAPI->R_TempSprite(tr.endpos - (forward * (itr * 0.06)), vec3_origin, glowEffectScale, m_iGlow, kRenderGlow, kRenderFxNoDissipation, 1.0f, 6.0, FTENT_FADEOUT);
+					glowEffectOpacity -= 1;
+					itr += 1;
+				}
+				// and the remainder (at least 0, under 1), if there is any.
+				if(glowEffectOpacity > 0){
+					gEngfuncs.pEfxAPI->R_TempSprite(tr.endpos - (forward * (itr * 0.06)), vec3_origin, glowEffectScale, m_iGlow, kRenderGlow, kRenderFxNoDissipation, glowEffectOpacity, 6.0, FTENT_FADEOUT);
+				}
 #endif
+
+
+
+
+
 				// limit it to one hole punch
-				if (fHasPunched)
+				if(fHasPunched)
 				{
 					break;
 				}
@@ -2074,7 +2097,7 @@ void EV_FireGauss(event_args_t* args)
 			}
 
 		}
-	}//END OF while(...)
+	}//END OF while
 }
 //======================
 //	   GAUSS END 
@@ -2541,10 +2564,7 @@ void EV_EgonFire(event_args_t* args)
 	//easyForcePrintLine("EV_EgonFire pid: %d  islocal? %d dathing %d othathing: %.2f", idx, EV_IsLocal(idx), iStartup, cl_lw->value );
 
 
-
 	if ( 1 ){
-
-	//if (1) {
 		//gets the spiral.
 
 		//MODDD - SAFETY.  If for whatever reason the effect has not been created yet, ignore iStartup being 0.
@@ -2829,9 +2849,9 @@ void EV_EgonFire(event_args_t* args)
 	//}
 
 	*/
-
-
+	
 }//END OF EV_EgonFire
+
 
 void EV_EgonStop(event_args_t* args)
 {

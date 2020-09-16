@@ -29,7 +29,7 @@ TYPEDESCRIPTION	CHornetKingpin::m_SaveData[] =
 {
 
 	DEFINE_FIELD( CHornetKingpin, expireTime, FIELD_TIME ),
-	DEFINE_FIELD( CHornetKingpin, speedMissileDartTarget, FIELD_VECTOR ),
+	DEFINE_FIELD( CHornetKingpin, speedMissileDartTarget, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CHornetKingpin, speedMissileDartTargetOffset, FIELD_VECTOR ),
 	DEFINE_FIELD( CHornetKingpin, speedMissileDartDirection, FIELD_VECTOR ),
 	

@@ -115,7 +115,8 @@ public:
 	float  m_flMinZ;
 	float  m_flMaxZ;
 
-	Vector m_vecGoal;
+	//MODDD - never used.  what?
+	//Vector m_vecGoal;
 
 	float m_flLastSeen;
 	float m_flPrevSeen;
@@ -173,7 +174,7 @@ TYPEDESCRIPTION	CNihilanth::m_SaveData[] =
 	DEFINE_FIELD( CNihilanth, m_posDesired, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CNihilanth, m_flMinZ, FIELD_FLOAT ),
 	DEFINE_FIELD( CNihilanth, m_flMaxZ, FIELD_FLOAT ),
-	DEFINE_FIELD( CNihilanth, m_vecGoal, FIELD_VECTOR ),
+	//DEFINE_FIELD( CNihilanth, m_vecGoal, FIELD_VECTOR ),
 	DEFINE_FIELD( CNihilanth, m_flLastSeen, FIELD_TIME ),
 	DEFINE_FIELD( CNihilanth, m_flPrevSeen, FIELD_TIME ),
 	DEFINE_FIELD( CNihilanth, m_irritation, FIELD_INTEGER ),

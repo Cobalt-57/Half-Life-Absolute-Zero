@@ -636,6 +636,7 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sv_explosion_shake_freq, sv_explosion_shake_freq)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sv_explosion_shake_duration, sv_explosion_shake_duration)\
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(sv_gargantua_throwattack, sv_gargantua_throwattack)\
+	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindMonsterclipFreshLogic, pathfindmonsterclipfreshlogic)\
 	DUMMY
 
 // IMPORTANT!  Keep HIDDEN_CVAR_INFO_LENGTH (dlls/client.cpp) in check with any changes to the number of entries above
@@ -1103,6 +1104,7 @@
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(sv_explosion_shake_freq)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(sv_explosion_shake_duration)\
 	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(sv_gargantua_throwattack)\
+	EASY_CVAR_HIDDEN_SAVE_SERVERONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -1568,6 +1570,7 @@
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(sv_explosion_shake_freq, sv_explosion_shake_freq)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(sv_explosion_shake_duration, sv_explosion_shake_duration)\
 	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(sv_gargantua_throwattack, sv_gargantua_throwattack)\
+	EASY_CVAR_HIDDEN_LOAD_SERVERONLY(pathfindMonsterclipFreshLogic, pathfindmonsterclipfreshlogic)\
 	DUMMY
 
 
@@ -2092,6 +2095,7 @@
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_DECLARATION_SERVER_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_DECLARATION_SERVER_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -2615,6 +2619,7 @@
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_DECLARATION_CLIENT_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_DECLARATION_CLIENT_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -3137,6 +3142,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_UPDATE_SERVER_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_UPDATE_SERVER_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -3662,6 +3668,7 @@
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -4186,6 +4193,7 @@
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_UPDATE_CLIENT_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_UPDATE_CLIENT_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -4709,6 +4717,7 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -5231,6 +5240,7 @@
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -5753,6 +5763,7 @@
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -6274,6 +6285,7 @@
 	EASY_CVAR_RESET_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_RESET_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_RESET_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_RESET_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -6796,6 +6808,7 @@
 	EASY_CVAR_EXTERN_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_EXTERN_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_EXTERN_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_EXTERN_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
 
 
@@ -7320,7 +7333,9 @@
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(sv_gargantua_throwattack)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_CLIENTONLY(cl_viewpunch_mod)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_CLIENTONLY(cl_gauss_viewpunch_mod)\
+	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	DUMMY
+
 
 
 

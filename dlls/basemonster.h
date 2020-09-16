@@ -318,6 +318,14 @@ typedef enum
 
 
 
+// an array of waypoints makes up the monster's route. 
+struct WayPoint_t
+{
+	Vector vecLocation;
+	int iType;
+};
+
+
 //
 // generic Monster
 //
@@ -353,11 +361,14 @@ public:
 
 	EHANDLE				m_hOldEnemy[MAX_OLD_ENEMIES];
 	Vector				m_vecOldEnemy[MAX_OLD_ENEMIES];
-	// NEW.  Have the zoffsets too.
+	// NEW.  Have the zoffsets too.  And VIEWOFS's.  Although should those just be stored as floats?
 	float				m_flOldEnemy_zOffset[MAX_OLD_ENEMIES];
+	Vector				m_vecOldEnemy_ViewOFS[MAX_OLD_ENEMIES];
+
 	// It shall use the stack!
 	// Use this variable to record the most recent addition to take instead.
 	int m_intOldEnemyNextIndex;
+
 
 
 	float			m_flFieldOfView;// width of monster's field of view ( dot product )
@@ -376,7 +387,7 @@ public:
 	Schedule_t* m_pSchedule;
 	int				m_iScheduleIndex;
 
-	WayPoint_t			m_Route[ROUTE_SIZE];	// Positions of movement
+	WayPoint_t		m_Route[ROUTE_SIZE];	// Positions of movement
 	int				m_movementGoal;			// Goal that defines route
 	int				m_iRouteIndex;			// index into m_Route[]
 	//MODDD - and why wasn't the number of nodes in the current route ever recorded to a var?
@@ -547,6 +558,7 @@ public:
 	BOOL strictNodeTolerance;
 	float goalDistTolerance;
 	BOOL recentTimedTriggerDamage;
+	float recentMoveExecuteFailureCooldown;
 
 	Vector respawn_origin;
 	Vector respawn_angles;

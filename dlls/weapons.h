@@ -15,7 +15,6 @@
 #ifndef WEAPONS_H
 #define WEAPONS_H
 
-
 #include "cbase.h"  //why not?!
 #include "animating.h"
 #include "basemonster.h"
@@ -276,6 +275,12 @@ extern DLL_GLOBAL short g_sModelIndexBloodDrop;// holds the sprite index for blo
 extern DLL_GLOBAL short g_sModelIndexBloodSpray;// holds the sprite index for blood spray (bigger)
 
 extern int gmsgWeapPickup;
+
+
+
+#ifdef CLIENT_DLL
+extern int g_framesSinceRestore;
+#endif
 
 
 
@@ -696,6 +701,9 @@ public:
 	// Wanted to make this inline with 'ifdef's for CLIENT_DLL and not, but the player has to be defined at this point.
 	// So see implementations in cl_dlls/hl/hl_baseentity.cpp and dlls/weapons.cpp.
 	float getPlayerBaseFOV(void);
+	//MODDD - get 'framesSinceRestore' between client and serverside.
+	int getFramesSinceRestore(void);
+
 
 
 	virtual CBasePlayerItem *GetWeaponPtr( void ) { return (CBasePlayerItem *)this; }
@@ -705,8 +713,6 @@ public:
 		m_flNextPrimaryAttack = targetTime;
 		m_flNextSecondaryAttack = targetTime;
 	}
-
-
 
 	//MODDD - new var.  Like "pev->button" from the player, but accounts for whether firing with the weapon is allowed at the moment (can't be done in weapons themselves, only in weapons.cpp)
 	// Are this and bothFireButtonsMode still used/necessary?

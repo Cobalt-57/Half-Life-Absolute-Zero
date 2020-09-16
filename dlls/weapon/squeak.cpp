@@ -67,6 +67,7 @@ float CSqueakGrenade::m_flNextBounceSoundTime = 0;
 TYPEDESCRIPTION	CSqueakGrenade::m_SaveData[] = 
 {
 	DEFINE_FIELD( CSqueakGrenade, m_flDie, FIELD_TIME ),
+	// ok, vecTarget is a direction, not a position (which would have needed FIELD_POSITION_VECTOR instead.
 	DEFINE_FIELD( CSqueakGrenade, m_vecTarget, FIELD_VECTOR ),
 	DEFINE_FIELD( CSqueakGrenade, m_flNextHunt, FIELD_TIME ),
 	DEFINE_FIELD( CSqueakGrenade, m_flNextHit, FIELD_TIME ),

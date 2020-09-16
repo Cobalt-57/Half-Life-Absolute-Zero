@@ -591,8 +591,8 @@ void CHalfLifeMultiplay::PlayerThink( CBasePlayer *pPlayer )
 //=========================================================
 void CHalfLifeMultiplay::PlayerSpawn( CBasePlayer *pPlayer )
 {
-	BOOL		addDefault;
-	CBaseEntity	*pWeaponEntity = NULL;
+	BOOL addDefault;
+	CBaseEntity *pWeaponEntity = NULL;
 
 	pPlayer->pev->weapons |= (1<<WEAPON_SUIT);
 	
@@ -655,6 +655,26 @@ int CHalfLifeMultiplay::IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKi
 //=========================================================
 void CHalfLifeMultiplay::PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pInflictor )
 {
+
+	//MODDD - have some null checks
+	if(pVictim == NULL){
+		// no victim.    ....... what.
+		const char* killerClassname;
+		const char* inflictorClassname;
+		if (pKiller != NULL) { killerClassname = STRING(pKiller->classname); }else { killerClassname = "NULL"; }
+		if (pInflictor != NULL) { inflictorClassname = STRING(pInflictor->classname); }else { inflictorClassname = "NULL"; }
+		easyPrintLine("WARNING: PlayerKilled: No victim, call ignored.  pKiller classname:%s pInflictor classname:%s", killerClassname, inflictorClassname);
+		return;
+	}
+
+	// And don't let gibbing/killing in console while dead cause problems.
+	if (pKiller == NULL) {
+		pKiller = pVictim->pev;
+	}
+	/////////////////////////////////////////////////////////////////
+
+
+
 	DeathNotice( pVictim, pKiller, pInflictor );
 
 	pVictim->m_iDeaths += 1;
@@ -720,12 +740,6 @@ void CHalfLifeMultiplay::PlayerKilled( CBasePlayer *pVictim, entvars_t *pKiller,
 //=========================================================
 void CHalfLifeMultiplay::DeathNotice( CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pevInflictor )
 {
-
-	//MODDD - don't let gibbing/killing in console while dead cause problems.
-	if (pKiller == NULL) {
-		pKiller = pVictim->pev;
-	}
-
 	// Work out what killed the player, and send a message to all clients about it
 	CBaseEntity *Killer = CBaseEntity::Instance( pKiller );
 

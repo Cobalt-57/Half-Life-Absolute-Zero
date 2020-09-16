@@ -94,6 +94,7 @@
     <ClCompile Include="entity\pickupwalker.cpp" />
     <ClCompile Include="entity\plats.cpp" />
     <ClCompile Include="entity\player.cpp" />
+    <ClCompile Include="entity\player_extra.cpp" />
     <ClCompile Include="entity\rat.cpp" />
     <ClCompile Include="entity\roach.cpp" />
     <ClCompile Include="entity\scientist.cpp" />
@@ -203,6 +204,7 @@
     <ClInclude Include="entity\pickupwalker.h" />
     <ClInclude Include="entity\plats.h" />
     <ClInclude Include="entity\player.h" />
+    <ClInclude Include="entity\player_extra.h" />
     <ClInclude Include="entity\scientist.h" />
     <ClInclude Include="entity\scripted.h" />
     <ClInclude Include="entity\snapbug.h" />

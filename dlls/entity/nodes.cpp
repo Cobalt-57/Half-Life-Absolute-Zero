@@ -35,7 +35,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(nodeDetailPrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreNearestNodeCache)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreStaticRoutes)
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindNearestNodeExtra)
-
+EASY_CVAR_EXTERN_DEBUGONLY(pathfindMonsterclipFreshLogic)
 
 //MODDD - retail behavior HULL_STEP_SIZE is 16!
 #define HULL_STEP_SIZE 16// how far the test hull moves on each step
@@ -825,7 +825,7 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 	if (
 		EASY_CVAR_GET(pathfindIgnoreStaticRoutes) != 1 &&
 		m_fRoutingComplete &&
-		(g_routeTempMonster==NULL || !(g_routeTempMonster->pev->flags & FL_MONSTERCLIP)) &&
+		(EASY_CVAR_GET_DEBUGONLY(pathfindMonsterclipFreshLogic) == 0 || g_routeTempMonster==NULL || !(g_routeTempMonster->pev->flags & FL_MONSTERCLIP)) &&
 		iHull >= 0 && iHull < MAX_NODE_HULLS
 	)
 	{
@@ -862,7 +862,15 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 	else
 	{
 		// Can't rely on built-in logic for FL_MONSTERCLIP, didn't factor that in.
-		BOOL theHardWay = (g_routeTempMonster!=NULL && g_routeTempMonster->pev->flags & FL_MONSTERCLIP);
+		BOOL theHardWay;
+		
+		if(EASY_CVAR_GET_DEBUGONLY(pathfindMonsterclipFreshLogic) != 0){
+			theHardWay = (g_routeTempMonster != NULL && g_routeTempMonster->pev->flags & FL_MONSTERCLIP);
+		}else{
+			// no check.
+			theHardWay = FALSE;
+		}
+
 
 		CQueuePriority	queue;
 
@@ -929,15 +937,27 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 						continue;
 					}
 				}else{
+
 					CNode* srcNode = &m_pNodes[m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_iSrcNode];
 					CNode* destNode = &m_pNodes[m_pLinkPool[m_pNodes[iCurrentNode].m_iFirstLink + i].m_iDestNode];
 
-					// running into your enemy is always a good thing.  Right?
-					BOOL succ = g_routeTempMonster->CheckLocalMove(srcNode->m_vecOrigin, destNode->m_vecOrigin, g_routeTempMonster_GoalEnt, TRUE, NULL) == LOCALMOVE_VALID;
-					if(!succ){
-						continue;
+					if(EASY_CVAR_GET_DEBUGONLY(pathfindMonsterclipFreshLogic) == 1){
+						TraceResult tr;
+						UTIL_TraceLine(srcNode->m_vecOriginPeek, destNode->m_vecOriginPeek, dont_ignore_monsters, ENT(g_routeTempMonster->pev), &tr);
+						if(tr.flFraction >= 1.0 || (tr.pHit != NULL && g_routeTempMonster_GoalEnt != NULL && tr.pHit == g_routeTempMonster_GoalEnt->edict())  ){
+							// uninterrupted line, or the thing hit was the goal ent?  Allow
+						}else{
+							// nope
+							continue;
+						}
+					}else if(EASY_CVAR_GET_DEBUGONLY(pathfindMonsterclipFreshLogic) == 2){
+						// running into your enemy is always a good thing.  Right?
+						BOOL succ = g_routeTempMonster->CheckLocalMove(srcNode->m_vecOrigin, destNode->m_vecOrigin, g_routeTempMonster_GoalEnt, TRUE, NULL) == LOCALMOVE_VALID;
+						if(!succ){
+							continue;
+						}
 					}
-				}
+				}//theHardWay
 
 
 

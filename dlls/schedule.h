@@ -318,14 +318,6 @@ struct Schedule_t
 	const char *pName;
 };
 
-// an array of waypoints makes up the monster's route. 
-// !!!LATER- this declaration doesn't belong in this file.
-struct WayPoint_t
-{
-	Vector	vecLocation;
-	int	iType;
-};
-
 // these MoveFlag values are assigned to a WayPoint's TYPE in order to demonstrate the 
 // type of movement the monster should use to get there.
 #define bits_MF_TO_TARGETENT		( 1 << 0 ) // local move to targetent.

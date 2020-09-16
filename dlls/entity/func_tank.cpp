@@ -23,6 +23,14 @@
 #include "player.h"
 
 
+
+//MODDD - save types for m_sightOrigin and m_vecControllerUsePos changed
+// from FIELD_VECTOR to FIELD_POSITION_VECTOR, since they are meant to be 
+// positions on the map (m_barrelPos is relative instead).
+
+
+
+
 #define SF_TANK_ACTIVE			0x0001
 #define SF_TANK_PLAYER			0x0002
 #define SF_TANK_HUMANS			0x0004
@@ -100,7 +108,7 @@ public:
 protected:
 	CBasePlayer* m_pController;
 	float	m_flNextAttack;
-	Vector		m_vecControllerUsePos;
+	Vector	m_vecControllerUsePos;
 	
 	float	m_yawCenter;	// "Center" yaw
 	float	m_yawRate;		// Max turn rate to track targets
@@ -154,10 +162,10 @@ TYPEDESCRIPTION	CFuncTank::m_SaveData[] =
 	DEFINE_FIELD( CFuncTank, m_iszSpriteSmoke, FIELD_STRING ),
 	DEFINE_FIELD( CFuncTank, m_iszSpriteFlash, FIELD_STRING ),
 	DEFINE_FIELD( CFuncTank, m_bulletType, FIELD_INTEGER ),
-	DEFINE_FIELD( CFuncTank, m_sightOrigin, FIELD_VECTOR ),
+	DEFINE_FIELD( CFuncTank, m_sightOrigin, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CFuncTank, m_spread, FIELD_INTEGER ),
 	DEFINE_FIELD( CFuncTank, m_pController, FIELD_CLASSPTR ),
-	DEFINE_FIELD( CFuncTank, m_vecControllerUsePos, FIELD_VECTOR ),
+	DEFINE_FIELD( CFuncTank, m_vecControllerUsePos, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CFuncTank, m_flNextAttack, FIELD_TIME ),
 	DEFINE_FIELD( CFuncTank, m_iBulletDamage, FIELD_INTEGER ),
 	DEFINE_FIELD( CFuncTank, m_iszMaster, FIELD_STRING ),

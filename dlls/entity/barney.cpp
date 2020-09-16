@@ -992,7 +992,17 @@ void CBarney::BarneyFirePistol ( void )
 
 	UTIL_MakeVectors(pev->angles);
 	vecShootOrigin = GetGunPosition();
-	Vector vecShootDir = ShootAtEnemyMod( vecShootOrigin );
+
+
+	Vector vecShootDir;
+	if(m_hEnemy != NULL && FClassnameIs(m_hEnemy->pev, "monster_zombie")){
+		// I'll aim for the head.  If I can find it.
+		vecShootDir = ShootAtEnemyEyes(vecShootOrigin);
+	}else{
+		// eh, default
+		vecShootDir = ShootAtEnemyMod(vecShootOrigin);
+	}
+
 
 	//MODDD - do this every frame with an enemy active instead.  Like TASK_RANGE_ATTACK1 ?
 	//Vector angDir = UTIL_VecToAngles( vecShootDir );

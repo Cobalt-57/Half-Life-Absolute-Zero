@@ -35,6 +35,7 @@
 #include "game.h"
 #include "hltv.h"
 #include "gib.h"
+#include "player_extra.h"
 #include "util_debugdraw.h"
 #include "satchel.h"
 // only included to see what some default AI schedules are such as "slSmallFlinsh" for another
@@ -107,8 +108,6 @@ EASY_CVAR_EXTERN(precacheAll)
 EASY_CVAR_EXTERN(blastExtraArmorDamageMode)
 EASY_CVAR_EXTERN(sv_player_midair_fix)
 EASY_CVAR_EXTERN(sv_player_midair_accel)
-
-
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteclip)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
@@ -116,11 +115,6 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)
-
-
-extern BOOL g_firstFrameSinceRestore;
-
-
 
 
 
@@ -169,6 +163,9 @@ extern BOOL g_firstFrameSinceRestore;
 //extern cvar_t* cvar_sv_cheats;
 //MODDD
 extern unsigned short g_sFreakyLight;
+// nope, for the player serverside
+//extern int g_framesSinceRestore;
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -186,6 +183,7 @@ extern edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer );
 extern CGraph WorldGraph;
 extern DLL_GLOBAL ULONG g_ulFrameCount;
 extern BOOL g_firstPlayerEntered;
+extern float g_flWeaponCheat;
 
 
 
@@ -194,7 +192,7 @@ int gEvilImpulse101;
 // Also, FNullEnt moved to util_entity.h.  Because why would only the player want this.
 DLL_GLOBAL CBaseEntity* g_pLastSpawn;
 BOOL gInitHUD = TRUE;
-
+BOOL g_giveWithoutTargetLocation = FALSE;
 
 
 
@@ -468,7 +466,242 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 };
 
 
-//MODDD - LinkUserMessages and message ID's moved to client.cpp.
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// GLOBAL METHODS, sit at the top.
+
+// LinkUserMessages and message ID's moved to client.cpp.
+// global methods VecVelocityForDamage, ThrowGib, and ThrowHead removed, unused or otherwise dead code.
+
+
+int TrainSpeed(int iSpeed, int iMax)
+{
+	float fSpeed, fMax;
+	int iRet = 0;
+
+	fMax = (float)iMax;
+	fSpeed = iSpeed;
+
+	fSpeed = fSpeed/fMax;
+
+	if (iSpeed < 0)
+		iRet = TRAIN_BACK;
+	else if (iSpeed == 0)
+		iRet = TRAIN_NEUTRAL;
+	else if (fSpeed < 0.33)
+		iRet = TRAIN_SLOW;
+	else if (fSpeed < 0.66)
+		iRet = TRAIN_MEDIUM;
+	else
+		iRet = TRAIN_FAST;
+
+	return iRet;
+}
+
+
+
+// checks if the spot is clear of players
+BOOL IsSpawnPointValid( CBaseEntity *pPlayer, CBaseEntity *pSpot )
+{
+	CBaseEntity *ent = NULL;
+
+	if ( !pSpot->IsTriggered( pPlayer ) )
+	{
+		return FALSE;
+	}
+
+	while ( (ent = UTIL_FindEntityInSphere( ent, pSpot->pev->origin, 128 )) != NULL )
+	{
+		// if ent is a client, don't spawn on 'em
+		if ( ent->IsPlayer() && ent != pPlayer )
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+//MODDD - moved from client.cpp.
+// called by ClientKill and DeadThink
+void respawn(entvars_t* pev, BOOL fCopyCorpse)
+{
+	if (gpGlobals->coop || gpGlobals->deathmatch)
+	{
+		if ( fCopyCorpse )
+		{
+			// make a copy of the dead body for appearances sake
+			CopyToBodyQue(pev);
+		}
+
+		// respawn player
+		GetClassPtr( (CBasePlayer *)pev)->Spawn( );
+	}
+	else
+	{       // restart the entire server
+		SERVER_COMMAND("reload\n");
+	}
+}
+
+
+/*
+============
+EntSelectSpawnPoint
+
+Returns the entity to spawn at
+
+USES AND SETS GLOBAL g_pLastSpawn
+============
+*/
+edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
+{
+	CBaseEntity *pSpot;
+	edict_t		*player;
+
+	player = pPlayer->edict();
+
+// choose a info_player_deathmatch point
+	if (g_pGameRules->IsCoOp())
+	{
+		pSpot = UTIL_FindEntityByClassname( g_pLastSpawn, "info_player_coop");
+		if ( !FNullEnt(pSpot) )
+			goto ReturnSpot;
+		pSpot = UTIL_FindEntityByClassname( g_pLastSpawn, "info_player_start");
+		if ( !FNullEnt(pSpot) ) 
+			goto ReturnSpot;
+	}
+	else if ( g_pGameRules->IsDeathmatch() )
+	{
+		pSpot = g_pLastSpawn;
+		// Randomize the start spot
+		for ( int i = RANDOM_LONG(1,5); i > 0; i-- )
+			pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
+		if ( FNullEnt( pSpot ) )  // skip over the null point
+			pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
+
+		CBaseEntity *pFirstSpot = pSpot;
+
+		do 
+		{
+			if ( pSpot )
+			{
+				// check if pSpot is valid
+				if ( IsSpawnPointValid( pPlayer, pSpot ) )
+				{
+					if ( pSpot->pev->origin == Vector( 0, 0, 0 ) )
+					{
+						pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
+						continue;
+					}
+
+					// if so, go to pSpot
+					goto ReturnSpot;
+				}
+			}
+			// increment pSpot
+			pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
+		} while ( pSpot != pFirstSpot ); // loop if we're not back to the start
+
+		// we haven't found a place to spawn yet,  so kill any guy at the first spawn point and spawn there
+		if ( !FNullEnt( pSpot ) )
+		{
+			CBaseEntity *ent = NULL;
+			while ( (ent = UTIL_FindEntityInSphere( ent, pSpot->pev->origin, 128 )) != NULL )
+			{
+				// if ent is a client, kill em (unless they are ourselves)
+				if ( ent->IsPlayer() && !(ent->edict() == player) )
+					ent->TakeDamage( VARS(INDEXENT(0)), VARS(INDEXENT(0)), 300, DMG_GENERIC );
+			}
+			goto ReturnSpot;
+		}
+	}
+
+	// If startspot is set, (re)spawn there.
+	//MODDD - order changed a bit.  If the tried 'gpGlobals->startspot' does not exist,
+	// make a printout about it and just use info_player_start.
+
+	if ( !FStringNull( gpGlobals->startspot ) && strlen(STRING(gpGlobals->startspot))){
+
+		pSpot = UTIL_FindEntityByTargetname( NULL, STRING(gpGlobals->startspot) );
+		if ( !FNullEnt(pSpot) ){
+			goto ReturnSpot;
+		}else{
+			easyForcePrintLine("WARNING!  Player Spawn: Startspot '%s' not found, falling back to default info_player_start", STRING(gpGlobals->startspot) );
+		}
+	}
+
+	
+	pSpot = UTIL_FindEntityByClassname(NULL, "info_player_start");
+	if ( !FNullEnt(pSpot) )
+		goto ReturnSpot;
+	
+
+ReturnSpot:
+	if ( FNullEnt( pSpot ) )
+	{
+		ALERT(at_error, "PutClientInServer: no info_player_start on level");
+		return INDEXENT(0);
+	}
+
+	g_pLastSpawn = pSpot;
+	return pSpot->edict();
+}
+
+
+
+
+
+
+// This is a glorious hack to find free space when you've crouched into some solid space
+// Our crouching collisions do not work correctly for some reason and this is easier
+// than fixing the problem :(
+void FixPlayerCrouchStuck( edict_t *pPlayer )
+{
+	TraceResult trace;
+
+	// Move up as many as 18 pixels if the player is stuck.
+	for ( int i = 0; i < 18; i++ )
+	{
+		UTIL_TraceHull( pPlayer->v.origin, pPlayer->v.origin, dont_ignore_monsters, head_hull, pPlayer, &trace );
+		if ( trace.fStartSolid )
+			pPlayer->v.origin.z ++;
+		else
+			break;
+	}
+}
+
+
+/*
+================
+CheckPowerups
+
+Check for turning off powerups
+
+GLOBALS ASSUMED SET:  g_ulModelIndexPlayer
+================
+*/
+static void CheckPowerups(entvars_t *pev)
+{
+	if (pev->health <= 0)
+		return;
+
+	pev->modelindex = g_ulModelIndexPlayer;    // don't use eyes
+}
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 
 
 
@@ -530,89 +763,6 @@ void CBasePlayer::PainChance( void )
 }//END OF PainChance
 
 
-
-//MODDD - whoops.  This wasn't commented out in the as-is codebase, but it's no longer referred
-// to so it may as well be.
-/*
-Vector VecVelocityForDamage(float flDamage)
-{
-	Vector vec(RANDOM_FLOAT(-100,100), RANDOM_FLOAT(-100,100), RANDOM_FLOAT(200,300));
-
-	if (flDamage > -50)
-		vec = vec * 0.7;
-	else if (flDamage > -200)
-		vec = vec * 2;
-	else
-		vec = vec * 10;
-	
-	return vec;
-}
-*/
-
-#if 0 /*
-static void ThrowGib(entvars_t *pev, char *szGibModel, float flDamage)
-{
-	edict_t *pentNew = CREATE_ENTITY();
-	entvars_t *pevNew = VARS(pentNew);
-
-	pevNew->origin = pev->origin;
-	SET_MODEL(ENT(pevNew), szGibModel);
-	UTIL_SetSize(pevNew, g_vecZero, g_vecZero);
-
-	pevNew->velocity		= VecVelocityForDamage(flDamage);
-	pevNew->movetype		= MOVETYPE_BOUNCE;
-	pevNew->solid			= SOLID_NOT;
-	pevNew->avelocity.x		= RANDOM_FLOAT(0,600);
-	pevNew->avelocity.y		= RANDOM_FLOAT(0,600);
-	pevNew->avelocity.z		= RANDOM_FLOAT(0,600);
-	CHANGE_METHOD(ENT(pevNew), em_think, SUB_Remove);
-	pevNew->ltime		= gpGlobals->time;
-	pevNew->nextthink	= gpGlobals->time + RANDOM_FLOAT(10,20);
-	pevNew->frame		= 0;
-	pevNew->flags		= 0;
-}
-
-static void ThrowHead(entvars_t *pev, char *szGibModel, floatflDamage)
-{
-	SET_MODEL(ENT(pev), szGibModel);
-	pev->frame			= 0;
-	pev->nextthink		= -1;
-	pev->movetype		= MOVETYPE_BOUNCE;
-	pev->takedamage		= DAMAGE_NO;
-	pev->solid			= SOLID_NOT;
-	pev->view_ofs		= Vector(0,0,8);
-	UTIL_SetSize(pev, Vector(-16,-16,0), Vector(16,16,56));
-	pev->velocity		= VecVelocityForDamage(flDamage);
-	pev->avelocity		= RANDOM_FLOAT(-1,1) * Vector(0,600,0);
-	pev->origin.z -= 24;
-	ClearBits(pev->flags, FL_ONGROUND);
-}
-*/ 
-#endif
-
-int TrainSpeed(int iSpeed, int iMax)
-{
-	float fSpeed, fMax;
-	int iRet = 0;
-
-	fMax = (float)iMax;
-	fSpeed = iSpeed;
-
-	fSpeed = fSpeed/fMax;
-
-	if (iSpeed < 0)
-		iRet = TRAIN_BACK;
-	else if (iSpeed == 0)
-		iRet = TRAIN_NEUTRAL;
-	else if (fSpeed < 0.33)
-		iRet = TRAIN_SLOW;
-	else if (fSpeed < 0.66)
-		iRet = TRAIN_MEDIUM;
-	else
-		iRet = TRAIN_FAST;
-
-	return iRet;
-}
 
 //MODDD - DeathSound method that takes no 
 void CBasePlayer::DeathSound( void ){
@@ -1742,6 +1892,11 @@ void CBasePlayer::RemoveAllAmmo(void) {
 void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 {
 	int i;
+	
+	// Safe to reset since these settings were valid only for one call.
+	scheduleRemoveAllItems = FALSE;
+	scheduleRemoveAllItemsIncludeSuit = FALSE;
+
 	if (m_pActiveItem)
 	{
 		ResetAutoaim( );
@@ -2492,6 +2647,8 @@ CBasePlayer::CBasePlayer(void){
 
 	alreadySentSatchelOutOfAmmoNotice = FALSE;
 
+	m_framesSinceRestore = 0;
+
 
 }//END OF CBasePlayer constructor
 
@@ -2963,9 +3120,6 @@ void CBasePlayer::PlayerDeathThink(void)
 
 	if(scheduleRemoveAllItems == TRUE){
 		RemoveAllItems(scheduleRemoveAllItemsIncludeSuit);
-
-		scheduleRemoveAllItemsIncludeSuit = FALSE;
-		scheduleRemoveAllItems = FALSE;
 	}
 
 	respawn(pev, !(m_afPhysicsFlags & PFLAG_OBSERVER) );// don't copy a corpse if we're in deathcam.
@@ -3659,23 +3813,6 @@ void CBasePlayer::Jump()
 
 
 
-// This is a glorious hack to find free space when you've crouched into some solid space
-// Our crouching collisions do not work correctly for some reason and this is easier
-// than fixing the problem :(
-void FixPlayerCrouchStuck( edict_t *pPlayer )
-{
-	TraceResult trace;
-
-	// Move up as many as 18 pixels if the player is stuck.
-	for ( int i = 0; i < 18; i++ )
-	{
-		UTIL_TraceHull( pPlayer->v.origin, pPlayer->v.origin, dont_ignore_monsters, head_hull, pPlayer, &trace );
-		if ( trace.fStartSolid )
-			pPlayer->v.origin.z ++;
-		else
-			break;
-	}
-}
 
 void CBasePlayer::Duck( )
 {
@@ -4339,8 +4476,6 @@ float CBasePlayer::TimedDamageBuddhaFilter(float dmgIntent) {
 }
 
 
-
-
 // at the end of a frame, if a monster has 1 health and buddha mode, cancel the timed damage.
 void CBasePlayer::TimedDamagePostBuddhaCheck(void) {
 	
@@ -4501,7 +4636,7 @@ void CBasePlayer::timedDamage_nonFirstFrame(int i, int* m_bitsDamageTypeRef) {
 
 // if in range of radiation source, ping geiger counter
 
-int CBasePlayer::getGeigerChannel(){
+int CBasePlayer::getGeigerChannel(void){
 	return EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(geigerChannel);
 }
 
@@ -5564,23 +5699,6 @@ void CBasePlayer::SetSuitUpdateEventFVoxCutoff(char *name, int fgroup, float fNo
 }//END OF SetSuitUpdateEventFVoxCutoff
 
 
-/*
-================
-CheckPowerups
-
-Check for turning off powerups
-
-GLOBALS ASSUMED SET:  g_ulModelIndexPlayer
-================
-*/
-	static void
-CheckPowerups(entvars_t *pev)
-{
-	if (pev->health <= 0)
-		return;
-
-	pev->modelindex = g_ulModelIndexPlayer;    // don't use eyes
-}
 
 
 //=========================================================
@@ -5992,154 +6110,6 @@ pt_end:
 }
 
 
-// checks if the spot is clear of players
-BOOL IsSpawnPointValid( CBaseEntity *pPlayer, CBaseEntity *pSpot )
-{
-	CBaseEntity *ent = NULL;
-
-	if ( !pSpot->IsTriggered( pPlayer ) )
-	{
-		return FALSE;
-	}
-
-	while ( (ent = UTIL_FindEntityInSphere( ent, pSpot->pev->origin, 128 )) != NULL )
-	{
-		// if ent is a client, don't spawn on 'em
-		if ( ent->IsPlayer() && ent != pPlayer )
-			return FALSE;
-	}
-
-	return TRUE;
-}
-
-
-//MODDD - moved from client.cpp.
-// called by ClientKill and DeadThink
-void respawn(entvars_t* pev, BOOL fCopyCorpse)
-{
-	if (gpGlobals->coop || gpGlobals->deathmatch)
-	{
-		if ( fCopyCorpse )
-		{
-			// make a copy of the dead body for appearances sake
-			CopyToBodyQue(pev);
-		}
-
-		// respawn player
-		GetClassPtr( (CBasePlayer *)pev)->Spawn( );
-	}
-	else
-	{       // restart the entire server
-		SERVER_COMMAND("reload\n");
-	}
-}
-
-
-/*
-============
-EntSelectSpawnPoint
-
-Returns the entity to spawn at
-
-USES AND SETS GLOBAL g_pLastSpawn
-============
-*/
-edict_t *EntSelectSpawnPoint( CBaseEntity *pPlayer )
-{
-	CBaseEntity *pSpot;
-	edict_t		*player;
-
-	player = pPlayer->edict();
-
-// choose a info_player_deathmatch point
-	if (g_pGameRules->IsCoOp())
-	{
-		pSpot = UTIL_FindEntityByClassname( g_pLastSpawn, "info_player_coop");
-		if ( !FNullEnt(pSpot) )
-			goto ReturnSpot;
-		pSpot = UTIL_FindEntityByClassname( g_pLastSpawn, "info_player_start");
-		if ( !FNullEnt(pSpot) ) 
-			goto ReturnSpot;
-	}
-	else if ( g_pGameRules->IsDeathmatch() )
-	{
-		pSpot = g_pLastSpawn;
-		// Randomize the start spot
-		for ( int i = RANDOM_LONG(1,5); i > 0; i-- )
-			pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
-		if ( FNullEnt( pSpot ) )  // skip over the null point
-			pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
-
-		CBaseEntity *pFirstSpot = pSpot;
-
-		do 
-		{
-			if ( pSpot )
-			{
-				// check if pSpot is valid
-				if ( IsSpawnPointValid( pPlayer, pSpot ) )
-				{
-					if ( pSpot->pev->origin == Vector( 0, 0, 0 ) )
-					{
-						pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
-						continue;
-					}
-
-					// if so, go to pSpot
-					goto ReturnSpot;
-				}
-			}
-			// increment pSpot
-			pSpot = UTIL_FindEntityByClassname( pSpot, "info_player_deathmatch" );
-		} while ( pSpot != pFirstSpot ); // loop if we're not back to the start
-
-		// we haven't found a place to spawn yet,  so kill any guy at the first spawn point and spawn there
-		if ( !FNullEnt( pSpot ) )
-		{
-			CBaseEntity *ent = NULL;
-			while ( (ent = UTIL_FindEntityInSphere( ent, pSpot->pev->origin, 128 )) != NULL )
-			{
-				// if ent is a client, kill em (unless they are ourselves)
-				if ( ent->IsPlayer() && !(ent->edict() == player) )
-					ent->TakeDamage( VARS(INDEXENT(0)), VARS(INDEXENT(0)), 300, DMG_GENERIC );
-			}
-			goto ReturnSpot;
-		}
-	}
-
-	// If startspot is set, (re)spawn there.
-	//MODDD - order changed a bit.  If the tried 'gpGlobals->startspot' does not exist,
-	// make a printout about it and just use info_player_start.
-
-	if ( !FStringNull( gpGlobals->startspot ) && strlen(STRING(gpGlobals->startspot))){
-
-		pSpot = UTIL_FindEntityByTargetname( NULL, STRING(gpGlobals->startspot) );
-		if ( !FNullEnt(pSpot) ){
-			goto ReturnSpot;
-		}else{
-			easyForcePrintLine("WARNING!  Player Spawn: Startspot '%s' not found, falling back to default info_player_start", STRING(gpGlobals->startspot) );
-		}
-	}
-
-	
-	pSpot = UTIL_FindEntityByClassname(NULL, "info_player_start");
-	if ( !FNullEnt(pSpot) )
-		goto ReturnSpot;
-	
-
-ReturnSpot:
-	if ( FNullEnt( pSpot ) )
-	{
-		ALERT(at_error, "PutClientInServer: no info_player_start on level");
-		return INDEXENT(0);
-	}
-
-	g_pLastSpawn = pSpot;
-	return pSpot->edict();
-}
-
-
-
 //MODDD - public setter methods.
 void CBasePlayer::setHealth(int newHealth){
 	pev->health = newHealth;
@@ -6212,59 +6182,62 @@ void CBasePlayer::grantAllItems(){
 	//It is up to anything with special deploy sounds to deny playing extra sounds if this is set.
 	globalflag_muteDeploySound = TRUE;
 
-		GiveNamedItemIfLacking( "weapon_crowbar" );
-		GiveNamedItemIfLacking( "weapon_9mmhandgun" ); //same as "weapon_glock"
-		GiveNamedItemIfLacking( "weapon_9mmAR" ); //same as "weapon_mp5"
-		GiveNamedItemIfLacking( "weapon_357" ); //same as "weapon_python"
+	GiveNamedItemIfLacking( "weapon_crowbar" );
+	GiveNamedItemIfLacking( "weapon_9mmhandgun" ); //same as "weapon_glock"
+	GiveNamedItemIfLacking( "weapon_9mmAR" ); //same as "weapon_mp5"
+	GiveNamedItemIfLacking( "weapon_357" ); //same as "weapon_python"
 		
-		//crossbow moved to last
+	//crossbow moved to last
 
-		GiveNamedItemIfLacking( "weapon_gauss" );
-		GiveNamedItemIfLacking( "weapon_hornetgun" );
-		GiveNamedItemIfLacking( "weapon_tripmine" );
-		GiveNamedItemIfLacking( "weapon_rpg" );
+	GiveNamedItemIfLacking( "weapon_gauss" );
+	GiveNamedItemIfLacking( "weapon_hornetgun" );
+	GiveNamedItemIfLacking( "weapon_tripmine" );
+	GiveNamedItemIfLacking( "weapon_rpg" );
 
-		GiveNamedItemIfLacking( "weapon_egon" );
+	GiveNamedItemIfLacking( "weapon_egon" );
 
-		GiveNamedItemIfLacking( "weapon_satchel" );
-		GiveNamedItemIfLacking( "weapon_shotgun" );
-		GiveNamedItemIfLacking( "weapon_handgrenade" );
-		GiveNamedItemIfLacking( "weapon_snark" );
+	GiveNamedItemIfLacking( "weapon_satchel" );
+	GiveNamedItemIfLacking( "weapon_shotgun" );
+	GiveNamedItemIfLacking( "weapon_handgrenade" );
+	GiveNamedItemIfLacking( "weapon_snark" );
 
-		// Don't give chumtoads through cheat commands in multiplayer.
-		// Don't really serve a purpose there.
-		// Beats me what someone is doing using cheats in multiplayer anyway.  Garrysmod 1998 anyone.
-		if (!IsMultiplayer()) {
-			GiveNamedItemIfLacking("weapon_chumtoad");
-		}
+	// Don't give chumtoads through cheat commands in multiplayer.
+	// Don't really serve a purpose there.
+	// Beats me what someone is doing using cheats in multiplayer anyway.  Garrysmod 1998 anyone.
+	if (!IsMultiplayer()) {
+		GiveNamedItemIfLacking("weapon_chumtoad");
+	}
 
-		//Deploy this instead.
-		GiveNamedItemIfLacking( "weapon_crossbow" );
+	//Deploy this instead.
+	GiveNamedItemIfLacking( "weapon_crossbow" );
 
-	globalflag_muteDeploySound = FALSE;
 
-		//ItemInfoArray[ m_iId ].pszAmmo1 = 4;
+	//ItemInfoArray[ m_iId ].pszAmmo1 = 4;
 
-		//well that was needless.
-		/*
-		CBasePlayerItem* test = FindNamedPlayerItem("weapon_9mmhandgun");
-		if(test != NULL){
-			CBasePlayerWeapon* test2 = (CBasePlayerWeapon *)test->GetWeaponPtr();
-			if(test2 != NULL){
-				CGlock* test3 = (CGlock*)test2;
-				if(test3 != NULL){
-					//WE GOT IT!
-					this->hasGlockSilencer = 1;
-				}
+	//well that was needless.
+	/*
+	CBasePlayerItem* test = FindNamedPlayerItem("weapon_9mmhandgun");
+	if(test != NULL){
+		CBasePlayerWeapon* test2 = (CBasePlayerWeapon *)test->GetWeaponPtr();
+		if(test2 != NULL){
+			CGlock* test3 = (CGlock*)test2;
+			if(test3 != NULL){
+				//WE GOT IT!
+				this->hasGlockSilencer = 1;
 			}
 		}
-		*/
-		this->hasGlockSilencer = TRUE;
-		// Eliminate HEV chatter from all these new weapons (since the new HEV messages 
-		// play upon receiving a weapon now)
-		// No longer necessary, if granted while globalflag_muteDeploySound is on, they also won't
-		// add FVox messages.
-		//SetSuitUpdate(NULL, FALSE, 0);
+	}
+	*/
+	this->hasGlockSilencer = TRUE;
+	
+	globalflag_muteDeploySound = FALSE;
+
+
+	// Eliminate HEV chatter from all these new weapons (since the new HEV messages 
+	// play upon receiving a weapon now)
+	// No longer necessary, if granted while globalflag_muteDeploySound is on, they also won't
+	// add FVox messages.
+	//SetSuitUpdate(NULL, FALSE, 0);
 }
 
 // often called alongside "grantAllItems" above.
@@ -6976,7 +6949,6 @@ void CBasePlayer::Precache( void )
 		m_fInitHUD = TRUE;
 
 
-
 }
 
 
@@ -7015,6 +6987,10 @@ int CBasePlayer::Restore( CRestore &restore )
 
 	easyPrintLine("***Player Restored");
 	OnFirstAppearance();
+	// safe?  On a fresh map start, 'Restore' gets skipped, which is fine, should rely on
+	// the '0' the constructor set it to.  Or maybe all memory of all entities is set to 0 anyway.
+
+	m_framesSinceRestore = 0;
 
 	friendlyCheckTime = 0;  //can check again.
 	
@@ -7399,99 +7375,6 @@ const char *CBasePlayer::TeamID( void )
 }
 
 
-//==============================================
-// !!!UNDONE:ultra temporary SprayCan entity to apply
-// decal frame at a time. For PreAlpha CD
-//==============================================
-class CSprayCan : public CBaseEntity
-{
-public:
-	void Spawn ( entvars_t *pevOwner );
-	void Think( void );
-
-	virtual int ObjectCaps( void ) { return FCAP_DONT_SAVE; }
-};
-
-void CSprayCan::Spawn ( entvars_t *pevOwner )
-{
-	pev->origin = pevOwner->origin + Vector ( 0 , 0 , 32 );
-	pev->angles = pevOwner->v_angle;
-	pev->owner = ENT(pevOwner);
-	pev->frame = 0;
-
-	pev->nextthink = gpGlobals->time + 0.1;
-	//MODDD - soundsentencesave. This one's ok to play through it.
-	UTIL_PlaySound(ENT(pev), CHAN_VOICE, "player/sprayer.wav", 1, ATTN_NORM, 0, 100, FALSE);
-}
-
-void CSprayCan::Think( void )
-{
-	TraceResult	tr;	
-	int playernum;
-	int nFrames;
-	CBasePlayer *pPlayer;
-
-
-	pPlayer = (CBasePlayer *)GET_PRIVATE(pev->owner);
-
-	if (pPlayer)
-		nFrames = pPlayer->GetCustomDecalFrames();
-	else
-		nFrames = -1;
-
-	playernum = ENTINDEX(pev->owner);
-	
-	// ALERT(at_console, "Spray by player %i, %i of %i\n", playernum, (int)(pev->frame + 1), nFrames);
-
-
-	//MODDD - NOTE.  Aha!  This pev->angles is a copy of the player's v_angle so this is ok
-	UTIL_MakeVectors(pev->angles);
-	UTIL_TraceLine ( pev->origin, pev->origin + gpGlobals->v_forward * 128, ignore_monsters, pev->owner, & tr);
-
-
-	switch( (int)EASY_CVAR_GET_DEBUGONLY(customLogoSprayMode) ){
-		case 1:{
-			nFrames = 6;
-			//easyForcePrintLine("MY NUMBERS %d", playernum);
-			UTIL_DecalTrace( &tr, DECAL_LAMBDA1 + pev->frame );
-			//UTIL_PlayerDecalTrace( &tr, playernum, DECAL_LAMBDA1 + pev->frame, FALSE );
-		
-			if ( pev->frame++ >= (nFrames - 1))
-				UTIL_Remove( this );
-			break;
-		}
-
-		//case 2: ... etc.
-
-		default:{  //0 or other unrecognized values
-			// No customization present.
-			if (nFrames == -1)
-			{
-				UTIL_DecalTrace( &tr, DECAL_LAMBDA6 );
-				UTIL_Remove( this );
-			}
-			else
-			{
-				UTIL_PlayerDecalTrace( &tr, playernum, pev->frame, TRUE );
-				// Just painted last custom frame.
-				if ( pev->frame++ >= (nFrames - 1))
-					UTIL_Remove( this );
-			}
-			break;
-		}
-	}//END OF else OF customLogoSprayMode
-
-
-
-	pev->nextthink = gpGlobals->time + 0.1;
-}
-
-
-//==============================================
-
-
-BOOL g_giveWithoutTargetLocation = FALSE;
-
 void CBasePlayer::GiveNamedItemIfLacking( const char *pszName ){
 	if(!HasNamedPlayerItem(pszName)){
 		GiveNamedItem(pszName);
@@ -7505,8 +7388,6 @@ edict_t* CBasePlayer::GiveNamedItem( const char *pszName ){
 //send right to the player's origin like the retail "give" command does (which likely referred to this method now)
 edict_t* CBasePlayer::GiveNamedItem( const char *pszName, int pszSpawnFlags  )
 {
-
-
 	char resultpre[128];
 	strncpy( &resultpre[0], &pszName[0], 127 );
 	resultpre[127] = '\0';
@@ -7902,7 +7783,6 @@ void CBasePlayer::ForceClientDllUpdate( void )
 ImpulseCommands
 ============
 */
-extern float g_flWeaponCheat;
 
 void CBasePlayer::ImpulseCommands( )
 {
@@ -8267,10 +8147,15 @@ BOOL CBasePlayer::AddPlayerItem( CBasePlayerItem *pItem )
 		m_rgpPlayerItems[pItem->iItemSlot()] = pItem;
 
 		// should we switch to this item?
-		if ( g_pGameRules->FShouldSwitchWeapon( this, pItem ) )
-		{
-			SwitchWeapon( pItem );
+		//MODDD - don't if we're using cheats to achieve this, annoying to change weapons automatically.
+		// If lacking any weapon, at least switch to the first granted one though.
+		if(!globalflag_muteDeploySound || m_pActiveItem == NULL){
+			if ( g_pGameRules->FShouldSwitchWeapon( this, pItem ) )
+			{
+				SwitchWeapon( pItem );
+			}
 		}
+
 
 		return TRUE;
 	}
@@ -8280,11 +8165,11 @@ BOOL CBasePlayer::AddPlayerItem( CBasePlayerItem *pItem )
 		pItem->Kill( );
 	}
 	return FALSE;
-}//END OF AddPlayerItem(...)
+}//END OF AddPlayerItem
 
 
 
-void CBasePlayer::printOutWeapons(){
+void CBasePlayer::printOutWeapons(void){
 	//CBasePlayerWeapon whut;
 	//whut.PrintState();
 
@@ -8296,8 +8181,8 @@ void CBasePlayer::printOutWeapons(){
 			easyForcePrintLine("slot:%d row:%d %s", i, i2, STRING(thisItem->pev->classname) );
 			i2++;
 			thisItem = thisItem->m_pNext;
-		}//END OF while(...)
-	}//END OF for(...)
+		}//END OF while
+	}//END OF for
 
 }//END OF printOutWeapons
 
@@ -8352,7 +8237,6 @@ BOOL CBasePlayer::CanAddPlayerItem( int arg_iItemSlot, const char* arg_classname
 
 	return TRUE;
 }//END OF CanAddPlayerItem
-
 
 
 int CBasePlayer::RemovePlayerItem( CBasePlayerItem *pItem )
@@ -8481,11 +8365,6 @@ int CBasePlayer::GiveAmmoID(int iCount, int iAmmoTypeId, int iMax)
 
 
 
-
-
-
-
-
 /*
 ============
 ItemPreFrame
@@ -8542,8 +8421,6 @@ void CBasePlayer::ItemPreFrame()
 		return;
 	}
 
-	
-
 	m_pActiveItem->ItemPreFrame( );
 }
 
@@ -8576,8 +8453,11 @@ void CBasePlayer::ItemPostFrame()
 	if(canCallItemPostFrame){
 		m_pActiveItem->ItemPostFrameThink( );
 	}
-
-	g_firstFrameSinceRestore = FALSE;
+	
+	//MODDD - new.  No need to keep counting after that
+	if(m_framesSinceRestore < 50){
+		m_framesSinceRestore++;
+	}
 
 	//MODDDD - now always done, BUT with a few edits to ensure the same logic.
 	//MODDDD - no, reverted to normal for now...
@@ -9283,7 +9163,7 @@ void CBasePlayer::UpdateClientData( void )
 		UpdateStatusBar();
 		m_flNextSBarUpdateTime = gpGlobals->time + 0.2;
 	}
-}
+}//UpdateClientData
 
 
 //=========================================================
@@ -9609,80 +9489,16 @@ int CBasePlayer::GetCustomDecalFrames( void )
 
 
 
-
-
-
 /*
 //MODDD - clone of DropPlayerItem, only no resulting drop.
 // Wait.  There's already a "RemovePlayerItem" that takes a reference to the object instead.
 // And that's already availble in the scenario I have.   ...     oops.
+// Just don't repeat that mistake.
 void CBasePlayer::RemovePlayerItemClassname(char* pszItemName)
 {
-	if (!strlen(pszItemName))
-	{
-		// if this string has no length, the client didn't type a name!
-		// assume player wants to drop the active item.
-		// make the string null to make future operations in this function easier
-		pszItemName = NULL;
-	}
-
-	CBasePlayerItem* pWeapon;
-	int i;
-
-	for (i = 0; i < MAX_ITEM_TYPES; i++)
-	{
-		pWeapon = m_rgpPlayerItems[i];
-
-		while (pWeapon)
-		{
-			if (pszItemName)
-			{
-				// try to match by name. 
-				if (!strcmp(pszItemName, STRING(pWeapon->pev->classname)))
-				{
-					// match! 
-					break;
-				}
-			}
-			else
-			{
-				// trying to drop active item
-				if (pWeapon == m_pActiveItem)
-				{
-					// active item!
-					break;
-				}
-			}
-
-			pWeapon = pWeapon->m_pNext;
-		}
-
-
-		// if we land here with a valid pWeapon pointer, that's because we found the 
-		// item we want to drop and hit a BREAK;  pWeapon is the item.
-		if (pWeapon)
-		{
-			BOOL getNextSuccess = g_pGameRules->GetNextBestWeapon(this, pWeapon);
-
-			// m_pActiveItem == NULL
-			if (!getNextSuccess || pWeapon == m_pActiveItem) {
-				//send a signal to clear the currently equipped weapon.
-				MESSAGE_BEGIN(MSG_ONE, gmsgClearWeapon, NULL, pev);
-				MESSAGE_END();
-			}
-
-			pev->weapons &= ~(1 << pWeapon->m_iId);// take item off hud
-			
-			// Tricky tricky!  The weapon box would have called 'PackWeapon' and involved this weapon.
-			// That also included the 'RemovePlayerItem' to delete the weapon entity itself.  So do so here.
-			RemovePlayerItem(pWeapon);
-
-			return;// we're done, so stop searching with the FOR loop.
-		}
-	}
+	<snip>
 }
 */
-
 
 
 //=========================================================
@@ -9791,8 +9607,7 @@ void CBasePlayer::DropPlayerItem ( char *pszItemName )
 			}
 
 			/*
-			easyPrintLine("DID YOU DO THE AMMO UPDATE???");
-
+			// nope, not a good idea.  Apparently.
 			SendAmmoUpdate();
 
 			//MODDD - update the GUI.  Why was this not here?
@@ -9895,9 +9710,6 @@ CBasePlayerItem* CBasePlayer::FindNamedPlayerItem(const char *pszItemName){
 	//gun = (CBasePlayerWeapon *)pPlayerItem->GetWeaponPtr();
 
 }
-
-
-
 
 
 //MODDD - as-is method, modified to work with holstering.
@@ -10048,7 +9860,6 @@ void CBasePlayer::SetGravity(float newGravityVal){
 
 
 
-
 /*
 void CBasePlayer::Think(void)
 {
@@ -10073,273 +9884,4 @@ void CBasePlayer::MonsterThink(void)
 
 }
 */
-
-
-
-
-
-//=========================================================
-// Dead HEV suit prop
-//=========================================================
-class CDeadHEV : public CBaseMonster
-{
-public:
-	void Spawn( void );
-	int Classify ( void ) { return	CLASS_HUMAN_MILITARY; }
-
-	void KeyValue( KeyValueData *pkvd );
-
-	int m_iPose;// which sequence to display	-- temporary, don't need to save
-	static char *m_szPoses[4];
-};
-
-char *CDeadHEV::m_szPoses[] = { "deadback", "deadsitting", "deadstomach", "deadtable" };
-
-void CDeadHEV::KeyValue( KeyValueData *pkvd )
-{
-	if (FStrEq(pkvd->szKeyName, "pose"))
-	{
-		m_iPose = atoi(pkvd->szValue);
-		pkvd->fHandled = TRUE;
-	}
-	else 
-		CBaseMonster::KeyValue( pkvd );
-}
-
-LINK_ENTITY_TO_CLASS( monster_hevsuit_dead, CDeadHEV );
-
-//=========================================================
-// ********** DeadHEV SPAWN **********
-//=========================================================
-void CDeadHEV::Spawn( void )
-{
-	PRECACHE_MODEL("models/player.mdl");
-	SET_MODEL(ENT(pev), "models/player.mdl");
-
-	pev->effects		= 0;
-	pev->yaw_speed		= 8;
-	pev->sequence		= 0;
-	pev->body			= 1;
-	m_bloodColor		= BLOOD_COLOR_RED;
-
-	pev->sequence = LookupSequence( m_szPoses[m_iPose] );
-
-	if (pev->sequence == -1)
-	{
-		ALERT ( at_console, "Dead hevsuit with bad pose\n" );
-		pev->sequence = 0;
-		pev->effects = EF_BRIGHTFIELD;
-	}
-
-	// Corpses have less health
-	pev->health			= 8;
-
-	MonsterInitDead();
-}
-
-
-class CStripWeapons : public CPointEntity
-{
-public:
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
-private:
-};
-
-LINK_ENTITY_TO_CLASS( player_weaponstrip, CStripWeapons );
-
-void CStripWeapons::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
-{
-	CBasePlayer *pPlayer = NULL;
-
-	if ( pActivator && pActivator->IsPlayer() )
-	{
-		pPlayer = (CBasePlayer *)pActivator;
-	}
-	else if ( !g_pGameRules->IsDeathmatch() )
-	{
-		pPlayer = (CBasePlayer *)CBaseEntity::Instance( g_engfuncs.pfnPEntityOfEntIndex( 1 ) );
-	}
-
-	if ( pPlayer ){
-		//I think it is okay to remove items here?  unsure.
-		pPlayer->RemoveAllItems( FALSE );
-	}
-}
-
-
-class CRevertSaved : public CPointEntity
-{
-public:
-	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-	void EXPORT MessageThink( void );
-	void EXPORT LoadThink( void );
-	void KeyValue( KeyValueData *pkvd );
-
-	virtual int	Save( CSave &save );
-	virtual int	Restore( CRestore &restore );
-	static	TYPEDESCRIPTION m_SaveData[];
-
-	inline	float Duration( void ) { return pev->dmg_take; }
-	inline	float HoldTime( void ) { return pev->dmg_save; }
-	inline	float MessageTime( void ) { return m_messageTime; }
-	inline	float LoadTime( void ) { return m_loadTime; }
-
-	inline	void SetDuration( float duration ) { pev->dmg_take = duration; }
-	inline	void SetHoldTime( float hold ) { pev->dmg_save = hold; }
-	inline	void SetMessageTime( float time ) { m_messageTime = time; }
-	inline	void SetLoadTime( float time ) { m_loadTime = time; }
-
-private:
-	float m_messageTime;
-	float m_loadTime;
-};
-
-LINK_ENTITY_TO_CLASS( player_loadsaved, CRevertSaved );
-
-TYPEDESCRIPTION	CRevertSaved::m_SaveData[] = 
-{
-	DEFINE_FIELD( CRevertSaved, m_messageTime, FIELD_FLOAT ),	// These are not actual times, but durations, so save as floats
-	DEFINE_FIELD( CRevertSaved, m_loadTime, FIELD_FLOAT ),
-};
-
-IMPLEMENT_SAVERESTORE( CRevertSaved, CPointEntity );
-
-void CRevertSaved::KeyValue( KeyValueData *pkvd )
-{
-	if (FStrEq(pkvd->szKeyName, "duration"))
-	{
-		SetDuration( atof(pkvd->szValue) );
-		pkvd->fHandled = TRUE;
-	}
-	else if (FStrEq(pkvd->szKeyName, "holdtime"))
-	{
-		SetHoldTime( atof(pkvd->szValue) );
-		pkvd->fHandled = TRUE;
-	}
-	else if (FStrEq(pkvd->szKeyName, "messagetime"))
-	{
-		SetMessageTime( atof(pkvd->szValue) );
-		pkvd->fHandled = TRUE;
-	}
-	else if (FStrEq(pkvd->szKeyName, "loadtime"))
-	{
-		SetLoadTime( atof(pkvd->szValue) );
-		pkvd->fHandled = TRUE;
-	}
-	else 
-		CPointEntity::KeyValue( pkvd );
-}
-
-void CRevertSaved::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
-{
-	UTIL_ScreenFadeAll( pev->rendercolor, Duration(), HoldTime(), pev->renderamt, FFADE_OUT );
-	pev->nextthink = gpGlobals->time + MessageTime();
-	SetThink( &CRevertSaved::MessageThink );
-}
-
-
-void CRevertSaved::MessageThink( void )
-{
-	UTIL_ShowMessageAll( STRING(pev->message) );
-	float nextThink = LoadTime() - MessageTime();
-	if ( nextThink > 0 ) 
-	{
-		pev->nextthink = gpGlobals->time + nextThink;
-		SetThink( &CRevertSaved::LoadThink );
-	}
-	else
-		LoadThink();
-}
-
-
-void CRevertSaved::LoadThink( void )
-{
-	if ( !gpGlobals->deathmatch )
-	{
-		SERVER_COMMAND("reload\n");
-	}
-}
-
-
-
-
-
-//MODDDMIRROR
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//==========================================================
-// player marker for right mirroring a player in env_mirror
-//==========================================================
-
-class CPlayerMarker : public CBaseEntity
-{
-public:
-	void Spawn( void );
-	void Precache ( void );
-};
-
-//NOTICE - the player marker is no longer physically necessary. It only exists to force the rendered to render at least once while
-//         the mirror is in view, but that may even already happen regardless. This can't hurt.
-//         In short, null.mdl is no longer required.
-LINK_ENTITY_TO_CLASS( player_marker, CPlayerMarker );
-
-void CPlayerMarker::Spawn( void )
-{
-	Precache();
-	//SET_MODEL( ENT(pev), "models/null.mdl" );
-	SET_MODEL( ENT(pev), "models/player.mdl" );
-
-	ALERT(at_aiconsole, "DEBUG: Player_marker coordinates is %f %f %f \n", pev->origin.x, pev->origin.y, pev->origin.z);
-	
-	//this->pev->renderfx = FX_DUMMY;
-	this->pev->renderfx = kRenderFxDummy;
-
-	//MODDD
-	//pev->effects |= 128;
-}
-
-
-void CPlayerMarker::Precache( void )
-{
-	//PRECACHE_MODEL( "models/null.mdl" );
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//=========================================================
-// Multiplayer intermission spots.
-//=========================================================
-class CInfoIntermission:public CPointEntity
-{
-	void Spawn( void );
-	void Think( void );
-};
-
-void CInfoIntermission::Spawn( void )
-{
-	UTIL_SetOrigin( pev, pev->origin );
-	pev->solid = SOLID_NOT;
-	pev->effects = EF_NODRAW;
-	pev->v_angle = g_vecZero;
-
-	pev->nextthink = gpGlobals->time + 2;// let targets spawn!
-
-}
-
-void CInfoIntermission::Think ( void )
-{
-	edict_t *pTarget;
-
-	// find my target
-	pTarget = FIND_ENTITY_BY_TARGETNAME( NULL, STRING(pev->target) );
-
-	if ( !FNullEnt(pTarget) )
-	{
-		pev->v_angle = UTIL_VecToAngles( (pTarget->v.origin - pev->origin).Normalize() );
-		pev->v_angle.x = -pev->v_angle.x;
-	}
-}
-LINK_ENTITY_TO_CLASS( info_intermission, CInfoIntermission );
 

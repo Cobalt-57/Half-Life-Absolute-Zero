@@ -30,9 +30,14 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(viewModelPrintouts)
 //EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer)
 
 
+extern int g_framesSinceRestore;
+
+
+
+
 //MODDD - ????      This file seems to need re-implementations of several (including newly added) CBasePlayerWeapon methods from weapons.h
 //(besides weapons.cpp ...    parallel implementations for the same exact prototypes?  Very strange.)
-CBasePlayerWeapon::CBasePlayerWeapon() {
+CBasePlayerWeapon::CBasePlayerWeapon(void) {
 	//Starts as 0, not a garbage value, for ALL weapons.
 	m_chargeReady = 0;
 
@@ -54,13 +59,13 @@ int CBasePlayerWeapon::SecondaryAmmoIndex(void)
 {
 	return getSecondaryAmmoType();
 }
+
 //MODDD - more clones.   yay.
 int CBasePlayerWeapon::PlayerPrimaryAmmoCount() {
 	int myPrimaryAmmoType = getPrimaryAmmoType();
 	if (IS_AMMOTYPE_VALID(myPrimaryAmmoType)) {
 		return m_pPlayer->m_rgAmmo[myPrimaryAmmoType];
-	}
-	else {
+	}else {
 		return -1;  //what
 	}
 }
@@ -68,8 +73,7 @@ int CBasePlayerWeapon::PlayerSecondaryAmmoCount() {
 	int mySecondaryAmmoType = getSecondaryAmmoType();
 	if (IS_AMMOTYPE_VALID(mySecondaryAmmoType)) {
 		return m_pPlayer->m_rgAmmo[mySecondaryAmmoType];
-	}
-	else {
+	}else {
 		return -1;  //what
 	}
 }
@@ -988,6 +992,17 @@ void CBasePlayerWeapon::PrintState(void)
 	COM_Log("c:\\hl.log", "%.4f ", m_flNextPrimaryAttack);
 	COM_Log("c:\\hl.log", "%.4f ", m_flTimeWeaponIdle - gpGlobals->time);
 	COM_Log("c:\\hl.log", "%i ", m_iClip);
+}
+
+
+float CBasePlayerWeapon::getPlayerBaseFOV(void) {
+	// FOV info is stored in the gHUD instance.
+	return gHUD.getPlayerBaseFOV();
+}
+
+int CBasePlayerWeapon::getFramesSinceRestore(void){
+	// stored globally
+	return g_framesSinceRestore;
 }
 
 

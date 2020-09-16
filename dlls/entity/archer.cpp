@@ -532,7 +532,7 @@ IMPLEMENT_CUSTOM_SCHEDULES( CArcher, CFlyingMonster );
 
 TYPEDESCRIPTION	CArcher::m_SaveData[] = 
 {
-	DEFINE_FIELD( CArcher, preSurfaceAttackLocation, FIELD_VECTOR ),
+	DEFINE_FIELD( CArcher, preSurfaceAttackLocation, FIELD_POSITION_VECTOR ),
 	DEFINE_FIELD( CArcher, lackOfWaterTimer, FIELD_TIME ),
 };
 
@@ -2565,6 +2565,8 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 		//MODDD - I'd rather deal damage to my enemy, seems CheckTraceHullAttack is too grabby and can even get things left and right
 		// of me first.
 
+
+		/*
 		//if(!pHurt){
 			//didn't get anything? Is our enemy in an odd spot like directly below or above? If so count to stop abusing this mechanic.
 			
@@ -2583,7 +2585,7 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 				}
 			}
 		//}
-
+		*/
 		
 		if ( pHurt )
 		{

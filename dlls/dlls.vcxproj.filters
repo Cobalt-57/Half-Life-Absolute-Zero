@@ -437,6 +437,9 @@
     <ClCompile Include="weapons.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="entity\player_extra.cpp">
+      <Filter>Source Files\entity</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\vector.h">
@@ -686,6 +689,9 @@
       <Filter>Header Files\pm_shared</Filter>
     </ClInclude>
     <ClInclude Include="entity\gargantua.h">
+      <Filter>Header Files\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="entity\player_extra.h">
       <Filter>Header Files\entity</Filter>
     </ClInclude>
   </ItemGroup>

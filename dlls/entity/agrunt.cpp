@@ -2197,8 +2197,8 @@ Vector CAGrunt::GetGunPositionAI(void){
 	////Clone of GetGunPosition from monsters.cpp. The GetGunPositionAI method of CBaseMonster would have called Monster's GetGunPosition, but we've made ours more specific.
 	//return CBaseMonster::GetGunPosition();
 	////CHANGED.  Just using the hacked position to determine this.
-	//return CBaseMonster::GetGunPositionAI();
-	return EyePosition();
+	return CBaseMonster::GetGunPositionAI();
+	//return EyePosition();
 
 	/*
 	Vector v_forward, v_right, v_up, angle;

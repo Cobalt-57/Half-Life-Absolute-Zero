@@ -1091,13 +1091,6 @@ const char* CBasePlayerWeapon::GetPickupWalkerName(void){return 0;}
 void CBasePlayerWeapon::OnReloadApply(void) {}
 void CBasePlayerWeapon::OnAddPrimaryAmmoAsNewWeapon(void) {}
 
-// Aha - don't dummy me!  I'm still important clientside, weapons
-// refer to me and expect something better than worthless.
-float CBasePlayerWeapon::getPlayerBaseFOV(void) {
-	//FOV info is stored in the gHUD instance.
-	return gHUD.getPlayerBaseFOV();
-}//END OF getPlayerBaseFOV
-
 
 
 

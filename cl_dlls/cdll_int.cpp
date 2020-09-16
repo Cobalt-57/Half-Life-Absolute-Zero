@@ -77,7 +77,7 @@ extern double ary_g_LastEventCheck[1024];
 extern double ary_g_LastEventCheckEXACT[1024];
 
 extern BOOL g_cl_egonEffectCreatedYet;
-extern BOOL g_firstFrameSinceRestore;
+extern int g_framesSinceRestore;
 extern BOOL g_cl_queueSharedPrecache;
 extern BOOL g_cl_firstSendoffSinceMapLoad;
 
@@ -258,7 +258,9 @@ int DLLEXPORT HUD_VidInit( void )
 	// safety?
 	g_cl_egonEffectCreatedYet = FALSE;
 
-	g_firstFrameSinceRestore = TRUE;
+	// NOTE - can't really differentiate between a whole new map-load, saved game restore,
+	// or taking a transition but it isn't too important.
+	g_framesSinceRestore = 0;
 
 	// is this safe?
 	// No.

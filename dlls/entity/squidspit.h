@@ -14,6 +14,12 @@
 class CSquidSpit : public CBaseAnimating
 {
 public:
+	static int iSquidSpitSprite;
+	int m_maxFrame;
+	BOOL doHalfDuration;
+
+
+
 	CSquidSpit(void);
 	BOOL usesSoundSentenceSave(void);
 
@@ -22,8 +28,8 @@ public:
 
 	//MODDD - new field in there.
 
-	static void Shoot( CBaseMonster* argFiringEntity, Vector vecStart, Vector vecDirection, float argSpeed  );
-	static void Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirection, float argSpeed, const Vector& vecDest, const Vector& vecMinBounds, const Vector& vecMaxBounds );
+	static CSquidSpit* Shoot( CBaseMonster* argFiringEntity, Vector vecStart, Vector vecDirection, float argSpeed  );
+	static CSquidSpit* Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecDirection, float argSpeed, const Vector& vecDest, const Vector& vecMinBounds, const Vector& vecMaxBounds );
 	void Touch( CBaseEntity *pOther );
 	void EXPORT Animate( void );
 
@@ -40,7 +46,5 @@ public:
 	int GetProjectileType(void);
 
 
-	static int iSquidSpitSprite;
-	int m_maxFrame;
 };
 

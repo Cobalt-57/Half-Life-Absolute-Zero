@@ -247,7 +247,8 @@ void CHudMessage::MessageDrawScan( client_textmessage_t *pMessage, float time )
 {
 	int i, j, length, width;
 	const char *pText;
-	unsigned char line[80];
+	//MODDD - size changed to 256, was 80
+	unsigned char line[256];
 
 	pText = pMessage->pMessage;
 	// Count lines
@@ -286,7 +287,10 @@ void CHudMessage::MessageDrawScan( client_textmessage_t *pMessage, float time )
 	{
 		m_parms.lineLength = 0;
 		m_parms.width = 0;
-		while ( *pText && *pText != '\n' )
+		//MODDD - added check for reaching the 2nd to last buffer char.
+		// That puts the terminating 0 at index 255 if the longest string possible
+		// is seen.
+		while ( *pText && *pText != '\n' && m_parms.lineLength < 256-1 )
 		{
 			unsigned char c = *pText;
 			line[m_parms.lineLength] = c;

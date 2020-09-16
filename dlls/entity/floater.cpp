@@ -76,6 +76,7 @@ enum floater_sequence{  //key: frames, FPS
 	SEQ_FLOATER_TURN_LEFT,
 	SEQ_FLOATER_TURN_RIGHT,
 	SEQ_FLOATER_SHOOT,
+	SEQ_FLOATER_FLOAT_MELEE,
 	SEQ_FLOATER_DIE,
 	SEQ_FLOATER_FALL_LOOP,
 	SEQ_FLOATER_FALL_DIE,
@@ -1166,6 +1167,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CFloater)
 
 	// I don't take damage from poison, since I'm poison-based.
 	m_bitsDamageType &= ~DMG_POISON;
+	m_bitsDamageTypeMod &= ~DMG_POISONHALF;
 
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CFlyingMonster);
 }
@@ -1436,7 +1438,13 @@ void CFloater::HandleEventQueueEvent(int arg_eventID){
 		AttackSound();
 
 		//MODDD - TODO!!!   Should I have a little more customized of a projectile sprite than squidspit?
-		CSquidSpit::Shoot( this, vecSpitOffset, vecSpitDir, 900 );
+		CSquidSpit* theSquidSpit = CSquidSpit::Shoot( this, vecSpitOffset, vecSpitDir, 900 );
+		if(theSquidSpit != NULL){
+			// This thing's poison attacks get spammy, don't be too unforgiving.
+			// (hard may turn this off though, but there's enough to make 'hard' hard as it is)
+			theSquidSpit->doHalfDuration = TRUE;
+		}
+
 	break;
 	}
 	case 1:

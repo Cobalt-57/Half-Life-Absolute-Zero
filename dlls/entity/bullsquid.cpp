@@ -468,6 +468,7 @@ GENERATE_TAKEDAMAGE_IMPLEMENTATION(CBullsquid)
 
 	//MODDD - I don't take damage from poison.  Bullsquids fighting each other can't poison each other.
 	m_bitsDamageType &= ~DMG_POISON;
+	m_bitsDamageTypeMod &= ~DMG_POISONHALF;
 
 	return GENERATE_TAKEDAMAGE_PARENT_CALL(CBaseMonster);
 }

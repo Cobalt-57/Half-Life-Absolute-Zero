@@ -54,7 +54,6 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(gauss_mode)
 
 
-extern BOOL g_firstFrameSinceRestore;
 
 #ifdef CLIENT_DLL
 extern BOOL g_irunninggausspred;
@@ -75,9 +74,7 @@ CGauss::CGauss(void) {
 	// ALSO, m_flStartCharge replaced with pev->fuser1, something that counts down to 0 (0-based timer).
 
 	fuser1_store = -1;
-
 	ignoreIdleTime = -1;
-
 	inAttackPrev = 0;
 
 }//END OF CGauss constructor
@@ -93,12 +90,10 @@ TYPEDESCRIPTION	CGauss::m_SaveData[] =
 
 	//MODDD - new
 	DEFINE_FIELD(CGauss, m_fireState, FIELD_INTEGER),
-	
 	//MODDD - coming back here
 	DEFINE_FIELD( CGauss, fuser1_store, FIELD_FLOAT ),  // was FIELD_TIME.
 	//DEFINE_FIELD( CGauss, pev->fuser1, FIELD_FLOAT ),
 	
-
 	//	DEFINE_FIELD( CGauss, m_flPlayAftershock, FIELD_TIME ),
 	//	DEFINE_FIELD( CGauss, m_flNextAmmoBurn, FIELD_TIME ),
 	DEFINE_FIELD(CGauss, m_fPrimaryFire, FIELD_BOOLEAN),
@@ -110,7 +105,6 @@ TYPEDESCRIPTION	CGauss::m_SaveData[] =
 int CGauss::Save(CSave& save){
 	if (!CBasePlayerWeapon::Save(save))
 		return 0;
-
 
 	fuser1_store = pev->fuser1;  //commit it
 
@@ -140,9 +134,6 @@ int CGauss::Restore(CRestore& restore){
 
 	pev->fuser1 = fuser1_store;  //take it
 
-	g_firstFrameSinceRestore = TRUE;
-
-
 	return result;
 }
 #endif
@@ -150,6 +141,22 @@ int CGauss::Restore(CRestore& restore){
 
 
 
+// Drop the damage and range based off of the direct-hit damage (flDamage).
+void getRadiusStats(float flDamage, float& radDmg, float& radRange){
+	// Diminishing returns with each '200' bracket that's reached.
+	// Although, more range means more damage at the same distance, even without increasing damage.
+	// Range drops off steeply for that reason.
+	if(flDamage <= 200){
+		radDmg = flDamage * 0.60;
+		radRange = flDamage * 0.60;
+	}else if(flDamage <= 400){
+		radDmg = (200 * 0.60) + (flDamage - 200) * 0.30;
+		radRange = (200 * 0.60) + (flDamage - 200) * 0.20;
+	}else{
+		radDmg = (200 * 0.60) + (400 - 200) * 0.30 + (flDamage - 400) * 0.20;
+		radRange = (200 * 0.60) + (400 - 200) * 0.20 + (flDamage - 400) * 0.08;
+	}
+}//getRadiusStats
 
 
 
@@ -159,28 +166,22 @@ int CGauss::Restore(CRestore& restore){
 // And the pitch, this is used for how to scale the pitch snce starting a charge.
 // Point is, good to keep in synch with when the most ammo that could possibly be used has been added
 // to the charge.
-float CGauss::GetFullChargeTime(void)
-{
+float CGauss::GetFullChargeTime(void){
 	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_mode) != 1) {
-		if (IsMultiplayer())
-		{
+		if (IsMultiplayer()){
 			return 1.5;
 		}
-
 		return 4;
-	}
-	else {
+	}else{
 		// ALPHA: any differences for multiplayer unknown.  How about 30% less time?
-		if (IsMultiplayer())
-		{
+		if (IsMultiplayer()){
 			// - 1.3 ?
-			return (0.8*13)*0.7;
+			return (0.7*(12-1.5))*0.7;
 		}
-
-		return 0.8 * 13; // - 1.3;
+		return 0.7*(12-1.5); // - 1.3;
 	}
-	
-}
+}//GetFullChargeTime
+
 
 
 
@@ -371,7 +372,10 @@ void CGauss::_SecondaryAttack()
 	float chargeInitialDelay;
 	float startPitch;
 	float maxPitch;
-	if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_mode) != 1) {
+	float pitchDelta;
+
+	float theGaussMode = EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gauss_mode);
+	if (theGaussMode != 1) {
 		//retail
 		chargeAmmoUsage = 1;
 		chargeAmmoStoredMax = 13;
@@ -387,15 +391,16 @@ void CGauss::_SecondaryAttack()
 	else {
 		chargeAmmoUsage = 5;
 		chargeAmmoStoredMax = 12;
-		chargeInitialDelay = 0.9;
+		chargeInitialDelay = 0.5;
 		startPitch = 103;
 		maxPitch = 290;
 		if (IsMultiplayer()){
-			chargeAmmoUsageDelay = 0.8*0.7;
+			chargeAmmoUsageDelay = 0.7*0.7;
 		}else{
-			chargeAmmoUsageDelay = 0.8;
+			chargeAmmoUsageDelay = 0.7;
 		}
 	}
+	pitchDelta = maxPitch - startPitch;
 
 
 	// don't fire underwater
@@ -554,10 +559,21 @@ void CGauss::_SecondaryAttack()
 			// max it goes
 			pitch = maxPitch;
 		}else{
+			float chargeTimeFracto = (currentChargeTime / GetFullChargeTime());
 			// go upwards
-			pitch = (currentChargeTime / GetFullChargeTime()) * (maxPitch - startPitch) + startPitch;
+			if(theGaussMode != 1){
+				pitch = chargeTimeFracto * (pitchDelta) + startPitch;
+			}else{
+				float pitcho;
+				// move up the pitch faster at first, then more slowly
+				if(chargeTimeFracto < 0.5){
+					pitcho = (chargeTimeFracto/0.5) * (pitchDelta) * 0.75 + startPitch;
+				}else{
+					pitcho = (pitchDelta) * 0.75 + (chargeTimeFracto - 0.5)/0.5 * (pitchDelta) * 0.25 + startPitch;
+				}
+				pitch = (int)pitcho;
+			}
 		}
-
 
 		if(pitch < 50){
 			// WARNING!  Pitch should never go under the starting 100 for 0 charge time!
@@ -569,14 +585,19 @@ void CGauss::_SecondaryAttack()
 		if (pitch > maxPitch){
 			pitch = maxPitch;
 		}
-		//easyForcePrintLine("OH dear PITCH %.2f / %.2f : %d", currentChargeTime, daChargeTime, pitch);
 
+		/*
+		if(m_fireState < chargeAmmoStoredMax-1){
+			easyForcePrintLine("OH dear PITCH %.2f / %.2f : %d", currentChargeTime, daChargeTime, pitch);
+		}
+		*/
 
 
 		// ALERT( at_console, "%d %d %d\n", m_fInAttack, m_iSoundState, pitch );
 
-		if (m_iSoundState == 0)
+		if (m_iSoundState == 0){
 			ALERT(at_console, "sound state %d\n", m_iSoundState);
+		}
 
 		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usGaussSpin, 0.0, (float*)&g_vecZero, (float*)&g_vecZero, 0.0, 0.0, pitch, 0, (m_iSoundState == SND_CHANGE_PITCH) ? 1 : 0, 0);
 
@@ -979,14 +1000,7 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 				// also diminishing returns for extreme damage.
 				float radDmg;
 				float radRange;
-
-				if (flDamage <= 140) {
-					radDmg = flDamage * 0.36;
-					radRange = flDamage * 1.2;
-				}else {
-					radDmg = (140 * 0.36) + (flDamage - 140) * 0.16;
-					radRange = (140 * 1.2) + (flDamage - 140) * 0.32;
-				}
+				getRadiusStats(flDamage, radDmg, radRange);
 
 
 				RadiusDamage(tr.vecEndPos, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, dmgBlastBit, dmgBlastBitMod);
@@ -1049,18 +1063,9 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 							::RadiusDamage( beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, flDamage, damage_radius, CLASS_NONE, DMG_BLAST, DMG_GAUSS );
 							*/
 
-
 							float radDmg;
 							float radRange;
-
-							if (flDamage <= 140) {
-								radDmg = flDamage * 0.36;
-								radRange = flDamage * 1.2;
-							}
-							else {
-								radDmg = (140 * 0.36) + (flDamage - 140) * 0.16;
-								radRange = (140 * 1.2) + (flDamage - 140) * 0.32;
-							}
+							getRadiusStats(flDamage, radDmg, radRange);
 
 							::RadiusDamage(beam_tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, dmgBlastBit, dmgBlastBitMod);
 
@@ -1089,18 +1094,9 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 
 					//MODDD - NEW.  Only happen if a reflection or pierce hasn't already done this by this point.
 					if (doDirectHitRadDamage) {
-
 						float radDmg;
 						float radRange;
-
-						if (flDamage <= 140) {
-							radDmg = flDamage * 0.19;
-							radRange = flDamage * 0.94;
-						}
-						else {
-							radDmg = (140 * 0.19) + (flDamage - 140) * 0.13;
-							radRange = (140 * 0.94) + (flDamage - 140) * 0.26;
-						}
+						getRadiusStats(flDamage, radDmg, radRange);
 
 						::RadiusDamage(tr.vecEndPos + vecDir * 8, pev, m_pPlayer->pev, radDmg, radRange, CLASS_NONE, dmgBlastBit, dmgBlastBitMod);
 
@@ -1146,17 +1142,28 @@ void CGauss::Fire(Vector vecOrigSrc, Vector vecDir, float flDamage)
 
 void CGauss::onFreshFrame(void){
 
-	// ???????????????????
-	//m_fInAttack = 0;
-	//inAttackPrev = 0;
+	BOOL holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
+	BOOL holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
 
-	ignoreIdleTime = gpGlobals->time + 0.8;
+	float framesSinceRestore = getFramesSinceRestore();
 
-	if(m_fInAttack == 1){
-		SendWeaponAnim(GAUSS_SPINUP);
-	}else if(m_fInAttack == 2){
-		SendWeaponAnim(GAUSS_SPIN);
+	if(framesSinceRestore == 0 || (holdingSecondary || holdingPrimary) ){
+		ignoreIdleTime = gpGlobals->time + 0.3;
 	}
+
+	if(framesSinceRestore == 0){
+		//g_firstFrameSinceRestore -= 1;
+
+		// ???????????????????
+		//m_fInAttack = 0;
+		//inAttackPrev = 0;
+
+		if(m_fInAttack == 1){
+			SendWeaponAnim(GAUSS_SPINUP);
+		}else if(m_fInAttack == 2){
+			SendWeaponAnim(GAUSS_SPIN);
+		}
+	}//framesSinceRestore check
 
 }//onFreshFrame
 
@@ -1171,7 +1178,6 @@ void CGauss::ItemPreFrame( void ){
 
 void CGauss::ItemPostFrame(void){
 
-
 	/*
 	if (!m_pPlayer->m_bHolstering) {
 	// If the player is putting the weapon away, don't do this!
@@ -1184,8 +1190,7 @@ void CGauss::ItemPostFrame(void){
 
 
 void CGauss::ItemPostFrameThink(void){
-
-	if(g_firstFrameSinceRestore){
+	if(getFramesSinceRestore() < 3){
 		onFreshFrame();
 	}
 
@@ -1193,7 +1198,6 @@ void CGauss::ItemPostFrameThink(void){
 	// m_fInAttack is what phase charging is in (0: none, 1: startup + one-time delay, 2: charge-loop to further add ammo)
 
 	//easyForcePrintLine("I AM gauss fs:%d ia:%d", m_fireState, m_fInAttack);
-
 
 	BOOL holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
 	BOOL holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
@@ -1203,8 +1207,6 @@ void CGauss::ItemPostFrameThink(void){
 		//easyForcePrintLine("WHATS GOOD nextprim:%.2f", m_flNextPrimaryAttack);
 //#endif
 
-
-	
 	BOOL forceIdle = FALSE;
 
 	if(!m_pPlayer->m_bHolstering){
@@ -1232,8 +1234,6 @@ void CGauss::ItemPostFrameThink(void){
 
 
 
-
-
 	if(m_fInAttack == 0 && inAttackPrev != 0){
 		// FUCK SHIT AVENUE
 		StartFire();
@@ -1247,7 +1247,6 @@ void CGauss::ItemPostFrameThink(void){
 	}
 
 	inAttackPrev = m_fInAttack;
-
 
 	
 	if(forceIdle){
