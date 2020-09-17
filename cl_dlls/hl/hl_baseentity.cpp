@@ -537,6 +537,10 @@ void CBaseMonster::SetSequenceByNameForceLoops(char* szSequence, float flFramera
 //MODDD - new 
 int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist ) { return 0; }
 int CBaseMonster::CheckLocalMoveHull ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist ) { return 0; }
+BOOL CBaseMonster::ZCheck(const Vector& vecPosition, const Vector& vecEnd){return FALSE;}
+BOOL CBaseMonster::ZCheck_Ground(const Vector& vecPosition, const Vector& vecEnd){return FALSE;}
+BOOL CBaseMonster::ZCheck_Flyer(const Vector& vecPosition, const Vector& vecEnd){return FALSE;}
+
 
 
 float CBaseMonster::OpenDoorAndWait( entvars_t *pevDoor ) { return 0.0; }

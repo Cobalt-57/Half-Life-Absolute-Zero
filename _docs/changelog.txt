@@ -727,13 +727,26 @@ Floaters now do half duration poison as well.  More forgiving given how spammy t
 
 Spawning weapons with cheats ('impulse 101', 'everything' in console) doesn't change the currently equipped weapon (unless none is, picks the crowbar).
 
+Triangulation improvements (improvised 'how do I get around a simple obstacle' pathfinding AI), especially for fliers.
+Flyer AI less likely to be unable to follow.
+
+Reduced floater gravity (when falling from being killed)
+Floaters less likely to be content hitting the floor of an overhand when barely peeking over it.
+Floater spit launch & hit sounds now use unused bullsquid sounds.
+
+Monsters in a 'fail' state in certain scenarios will no longer wait on 'PVS' if in a combat state, just like enemy-check updates already did.
+
+Archer melee attack damage cut in half; based on bullsquid skill values.  Could be punishing for happening more quickly.
+Does not have a chance of staying alive indefinitely after water drains.
+
+Panthereyes much more willing to jump while pathing randomly around a player that cannot be reached directly.
+Jump cool down released (scales with difficulty; less minimum time between jumps toward hard), jump range min/max distances extended.
+More likely to land on the surface of objects it jumps against.
+
 
 
 IN PROGRESS:
-Panthereye jump:  although not failing to jump at all, it is odd it picks a position it cannot reach jumping as far as possible.  Broken 'stuck' mechanic maybe?
--might not be happening anymore?
-Panthereye will also be more willing to jump while routing randomly around a player it can't reach to melee.
-Archers: sometimes deprived-of-water killed never happens.
+Panthereye will also be more willing to jump while routing randomly around a player it can't reach to melee.  (maybe?)
 
 
 LATER:

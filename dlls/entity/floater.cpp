@@ -18,6 +18,7 @@
 #include "schedule.h"
 */
 
+extern BOOL g_CheckLocalMove_ExtraDebug;
 
 
 #if REMOVE_ORIGINAL_NAMES != 1
@@ -200,7 +201,8 @@ const char* CFloater::pPainSounds[] =
 };
 const char* CFloater::pAttackSounds[] = 
 {
-	"floater/floater_attack.wav",
+	//"floater/floater_attack.wav",
+	"bullchicken/bc_attack1.wav"
 };
 
 
@@ -224,6 +226,8 @@ const char* CFloater::pAttackMissSounds[] =
 
 TYPEDESCRIPTION	CFloater::m_SaveData[] = 
 {
+	// not saving this??  Wait.. no need, just use m_flGroundSpeed.  Why is flightspeed even a separate thing
+	//DEFINE_FIELD( CFloater, m_flightSpeed, FIELD_FLOAT ),
 	DEFINE_FIELD( CFloater, explodeDelay, FIELD_TIME ),
 };
 
@@ -241,6 +245,8 @@ int CFloater::Restore( CRestore &restore )
 	if ( !CFlyingMonster::Restore(restore) )
 		return 0;
 	int iReadFieldsResult = restore.ReadFields( "CFloater", this, m_SaveData, ARRAYSIZE(m_SaveData) );
+
+	m_flightSpeed = m_flGroundSpeed;
 
 	return iReadFieldsResult;
 }
@@ -328,11 +334,9 @@ void CFloater::PainSound( void ){
 	*/
 }
 void CFloater::AttackSound( void ){
-	/*
 	int pitch = 95 + RANDOM_LONG(0,9);
 	// Play a random attack sound
-	UTIL_PlaySound( edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
-	*/
+	UTIL_PlaySound( edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, pitch );
 }
 
 
@@ -354,10 +358,16 @@ void CFloater::Precache( void )
 	PRECACHE_SOUND_ARRAY(pAlertSounds);
 	PRECACHE_SOUND_ARRAY(pIdleSounds);
 	PRECACHE_SOUND_ARRAY(pPainSounds);
-	PRECACHE_SOUND_ARRAY(pAttackSounds);
 	*/
+
+	PRECACHE_SOUND_ARRAY(pAttackSounds);
+
 	PRECACHE_SOUND_ARRAY(pAttackHitSounds);
 	PRECACHE_SOUND_ARRAY(pAttackMissSounds);
+
+	// for the spit effect (also unused bullsquid sounds, pAttackSounds's only one is too)
+	PRECACHE_SOUND("bullchicken/bc_acid2.wav");
+	PRECACHE_SOUND("bullchicken/bc_spithit3.wav");
 
 	global_useSentenceSave = FALSE;
 }//END OF Precache()
@@ -378,6 +388,8 @@ void CFloater::Spawn( void )
 
 	//SetBits(pev->flags, FL_FLY);
 	pev->flags |= FL_FLY;
+
+	pev->gravity = 0.28;  //reduced gravity.  why... has that never been in here.
 
 	///pev->solid			= SOLID_BBOX;  //not SOLID_SLIDEBOX
 	//pev->movetype		= MOVETYPE_FLY;
@@ -419,6 +431,9 @@ void CFloater::Stop(){
 int CFloater::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist )
 {
 	int iReturn;
+
+	//iReturn = LOCALMOVE_VALID;
+	//return  LOCALMOVE_VALID;;
 
 	/*
 	// UNDONE: need to check more than the endpoint
@@ -518,20 +533,31 @@ int CFloater::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBa
 	//if(tracesStartSolid || minFraction < 1.0)
 	*/
 
-	
+
 	TraceResult tr;
 	Vector vecStartTrace = vecStart + Vector( 0, 0, 12 );
+	Vector vecEndFiltered = vecEnd + Vector(0, 0, 12);
+
 
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
 
-	//MODDD - large_hull is probably the safest for flyers in general.  point_hull if using the bounce system. or maybe head_hull?
-	UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 12), dont_ignore_monsters, head_hull, edict(), &tr );
+	// large_hull is probably the safest for flyers in general.  point_hull if using the bounce system. or maybe head_hull?
+
+	// WAS THE ONE USED!!!
+	/////////////////////////////////////////////////////
+	// YES you want TRACE_MONSTER_HULL.
+	// This doesn't run into the annoying issue of bumping into the ground due to being centered vertically
+	// instead of centered on its bottom bounds.  Even thoughit's a 'head_hull' and there's already a +12
+	// Z offset (see vecStartTrace and vecEndFiltered above)? I guess that was too small.
+	TRACE_MONSTER_HULL(edict(), vecStartTrace, vecEndFiltered, dont_ignore_monsters, edict(), &tr);
+	//UTIL_TraceHull( vecStartTrace, vecEndFiltered, dont_ignore_monsters, head_hull, edict(), &tr );
+	/////////////////////////////////////////////////////
+
 	
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
 	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
 
-	if (pflDist)
-	{
+	if (pflDist){
 		*pflDist = ( (tr.vecEndPos ) - vecStartTrace ).Length();// get the distance.
 	}
 	
@@ -540,12 +566,29 @@ int CFloater::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBa
 		return LOCALMOVE_VALID;
 	}
 
+	const char* hitClassname;
+
+	if(gpGlobals->trace_ent != NULL){
+		hitClassname = STRING(gpGlobals->trace_ent->v.classname);
+	}else{
+		hitClassname = "NULL";
+	}
+
+
+
 	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
 	if (tr.fStartSolid || tr.flFraction < 1.0)
 	{
-		if ( pTarget && pTarget->edict() == gpGlobals->trace_ent ){
-			iReturn = LOCALMOVE_VALID;
+		if(pTarget){
+			if ( pTarget->edict() == gpGlobals->trace_ent ){
+				//if(g_CheckLocalMove_ExtraDebug)UTIL_drawLineFrame(vecStart.x, vecStart.y, vecStart.z, vecEndFiltered.x, vecEndFiltered.y, vecEndFiltered.z, 8, 100, 0, 255, 0);
+				iReturn = LOCALMOVE_VALID;
+			}else{
+				//if(g_CheckLocalMove_ExtraDebug)UTIL_drawLineFrame(vecStart.x, vecStart.y, vecStart.z, vecEndFiltered.x, vecEndFiltered.y, vecEndFiltered.z, 8, 100, 255, 0, 0);
+				iReturn = LOCALMOVE_INVALID;
+			}
 		}else{
+			// no target?  wait..   what.
 			iReturn = LOCALMOVE_INVALID;
 		}
 	}else{
@@ -573,7 +616,7 @@ int CFloater::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBa
 		}
 	}
 	return iReturn;
-}
+}//CheckLocalMove
 
 
 
@@ -594,7 +637,8 @@ BOOL CFloater::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 		flWaypointDist = ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin ).Length();
 
 	// !!! Replaced gpGlobals->frametime with flInterval
-	if ( flWaypointDist <= 64 + (m_flGroundSpeed * flInterval) )
+	// NO.   Not wise to be so high (constant 64).
+	if ( flWaypointDist <= 2 + (m_flGroundSpeed * flInterval) )
 		return TRUE;
 
 	return FALSE;
@@ -1042,7 +1086,7 @@ BOOL CFloater::CheckMeleeAttack2( float flDot, float flDist ){
 	return FALSE;
 }
 BOOL CFloater::CheckRangeAttack1( float flDot, float flDist ){
-	//DEBUG - why you no work!!!??
+	
 	if(gpGlobals->time >= shootCooldown){
 		//past cooldown? allowed.
 	}else{
@@ -1054,7 +1098,24 @@ BOOL CFloater::CheckRangeAttack1( float flDot, float flDist ){
 	if ( flDot > 0.5 && flDist <= 1024 )
 	{
 		// there is one more check to do.  Is there a little wider of a straight line of sight available, not just barely peeking around a wall?
-		
+		Vector vecSpitOffset = ( pev->origin + gpGlobals->v_right * 0 + gpGlobals->v_forward * 18 + gpGlobals->v_up * 22);
+		TraceResult tr;
+		UTIL_TraceLine(vecSpitOffset, m_hEnemy->BodyTargetMod(vecSpitOffset), ignore_monsters, ENT(pev), &tr);
+		if(tr.flFraction >= 1.0){
+			// good?
+			return TRUE;
+		}else if(tr.pHit != NULL){
+			// is it something I hate?
+			CBaseEntity* entTest = CBaseEntity::Instance(tr.pHit);
+			if(entTest != NULL){
+				int daRel = IRelationship(entTest);
+				if(daRel > R_NO || daRel == R_FR){
+					// yes.
+					return TRUE;
+				}
+			}
+		}// trace/hitent check
+
 
 		//easyForcePrintLine("YAY?!");
 		return TRUE;
@@ -1263,6 +1324,9 @@ GENERATE_KILLED_IMPLEMENTATION(CFloater)
 		//Any further resets will look like gravity suddenly stops with each shot (Killed call again).
 		pev->velocity = Vector(0, 0, 0);
 		m_velocity = Vector(0, 0, 0);
+
+		// Just in case it never hits the ground (stuck in a upwards fan), explode in around 12 seconds to start.
+		explodeDelay = gpGlobals->time + RANDOM_FLOAT(12, 14);
 	}
 
 	//MODDD - is still doing here ok?
@@ -1443,6 +1507,8 @@ void CFloater::HandleEventQueueEvent(int arg_eventID){
 			// This thing's poison attacks get spammy, don't be too unforgiving.
 			// (hard may turn this off though, but there's enough to make 'hard' hard as it is)
 			theSquidSpit->doHalfDuration = TRUE;
+			// and use the unused bullsquid sounds, why not
+			theSquidSpit->useAltFireSound = TRUE;
 		}
 
 	break;
@@ -1942,7 +2008,14 @@ void CFloater::onDeathAnimationEnd(void){
 
 // Can move in the water a little if I have to, but I'd prefer not to.
 int CFloater::getNodeTypeAllowed(void){
-	return bits_NODE_AIR;
+	if(map_anyAirNodes){
+		// then I only want to use air nodes.
+		return bits_NODE_AIR;
+	}else{
+		// Not really a choice.  Why miss out on what's useful.
+		return bits_NODE_LAND | bits_NODE_AIR;
+	}
+
 }
 
 

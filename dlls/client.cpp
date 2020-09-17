@@ -2735,7 +2735,6 @@ void ClientCommand( edict_t *pEntity )
 			easyForcePrintLineClient(pEntity, "ERROR: Could not find an entity / monster in crosshairs.");
 		}
 
-
 	}else if( FStrEq(pcmdRefinedRef, "squadinfo") || FStrEq(pcmdRefinedRef, "squad") || FStrEq(pcmdRefinedRef, "reportsquad") || FStrEq(pcmdRefinedRef, "squadreport") || FStrEq(pcmdRefinedRef, "squadstate")  ){
 		CBaseEntity* forwardEnt = FindEntityForward(tempplayer);
 	
@@ -2752,8 +2751,6 @@ void ClientCommand( edict_t *pEntity )
 		CSquadMonster* squadTest = forwardEnt->MySquadMonsterPointer();
 
 		if(squadTest != NULL){
-
-
 			const char* netnameSafe;
 
 			if(FStringNull(squadTest->pev->netname) || ((netnameSafe = STRING(squadTest->pev->netname)) == NULL) ){
@@ -2792,15 +2789,11 @@ void ClientCommand( edict_t *pEntity )
 				}
 
 			}
-
 			easyForcePrintLineClient(pEntity, "***END OF SQUADINFO***");
 		}else{
 			easyForcePrintLineClient(pEntity, "SquadInfo failed: not a SquadMonster!  Thing picked: %s", forwardEnt->getClassname() );
 		}
-
-
 	}else if(FStrEq(pcmdRefinedRef, "reportnetname")){
-		
 		const char* arg1ref = CMD_ARGV(1);
 
 		//ambiguous as to whether this is what is in the crosshairs or the player itself.  Try to figure it out:
@@ -2816,22 +2809,16 @@ void ClientCommand( edict_t *pEntity )
 				tempMonster->reportNetName();
 			}
 		}
-	
-	
+		
 	}else if( FStrEq(pcmdRefinedRef, "selfquery") || FStrEq(pcmdRefinedRef, "queryself") || FStrEq(pcmdRefinedRef, "reportself") ){
-		//pev->solid			= SOLID_SLIDEBOX;
-		//pev->movetype
-
 		easyForcePrintLineClient(pEntity, "PLAYER STATS:");
 		tempplayer->ReportAIState();
 	
-	}else if( FStrEq(pcmdRefinedRef, "gib") || FStrEq(pcmdRefinedRef, "gibbed") || FStrEq(pcmdRefinedRef, "gibme") || FStrEq(pcmdRefinedRef, "diehard") || FStrEq(pcmdRefinedRef, "diehard") || FStrEq(pcmdRefinedRef, "explode") || FStrEq(pcmdRefinedRef, "asplode") || FStrEq(pcmdRefinedRef, "yourheadasplode") || FStrEq(pcmdRefinedRef, "myheadasplode") ||  FStrEq(pcmdRefinedRef, "headasplode") || FStrEq(pcmdRefinedRef, "yourheadexplode") || FStrEq(pcmdRefinedRef, "myheadexplode") ||  FStrEq(pcmdRefinedRef, "headexplode")    ){
-		
+	}else if( FStrEq(pcmdRefinedRef, "gib") || FStrEq(pcmdRefinedRef, "gibbed") || FStrEq(pcmdRefinedRef, "gibme") || FStrEq(pcmdRefinedRef, "diehard") || FStrEq(pcmdRefinedRef, "diehard") || FStrEq(pcmdRefinedRef, "explode") || FStrEq(pcmdRefinedRef, "asplode") || FStrEq(pcmdRefinedRef, "yourheadasplode") || FStrEq(pcmdRefinedRef, "myheadasplode") ||  FStrEq(pcmdRefinedRef, "headasplode") || FStrEq(pcmdRefinedRef, "yourheadexplode") || FStrEq(pcmdRefinedRef, "myheadexplode") ||  FStrEq(pcmdRefinedRef, "headexplode") ){
 		if(g_flWeaponCheat == 0.0){
 			easyForcePrintLineClient(pEntity, "No exploding.");
 			return;
 		}
-
 
 		//BOOL godModeMem = tempplayer->pev->flags & FL_GODMODE;
 		//if(godModeMem){
@@ -2845,13 +2832,9 @@ void ClientCommand( edict_t *pEntity )
 		tempplayer->pev->health = -200;
 		tempplayer->Killed(tempplayer->pev, tempplayer->pev, GIB_ALWAYS);
 
-
 		//if(godModeMem){
 		//	tempplayer->pev->flags |= FL_GODMODE;
 		//}
-
-
-
 	}else if( FStrEq(pcmdRefinedRef, "dividebyzero") || FStrEq(pcmdRefinedRef, "crash") || FStrEq(pcmdRefinedRef, "enditalready") || FStrEq(pcmdRefinedRef, "thissucks") || FStrEq(pcmdRefinedRef, "iwantmydesktop") || FStrEq(pcmdRefinedRef, "iwannagohome")   ){
 		
 		if(g_flWeaponCheat == 0.0){

@@ -54,7 +54,9 @@ EASY_CVAR_EXTERN_DEBUGONLY(cineChangelevelFix)
 // Could just be entities?  Invisible.
 // Anyway, this counts up independently of CCineMonster.  Scripted #7 is not necessarily related
 // to monster #7 at all.
-int CCineMonster::scriptedIDLatest = 0;
+// CHANGE: Now counts starting at 9000 to avoid overlapping with monsterID's, so that debugging
+// calls for monsterID aren't forced to pick one or the other.
+int CCineMonster::scriptedIDLatest = 9000;
 
 
 
@@ -604,10 +606,20 @@ BOOL CCineMonster::StartSequence(CBaseMonster* pTarget, int iszSeq, BOOL complet
 		return FALSE;
 	}
 
-	pTarget->pev->sequence = pTarget->LookupSequence(STRING(iszSeq));
+	const char* seqName = STRING(iszSeq);
+	pTarget->pev->sequence = pTarget->LookupSequence(seqName);
+
+
+	if(pTarget->monsterID == 0 && pTarget->pev->sequence == 90){
+		int x = 45;
+	}
+
+	//MODDD - I mean, it is.
+	pTarget->usingCustomSequence = TRUE;
+
 	if (pTarget->pev->sequence == -1)
 	{
-		ALERT(at_error, "%s: unknown scripted sequence \"%s\"\n", STRING(pTarget->pev->targetname), STRING(iszSeq));
+		ALERT(at_error, "%s: unknown scripted sequence \"%s\"\n", STRING(pTarget->pev->targetname), seqName);
 		pTarget->pev->sequence = 0;
 		// return FALSE;
 	}

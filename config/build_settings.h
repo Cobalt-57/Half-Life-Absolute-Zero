@@ -73,13 +73,12 @@
 
 
 
-//#define BUILD_INFO_TITLE "Half-Life: Absolute Zero Development Build"
+#define BUILD_INFO_TITLE "Half-Life: Absolute Zero Development Build"
 // shortened?
-#define BUILD_INFO_TITLE "Half-Life: AZ - Dev Build"
+//#define BUILD_INFO_TITLE "Half-Life: AZ - Dev Build"
 
-// was DEBUG and RELEASE, shortened
-#define BUILD_INFO_DEBUG "DE"
-#define BUILD_INFO_RELEASE "RE"
+#define BUILD_INFO_DEBUG "DEBUG"
+#define BUILD_INFO_RELEASE "RELEASE"
 
 
 // .............. nothing

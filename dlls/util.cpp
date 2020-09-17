@@ -6055,6 +6055,11 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("bullchicken/bc_spithit1.wav");
 			PRECACHE_SOUND("bullchicken/bc_spithit2.wav");
 
+			// Unused bullsquid sounds, now for the floater's spit effect to use
+			PRECACHE_SOUND("bullchicken/bc_attack1.wav");
+			PRECACHE_SOUND("bullchicken/bc_acid2.wav");
+			PRECACHE_SOUND("bullchicken/bc_spithit3.wav");
+
 			PRECACHE_SOUND("bullchicken/bc_attack2.wav");
 			PRECACHE_SOUND("bullchicken/bc_attack3.wav");
 			PRECACHE_SOUND("bullchicken/bc_die1.wav");

@@ -46,6 +46,7 @@ public:
 	float waterLevelMem;
 	float lackOfWaterTimer;
 	float interruptMeleeTimer;
+	BOOL meleeAttackIsDirect;
 
 	
 	//save info

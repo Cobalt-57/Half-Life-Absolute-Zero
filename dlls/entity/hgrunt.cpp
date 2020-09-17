@@ -6253,10 +6253,6 @@ Vector CHGrunt::HGRUNT_ShootAtEnemyEyes( const Vector &shootOrigin )
 
 
 
-
-
-
-
 void CHGrunt::checkHeadGore( ){
 	CHGrunt::checkHeadGore(GIB_ALWAYS);  //just a cheap way to make it draw decal blood on impact (at least not block it).
 }

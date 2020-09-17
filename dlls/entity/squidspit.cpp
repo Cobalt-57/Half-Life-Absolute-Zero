@@ -32,12 +32,15 @@ int CSquidSpit::iSquidSpitSprite = -1;
 CSquidSpit::CSquidSpit(void){
 
 	doHalfDuration = FALSE;
+	useAltFireSound = FALSE;
 }
 
 
 TYPEDESCRIPTION	CSquidSpit::m_SaveData[] = 
 {
 	DEFINE_FIELD( CSquidSpit, m_maxFrame, FIELD_INTEGER ),
+	DEFINE_FIELD( CSquidSpit, doHalfDuration, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CSquidSpit, useAltFireSound, FIELD_BOOLEAN )
 };
 
 IMPLEMENT_SAVERESTORE( CSquidSpit, CBaseEntity );
@@ -107,6 +110,7 @@ void CSquidSpit::precacheStatic(void){
 	
 	PRECACHE_MODEL("sprites/bigspit.spr");// spit projectile.
 	PRECACHE_MODEL("models/spit.mdl");
+
 }//END OF precacheStatic
 
 
@@ -227,21 +231,20 @@ CSquidSpit* CSquidSpit::Shoot( entvars_t *pevOwner, Vector vecStart, Vector vecD
 		//everything above is good enough.
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		//IMPORTANT! EARLY TERMINATION HERE. Below is stuff for figuring out how to shoot to arc towards the target correctly (gravity).
-		//Clearly a bullsquidspitarc of 0 (or really non-1) tells us not to do that.
+		// IMPORTANT! EARLY TERMINATION HERE. Below is stuff for figuring out how to shoot to arc towards the target correctly (gravity).
+		// Clearly a bullsquidspitarc of 0 (or really non-1) tells us not to do that.
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		return NULL;
+		return pSpit;
 	}
 
 	/*
 	if(targetEnt == NULL){
 		//just rely on the "vecVelocity" already assigned?
-		return NULL;
+		return pSpit;
 	}
 	*/
 
 	Vector dest;
-	//EyePosition( ) { return pev->origin + pev->view_ofs;
 
 	Vector vecEnemySize = vecMinBounds - vecMaxBounds;
 
@@ -355,25 +358,27 @@ void CSquidSpit::Touch ( CBaseEntity *pOther )
 	// splat sound
 	iPitch = RANDOM_FLOAT( 90, 110 );
 
-	UTIL_PlaySound( ENT(pev), CHAN_VOICE, "bullchicken/bc_acid1.wav", 1, ATTN_NORM, 0, iPitch );	
 
-	switch ( RANDOM_LONG( 0, 1 ) )
-	{
-	case 0:
-		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "bullchicken/bc_spithit1.wav", 1, ATTN_NORM, 0, iPitch );	
-		break;
-	case 1:
-		UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "bullchicken/bc_spithit2.wav", 1, ATTN_NORM, 0, iPitch );	
-		break;
+	if(!useAltFireSound){
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "bullchicken/bc_acid1.wav", 1, ATTN_NORM, 0, iPitch );	
+
+		switch ( RANDOM_LONG( 0, 1 ) ){
+			case 0:UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "bullchicken/bc_spithit1.wav", 1, ATTN_NORM, 0, iPitch );	break;
+			case 1:UTIL_PlaySound( ENT(pev), CHAN_WEAPON, "bullchicken/bc_spithit2.wav", 1, ATTN_NORM, 0, iPitch );	break;
+		}
+	}else{
+		// floater's sound
+		UTIL_PlaySound( ENT(pev), CHAN_VOICE, "bullchicken/bc_acid2.wav", 1, ATTN_NORM, 0, iPitch );
+		UTIL_PlaySound(ENT(pev), CHAN_WEAPON, "bullchicken/bc_spithit3.wav", 1, ATTN_NORM, 0, iPitch);
 	}
 
-	if ( !pOther->pev->takedamage )
-	{
 
+
+
+	if ( !pOther->pev->takedamage ){
 		// make a splat on the wall
 		UTIL_TraceLine( pev->origin, pev->origin + pev->velocity * 10, dont_ignore_monsters, ENT( pev ), &tr );
 		UTIL_DecalTrace(&tr, DECAL_SPIT1 + RANDOM_LONG(0,1));
-
 
 		if(EASY_CVAR_GET_DEBUGONLY(bullsquidSpitUseAlphaEffect) == 0){
 			// make some flecks

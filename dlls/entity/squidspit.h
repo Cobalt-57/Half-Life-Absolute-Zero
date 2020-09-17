@@ -17,7 +17,7 @@ public:
 	static int iSquidSpitSprite;
 	int m_maxFrame;
 	BOOL doHalfDuration;
-
+	BOOL useAltFireSound;
 
 
 	CSquidSpit(void);

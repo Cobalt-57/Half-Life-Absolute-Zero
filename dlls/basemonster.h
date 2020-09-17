@@ -792,8 +792,12 @@ public:
 
 
 	virtual int CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist );// check validity of a straight move through space
-	
 	virtual int CheckLocalMoveHull ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, float *pflDist );// check validity of a straight move through space
+
+	virtual BOOL ZCheck(const Vector& vecPosition, const Vector& vecEnd);
+	virtual BOOL ZCheck_Ground(const Vector& vecPosition, const Vector& vecEnd);
+	virtual BOOL ZCheck_Flyer(const Vector& vecPosition, const Vector& vecEnd);
+
 	
 	virtual BOOL usesSegmentedMove(void);
 	virtual int MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt );

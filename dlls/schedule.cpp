@@ -456,13 +456,19 @@ void CBaseMonster::MaintainSchedule ( void )
 
 	// And m_iTaskStatus isn't used when a task failed, right?  Be sure of that.
 
-
 	Schedule_t* pNewSchedule;
 	Schedule_t* pPrevSchedule;
 	int i;
 	BOOL pickedScheduleThisCall = FALSE;
 	BOOL queueStopAtScheduleEnd = FALSE;
-	
+
+	/*
+	int oldSeq = pev->sequence;
+	float oldFrame = pev->frame;
+	int oldAct = m_Activity;
+	//int oldIdealAct = m_IdealActivity;
+	*/
+
 	/*
 	if(m_iTaskStatus == TASKSTATUS_RUNNING){
 		return;
@@ -471,6 +477,10 @@ void CBaseMonster::MaintainSchedule ( void )
 
 	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyPrintLine("DOCKS1 %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
+	}
+
+	if(monsterID == 0){
+		int x = 34;
 	}
 
 	// UNDONE: Tune/fix this 10... This is just here so infinite loops are impossible
@@ -742,15 +752,24 @@ void CBaseMonster::MaintainSchedule ( void )
 		// animations more often.
 
 		
-		if ( m_Activity != m_IdealActivity )
-		{
-			if(monsterID==1){
-				int x = 45;
-			}
+		if ( m_Activity != m_IdealActivity ){
 			SetActivity ( m_IdealActivity );
 		}
 		
-		
+
+		/*
+		if ( m_Activity != m_IdealActivity )
+		{
+			if(m_IdealActivity == ACT_RESET){
+				easyPrintLine("excuse me kind sir but W A T");
+			}
+			signalActivityUpdate = FALSE;
+			m_Activity = m_IdealActivity;
+			m_fSequenceFinished = FALSE;
+			m_fSequenceFinishedSinceLoop = FALSE;
+			pev->frame = 0;
+		}
+		*/
 		// 
 		/*
 		if(m_MonsterState != MONSTERSTATE_SCRIPT ){
@@ -849,12 +868,35 @@ void CBaseMonster::MaintainSchedule ( void )
 
 
 
-
 	// UNDONE: We have to do this so that we have an animation set to blend to if RunTask changes the animation
 	// RunTask() will always change animations at the end of a script!
 	// Don't do this twice
 
 	//MODDD - allowing for "signalActivityUpdate" to also trigger SetActivity... once.
+	
+
+	/*
+	//MODDD - EXPERIMENTAL
+	///////////////////////////////////////////////////////////////////////////////////
+	if(oldSeq != pev->sequence){
+		// changed by any other means?   UNHOLY
+		return;
+	}
+
+	if(oldAct == m_Activity){
+		// no net change in activity?  Restore old frame
+		//	pev->frame = oldFrame;
+	}
+
+	// .... what.
+	if(m_Activity == ACT_RESET && oldAct != ACT_RESET){
+		m_Activity = (Activity)oldAct;
+	}
+
+	if (oldAct != m_Activity || signalActivityUpdate )
+	///////////////////////////////////////////////////////////////////////////////////
+	*/
+
 	if ( m_Activity != m_IdealActivity || signalActivityUpdate )
 	{
 		//MODDD - well yea.
@@ -863,6 +905,18 @@ void CBaseMonster::MaintainSchedule ( void )
 		SetActivity ( m_IdealActivity );
 	}
 
+
+	/*
+	// AGH.  No good.
+	if(oldAct == m_IdealActivity && !usingCustomSequence){
+		if(monsterID == 0){
+			int x = 45;
+		}
+		pev->sequence = oldSeq;
+		pev->frame = oldFrame;
+		//MODDD - TODO: save/restore all sequence info?
+	}
+	*/
 
 	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyPrintLine("CAN I MELEE COND1? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
@@ -1005,6 +1059,14 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 	break;
 	case TASK_WAIT_PVS:
 		{
+			//MODDD - wait.  Why wasn't this skipped if the monsterstate is COMBAT?
+			// The check in monsterstate.cpp lets being in COMBAT skip its PVS check for turning
+			// enemy-checks on & off.
+			if(m_MonsterState == MONSTERSTATE_COMBAT){
+				TaskComplete();
+				return;
+			}
+
 			//MODDD - alternate way to pass. If we're marked to ignore PVS checks, ignore this too.
 			if(noncombat_Look_ignores_PVS_check()){
 				TaskComplete();
@@ -1065,7 +1127,7 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 			// Turning to the direction of enemyLKP could lead them to staring at a wall for a bit.
 
 			/*
-			//MODDD - !!! Don't leave this on for much, testing.
+			//MODDD - !!! Don't leave this on for long, testing.
 			///////////////////////////////////////////////////////////////
 			//if(m_fEnemyLKP_EverSet){
 				// assume I'm trying to face that.
@@ -1192,7 +1254,8 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 	case TASK_MOVE_TO_ENEMY_RANGE:
 		{
 			//see TASK_WAIT_FOR_MOVEMENT_RANGE... interesting stuff.
-
+			
+			// NOTE - it is assumed pTask->flData and goalDistTolerance are one and the same here
 
 
 			//...is this a good idea?  And why wasn't it needed all this time?!
@@ -1266,9 +1329,30 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 
 
 				//which one?
-				//ALSO STILL... headcrab jumpiness and hassassin backwards anim events + restore out.
+				// ALSO STILL... headcrab jumpiness and hassassin backwards anim events + restore out.
+				// --- 2D and Z-wise to compare separately maybe?
 				//const float enemyRealDist = (pev->origin - vecDestination).Length();
-				const float enemyRealDist = (pev->origin - m_vecMoveGoal).Length();
+
+				// How about goal node and ZCheck?
+				//const float enemyRealDist = (pev->origin - m_vecMoveGoal).Length();
+				float distToGoal2D = -1;
+				BOOL theZCheck = FALSE;
+
+				/*
+				WayPoint_t* waypointGoalRef;
+				waypointGoalRef = GetGoalNode();
+
+				if(waypointGoalRef != NULL){
+					distToGoal2D = (waypointGoalRef->vecLocation - pev->origin ).Length2D();
+					// Not yet...
+					//theZCheck = ZCheck(pev->origin, waypointGoalRef->vecLocation);
+				}
+				*/
+				// GAH.  We do want to m_vecMoveGoal, location of the enemy itself.
+				distToGoal2D = (pev->origin - m_vecMoveGoal).Length();
+
+
+
 
 				//interestingly enough, "FInViewCone" does not count as a Visible check.
 				//As in, if there is a solid wall between this monster and the enemy, FInViewCone will still report "true" if this monster is facing the enemy regardless.
@@ -1289,7 +1373,6 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 						::DebugLine_Setup(1, vecDestination - Vector(0,0,8), vecDestination+Vector(0, 0, 8), 255, 0, 0);
 
 					}
-					float enemyPathGoalDistance = (m_vecMoveGoal - vecDestination).Length();
 					
 					/*
 					if(pTask->flData <= 1){
@@ -1309,7 +1392,7 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 						// (pathfind guaranteed to fail) sound terrifically wasteful.
 						// Let routine route checks for a better direct one work at 1-second intervals, much cheaper.
 						// In fact, right here!
-
+						
 						if(gpGlobals->time >= nextDirectRouteAttemptTime){
 							nextDirectRouteAttemptTime = gpGlobals->time + 1;
 							
@@ -1318,13 +1401,17 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 							BOOL theResult = FRefreshRouteChaseEnemySmartSafe();
 							// PRINTOUT HERE MAYBE?
 
-
+							int x = 45;
 						}//nextDirectRouteAttemptTime check
 
 						int x = 45;
 					}else{
 						// enemy got too far from the goal and we see they're goo far?   go ahead then, refresh.
-						redoPass = (enemyPathGoalDistance > enemyRealDist*0.2); //((m_vecMoveGoal - vecDestination).Length2D() > enemyRealDist*0.3);
+						//redoPass = (enemyPathGoalDistance > enemyRealDist*0.2); //((m_vecMoveGoal - vecDestination).Length2D() > enemyRealDist*0.3);
+						// (m_vecMoveGoal is straight to the enemy so it can be trusted)
+						float enemyPathGoalDistance = (m_vecMoveGoal - vecDestination).Length();
+						redoPass = (enemyPathGoalDistance > distToGoal2D * 0.2);
+
 					}
 				}// enemy in sight or damaged recently checks
 
@@ -1369,7 +1456,18 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 
 				// Set the appropriate activity based on an overlapping range
 				// overlap the range to prevent oscillation
-				if ( enemyRealDist < pTask->flData )
+
+
+				BOOL distaPass;
+				// Wait no!  Always be to m_vecMoveGoal, that is where the enemy is.
+				// If we happen to end close to that, not any route to any nearest node, end early.
+				//if(this->m_movementGoal == MOVEGOAL_ENEMY){
+					distaPass = (distToGoal2D < pTask->flData);
+				//}else{
+				//	distaPass = (
+				//}
+
+				if ( distaPass )
 				{
 					//TaskComplete();
 					//RouteClear();		// Stop moving
@@ -2314,7 +2412,7 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		}
 		else
 		{
-			easyPrintLine("Pathfind: TASK_FIND_COVER_FROM_ORIGIN: I FAIL HARD.");
+			easyPrintLine("Pathfind: TASK_MOVE_FROM_ORIGIN: I FAIL HARD.");
 			// no cover!
 			TaskFail();
 		}
@@ -2786,10 +2884,15 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 				// or, assume m_movementActivity was set by FRefreshRouteChaseEnemySmart?
 				// Although it forces to ACT_RUN.   ehhh why not.
 				
+				// Wait!  Careful about setting this so early, some things depend on
+				// seeing the difference between IdealActivity and movementActivity to set
+				// something speed-related.
+				/*
 				if(!MovementIsComplete()){
 					// It is possible that movement completed in the same frame in a very short route?  what?
 					m_IdealActivity = m_movementActivity;
 				}
+				*/
 				//////////////////////////////////////////////////////////////////////////////////////////////////
 				//////////////////////////////////////////////////////////////////////////////////////////////////
 				//////////////////////////////////////////////////////////////////////////////////////////////////

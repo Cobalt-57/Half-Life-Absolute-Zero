@@ -2241,6 +2241,13 @@ void CTestHull::BuildNodeGraph(void)
 				}
 			}
 
+
+			//MODDD - TODO?  Could there also be a check for rising out of the ground slightly to see if the
+			// node was accidentally placed too deep, if it begins in solid space?  Unsure if that really ever
+			// has a chance of happening, it would've failed to work with routing in retail anyway 
+			// (mappers would have never done this).
+
+
 			//MODDD - now another check.  Is the point reached from attempting to snap to the ground
 			// even in valid space?  If it started in some odd place deep inside the map and only found
 			// more map 384 below, it shouldn't have any nodeinfo.
@@ -2275,12 +2282,13 @@ void CTestHull::BuildNodeGraph(void)
 					WorldGraph.m_pNodes[i].m_afNodeInfo = 0;
 				}
 			}else{
+				// Hit something?  This is indeed on the ground.
 				WorldGraph.m_pNodes[i].m_afNodeInfo |= bits_NODE_LAND;
+				//MODDD - don't add node_linktest_height anymore. It's going to just get subtracted anyways.
+				// Checking to see what is land based or not later is perfectly fine.  This height change gets reverted anyways.
+				WorldGraph.m_pNodes[i].m_vecOriginPeek.z = WorldGraph.m_pNodes[i].m_vecOrigin.z = tr.vecEndPos.z;// + node_linktest_height;
 			}
-
-			//MODDD - don't add node_linktest_height anymore. It's going to just get subtracted anyways.
-			// Checking to see what is land based or not later is perfectly fine.  This height change gets reverted anyways.
-			WorldGraph.m_pNodes[i].m_vecOriginPeek.z = WorldGraph.m_pNodes[i].m_vecOrigin.z = tr.vecEndPos.z;// + node_linktest_height;
+			
 		}//node type determining
 
 	}//for loop through nodes

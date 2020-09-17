@@ -4014,7 +4014,11 @@ int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 	//MODDD - try smaller?
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
-	UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 16 ), dont_ignore_monsters, head_hull, edict(), &tr );
+	
+	
+	//UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 16 ), dont_ignore_monsters, head_hull, edict(), &tr );
+	TRACE_MONSTER_HULL(edict(), vecStartTrace, vecEnd + Vector( 0, 0, 16 ), dont_ignore_monsters, edict(), &tr);
+
 
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
 	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEnd.x, vecEnd.y, vecEnd.z );
@@ -4031,9 +4035,7 @@ int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 		//or should we do thsi?
 		Vector vecDir = (vecEnd - vecStart).Normalize();
 		UTIL_TraceHull( vecStartTrace + vecDir * 6, vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, head_hull, edict(), &tr );
-		//MODDD SUPER WTF
-		//what you didn't even check this new trace X_X
-
+		
 		return LOCALMOVE_VALID;
 	}
 	

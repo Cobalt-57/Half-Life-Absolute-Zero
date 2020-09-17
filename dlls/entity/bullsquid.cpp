@@ -949,6 +949,9 @@ void CBullsquid::Precache()
 	PRECACHE_SOUND("bullchicken/bc_attackgrowl3.wav");
 
 	PRECACHE_SOUND("bullchicken/bc_acid1.wav");
+	//MODDD - NOTE.  bc_acid2 is unused?  So are bc_attack1, bc_spithit3, and bc_bite1
+	// (although bc_bite1 might be a recycled barnacle bite sound)
+	// Now used for the floater's spit attack.
 
 	PRECACHE_SOUND("bullchicken/bc_bite2.wav");
 	PRECACHE_SOUND("bullchicken/bc_bite3.wav");

@@ -272,14 +272,14 @@ const char* CArcher::pAttackMissSounds[] =
 
 // clone of defaultai.cpp's primary attack for now, but TASK_MELEE_ATTACK1 can be interrupted
 // by the enemy going out of range (kindof a long anim to keep playing; attacks twice throughout)
-Task_t	tlArcherMeleeAttack[] =
+Task_t tlArcherMeleeAttack[] =
 {
 	{ TASK_STOP_MOVING,			0				},
 	{ TASK_FACE_ENEMY,			(float)0		},
 	{ TASK_MELEE_ATTACK1,		(float)0		},
 };
 
-Schedule_t	slArcherMeleeAttack[] =
+Schedule_t slArcherMeleeAttack[] =
 {
 	{ 
 		tlArcherMeleeAttack,
@@ -563,8 +563,9 @@ CArcher::CArcher(void){
 	lastVelocityChange = -1;
 	waterLevelMem = -1;
 	lackOfWaterTimer = -1;
+	meleeAttackIsDirect = FALSE;
 
-}//END OF CArcher constructor
+}//CArcher constructor
 
 
 
@@ -879,8 +880,14 @@ int CArcher::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBas
 
 
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEndFiltered + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
-	UTIL_TraceHull( vecStartTrace, vecEndFiltered + Vector( 0, 0, 6), dont_ignore_monsters, head_hull, edict(), &tr );
 	
+	// AWOEGKAERIGHJTEIHGJRTYGNBIMYRFJERAHJBETISH          no
+	//UTIL_TraceHull( vecStartTrace, vecEndFiltered + Vector( 0, 0, 6), dont_ignore_monsters, head_hull, edict(), &tr );
+	TRACE_MONSTER_HULL(edict(), vecStartTrace, vecEndFiltered + Vector( 0, 0, 6), dont_ignore_monsters, edict(), &tr);
+	
+
+
+
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
 	// ALERT( at_console, "%.0f %.0f %.0f\n", vecEndFiltered.x, vecEndFiltered.y, vecEndFiltered.z );
 
@@ -1488,8 +1495,14 @@ Schedule_t* CArcher::GetScheduleOfType( int Type){
 			}else{
 				// Enemy isn't in the water? Wait for them to come back. Can interrupt by being able to attack too.
 				//slWaitForEnemyToEnterWater ?
-
+				
 				// NEW!  Make sure I have the 'can range attack1' condition.  Yeah, imagine that.
+				
+				if(HasConditions(bits_COND_CAN_MELEE_ATTACK1)){
+					// special case from the enemy being very close (or on top of me)
+					return slArcherMeleeAttack;
+				}
+
 				if(HasConditions(bits_COND_CAN_RANGE_ATTACK1)){
 					return (pev->spawnflags & SF_ARCHER_LONG_RANGE_LOGIC) ? slArcherSurfaceRangeAttack : slArcherRangeAttack1;
 				}else{
@@ -1973,8 +1986,21 @@ BOOL CArcher::CheckMeleeAttack1( float flDot, float flDist ){
 	//of course no ev->flags, FL_ONGROUND check, they may be swimmin';
 	if ( flDist <= 64 && flDot >= 0.7 && m_hEnemy != NULL )
 	{
+		// noting unusual?
+		meleeAttackIsDirect = FALSE;
 		return TRUE;
 	}
+	
+	// ALTERNATE CONDITION:  if the enemy is standing on me, allow
+	float enemyLowerBound = m_hEnemy->pev->origin.z + m_hEnemy->pev->mins.z;
+	float myUpperBound = this->pev->origin.z + this->pev->maxs.z;
+
+	if(flDist < 40 && enemyLowerBound < myUpperBound + 5){
+		// mention this, the default TRACEHULL that looks in front may miss em'
+		meleeAttackIsDirect = TRUE;
+		return TRUE;
+	}
+
 
 	return FALSE;
 }
@@ -2064,6 +2090,8 @@ void CArcher::MonsterThink(){
 			// oh dear, that ding-dang ol' gravity's at it again
 			pev->movetype = MOVETYPE_TOSS;
 			pev->gravity = 1.0;
+			// set just in case?
+			lackOfWaterTimer = gpGlobals->time + 5;
 		}else{
 			// ahh, I can breathe
 			lackOfWaterTimer = -1;
@@ -2554,38 +2582,32 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 	}
 	case 1:
 	{
+		CBaseEntity* pHurt;
+		float dmg = gSkillData.bullsquidDmgBite * 0.5;
+		float flDist = 46;
 
 		UTIL_MakeAimVectors(pev->angles);
 		Vector offsetVecto = gpGlobals->v_forward * 25;
 		//offsetVecto.z += pev->maxs.z * 0.5;
 
-		//melee bite?
-		CBaseEntity *pHurt = CheckTraceHullAttack(offsetVecto, 50, gSkillData.bullsquidDmgBite, DMG_SLASH, DMG_BLEEDING );
-		
-		//MODDD - I'd rather deal damage to my enemy, seems CheckTraceHullAttack is too grabby and can even get things left and right
-		// of me first.
 
-
-		/*
-		//if(!pHurt){
-			//didn't get anything? Is our enemy in an odd spot like directly below or above? If so count to stop abusing this mechanic.
+		if(!meleeAttackIsDirect){
+			//melee bite?
+			pHurt = CheckTraceHullAttack(offsetVecto, flDist, dmg, DMG_SLASH, DMG_BLEEDING );
 			
-			if(m_hEnemy != NULL){
-				Vector deltaToEnemy = (m_hEnemy->pev->origin - pev->origin);
-				float distToEnemy = deltaToEnemy.Length();
-				float distToEnemy2D = deltaToEnemy.Length2D();
+			
 
-				if(distToEnemy < 84 && distToEnemy2D < 60){
+		}else{
+			// always hurt the enemy in this case.  
+			pHurt = m_hEnemy;
 
-					//float zDiff = fabs(m_hEnemy->Center().z - this->Center().z);
-					//if(zDiff > 30){
-						//just hurt the enemy.
-						pHurt = m_hEnemy;
-					//}
-				}
+			if(pHurt){
+				pHurt->TraceAttack_Traceless(pev, dmg, (m_hEnemy->pev->origin - pev->origin).Normalize(), DMG_SLASH, DMG_BLEEDING);
+				pHurt->TakeDamage( pev, pev, dmg, DMG_SLASH, DMG_BLEEDING );
+				// Sorry, no extra blood-slash effect for weirdos who stand on top of fish.
+				//UTIL_fromToBlood(this, pHurt, dmg, flDist, &targetEnd, &vecStart, &vecEnd);
 			}
-		//}
-		*/
+		}//meleeAttackIsDirect check
 		
 		if ( pHurt )
 		{
@@ -2598,9 +2620,9 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 				//MODDD TODO - Should there be a random velocity applied since this is underwater?
 			}
 			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackHitSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackHitSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
-		}
-		else
+		}else{
 			UTIL_PlaySound( ENT(pev), CHAN_WEAPON, pAttackMissSounds[ RANDOM_LONG(0,ARRAYSIZE(pAttackMissSounds)-1) ], 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5,5) );
+		}
 
 
 		/*

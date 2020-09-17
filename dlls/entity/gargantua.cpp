@@ -1371,7 +1371,7 @@ void CGargantua::StompAttack( void )
 		}
 
 		//TEST?
-		angleShift = 9;
+		//angleShift = 9;
 		
 		Vector theAngLeft(theAngles.x, fmod(theAngles.y - angleShift, 360), theAngles.z);
 		Vector theAngRight(theAngles.x, fmod(theAngles.y + angleShift, 360), theAngles.z);
@@ -3229,7 +3229,8 @@ int CGargantua::LookupActivityHard(int activity){
 
 	switch(activity){
 		case ACT_IDLE:
-			if(m_IdealMonsterState == MONSTERSTATE_SCRIPT || m_MonsterState == MONSTERSTATE_SCRIPT){
+
+			if(waitForScriptedTime != -1 || m_IdealMonsterState == MONSTERSTATE_SCRIPT || m_MonsterState == MONSTERSTATE_SCRIPT){
 				// Also, only use idle3 for idles, likely going between different animations soon.
 				return LookupSequence("idle3");
 			}
