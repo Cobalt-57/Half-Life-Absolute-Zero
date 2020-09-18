@@ -724,6 +724,7 @@ hgrunts also better comment on the enemy they've seen on 'alert' noises.
 Some func_tank vars now properly saved as FIELD_POSITION_VECTOR's.  They will transfer more gracefully if caught in a map transition.
 
 Floaters now do half duration poison as well.  More forgiving given how spammy the attack is.
+Also do half damage.  Fire rate slightly increased to compensate.
 
 Spawning weapons with cheats ('impulse 101', 'everything' in console) doesn't change the currently equipped weapon (unless none is, picks the crowbar).
 
@@ -742,6 +743,7 @@ Does not have a chance of staying alive indefinitely after water drains.
 Panthereyes much more willing to jump while pathing randomly around a player that cannot be reached directly.
 Jump cool down released (scales with difficulty; less minimum time between jumps toward hard), jump range min/max distances extended.
 More likely to land on the surface of objects it jumps against.
+Unstuck jumps much smarter.  Will target the enemy(player) if visible and within the max leap distance instead of jumping forward a short distance (still used if the player is obscurred)
 
 
 

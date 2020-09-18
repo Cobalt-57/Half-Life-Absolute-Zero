@@ -40,6 +40,7 @@ public:
 
 	BOOL isPissable;
 	BOOL isCornered;
+	BOOL isEnemyLookingAtMe;
 
 	float runawayTime;
 	float pissedOffTime;

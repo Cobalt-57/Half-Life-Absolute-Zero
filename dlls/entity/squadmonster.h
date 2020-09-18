@@ -67,11 +67,6 @@ public:
 	BOOL alreadyDoneNetnameLeaderCheck;
 	BOOL checkLeaderlessSquadByNetname(void);
 
-
-	//MODDD - new.
-	CSquadMonster(void);
-	void ChangeLeader(CSquadMonster* oldLeader, CSquadMonster* newLeader);
-
 	// squad leader info
 	EHANDLE	m_hSquadLeader;		// who is my leader
 	EHANDLE	m_hSquadMember[MAX_SQUAD_MEMBERS-1];	// valid only for leader
@@ -82,7 +77,18 @@ public:
 	// squad member info
 	int	m_iMySlot;// this is the behaviour slot that the monster currently holds in the squad. 
 
-	int  CheckEnemy ( CBaseEntity *pEnemy );
+	//MODDD used to tell replacements (hgrunt -> hassault) not to re-squad; they should already start out with the old leader's squad.
+	BOOL skipSquadStartup;
+	BOOL disableLeaderChange;
+
+
+
+
+	//MODDD - new.
+	CSquadMonster(void);
+	void ChangeLeader(CSquadMonster* oldLeader, CSquadMonster* newLeader);
+
+	int CheckEnemy ( CBaseEntity *pEnemy );
 
 	//MODDD - made virtual, never know if something could subclass even this and make its own version.
 	virtual void StartMonster ( void );
@@ -105,10 +111,6 @@ public:
 
 	BOOL OccupySlot( int iDesiredSlot );
 	virtual BOOL NoFriendlyFire( void );
-
-	//MODDD used to tell replacements (hgrunt -> hassault) not to re-squad; they should already start out with the old leader's squad.
-	BOOL skipSquadStartup;
-	BOOL disableLeaderChange;
 
 	// squad functions still left in base class
 	CSquadMonster *MySquadLeader( ) 
@@ -146,10 +148,11 @@ public:
 
 	int SquadCount( void );
 	void SquadRemove( CSquadMonster *pRemove );
-	void SquadUnlink( void );
+	//MODDD - as-is never implemented methods, whoops
+	//void SquadUnlink( void );
 	BOOL SquadAdd( CSquadMonster *pAdd );
-	void SquadDisband( void );
-	void SquadAddConditions ( int iConditions );
+	//void SquadDisband( void );
+	//void SquadAddConditions ( int iConditions );
 	void SquadMakeEnemy ( CBaseEntity *pEnemy );
 	void SquadPasteEnemyInfo ( void );
 	void SquadCopyEnemyInfo ( void );
@@ -178,7 +181,6 @@ public:
 	virtual void SetActivity ( Activity NewActivity );
 	//virtual void SetActivity ( Activity NewActivity, BOOL forceReset );
 	
-
 };
 
 

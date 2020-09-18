@@ -56,22 +56,20 @@ TYPEDESCRIPTION	CSquadMonster::m_SaveData[] =
 
 IMPLEMENT_SAVERESTORE( CSquadMonster, CBaseMonster );
 
-//FILLER
 
-/*
-void CSquadMonster::SetActivity( Activity NewActivity){
-	CBaseMonster::SetActivity(NewActivity, FALSE);
+CSquadMonster::CSquadMonster(void){
+	//default this var.
+	skipSquadStartup = FALSE;
+	disableLeaderChange = FALSE;
+	alreadyDoneNetnameLeaderCheck = FALSE;
+	m_flLastEnemySightTime = -1;
 }
-void CSquadMonster::SetActivity ( Activity NewActivity, BOOL forceReset )
-{
-	CBaseMonster::SetActivity(NewActivity, forceReset);
-}
-*/
+
+
 
 void CSquadMonster::SetActivity( Activity NewActivity){
 	CBaseMonster::SetActivity(NewActivity);
 }
-
 
 
 //=========================================================
@@ -649,14 +647,6 @@ int CSquadMonster::CheckEnemy ( CBaseEntity *pEnemy )
 	return iUpdatedLKP;
 }
 
-CSquadMonster::CSquadMonster(void){
-	//default this var.
-	skipSquadStartup = FALSE;
-	disableLeaderChange = FALSE;
-	alreadyDoneNetnameLeaderCheck = FALSE;
-	m_flLastEnemySightTime = -1;
-}
-
 void CSquadMonster::ChangeLeader(CSquadMonster* oldLeader, CSquadMonster* newLeader){
 	for (int i = 0; i < MAX_SQUAD_MEMBERS-1; i++){
 		if (oldLeader->m_hSquadMember[i] != NULL){
@@ -671,7 +661,7 @@ void CSquadMonster::ChangeLeader(CSquadMonster* oldLeader, CSquadMonster* newLea
 			}
 			oldLeader->m_hSquadMember[i] = NULL;
 		}
-	}//END OF for(...)
+	}//for thru squaddies
 	newLeader->m_hSquadLeader = newLeader;
 
 	//just in case... (old leader is just a member of the squad now)
@@ -712,8 +702,6 @@ BOOL CSquadMonster::checkLeaderlessSquadByNetname(void){
 
 
 
-//MODDD - REVOKED  oart
-// ...the fuck is 'oart'?
 //=========================================================
 // StartMonster
 //=========================================================
@@ -864,6 +852,12 @@ BOOL CSquadMonster::NoFriendlyFire( void )
 	return TRUE;
 }
 
+
+
+
+
+
+
 //=========================================================
 // GetIdealState - surveys the Conditions information available
 // and finds the best new state for a monster.
@@ -885,6 +879,7 @@ MONSTERSTATE CSquadMonster::GetIdealState ( void )
 		}
 		break;
 	}
+
 
 	return CBaseMonster::GetIdealState();
 }

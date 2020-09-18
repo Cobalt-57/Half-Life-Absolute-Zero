@@ -439,6 +439,11 @@ void removeAllMonsters(edict_t* theCaller) {
 			continue;  //not players or non-monsters.
 		}
 
+		if(tempMonster->monsterID >= 9000){
+			// this is a cine, unaffected.
+			continue;
+		}
+
 		easyForcePrintStarter();
 		easyForcePrint("*REMOVED ");
 		printBasicEntityInfo(theCaller, pTempEntity);
@@ -486,6 +491,11 @@ void removeAllMonstersExcept(edict_t* theCaller, int excludeID) {
 
 		if (tempMonster->monsterID == excludeID) {
 			continue;  // remove all BUT this one!  Skip.
+		}
+
+		if(tempMonster->monsterID >= 9000){
+			// this is a cine, unaffected.
+			continue;
 		}
 
 		easyForcePrintStarter();

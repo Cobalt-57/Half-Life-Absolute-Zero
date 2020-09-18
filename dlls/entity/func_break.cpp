@@ -890,8 +890,19 @@ void CBreakable::Die( void )
 
 	SetThink( &CBaseEntity::SUB_Remove );
 	pev->nextthink = pev->ltime + 0.1;
-	if ( m_iszSpawnObject )
-		CBaseEntity::Create( (char *)STRING(m_iszSpawnObject), VecBModelOrigin(pev), pev->angles, edict() );
+	if ( m_iszSpawnObject ){
+		CBaseEntity* theEnt = CBaseEntity::Create( (char *)STRING(m_iszSpawnObject), VecBModelOrigin(pev), pev->angles, edict() );
+		/*
+		// IDEA:  things in the breakable start mid-air and fall to the ground?
+		// Dunno if that would look cheezy
+		if(theEnt != NULL){
+			theEnt->pev->flags &= ~(FL_ONGROUND); //FL_MONSTERCLIP
+			theEnt->pev->groundentity = NULL;
+			theEnt->pev->origin.z += 16;
+			theEnt->pev->velocity.z = -3;
+		}
+		*/
+	}//'spawn object given' check
 
 	if ( Explodable() )
 	{

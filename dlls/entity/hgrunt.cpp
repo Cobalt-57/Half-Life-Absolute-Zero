@@ -59,6 +59,8 @@
 
 
 
+
+
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntBrassEjectForwardOffset)
 EASY_CVAR_EXTERN_DEBUGONLY(gruntsCanHaveMP5Grenade)
 EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
@@ -4832,8 +4834,6 @@ void CHGrunt::RunTask ( Task_t *pTask )
 	break;}
 	case TASK_WAIT_FOR_MOVEMENT:
 		
-
-
 		if(EASY_CVAR_GET_DEBUGONLY(hgruntMovementDeltaCheck) == 1){
 			if(nextPositionCheckTime == -1){
 				nextPositionCheckTime = gpGlobals->time + 1.0f;
@@ -4854,8 +4854,7 @@ void CHGrunt::RunTask ( Task_t *pTask )
 					}
 				}
 			}
-		}//END OF EASY_CVAR_GET_DEBUGONLY(hgruntMovementDeltaCheck) ...
-
+		}//END OF EASY_CVAR_GET_DEBUGONLY(hgruntMovementDeltaCheck)
 
 		vecPrevOrigin = pev->origin;
 
@@ -4884,22 +4883,15 @@ void CHGrunt::RunTask ( Task_t *pTask )
 
 
 
-
 void CHGrunt::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
-
-
 //	float flYaw = UTIL_VecToYaw ( m_Route[ m_iRouteIndex ].vecLocation - pev->origin );// build a yaw that points to the goal.
 //	WALK_MOVE( ENT(pev), flYaw, m_flGroundSpeed * flInterval, WALKMOVE_NORMAL );
 	if ( m_IdealActivity != m_movementActivity )
 		m_IdealActivity = m_movementActivity;
 
-
 	EASY_CVAR_PRINTIF_PRE(hgruntPrintout, easyForcePrintLine( "MONSTERID: %d MY GROUNDSPEED IS %.2f", this->monsterID, m_flGroundSpeed));
 	
-
-
-
 
 	float flTotal = m_flGroundSpeed * pev->framerate * EASY_CVAR_GET_DEBUGONLY(animationFramerateMulti) * flInterval * EASY_CVAR_GET_DEBUGONLY(hgruntSpeedMulti);
 	float flStep;
@@ -4924,10 +4916,6 @@ void CHGrunt::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float 
 	}
 	// ALERT( at_console, "dist %f\n", m_flGroundSpeed * pev->framerate * flInterval );
 }
-
-
-
-
 
 
 
@@ -4957,8 +4945,6 @@ void CHGrunt::SayAlert(void) {
 		// what.
 		enemyClassify = CLASS_NONE;
 	}
-
-	
 
 	// If my enemy is the player, always use specific lines
 	if(enemyClassify == CLASS_PLAYER){

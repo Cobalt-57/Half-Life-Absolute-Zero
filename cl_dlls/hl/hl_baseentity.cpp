@@ -551,7 +551,6 @@ int CBaseMonster::MovementGoalToMoveFlag(int iMoveGoal){return 0;}
 BOOL CBaseMonster::attemptRampFix(const Vector& vecGoal, int iMoveFlag, CBaseEntity* pTarget) {return FALSE;}
 
 BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget ) { return FALSE; }
-BOOL CBaseMonster::BuildRouteSafe ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget ) { return FALSE; }
 
 
 BOOL CBaseMonster::NoFriendlyFireImp(const Vector& startVec, const Vector& endVec){return FALSE;}

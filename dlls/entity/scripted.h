@@ -101,7 +101,7 @@ public:
 	virtual BOOL FCanOverrideState ( void );
 	void SequenceDone ( CBaseMonster *pMonster );
 	virtual void FixScriptMonsterSchedule( CBaseMonster *pMonster );
-	BOOL	CanInterrupt( void );
+	BOOL CanInterrupt( void );
 	void AllowInterrupt( BOOL fAllow );
 	int	IgnoreConditions( void );
 
@@ -124,7 +124,16 @@ public:
 	int m_saved_effects;
 //	Vector m_vecOrigOrigin;
 	BOOL m_interruptable;
+
+#if HACKY_SCRIPT_TEST == 1
+	//MODDD - NEW
+	BOOL startTimeSet;
+#endif
+
+
 };
+
+
 
 class CCineAI : public CCineMonster
 {

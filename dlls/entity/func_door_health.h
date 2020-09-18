@@ -26,9 +26,9 @@ public:
 	BOOL turnedOffHealLight;
 
 
-
-	HealthModule healthModuleInstance;  //guaranteed instance.
 	HealDoorPreference currentPreference;
+
+
 
 	static TYPEDESCRIPTION m_SaveData[];
 	virtual int Save(CSave& save);

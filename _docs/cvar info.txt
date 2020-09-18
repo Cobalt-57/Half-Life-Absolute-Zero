@@ -1582,7 +1582,7 @@ sv_player_midair_accel (0) - BOOL.  When on, uses some alternate logic for mid-a
 
 
 pathfindForcePointHull (0) - BOOL.  When on, pathfinding always uses the 'point' hull (no size) for checking whether a path between nodes is valid for a monster.
-- May cause monsters to take an otherwise invalid route (get stuck on part of the map in the way).  Worth knowing if a perfectly valid route was blocked from using the monster's normal hull (why wasn't it allowed then?).
+- May cause monsters to take an otherwise invalid route (get stuck on part of the map in the way), or fail such a route early from failing collision pre-checks.  Worth knowing if a perfectly valid route was blocked from using the monster's normal hull (why wasn't it allowed then?).
 
 pathfindIgnoreNearestNodeCache (0) - BOOL.  When on, pathfinding will re-determine the nearest node to a given point each time instead of relying on memory to fetch recent values.
 ~ Try 'clearnodecache', no quotes, in console to start with a fresh state for recently changed pathfinding CVars.  Nearest Node cache is not saved to a file.

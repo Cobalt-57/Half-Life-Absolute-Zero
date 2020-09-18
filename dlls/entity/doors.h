@@ -23,21 +23,6 @@
 
 
 
-// little debug feature.  Force "func_door_rotating" to "func_door_health"
-// for test maps that still haven't used the new func_door_health name.
-// Use 0 for intended behavior otherwise (func_door_health must be used for wallhealth doors now).
-#define FORCE_ROTDOOR_TO_HEALTHDOOR 0
-
-
-
-
-
-
-
-
-
-
-
 // doors
 //MODDD - this spawnflag is... completely unused. 0? How can that be included or excluded by anything?
 //        The constant isn't used at least. Just weird.

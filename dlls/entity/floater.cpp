@@ -21,6 +21,12 @@
 extern BOOL g_CheckLocalMove_ExtraDebug;
 
 
+// TODO:  put in the melee attack now that there's a sequence.
+// Should the floater want to run up close to do melee or only do it if the enemy happens to get close?
+// Might be some other idea for a greater AI overhaul though.
+
+
+
 #if REMOVE_ORIGINAL_NAMES != 1
 	LINK_ENTITY_TO_CLASS( monster_floater, CFloater );
 #endif
@@ -1026,7 +1032,7 @@ void CFloater::StartTask( Task_t *pTask ){
 
 
 		case TASK_RANGE_ATTACK1:
-
+			/*
 			// be a little more forgiving than 2.2 to 2.6 seconds!
 			if(g_iSkillLevel == SKILL_HARD){
 				shootCooldown = gpGlobals->time + RANDOM_LONG(2.6, 3.1);
@@ -1034,6 +1040,14 @@ void CFloater::StartTask( Task_t *pTask ){
 				shootCooldown = gpGlobals->time + RANDOM_LONG(3.0, 3.5);
 			}else{
 				shootCooldown = gpGlobals->time + RANDOM_LONG(3.3, 3.8);
+			}
+			*/
+			if(g_iSkillLevel == SKILL_HARD){
+				shootCooldown = gpGlobals->time + RANDOM_LONG(2.0, 2.5);
+			}else if(g_iSkillLevel == SKILL_MEDIUM){
+				shootCooldown = gpGlobals->time + RANDOM_LONG(2.4, 3.0);
+			}else{
+				shootCooldown = gpGlobals->time + RANDOM_LONG(2.9, 3.6);
 			}
 
 			CFlyingMonster::StartTask(pTask);

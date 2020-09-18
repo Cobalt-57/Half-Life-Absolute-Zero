@@ -106,7 +106,6 @@ class CHoundeye : public CSquadMonster
 {
 public:
 	CUSTOM_SCHEDULES;
-	static TYPEDESCRIPTION m_SaveData[];
 
 	BOOL firstSpecialAttackFrame;
 	BOOL canResetSound;
@@ -119,7 +118,11 @@ public:
 	static int numberOfEyeSkins;
 	float leaderLookCooldown;
 
-	CHoundeye();
+	CHoundeye(void);
+
+	int Save( CSave &save );
+	int Restore( CRestore &restore );
+	static TYPEDESCRIPTION m_SaveData[];
 
 	//MODDD
 	void setModel(void);
@@ -182,12 +185,7 @@ public:
 	Schedule_t *GetScheduleOfType ( int Type );
 	Schedule_t *CHoundeye::GetSchedule( void );
 
-	int Save( CSave &save );
-	int Restore( CRestore &restore );
 
-	//MODDD - test
-	int SquadRecruit( int searchRadius, int maxMembers );
-	
 	//MODDD - new. Enter the 21st century!
 	BOOL getMonsterBlockIdleAutoUpdate(void);
 	BOOL forceIdleFrameReset(void);
@@ -807,7 +805,7 @@ void CHoundeye::HandleAnimEvent( MonsterEvent_t *pEvent )
 }
 
 //MODDD
-CHoundeye::CHoundeye(){
+CHoundeye::CHoundeye(void){
 
 	firstSpecialAttackFrame = TRUE;
 	canResetSound = TRUE;
@@ -1474,97 +1472,6 @@ void CHoundeye::StartTask ( Task_t *pTask )
 	}
 
 }
-
-
-//MODDD - overwrite the original, don't call the original (any parts of the original that should stay are still here; calling that would be redundant with these parts and undermine the efforts to exlude / replace some parts)
-//~This is just a test, really.  Doesn't need changing.
-int CHoundeye::SquadRecruit( int searchRadius, int maxMembers )
-{
-	//EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "HOUNDEYE REEEE"));
-	int squadCount;
-	int iMyClass = Classify();// cache this monster's class
-
-
-	// Don't recruit if I'm already in a group
-	if ( InSquad() )
-		return 0;
-
-	if ( maxMembers < 2 )
-		return 0;
-
-	// I am my own leader
-	m_hSquadLeader = this;
-	squadCount = 1;
-
-	CBaseEntity *pEntity = NULL;
-
-
-	//EASY_CVAR_PRINTIF_PRE(houndeyePrintout, easyPrintLine( "IS IT H??   %d ", (!FStringNull( pev->netname ) ) ));
-
-	if ( !FStringNull( pev->netname ) )
-	{
-		// I have a netname, so unconditionally recruit everyone else with that name.
-		pEntity = UTIL_FindEntityByString( pEntity, "netname", STRING( pev->netname ) );
-		while ( pEntity )
-		{
-			CSquadMonster *pRecruit = pEntity->MySquadMonsterPointer();
-
-			if ( pRecruit )
-			{
-				//MODDD - added check to see if force hatable.
-				//if ( !pRecruit->InSquad() && pRecruit->Classify() == iMyClass && pRecruit != this )
-				if ( !pRecruit->InSquad() && !pRecruit->isForceHated(this) && pRecruit->Classify() == iMyClass && pRecruit != this )
-				{
-					// minimum protection here against user error.in worldcraft.
-					if (!SquadAdd( pRecruit ))
-						break;
-					squadCount++;
-				}
-			}
-
-			pEntity = UTIL_FindEntityByString( pEntity, "netname", STRING( pev->netname ) );
-		}
-	}
-	else
-	{
-		while ((pEntity = UTIL_FindEntityInSphere( pEntity, pev->origin, searchRadius )) != NULL)
-		{
-			CSquadMonster *pRecruit = pEntity->MySquadMonsterPointer( );
-
-			if ( pRecruit && pRecruit != this && pRecruit->IsAlive() && !pRecruit->m_pCine )
-			{
-				// Can we recruit this guy?
-				//MODDD - added ForceHated check
-				//if ( !pRecruit->InSquad() && pRecruit->Classify() == iMyClass &&
-				//   ( (iMyClass != CLASS_ALIEN_MONSTER) || FStrEq(STRING(pev->classname), STRING(pRecruit->pev->classname))) &&
-				//    FStringNull( pRecruit->pev->netname ) )
-				if ( !pRecruit->InSquad() && !pRecruit->isForceHated(this) && pRecruit->Classify() == iMyClass &&
-				   ( (iMyClass != CLASS_ALIEN_MONSTER) || FStrEq(STRING(pev->classname), STRING(pRecruit->pev->classname))) &&
-				    FStringNull( pRecruit->pev->netname ) )
-				{
-					TraceResult tr;
-					UTIL_TraceLine( pev->origin + pev->view_ofs, pRecruit->pev->origin + pev->view_ofs, ignore_monsters, pRecruit->edict(), &tr );// try to hit recruit with a traceline.
-					if ( tr.flFraction == 1.0 )
-					{
-						if (!SquadAdd( pRecruit ))
-							break;
-
-						squadCount++;
-					}
-				}
-			}
-		}
-	}
-
-	// no single member squads
-	if (squadCount == 1)
-	{
-		m_hSquadLeader = NULL;
-	}
-
-	return squadCount;
-}
-
 
 
 

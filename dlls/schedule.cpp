@@ -50,7 +50,7 @@ extern CGraph WorldGraph;
 #define CONDITIONS_BITMASK_USE m_afConditions
 
 
-
+BOOL g_queueSomeCondReset = FALSE;
 
 
 //MODDD - new.  Helper method for some schedules, not really for basemonster.cpp calls.
@@ -155,6 +155,8 @@ void CBaseMonster::ChangeSchedule ( Schedule_t *pNewSchedule )
 		return;
 	}
 
+	g_queueSomeCondReset = TRUE;
+
 	//MODDD - is this safe to assume when changing schedules?
 	//        Don't want to feel obliged to stick with an animation that may no longer be fitting.
 	this->usingCustomSequence = FALSE;
@@ -185,7 +187,12 @@ void CBaseMonster::ChangeSchedule ( Schedule_t *pNewSchedule )
 	// DANGEROUS!  Was ClearAllConditionsExcept_ThisFrame  (default includes that and NextFrame).
 	//ClearAllConditionsExcept_ThisFrame(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE | bits_COND_NEW_ENEMY);
 	//ClearAllConditionsExcept_ThisFrame(bits_COND_HEAR_SOUND | bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_SEE_FEAR | bits_COND_SEE_NEMESIS | bits_COND_SEE_CLIENT | bits_COND_ENEMY_OCCLUDED);
+	//MODDDD
+	// *bits_COND_NEW_ENEMY and bits_COND_ENEMY_DEAD removed, cleared at the end of MaintainSchedule
+	// on any sched change instead*
 	ClearConditions(bits_COND_NEW_ENEMY | bits_COND_ENEMY_DEAD | bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+	//ClearConditions(bits_COND_TASK_FAILED | bits_COND_SCHEDULE_DONE);
+
 	//ClearConditionsMod( );   //oh none.
 
 	//weren't these good ideas though, sorta?
@@ -253,7 +260,7 @@ void CBaseMonster::ChangeSchedule ( Schedule_t *pNewSchedule )
 	}
 #endif// 0
 
-}
+}//ChangeSchedule
 
 //=========================================================
 // NextScheduledTask - increments the ScheduleIndex
@@ -447,7 +454,6 @@ BOOL CBaseMonster::FScheduleValid ( void )
 //=========================================================
 void CBaseMonster::MaintainSchedule ( void )
 {
-
 	//MODDD - NOTE.
 	// How should giving up due to picking the same schedule as the previous work?
 	// Run until the end of the current loop iteration (set i to 999)?
@@ -455,6 +461,27 @@ void CBaseMonster::MaintainSchedule ( void )
 	// schedule for any reason?   'break' as soon as the 2nd same schedule is picked?
 
 	// And m_iTaskStatus isn't used when a task failed, right?  Be sure of that.
+
+	// !!! BEWARE OF TRYING TO IMPROVE THIS FURTHER.  Because believe me, I tried.
+	// A lot of the slight issues remaining (slight flinch to switching to ACT_IDLE
+	// in slIdleStand on finishing a scripted sequence, only to recognize there is an
+	// enemy to move states from MONSTERSTATE_IDLE to ALERT to COMBAT) are most likely
+	// because AI does differnet checks for different monsterstates, which aren't
+	// redone on schedule changes in the loop.  So it takes another think-frame for that
+	// info to come from the next think-frame with a monster in ALERT/COMBAT, even if
+	// 'new enemy' is forced to always being allowed (regardless of whether a schedule
+	// allows it to be interruptable;  no harm as it has no effect being ticked on in a 
+	// schedule not interruptable by it, and it could at least allow schedules within
+	// COMBAT to update with it correctly).
+
+	// Conditions NEW_ENEMY and ENEMY_DEAD are reset after a schedule change as most of the
+	// codebase expects.  Could change almost everything that acts on them to reset
+	// them after doing something based off them too, unsure if that's worthwhile.
+
+	// ALSO.  Don't try playing with the 'm_Activity != m_IdealActivity' bit that happens
+	// in the middle of the loop.  Sadly that's also very in consistent and not worthwhile.
+
+
 
 	Schedule_t* pNewSchedule;
 	Schedule_t* pPrevSchedule;
@@ -851,6 +878,10 @@ void CBaseMonster::MaintainSchedule ( void )
 			}
 			else {
 				// go through the loop to pick another task/schedule, perhaps
+
+				//TEST?  Retail would break out of this loop from having a task that hadn't finished in
+				// the same frame after StartTask(), even if RunTask run once would've finished.
+				// The 'Runtask' call was after this loop (only one run of that per MaintainShcedule call).
 			}
 
 
@@ -907,6 +938,14 @@ void CBaseMonster::MaintainSchedule ( void )
 
 
 	/*
+	if(g_queueSomeCondReset){
+		g_queueSomeCondReset = FALSE;
+		ClearConditions(bits_COND_NEW_ENEMY | bits_COND_ENEMY_DEAD);
+	}
+	*/
+
+
+	/*
 	// AGH.  No good.
 	if(oldAct == m_IdealActivity && !usingCustomSequence){
 		if(monsterID == 0){
@@ -921,7 +960,7 @@ void CBaseMonster::MaintainSchedule ( void )
 	if(EASY_CVAR_GET_DEBUGONLY(crazyMonsterPrintouts) == 1){
 		easyPrintLine("CAN I MELEE COND1? %d", HasConditions(bits_COND_CAN_MELEE_ATTACK1));
 	}
-}
+}//MaintainSchedule
 
 //=========================================================
 // RunTask 

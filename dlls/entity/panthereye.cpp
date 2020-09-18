@@ -69,6 +69,7 @@ enum
 	SCHED_PANTHEREYE_GENERIC_FAIL = LAST_COMMON_SCHEDULE + 1,
 	SCHED_PANTHEREYE_CHASE_ENEMY,
 	SCHED_PANTHEREYE_SNEAK_TO_LOCATION,
+	SCHED_PANTHEREYE_JUMP_AT_ENEMY_UNSTUCK,
 	SCHED_PANTHEREYE_COVER_FAIL,
 	//follow?
 	
@@ -88,6 +89,8 @@ enum
 	TASK_PANTHEREYE_FIND_COVER_FROM_ENEMY,
 	TASK_PANTHEREYE_COVER_FAIL_WAIT,
 	TASK_PANTHEREYE_DETERMINE_UNSTUCK_IDEAL,
+	TASK_PANTHEREYE_ATTEMPT_ROUTE,
+	TASK_PANTHEREYE_USE_ROUTE,
 
 };
 
@@ -213,7 +216,7 @@ Task_t	tlPanthereyeSneakToLocation[] =
 {
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_PANTHEREYE_COVER_FAIL	},
 	{ TASK_STOP_MOVING,			0				},
-	//{ TASK_WAIT,					(float)0.2					},
+	//{ TASK_WAIT,				(float)0.2					},
 	{ TASK_PANTHEREYE_FIND_COVER_FROM_ENEMY,	(float)0					},
 	{ TASK_RUN_PATH,				(float)0					},
 	{ TASK_WAIT_FOR_MOVEMENT,		(float)0					},
@@ -270,6 +273,10 @@ Schedule_t	slPanthereyeSneakWait[] =
 };
 
 
+
+
+
+
 Task_t	tlPanthereyeJumpAtEnemy[] =
 {
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_PANTHEREYE_GENERIC_FAIL	},
@@ -294,12 +301,69 @@ Schedule_t	slPanthereyeJumpAtEnemy[] =
 };
 
 
+
+
+// Very similar to the chaseenemy schedule, but if this fail
+Task_t tlPanthereyeJumpAtEnemyUnstuck_PreCheck[] = 
+{
+	// If this fails, unstuck jump time
+	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_PANTHEREYE_JUMP_AT_ENEMY_UNSTUCK	},
+	{ TASK_STOP_MOVING,			0				},
+
+	//!!!
+	// TASK_SET_ACTIVITY_PLAIN_IDLE  ???   pick only the simplest idle to avoid looking flinchy if
+	// planning on changing from that sequence soon.
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
+
+	{ TASK_WAIT_FACE_ENEMY,				(float)1.8		},
+
+	// is this ok?
+	{TASK_PANTHEREYE_ATTEMPT_ROUTE, (float)60			},
+	// assuming success if the schedule didn't fail at ATTEMPT_ROUTE. Use that schedule then.
+	// This also includes setting the fail schedule back to generic, since failing at any other
+	// point might not necessarily mean being stuck
+	{TASK_PANTHEREYE_USE_ROUTE, (float)60			},
+	{TASK_CHECK_STUMPED, (float)0					},
+};
+
+Schedule_t slPanthereyeJumpAtEnemyUnstuck_PreCheck[] =
+{
+	{ 
+		tlPanthereyeJumpAtEnemyUnstuck_PreCheck,
+		ARRAYSIZE ( tlPanthereyeJumpAtEnemyUnstuck_PreCheck ),
+		bits_COND_NEW_ENEMY			|
+		//MODDD - added, the bullsquid counts this.  Why doesn't everything?
+		bits_COND_ENEMY_DEAD |
+
+		bits_COND_CAN_RANGE_ATTACK1	|
+		bits_COND_CAN_MELEE_ATTACK1	|
+		bits_COND_CAN_RANGE_ATTACK2	|
+		bits_COND_CAN_MELEE_ATTACK2	|
+		bits_COND_TASK_FAILED		|
+		bits_COND_HEAR_SOUND |
+		//bits_COND_LIGHT_DAMAGE  |
+		bits_COND_HEAVY_DAMAGE,
+		
+		bits_SOUND_DANGER,
+		"Panther_JumpAtEnemy_unstuck_PC"
+	},
+};
+
+
+
+
+
+
+
+
 Task_t	tlPanthereyeJumpUnstuck[] =
 {
 	{ TASK_SET_FAIL_SCHEDULE,	(float)SCHED_PANTHEREYE_GENERIC_FAIL	},
 	{ TASK_STOP_MOVING,			0				},
+
 	//{ TASK_SET_ACTIVITY,		(float)ACT_IDLE },
-	//{ TASK_WAIT,				(float)0.4		},
+	//{ TASK_WAIT,				(float)1.3		},
+
 	{ TASK_PANTHEREYE_DETERMINE_UNSTUCK_IDEAL,  0},
 
 	// Why was there a 30 for the option here?  TASK_FACE_IDEAL doesn't look at that.
@@ -316,12 +380,17 @@ Schedule_t	slPanthereyeJumpAtEnemyUnstuck[] =
 	{
 		tlPanthereyeJumpUnstuck,
 		ARRAYSIZE ( tlPanthereyeJumpUnstuck ),
-		//TODO: much more!  sound_  stuff too.
 		0,
 		0,
 		"Panther_JumpAtEnemy_unstuck"
 	},
 };
+
+
+
+
+
+
 
 
 // Chase enemy schedule
@@ -362,6 +431,8 @@ Schedule_t slPanthereyeChaseEnemy[] =
 		"Panthereye Chase Enemy"
 	},
 };
+
+
 
 
 // Chase enemy schedule
@@ -483,7 +554,7 @@ DEFINE_CUSTOM_SCHEDULES( CPantherEye )
 	slPanthereyeGetBug,
 	slPanthereyeJumpAtEnemy,
 	slPanthereyeJumpAtEnemyUnstuck,
-
+	slPanthereyeJumpAtEnemyUnstuck_PreCheck,
 	slPanthereyeChaseEnemy,
 
 	slPanthereyeGetIntoCirclingRange,
@@ -605,8 +676,8 @@ BOOL CPantherEye::testLeapNoBlock(void){
 
 	if(m_hEnemy != NULL){
 		// was 10 and 10
-		Vector vTestStart = pev->origin + Vector(0, 0, 40);
-		Vector vTestEnd = m_vecEnemyLKP + Vector(0, 0, 40);
+		Vector vTestStart = pev->origin + Vector(0, 0, 30);
+		Vector vTestEnd = m_vecEnemyLKP + Vector(0, 0, 30);
 		
 		/*
 		//DEBUG - player pos?
@@ -655,8 +726,16 @@ BOOL CPantherEye::testLeapNoBlock(void){
 			//did not hit anything on the way or hit the enemy? or something I would have attacked anyways? it is OK.
 			//proceed
 		}else{
-			//stop!
-			return FALSE;
+			// Wait, one more try
+			Vector vTestStart = pev->origin + Vector(0, 0, 80);
+			Vector vTestEnd = m_vecEnemyLKP + Vector(0, 0, 40);
+			TRACE_MONSTER_HULL(edict(), vTestStart, vTestEnd, dont_ignore_monsters, edict(), &tr);
+			if(traceResultObstructionValidForAttack(tr)){
+				// ok
+			}else{
+				// failed too??
+				return FALSE;
+			}
 		}
 	}else{
 		//go ahead regardless.?
@@ -1540,8 +1619,8 @@ CPantherEye::CPantherEye(void){
 
 	timeTillSneakAgain = -1;
 	isPissable = FALSE;
-
 	isCornered = FALSE;
+	isEnemyLookingAtMe = FALSE;
 
 	waitingForNewPath = FALSE;
 
@@ -1983,7 +2062,6 @@ void CPantherEye::MonsterThink ( void )
 
 
 void CPantherEye::PrescheduleThink(void){
-	
 
 	// not working?... oops?
 	if(m_afSoundTypes & (bits_SOUND_COMBAT | bits_SOUND_PLAYER) ){
@@ -1994,7 +2072,6 @@ void CPantherEye::PrescheduleThink(void){
 			SetActivity(ACT_RUN);
 		}
 	}
-
 
 	if(m_hEnemy != NULL){
 		//pissedRunTime != -1 &&
@@ -2009,7 +2086,6 @@ void CPantherEye::PrescheduleThink(void){
 			}
 		}
 
-
 		if(gpGlobals->time < pissedRunTime){
 			if(HasConditions(bits_COND_SEE_ENEMY)){
 				// keep the frenzy going
@@ -2022,10 +2098,259 @@ void CPantherEye::PrescheduleThink(void){
 				pissedRunTime = gpGlobals->time + 12;
 			}
 		}
-
 	}//m_hEnemy check
 
 
+
+	//MODDD - chunk moved from RunTask to here in PreSchedule think!
+	//////////////////////////////////////////////////////////////////////////////////////////
+	isEnemyLookingAtMe = FALSE;
+
+	//NOTE: should only do this logic check if alive of course.
+	// How about on the ground too?
+	if(pev->deadflag == DEAD_NO && pev->flags & FL_ONGROUND && pev->sequence != g_panthereye_crouch_to_jump_sequenceID){
+		if(pissedOffTime == -1 && runawayTime == -1 && m_hEnemy != NULL){
+			//nothing all that strong, and an enemy about?  Sneak time!
+			sneakMode = 0;
+		}else{
+			sneakMode = -1;
+		}
+
+		if(m_hEnemy != NULL){
+			float distanceFromEnemy = (m_vecEnemyLKP - pev->origin).Length();
+
+			BOOL pissOff = FALSE;
+			BOOL pissOffHard = FALSE;
+			BOOL tryRunAway = FALSE;
+
+			//how far does the player have to be to look at me to piss me off?
+			float lookAtMePissRange = 115 * 20;
+
+			//how close does the player have to be, regardless of anything, to piss me off?
+			float distancePissRange = 70 * 20;
+
+			//if hurt (took damage), how far do I have to be to go on the attack instead of flee?
+			float fightOrFlightRange = 400 * 20;
+
+
+			if(isCornered){
+				lookAtMePissRange = 340 * 20;
+				distancePissRange = 230 * 20;
+				//nowhere to go?  I'm coming for you.
+				fightOrFlightRange = 1600 * 20;
+			}else if(isPissable){
+				//just more anxious than usual.
+				lookAtMePissRange = 200 * 20;
+				distancePissRange = 80 * 20;
+				fightOrFlightRange = 500 * 20;
+			}
+
+			float extraSensitiveness =  1 + (1 - (pev->health / pev->max_health) ) * 0.6 ;
+
+			lookAtMePissRange *= extraSensitiveness;
+			distancePissRange *= distancePissRange;
+			fightOrFlightRange *= fightOrFlightRange;
+		
+
+			if(HasConditions(bits_COND_SEE_ENEMY) ){
+
+			}
+
+			if(!HasConditions(bits_COND_ENEMY_OCCLUDED)  ){
+				if(UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.3)){
+					//if they face me anytime, face them.
+
+					// NO. No gpGlobals->frametime, not good.
+					// Interval between thinks is 0.1 (unless you have reason to think otherwise)
+					//stareTime += gpGlobals->frametime;
+					stareTime += 0.1;
+
+
+					//they are.
+					isEnemyLookingAtMe = TRUE;
+
+					int tsknbr = getTaskNumber();
+					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("RUN RUN %s %d %d", m_pSchedule->pName, tsknbr, isCornered));
+					if(  (isCornered || (m_pSchedule == slPanthereyeSneakToLocation || m_pSchedule == slPantherEyeCoverFail) && (tsknbr == TASK_PANTHEREYE_SNEAK_WAIT || tsknbr == TASK_PANTHEREYE_COVER_FAIL_WAIT) ) ){
+						//likely waiting.
+						MakeIdealYaw(m_vecEnemyLKP);
+
+						//instant yaw change. is that a good idea?
+						//ChangeYaw(99);
+					}
+
+				}else{
+					stareTime = 0;
+				}
+
+
+				if(pissedOffTime == -1){
+
+					//if the enemy is facing me, not behind a wall, clearly looking at me...
+					if(UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.2)){
+						//a lower distance can make it attack.
+						if(distanceFromEnemy < lookAtMePissRange){
+							pissOff = TRUE;
+						}
+					}else{
+						//this close?  Just attack already.
+						//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WELL DDDD %d", UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, 0.3) )); 
+						if(UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, EASY_CVAR_GET_DEBUGONLY(panthereyeJumpDotTol)) ){
+							//can jump...?
+							if(distanceFromEnemy < 360 * 20){
+
+								if(distanceFromEnemy < 130 * 20){
+									//too close, just go as normal.
+									pissOff = TRUE;
+								}else{
+
+									if(m_pSchedule != slPanthereyeJumpAtEnemy){
+										//b/w 130 and 320?  JUMP
+										RouteClear();
+										ChangeSchedule(slPanthereyeJumpAtEnemy);
+										//Best to stop this call here if we change schedules yes?
+										return;
+									}
+								}
+							}
+						}else{
+							if(distanceFromEnemy < distancePissRange){
+								pissOff = TRUE;
+							}
+						}
+					}
+				}//END OF if(pissedOffTime == -1)
+				else{
+					if(!HasConditions(bits_COND_ENEMY_OCCLUDED) && HasConditions(bits_COND_SEE_ENEMY)){
+
+						if(distanceFromEnemy < 300 * 20){
+							//if mad, gets mad easier!
+							pissOff = TRUE;
+						}
+					}
+				}
+
+			}else{
+				//if occluded, reset stare time.
+				stareTime = 0;
+			}
+			//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WHAT DA %d", HasConditions(bits_COND_LIGHT_DAMAGE)));
+			//If attacked recently, be a bit more easy to attack, or flee.  "fight or flight"
+			
+			if(!pissOff && HasConditions(bits_COND_LIGHT_DAMAGE) || HasConditions(bits_COND_HEAVY_DAMAGE) ){
+				if(distanceFromEnemy < fightOrFlightRange){
+					pissOffHard = TRUE;
+				}else{
+					tryRunAway = TRUE;
+				}
+			}
+
+			if(tryRunAway){
+				BOOL startRunningAway = FALSE;
+				if(runawayTime == -1){
+					//initiate!
+					startRunningAway = TRUE;
+				}
+				runawayTime = gpGlobals->time + 7;
+
+				if(startRunningAway && pissedOffTime == -1){
+					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM A STUPID <thing>"));
+					ChangeSchedule(GetSchedule());
+					return;  //let this be called freshly by the next frame of think logic.
+				}
+			}
+
+			if(pissOffHard || pissOff){
+				//longer!
+				BOOL startRunningAway = FALSE;
+				if(pissedOffTime == -1){
+					//initiate!
+					startRunningAway = TRUE;
+				}
+				if(pissOffHard){
+					//isCornered
+					if(pissedOffTime < gpGlobals->time + 8){
+						pissedOffTime = gpGlobals->time + 8;
+					}
+				}else{
+					//make it so.  Check so that it doesn't override "pissOffHard" pushing past 2 seconds.
+					if(pissedOffTime < gpGlobals->time + 3){
+						pissedOffTime = gpGlobals->time + 3;
+					}
+				}
+				runawayTime = -1;
+
+				if(startRunningAway){
+					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM A RAGING <thing>"));
+					ChangeSchedule(GetSchedule());
+					return;  //let this be called freshly.
+				}
+
+			}
+		}//END OF if(m_hEnemy != NULL)
+		else{
+			//no enemy?  Reset all timers.
+			runawayTime = -1;
+			pissedOffTime = -1;
+			stareTime = 0;
+		}
+
+		if(runawayTime != -1 ){
+			if(runawayTime <= gpGlobals->time){
+				//end!
+				runawayTime = -1;
+
+				if(m_pSchedule == slTakeCoverFromBestSound){
+					//TaskFail();
+					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM NOT A STUPID <thing>"));
+					ChangeSchedule(GetSchedule());
+					return;  //let this be called freshly
+				}
+
+			}else{
+				//still going.
+				/*
+				if(m_pSchedule != slTakeCoverFromBestSound){
+					ChangeSchedule(slTakeCoverFromBestSound);
+					return;  //let this be called freshly
+				}
+				*/
+			}
+		}
+
+		if(pissedOffTime != -1){
+			if(pissedOffTime <= gpGlobals->time){
+				//end!
+				pissedOffTime = -1;
+				//too crass of an interruption, try something else...?
+
+				//was CIRCLIN
+				if(m_pSchedule == slPanthereyeChaseEnemy){
+					//TaskFail();
+					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM NOT A RAGING <thing>"));
+					ChangeSchedule(GetSchedule());
+					return;  //let this be called freshly
+				}
+			}else{
+				//still going.
+
+				/*
+				if(m_pSchedule != slPanthereyeGetIntoCirclingRange){
+					ChangeSchedule(slPanthereyeGetIntoCirclingRange);
+					return;
+				}
+				*/
+			}
+		}
+
+
+	}//END OF if(pev->deadflag == DEAD_NO &&
+	else{
+
+		//////easyForcePrintLine(".....???????? %d : %d   %d %d", monsterID, pTask->iTask, pev->deadflag, deadSetActivityBlock);
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////
 
 
 	CBaseMonster::PrescheduleThink();
@@ -2035,7 +2360,6 @@ void CPantherEye::PrescheduleThink(void){
 
 void CPantherEye::SetActivity ( Activity NewActivity )
 {
-
 	/*
 	if(pev->deadflag != DEAD_NO &&
 	*/
@@ -2387,6 +2711,11 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 		case SCHED_PANTHEREYE_GENERIC_FAIL:
 			return slPantherEyeGenericFail;
 		break;
+		
+
+		case SCHED_PANTHEREYE_JUMP_AT_ENEMY_UNSTUCK:
+			return slPanthereyeJumpAtEnemyUnstuck;
+		break;
 
 		case SCHED_PANTHEREYE_CHASE_ENEMY:
 
@@ -2437,15 +2766,30 @@ Schedule_t* CPantherEye::GetScheduleOfType( int Type){
 			if(m_pSchedule == slMoveFromOrigin && getTaskNumber() == TASK_MOVE_FROM_ORIGIN){
 				// That's what failed?  Try to turn and face our enemy in case jumping at them is possible.
 				if(m_hEnemy != NULL){
-					setEnemyLKP(m_hEnemy);
-					MakeIdealYaw(m_vecEnemyLKP);
-					SetTurnActivity();
+					// Only if the enemy is in a line of sight to me
+					if(FVisible(m_hEnemy->Center())){
+						// Can see them?  Go ahead
+						setEnemyLKP(m_hEnemy);
+						MakeIdealYaw(m_vecEnemyLKP);
+						SetTurnActivity();
+					}else{
+						pev->ideal_yaw = pev->angles.y;
+					}
 				}else{
 					// where I'm already facing?
-					//MODDD - TODO: try testing at a random angle a few times to see what is ok to jump from
 					pev->ideal_yaw = pev->angles.y;
 				}
-				return &slPanthereyeJumpAtEnemyUnstuck[0];
+				// Wait a second or so before doing the jump in case a pathfind check after that time
+				// works or the enemy gets closer to become attackable.
+				// If still unrouteable, the unstuck jump starts.
+
+				// HACK: reset instantly.  Not required for the unstuck jump to work but
+				// could make leaping toward the enemy to get 'unstuck' more likely, seems
+				// odd to miss that opportunity.
+
+				this->leapAttackCooldown = gpGlobals->time + 0;
+
+				return &slPanthereyeJumpAtEnemyUnstuck_PreCheck[0];
 			}
 
 			// what is usually called on failure.  Can call something else if preferred.
@@ -2498,7 +2842,30 @@ void CPantherEye::StartTask ( Task_t *pTask ){
 	isCornered = FALSE;
 
 	switch ( pTask->iTask ){
+		
+		case TASK_PANTHEREYE_ATTEMPT_ROUTE:
+			// Really the first part of MOVE_TO_ENEMY_RANGE:  make the route, but complete if it passes
+			pTask->iTask = TASK_MOVE_TO_ENEMY_RANGE;
+			CBaseMonster::StartTask(pTask);
 
+			if(FRouteClear()){
+				// No route?  Assume it failed
+				TaskFail();
+			}else{
+				// success?  Also ditch the 'jump unstuck' fail schedule then
+				m_failSchedule = SCHED_PANTHEREYE_GENERIC_FAIL;
+				// MOVE_TO_ENEMY_RANGE would have set this.
+				goalDistTolerance = pTask->flData;
+				TaskComplete();
+			}
+
+		break;
+		case TASK_PANTHEREYE_USE_ROUTE:{
+			// same as MOVE_TO_ENEMY_RANGE, but doesn't start by making a route (assuming that came
+			// from the previous task succeeding)
+			// Do nothing here, leave the rest to RunTask.
+
+		}break;
 		case TASK_PANTHEREYE_DETERMINE_UNSTUCK_IDEAL:{
 			int i;
 			int alternator;
@@ -2711,292 +3078,14 @@ void CPantherEye::StartTask ( Task_t *pTask ){
 void CPantherEye::RunTask ( Task_t *pTask ){
 	//easyForcePrintLine("HEY YOOOO %s %d", getScheduleName(), pTask->iTask);
 	
-	BOOL isEnemyLookingAtMe = FALSE;
 
-
-
-
-	//NOTE: should only do this logic check if alive of course.
-	if(pev->deadflag == DEAD_NO){
-
-		if(pissedOffTime == -1 && runawayTime == -1 && m_hEnemy != NULL){
-			//nothing all that strong, and an enemy about?  Sneak time!
-			sneakMode = 0;
-		}else{
-			sneakMode = -1;
-		}
-
-
-		if(m_hEnemy != NULL){
-
-
-			float distanceFromEnemy = (m_vecEnemyLKP - pev->origin).Length();
-
-			BOOL pissOff = FALSE;
-			BOOL pissOffHard = FALSE;
-			BOOL tryRunAway = FALSE;
-
-			//how far does the player have to be to look at me to piss me off?
-			float lookAtMePissRange = 115 * 20;
-
-			//how close does the player have to be, regardless of anything, to piss me off?
-			float distancePissRange = 70 * 20;
-
-			//if hurt (took damage), how far do I have to be to go on the attack instead of flee?
-			float fightOrFlightRange = 400 * 20;
-
-
-			if(isCornered){
-				lookAtMePissRange = 340 * 20;
-				distancePissRange = 230 * 20;
-				//nowhere to go?  I'm coming for you.
-				fightOrFlightRange = 1600 * 20;
-			}else if(isPissable){
-				//just more anxious than usual.
-				lookAtMePissRange = 200 * 20;
-				distancePissRange = 80 * 20;
-				fightOrFlightRange = 500 * 20;
-			}
-
-
-			float extraSensitiveness =  1 + (1 - (pev->health / pev->max_health) ) * 0.6 ;
-
-			lookAtMePissRange *= extraSensitiveness;
-			distancePissRange *= distancePissRange;
-			fightOrFlightRange *= fightOrFlightRange;
-		
-
-			if(HasConditions(bits_COND_SEE_ENEMY) ){
-
-
-			}
-
-			if(!HasConditions(bits_COND_ENEMY_OCCLUDED)  ){
-				
-				if(UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.3)){
-					//if they face me anytime, face them.
-
-					// NO. No gpGlobals->frametime, not good.
-					// Interval between thinks is 0.1 (unless you have reason to think otherwise)
-					//stareTime += gpGlobals->frametime;
-					stareTime += 0.1;
-
-
-					//they are.
-					isEnemyLookingAtMe = TRUE;
-
-					int tsknbr = getTaskNumber();
-					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("RUN RUN %s %d %d", m_pSchedule->pName, tsknbr, isCornered));
-					if(  (isCornered || (m_pSchedule == slPanthereyeSneakToLocation || m_pSchedule == slPantherEyeCoverFail) && (tsknbr == TASK_PANTHEREYE_SNEAK_WAIT || tsknbr == TASK_PANTHEREYE_COVER_FAIL_WAIT) ) ){
-						//likely waiting.
-						MakeIdealYaw(m_vecEnemyLKP);
-
-						//instant yaw change. is that a good idea?
-						//ChangeYaw(99);
-					}
-
-				}else{
-					stareTime = 0;
-				}
-
-
-				if(pissedOffTime == -1){
-
-					//if the enemy is facing me, not behind a wall, clearly looking at me...
-					if(UTIL_IsFacing(m_hEnemy->pev, pev->origin, 0.2)){
-						//a lower distance can make it attack.
-						if(distanceFromEnemy < lookAtMePissRange){
-							pissOff = TRUE;
-						}
-					}else{
-						//this close?  Just attack already.
-						//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WELL DDDD %d", UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, 0.3) )); 
-						if(UTIL_IsFacingAway(m_hEnemy->pev, pev->origin, EASY_CVAR_GET_DEBUGONLY(panthereyeJumpDotTol)) ){
-							//can jump...?
-							if(distanceFromEnemy < 360 * 20){
-
-								if(distanceFromEnemy < 130 * 20){
-									//too close, just go as normal.
-									pissOff = TRUE;
-								}else{
-
-									if(m_pSchedule != slPanthereyeJumpAtEnemy){
-										//b/w 130 and 320?  JUMP
-										RouteClear();
-										ChangeSchedule(slPanthereyeJumpAtEnemy);
-										//Best to stop this call here if we change schedules yes?
-										return;
-									}
-								}
-
-							}
-
-						}else{
-
-							if(distanceFromEnemy < distancePissRange){
-								pissOff = TRUE;
-							}
-
-						}
-
-					}
-
-				}//END OF if(pissedOffTime == -1)
-				else{
-					if(!HasConditions(bits_COND_ENEMY_OCCLUDED) && HasConditions(bits_COND_SEE_ENEMY)){
-
-						if(distanceFromEnemy < 300 * 20){
-							//if mad, gets mad easier!
-							pissOff = TRUE;
-						}
-					}
-
-
-				}
-
-			}else{
-				//if occluded, reset stare time.
-				stareTime = 0;
-			}
-			//EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WHAT DA %d", HasConditions(bits_COND_LIGHT_DAMAGE)));
-			//If attacked recently, be a bit more easy to attack, or flee.  "fight or flight"
-			
-			if(!pissOff && HasConditions(bits_COND_LIGHT_DAMAGE) || HasConditions(bits_COND_HEAVY_DAMAGE) ){
-				if(distanceFromEnemy < fightOrFlightRange){
-					pissOffHard = TRUE;
-				}else{
-					tryRunAway = TRUE;
-				}
-			}
-
-			if(tryRunAway){
-			
-				BOOL startRunningAway = FALSE;
-				if(runawayTime == -1){
-					//initiate!
-					startRunningAway = TRUE;
-				}
-				runawayTime = gpGlobals->time + 7;
-
-				if(startRunningAway && pissedOffTime == -1){
-					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM A STUPID <thing>"));
-					ChangeSchedule(GetSchedule());
-					return;  //let this be called freshly by the next frame of think logic.
-				}
-
-			}
-
-			if(pissOffHard || pissOff){
-				//longer!
-			
-				BOOL startRunningAway = FALSE;
-				if(pissedOffTime == -1){
-					//initiate!
-					startRunningAway = TRUE;
-				}
-			
-				if(pissOffHard){
-				
-					//isCornered
-
-				
-					if(pissedOffTime < gpGlobals->time + 8){
-						pissedOffTime = gpGlobals->time + 8;
-					}
-
-				}else{
-					//make it so.  Check so that it doesn't override "pissOffHard" pushing past 2 seconds.
-					if(pissedOffTime < gpGlobals->time + 3){
-						pissedOffTime = gpGlobals->time + 3;
-					}
-				}
-
-				runawayTime = -1;
-
-				if(startRunningAway){
-					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM A RAGING <thing>"));
-					ChangeSchedule(GetSchedule());
-					return;  //let this be called freshly.
-				}
-
-			}
-		
-		
-		}//END OF if(m_hEnemy != NULL)
-		else{
-			//no enemy?  Reset all timers.
-			runawayTime = -1;
-			pissedOffTime = -1;
-			stareTime = 0;
-		}
-
-
-		if(runawayTime != -1 ){
-
-			if(runawayTime <= gpGlobals->time){
-				//end!
-				runawayTime = -1;
-
-				if(m_pSchedule == slTakeCoverFromBestSound){
-					//TaskFail();
-					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM NOT A STUPID <thing>"));
-					ChangeSchedule(GetSchedule());
-					return;  //let this be called freshly
-				}
-
-			}else{
-				//still going.
-				/*
-				if(m_pSchedule != slTakeCoverFromBestSound){
-					ChangeSchedule(slTakeCoverFromBestSound);
-					return;  //let this be called freshly
-				}
-				*/
-			}
-		}
-
-
-
-		if(pissedOffTime != -1){
-		
-			if(pissedOffTime <= gpGlobals->time){
-				//end!
-				pissedOffTime = -1;
-
-			
-				//too crass of an interruption, try something else...?
-
-				//was CIRCLIN
-				if(m_pSchedule == slPanthereyeChaseEnemy){
-					//TaskFail();
-					EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("!!!!! IM NOT A RAGING <thing>"));
-					ChangeSchedule(GetSchedule());
-					return;  //let this be called freshly
-				}
-			
-
-			}else{
-				//still going.
-
-				/*
-				if(m_pSchedule != slPanthereyeGetIntoCirclingRange){
-					ChangeSchedule(slPanthereyeGetIntoCirclingRange);
-					return;
-				}
-				*/
-
-			}
-		
-		}
-
-
-	}//END OF if(pev->deadflag == DEAD_NO &&
-	else{
-
-		//////easyForcePrintLine(".....???????? %d : %d   %d %d", monsterID, pTask->iTask, pev->deadflag, deadSetActivityBlock);
-	}
 
 	switch ( pTask->iTask ){
+	case TASK_PANTHEREYE_USE_ROUTE:{
+		pTask->iTask = TASK_MOVE_TO_ENEMY_RANGE;
+		CBaseMonster::RunTask(pTask);
+	}break;
+
 	case TASK_PANTHEREYE_FIND_COVER_FROM_ENEMY:
 	{
 		if(waitingForNewPath && newPathDelay == -1){
@@ -3147,20 +3236,21 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 			if( !(pev->flags & FL_ONGROUND )){
 				// not on the ground?  Get a constant small velocity boost forward to help grab onto ledges
 				UTIL_MakeAimVectors(pev->angles);
-				if(pev->velocity.Length2D() < 12){
-					pev->velocity = pev->velocity + gpGlobals->v_forward * 3;
+				if(pev->velocity.Length2D() < 24){
+					pev->velocity = pev->velocity + gpGlobals->v_forward * 8;
 				}
 			}//ground check
-
+			else{
+				if(this->m_fSequenceFinished ){
+					TaskComplete();
+					//no leap-touch, if still here.
+					SetTouch( NULL );
+					return;
+				}
+			}
 
 			EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WHAT THE : %.2f %d", pev->frame, m_fSequenceFinished));
-			//TODO: an "onGround" check may be nice.
-			if(this->m_fSequenceFinished){
-				TaskComplete();
-				//no leap-touch, if still here.
-				SetTouch( NULL );
-				return;
-			}
+			
 
 		break;
 		case TASK_PANTHEREYE_PLAYANIM_CROUCHTOJUMP_UNSTUCK:
@@ -3180,19 +3270,21 @@ void CPantherEye::RunTask ( Task_t *pTask ){
 			if( !(pev->flags & FL_ONGROUND )){
 				// not on the ground?  Get a constant small velocity boost forward to help grab onto ledges
 				UTIL_MakeAimVectors(pev->angles);
-				if(pev->velocity.Length2D() < 12){
-					pev->velocity = pev->velocity + gpGlobals->v_forward * 3;
+				if(pev->velocity.Length2D() < 24){
+					pev->velocity = pev->velocity + gpGlobals->v_forward * 8;
 				}
 			}//ground check
+			else{
+				if(this->m_fSequenceFinished ){
+					TaskComplete();
+					//no leap-touch, if still here.
+					SetTouch( NULL );
+					return;
+				}
+			}
 
 			EASY_CVAR_PRINTIF_PRE(panthereyePrintout, easyPrintLine("WHAT THE : %.2f %d", pev->frame, m_fSequenceFinished));
-			//TODO: an "onGround" check may be nice.
-			if(this->m_fSequenceFinished){
-				TaskComplete();
-				//no leap-touch, if still here.
-				SetTouch( NULL );
-				return;
-			}
+			
 		break;
 		case TASK_WAIT_PVS:
 			if(gpGlobals->time >= maxWaitPVSTime){

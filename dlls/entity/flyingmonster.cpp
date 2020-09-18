@@ -117,6 +117,7 @@ int CFlyingMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 
 	TraceResult tr;
 
+	// why TaceHull when there's TRACE_MONSTER ???
 	UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
 
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );

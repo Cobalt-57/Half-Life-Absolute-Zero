@@ -429,21 +429,24 @@ void CSquidSpit::Touch ( CBaseEntity *pOther )
 
 		int dmgBitsNormal;
 		int dmgBitsMod;
+		float dmg;
 
 		// Note that DMG_POISON is added automatically in takedamage logic if DMG_POISONHALF is present in BitsMod, so eh.
 		if(!doHalfDuration){
 			dmgBitsNormal = DMG_POISON;
 			dmgBitsMod = 0;
+			dmg = gSkillData.bullsquidDmgSpit;
 		}else{
-			// how to give half duration instead.
+			// how to give half duration instead.  Now damage too.
 			dmgBitsNormal = DMG_POISON;
 			dmgBitsMod = DMG_POISONHALF;
+			dmg = gSkillData.bullsquidDmgSpit * 0.5;
 		}
 
 		// lazy defaults, barely anything uses _Traceless for anything but cumulative damage anyway.
 		// And call TraceAttack_Traceless along plain TakeDamage calls!  Just keeping track of cumulative damage this frame.
-		pOther->TraceAttack_Traceless(pev, gSkillData.bullsquidDmgSpit, g_vecZero, dmgBitsNormal, dmgBitsMod),
-		pOther->TakeDamage ( pev, theOwner, gSkillData.bullsquidDmgSpit, dmgBitsNormal, dmgBitsMod );
+		pOther->TraceAttack_Traceless(pev, dmg, g_vecZero, dmgBitsNormal, dmgBitsMod),
+		pOther->TakeDamage ( pev, theOwner, dmg, dmgBitsNormal, dmgBitsMod );
 	}
 
 	SetThink ( &CBaseEntity::SUB_Remove );

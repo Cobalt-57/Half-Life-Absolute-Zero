@@ -985,7 +985,6 @@ public:
 
 	//MODDD - made virtual like BuildNearestRoute was. If something overrides this we should probably use its version.
 	virtual BOOL BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget );
-	virtual BOOL BuildRouteSafe(const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget);
 
 	//MODDD - now accepts an optional moveflag and optional target entity just like BuildRoute does. To whatever route it makes with BuildRoute,
 	//        it should be able to pass that information along just as if BuildRoute were called plainly.

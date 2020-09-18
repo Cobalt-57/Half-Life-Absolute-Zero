@@ -1545,9 +1545,6 @@ Schedule_t* CKingpin::GetScheduleOfType( int Type){
 		break;
 
 
-
-
-
 		
 		case SCHED_KINGPIN_ELECTRIC_BARRAGE_CHARGE_FAIL:
 			return slKingpinElectricBarrageChargeFail;
@@ -1560,7 +1557,7 @@ Schedule_t* CKingpin::GetScheduleOfType( int Type){
 			return slKingpinGenericRangeFail;
 		break;
 		
-	}//END OF switch(Type)
+	}//switch(Type)
 	
 	return CBaseMonster::GetScheduleOfType(Type);
 }//END OF GetScheduleOfType(...)
@@ -1587,8 +1584,6 @@ void CKingpin::StartTask( Task_t *pTask ){
 			//This does not come with the melee attack event, nor should it.  If it were included with the model, we
 			//need to be told to ignore that in HandleEvents or whatever handles model events instead of our custom queue ones.
 			SetSequenceByIndex(KINGPIN_ATTACK_BOTH);
-
-			//EEEEE
 
 		break;}
 		case TASK_GATE_KINGPIN_DISTANCE_MINIMUM:{
@@ -2593,7 +2588,7 @@ void CKingpin::MonsterThink( void ){
 		nextNormalThinkTime = gpGlobals->time + 0.1;
 	}
 
-}//END OF MonsterThink(...)
+}//MonsterThink
 
 
 
@@ -4614,14 +4609,11 @@ void CKingpin::administerShocker(void){
 
 
 	
-	if (RANDOM_LONG(0,1))
+	if (RANDOM_LONG(0,1)){
 		AttackSound();
+	}
 
 }//END OF administerShocker
-
-
-
-
 
 
 
@@ -4635,8 +4627,8 @@ BOOL CKingpin::needsMovementBoundFix(void){
 
 
 //MODDD - started as a clone of CBaseMonster's BestVisibleEnemy method (from the as-is SDK).
-//Modified to take a point instead, and see which entity is closest to the kingpin,
-//but still roughly in the same direction it is facing (towards this point).  A laser that fires some 140 or 180 degrees behind looks weird.
+// Modified to take a point instead, and see which entity is closest to the kingpin,
+// but still roughly in the same direction it is facing (towards this point).  A laser that fires some 140 or 180 degrees behind looks weird.
 CBaseEntity* CKingpin::attemptFindTowardsPoint(const Vector& arg_searchPoint){
 	CBaseEntity	*pReturn;
 	CBaseEntity	*pNextEnt;
@@ -4653,16 +4645,16 @@ CBaseEntity* CKingpin::attemptFindTowardsPoint(const Vector& arg_searchPoint){
 	{
 		if ( pNextEnt->IsAlive_FromAI(this) )
 		{
-			//First a check. Is this near a straight line from this Kingpin to arg_searchPoint?
+			// First a check. Is this near a straight line from this Kingpin to arg_searchPoint?
 			Vector2D vecTowardsEnemy = (pNextEnt->EyePosition() - this->EyePosition()).Make2D().Normalize();
 			float flDot = DotProduct(vecDirToSearchPoint, vecTowardsEnemy);
 
 
-			//based off of VIEW_FIELD_ULTRA_NARROW, which was +-25 degrees for a value of 0.9.
-			//greater values towards 1.0 are more strict (1.0 being impossibly exact... decimals match
-			//exactly once in a thousand blue moons), 0 (+- 90 degrees), and -1 (+- 180 degrees, or
-			//effectively any angle away from me is satisfactory, since that wraps around all 360 
-			//degrees).
+			// based off of VIEW_FIELD_ULTRA_NARROW, which was +-25 degrees for a value of 0.9.
+			// greater values towards 1.0 are more strict (1.0 being impossibly exact... decimals match
+			// exactly once in a thousand blue moons), 0 (+- 90 degrees), and -1 (+- 180 degrees, or
+			// effectively any angle away from me is satisfactory, since that wraps around all 360 
+			// degrees).
 			if(flDot >= 0.82){
 				//in the direction enough.
 				flDist = ( pNextEnt->pev->origin - pev->origin ).Length();
@@ -4693,21 +4685,21 @@ void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float a
 	int emptyReflectHandleID;
 	Vector anticipatedProjectileOrigin;
 
-	//Is this entity already being reflected?
+	// Is this entity already being reflected?
 	if(AlreadyReflectingEntity(arg_toReflect)){
-		//stop.  No need to set a slot for this.
+		// stop.  No need to set a slot for this.
 		return;
 	}
 
 	emptyReflectHandleID = this->getNextReflectHandleID();
 
 	if(emptyReflectHandleID == -1){
-		//also stop.  No slots available.
+		// also stop.  No slots available.
 		return;
 	}
 
-	//Going through with this?  Let the projectile know it's getting deflected. Or reflected. Whatever.
-	//Stop hornets and rockets from being persistent.
+	// Going through with this?  Let the projectile know it's getting deflected. Or reflected. Whatever.
+	// Stop hornets and rockets from being persistent.
 	arg_toReflect->OnDeflected(this);
 
 	//Make me the owner to avoid touching me.  Is this ok?
@@ -4718,11 +4710,11 @@ void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float a
 
 	
 	//TODO - check.  If this is MOVETYPE_TOSS or MOVETYPE_MISSLEBOUNCE, see if we can anticipate the pull from gravity too in 0.3 seconds.
-	//proabably not a huge difference anyways.
+	// proabably not a huge difference anyways.
 	anticipatedProjectileOrigin = arg_toReflect->pev->origin + arg_toReflect->GetVelocityLogical() * (0.3 * arg_delayFactor);
 
 	if(arg_toReflect->pev->movetype == MOVETYPE_TOSS || arg_toReflect->pev->movetype == MOVETYPE_BOUNCE ){
-		//anticipate the effect of gravity.
+		// anticipate the effect of gravity.
 		int gravityFactor = 0;
 		if(arg_toReflect->pev->gravity == 0){
 			gravityFactor = 1; //implied?

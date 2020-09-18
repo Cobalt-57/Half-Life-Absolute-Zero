@@ -148,7 +148,10 @@ TYPEDESCRIPTION	CCineMonster::m_SaveData[] =
 
 	DEFINE_FIELD(CCineMonster, wasAttached, FIELD_BOOLEAN),
 
-
+#if HACKY_SCRIPT_TEST == 1
+	//MODDD - SCRIPT MINOR.   Any mentions of startTimeSet
+	DEFINE_FIELD(CCineMonster, startTimeSet, FIELD_BOOLEAN),
+#endif
 
 };
 
@@ -227,8 +230,30 @@ void CCineMonster::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE u
 	CBaseEntity* pEntity = m_hTargetEnt;
 	CBaseMonster* pTarget = NULL;
 
-	if (pEntity)
+
+
+
+	if (pEntity){
 		pTarget = pEntity->MyMonsterPointer();
+	}else{
+
+#if HACKY_SCRIPT_TEST == 1
+		//MODDD - idea.  No target now?  Try immediately once.
+		// And picking up the entity breaks the a2a1 garg sequence (it never moves forward)
+		// beeeeccccccccaaaaaaauuuuusssssssseeeee?
+		////////////////////////////////////////////////////////
+		FindEntity();
+		pEntity = m_hTargetEnt;
+		if (pEntity){
+			// better?
+			pTarget = pEntity->MyMonsterPointer();
+		}
+#endif
+		////////////////////////////////////////////////////////
+	}//pEntity check
+	
+
+
 
 	if (pTarget)
 	{
@@ -238,6 +263,9 @@ void CCineMonster::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE u
 
 		//MODDD - why delayed by 0.05?  why not the next immediate think frame?
 		m_startTime = gpGlobals->time + 0.0;
+#if HACKY_SCRIPT_TEST == 1
+		startTimeSet = TRUE;
+#endif
 	}
 	else
 	{
@@ -408,6 +436,11 @@ void CCineMonster::PossessEntity(void)
 	if (pTarget)
 	{
 
+		if(pTarget->monsterID == 0){
+			int x = 45;
+		}
+
+
 		// FindEntity() just checked this!
 #if 0
 		if (!pTarget->CanPlaySequence(FCanOverrideState()))
@@ -461,7 +494,21 @@ void CCineMonster::PossessEntity(void)
 			pTarget->pev->effects |= EF_NOINTERP;
 			pTarget->pev->angles.y = pev->angles.y;
 			pTarget->m_scriptState = SCRIPT_WAIT;
+
+#if HACKY_SCRIPT_TEST == 1
+			//MODDD - SCRIPT MINOR - if startTimeSet is FALSE, set the delay high.
+			// If this was grabbed and told to play before this point, don't disturb that (TRUE).
+			if(!startTimeSet){
+				m_startTime = gpGlobals->time + 1E6;
+			}else{
+				// paranoia:  force it to play now anyway?
+				m_startTime = gpGlobals->time + 0;
+			}
+#else
+			// nope
 			m_startTime = gpGlobals->time + 1E6;
+#endif
+
 			// UNDONE: Add a flag to do this so people can fixup physics after teleporting monsters
 			//			pTarget->pev->flags &= ~FL_ONGROUND;
 			break;

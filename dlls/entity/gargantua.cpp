@@ -1084,17 +1084,15 @@ void CGargantua::MonsterThink(void){
 			grabbedEnt->pev->origin = finalEntPos;
 		}
 
-	}
+	}//g_gargantua_throwbody_sequenceID check
 
 
 
 	if(doNormalThink){
-
 		if(pev->sequence != g_gargantua_throwbody_sequenceID && pev->yaw_speed == 0){
 			easyPrintLine("WARNING!!! Garg sequence is not throwbody (%d) yet yaw_speed was 0, corrected!", pev->sequence);
 			pev->yaw_speed = 60;
 		}
-
 
 		if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(thatWasntPunch) == 1 && this->m_fSequenceFinished){
 			switch(RANDOM_LONG(0, 45)){

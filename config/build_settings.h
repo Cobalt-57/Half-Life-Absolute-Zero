@@ -63,6 +63,16 @@
 #define SPLIT_ALIEN_WEAPONS_INTO_NEW_SLOT 1
 
 
+// Test to fool around with scripted's, makes some things better (fixes a3a2, moving too fast at the opening = frozen agrunt),
+// but breaks others (a2a1 garg doesn't move).  Yowza, fragile.
+#define HACKY_SCRIPT_TEST 0
+
+// little debug feature.  Force "func_door_rotating" to "func_door_health"
+// for test maps that still haven't used the new func_door_health name.
+// Use 0 for intended behavior otherwise (func_door_health must be used for wallhealth doors now).
+#define FORCE_ROTDOOR_TO_HEALTHDOOR 0
+
+
 
 
 //***Descriptions seen in the server browser for a game running this mod***

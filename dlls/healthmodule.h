@@ -7,31 +7,10 @@
 //        certain CRotDoor's using this.
 //        So yes, not even of CBaseEntity.  Some events like 'Save' / 'Restore' must be called by some parent entity that handles those.
 
+// -Reorganized a bit to put the healthModuleInstance in the I_HealthParentModule class instead, say so if that causes any issues
 
 
-// A class that a parent of a HealthModule (in the sense of having a HealthModule instance at all) should take to guarantee some event methods.
-// And implement those of course.
-// C does multi-inheritence, not sure if there's any possible difference for that if this is more of an "Interface" like in Java than a parent class.
-class I_HealthModule_Parent{
-public:
-	//MODDD - NOTICE!  If the  " = 0;"  (pure virtual) breaks VS6 compatability,
-	// just replace " = 0;"  with "{};".
-	// Or make a preprocessor constant somewhere that checks for visual studio version
-	// and uses the right way for that version.
-	virtual void I_HealthModule_ChargeEmpty(void) = 0;
-	virtual void I_HealthModule_ChargeRestored(void) = 0;
-	virtual void I_HealthModule_UseStart(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
-	virtual void I_HealthModule_UseContinuous(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
-	virtual void I_HealthModule_UseEnd(void) = 0;
-
-	//virtual void I_HealthModule_SetThink_UseEnd(void) = 0;
-	//virtual void I_HealthModule_SetThink_ChargeRestored(void) = 0;
-	
-	virtual void I_HealthModule_SetThink_Custom(void) = 0;
-
-};
-
-
+class I_HealthModule_Parent;
 
 class HealthModule{
 public:
@@ -96,5 +75,30 @@ public:
 	void stopSounds(void);
 
 
+
+};
+
+// A class that a parent of a HealthModule (in the sense of having a HealthModule instance at all) should take to guarantee some event methods.
+// And implement those of course.
+// C does multi-inheritence, not sure if there's any possible difference for that if this is more of an "Interface" like in Java than a parent class.
+class I_HealthModule_Parent{
+public:
+
+	HealthModule healthModuleInstance;  //guaranteed instance.
+
+										//MODDD - NOTICE!  If the  " = 0;"  (pure virtual) breaks VS6 compatability,
+										// just replace " = 0;"  with "{};".
+										// Or make a preprocessor constant somewhere that checks for visual studio version
+										// and uses the right way for that version.
+	virtual void I_HealthModule_ChargeEmpty(void) = 0;
+	virtual void I_HealthModule_ChargeRestored(void) = 0;
+	virtual void I_HealthModule_UseStart(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
+	virtual void I_HealthModule_UseContinuous(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
+	virtual void I_HealthModule_UseEnd(void) = 0;
+
+	//virtual void I_HealthModule_SetThink_UseEnd(void) = 0;
+	//virtual void I_HealthModule_SetThink_ChargeRestored(void) = 0;
+
+	virtual void I_HealthModule_SetThink_Custom(void) = 0;
 
 };

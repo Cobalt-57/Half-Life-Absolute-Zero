@@ -1405,7 +1405,7 @@ CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, 
 	return pEntity;
 }
 CBaseEntity * CBaseEntity::Create( const char *szName, const Vector &vecOrigin, const Vector &vecAngles, edict_t *pentOwner ){
-	// seems to happen from real-time creation, like on crating gibs, not creatures at map load.
+	// seems to happen from real-time creation, like on creating gibs or ammo from destroyed breakables, not creatures at map load.
 	CBaseEntity* pEntity = CBaseEntity::CreateManual(szName, vecOrigin, vecAngles, pentOwner);
 	if(!pEntity)return NULL;
 

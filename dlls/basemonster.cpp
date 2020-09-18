@@ -136,7 +136,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreIsolatedNodes)
 #define DIST_TO_CHECK	300
 
 // Turned into a constant.  (Was 8)
-#define MAX_TRIANGULATION_ATTEMPTS 8
+#define MAX_TRIANGULATION_ATTEMPTS 4
 
 
 //extern DLL_GLOBAL	BOOL	g_fDrawLines;
@@ -1333,11 +1333,6 @@ void CBaseMonster::Look ( float flDistance )
 						ALERT ( at_aiconsole, "%s can't assess %s\n", STRING(pev->classname), STRING(pSightEnt->pev->classname ) );
 						break;
 					}
-
-
-
-
-
 
 				}
 			}
@@ -6146,106 +6141,6 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 
 
 
-
-// This is a combo of 'MoveToEnemy' and 'FRefreshRoute' (smart chase enemy variant) that only 
-// tests BuildRoute (in fact that's what it is mainly), but does not affect the current route 
-// if it fails to find a better one.
-// Wait!  Nevermind, made FRefreshRouteChaseEnemySmartSafe, and that handles saving the route
-// and calls ordinary BuildRoute, that should work.
-// SCRAP THIS
-BOOL CBaseMonster::BuildRouteSafe ( const Vector &vecGoal, int iMoveFlag, CBaseEntity *pTarget )
-{
-	// Save the existing route as all pathfinding methods yet want to mess with it.
-
-	//m_Route
-
-	float flDist;
-	Vector vecApex;
-	int	iLocalMove;
-
-	RouteNew();
-
-	m_movementGoal = RouteClassify( iMoveFlag );
-
-// so we don't end up with no moveflags
-	m_Route[ 0 ].vecLocation = vecGoal;
-	m_Route[ 0 ].iType = iMoveFlag | bits_MF_IS_GOAL;
-
-	m_iRouteLength = 1;  //so far?
-
-
-	// If a straight-line trace couldn't work, show me why
-	g_CheckLocalMoveCanReportBlocker = TRUE;
-
-// check simple local move
-	iLocalMove = CheckLocalMove( pev->origin, vecGoal, pTarget, TRUE, &flDist );
-
-	g_CheckLocalMoveCanReportBlocker = FALSE;
-
-	if ( iLocalMove == LOCALMOVE_VALID )
-	{
-		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: I GOT SATISIFED 1", getClassnameShort(), monsterID) );
-		// monster can walk straight there!
-		return TRUE;
-	}
-
-// try to triangulate around any obstacles.
-	else if ( iLocalMove != LOCALMOVE_INVALID_DONT_TRIANGULATE && FTriangulate( pev->origin, vecGoal, flDist, pTarget, &vecApex ) )
-	{
-		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: I GOT SATISIFED 2", getClassnameShort(), monsterID) );
-		// there is a slightly more complicated path that allows the monster to reach vecGoal
-		m_Route[ 0 ].vecLocation = vecApex;
-		m_Route[ 0 ].iType = (iMoveFlag | bits_MF_TO_DETOUR);
-
-		m_Route[ 1 ].vecLocation = vecGoal;
-		m_Route[ 1 ].iType = iMoveFlag | bits_MF_IS_GOAL;
-
-		m_iRouteLength = 2;
-
-			
-			//WRITE_BYTE(MSG_BROADCAST, SVC_TEMPENTITY);
-			//WRITE_BYTE(MSG_BROADCAST, TE_SHOWLINE);
-			//WRITE_COORD(MSG_BROADCAST, vecApex.x );
-			//WRITE_COORD(MSG_BROADCAST, vecApex.y );
-			//WRITE_COORD(MSG_BROADCAST, vecApex.z );
-			//WRITE_COORD(MSG_BROADCAST, vecApex.x );
-			//WRITE_COORD(MSG_BROADCAST, vecApex.y );
-			//WRITE_COORD(MSG_BROADCAST, vecApex.z + 128 );
-			
-
-		RouteSimplify( pTarget );
-		return TRUE;
-	}
-
-// last ditch, try nodes
-	if ( FGetNodeRoute( vecGoal ) )
-	{
-//		ALERT ( at_console, "Can get there on nodes\n" );
-		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: I GOT SATISIFED 3", getClassnameShort(), monsterID) );
-		m_vecMoveGoal = vecGoal;
-		RouteSimplify( pTarget );
-		return TRUE;
-	}
-
-
-	debugVectorsSet = FALSE;
-	debugFailColor = FALSE;
-
-	if(EASY_CVAR_GET_DEBUGONLY(pathfindRampFix) == 1){
-		BOOL rampFixSuccess = attemptRampFix(vecGoal, iMoveFlag, pTarget);
-		if(rampFixSuccess){
-			// yipee
-			return TRUE;
-		}
-	}//pathfindRampFix check
-
-	EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: TOTAL FAIL!", getClassnameShort(), monsterID) );
-
-	// b0rk
-	return FALSE;
-}//BuildRouteCheap
-
-
 //=========================================================
 // InsertWaypoint - Rebuilds the existing route so that the
 // supplied vector and moveflags are the first waypoint in
@@ -6320,7 +6215,11 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 	// In the very least this means calling FTriangulate without a route in mind (garbage m_Route info) 
 	// would not be very helpful.
 
-	Vector vecDirLeft;
+	float furthestDist;
+	Vector vecDirRight;
+	Vector vecDirUp(0,0,1);
+	Vector vecDirLeftUp;
+	Vector vecDirRightUp;
 	Vector vecForward;
 	Vector vecLeft;// the spot we'll try to triangulate to on the left
 	Vector vecRight;// the spot we'll try to triangulate to on the right
@@ -6333,8 +6232,21 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 	Vector vecRightTop;
 	//Vector vecForwardTop;
 
-	Vector vecLeftShiftApex;
+	Vector vecRightShiftApex;
 	Vector vecUpShiftApex;
+
+	//MODDD - another idea.  How about recording the max distance left/right/up/down allowed to be traveled from
+	// my pos to the target pos, and instead of completely blocking  a triangulation attept just because I can't go any
+	// further in that direction, try once more snapped to the max distance I could go in that direction?
+	// That is, if going 60 unts left is fine, but going 120 hits a wall at some point, where did it? 70? 80? 110? etc.
+	// Try from that point instead then.
+
+	BOOL sourceMaxLeftHit = FALSE;
+	BOOL sourceMaxRightHit = FALSE;
+	BOOL sourceMaxUpHit = FALSE;
+	BOOL sourceMaxDownHit = FALSE;
+	BOOL sourceMaxLeftUpHit = FALSE;
+	BOOL sourceMaxRightUpHit = FALSE;
 
 
 	int i;
@@ -6353,8 +6265,8 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 
 	//MODDD - allow trying in larger increments.
 	// was 1.25, not as-is though
-	sizeX *= 1.60;
-	sizeZ *= 1.60;
+	sizeX *= 1.70;
+	sizeZ *= 1.70;
 
 	//MODDD - added triangulation attemps for a blend of up and left/right too, but only for going upwards for now.
 	// Careful about making this too expensive, arleady cut the number of attempts in half to make up for this.
@@ -6362,9 +6274,10 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 
 	vecForward = ( vecEnd - vecStart ).Normalize();
 	
-	Vector vecDirUp(0,0,1);
-	vecDirLeft = CrossProduct ( vecForward, vecDirUp);
+	vecDirRight = CrossProduct ( vecForward, vecDirUp);
 
+	vecDirRightUp = (vecDirRight + vecDirUp).Normalize();
+	vecDirLeftUp = (-vecDirRight + vecDirUp).Normalize();
 
 	/*
 	// ALTERNATE WAY: interpret the vecForward as angles and derive dirUp & Left from that.
@@ -6381,13 +6294,13 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 	// was looking at something at a higher point.  Leaning towards it though too?  Wha?
 	// AAAAGGH.   It's from using UTIL_MakeVectors instead of UTIL_MakeAimVectors, isn't it.  Fixed since.
 	//vecDirUp = gpGlobals->v_up;
-	vecDirLeft = -gpGlobals->v_right;
+	vecDirRight = gpGlobals->v_right;
 
-	vecDirUp = CrossProduct(vecForward, vecDirLeft);
+	vecDirUp = CrossProduct(vecForward, vecDirRight);
 
 	Vector testVec = pev->origin + vecForward * 200;
 	Vector testVec2 = pev->origin + vecDirUp * 200;
-	Vector testVec3 = pev->origin + vecDirLeft * 200;
+	Vector testVec3 = pev->origin + vecDirRight * 200;
 	UTIL_drawLineFrame(pev->origin.x, pev->origin.y, pev->origin.z, testVec.x, testVec.y, testVec.z, 12, 30, 255, 255, 0);
 	UTIL_drawLineFrame(pev->origin.x, pev->origin.y, pev->origin.z, testVec2.x, testVec2.y, testVec2.z, 12, 30, 0, 255, 0);
 	UTIL_drawLineFrame(pev->origin.x, pev->origin.y, pev->origin.z, testVec3.x, testVec3.y, testVec3.z, 12, 30, 0, 0, 255);
@@ -6400,8 +6313,8 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 	// onto its original course.
 	
 	//MODDD - unsure why sizeX is even added to flDist times vecForward, times 0.5 instead now
-	vecLeft = pev->origin + ( vecForward * ( flDist + sizeX * 0.5 ) ) - (vecDirLeft * ( sizeX * 3 ));
-	vecRight = pev->origin + ( vecForward * ( flDist + sizeX * 0.5 ) ) + (vecDirLeft * ( sizeX * 3 ));
+	vecLeft = pev->origin + ( vecForward * ( flDist + sizeX * 0.5 ) ) - (vecDirRight * ( sizeX * 3 ));
+	vecRight = pev->origin + ( vecForward * ( flDist + sizeX * 0.5 ) ) + (vecDirRight * ( sizeX * 3 ));
 
 	//MODDD - Why not add sizeZ to flDist times vecForward too?
 	if (isMovetypeFlying()){
@@ -6409,16 +6322,119 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 		vecBottom = pev->origin + (vecForward * (flDist + sizeZ * 0.5) ) - (vecDirUp *  (sizeZ * 3));
 
 		//MODDD - NEW.
-		vecLeftTop = pev->origin + (vecForward * flDist) + -(vecDirLeft * ( sizeX * 2.25 )) + (vecDirUp * (sizeZ * 2.25));
-		vecRightTop = pev->origin + (vecForward * flDist) + (vecDirLeft * ( sizeX * 2.25 )) + (vecDirUp * (sizeZ * 2.25));
+		vecLeftTop = pev->origin + (vecForward * flDist) + -(vecDirRight * ( sizeX * 2.25 )) + (vecDirUp * (sizeZ * 2.25));
+		vecRightTop = pev->origin + (vecForward * flDist) + (vecDirRight * ( sizeX * 2.25 )) + (vecDirUp * (sizeZ * 2.25));
 	}
 
 	vecFarSide = m_Route[ m_iRouteIndex ].vecLocation;
 	
-	vecLeftShiftApex = vecDirLeft * sizeX * 1;
+	vecRightShiftApex = vecDirRight * sizeX * 1.6;
 	if (isMovetypeFlying() ){
-		vecUpShiftApex = vecDirUp * sizeZ * 1;
+		vecUpShiftApex = vecDirUp * sizeZ * 1.6;
 	}
+
+
+
+
+	// left of the target to the target, is that ok?
+	if(CheckLocalMove(pev->origin, vecLeft, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+		// passed?  That's all.
+	}else{
+		if(furthestDist > 24){
+			// worthwhile?
+			//vecLeft = pev->origin + -vecDirRight * (furthestDist - 16);
+			Vector pointDelta = vecLeft - pev->origin;
+			//float theLen = pointDelta.Length();
+			Vector theDir = pointDelta.Normalize();
+			vecLeft = pev->origin + theDir * (furthestDist - 16);
+			sourceMaxLeftHit = 1;
+		}else{
+			// no.  Don't bother with this direction from the target then
+			sourceMaxLeftHit = 2;
+		}
+	}
+
+
+	if(CheckLocalMove(pev->origin, vecRight, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+
+	}else{
+		if(furthestDist > 24){
+			// worthwhile?
+			//vecRight = pev->origin + vecDirRight * (furthestDist - 16);
+			Vector pointDelta = vecRight - pev->origin;
+			Vector theDir = pointDelta.Normalize();
+			vecRight = pev->origin + theDir * (furthestDist - 16);
+			sourceMaxRightHit = 1;
+		}else{
+			// no.  Don't bother with this direction from the target then
+			sourceMaxRightHit = 2;
+		}
+	}
+	if(isMovetypeFlying()){
+		if(CheckLocalMove(pev->origin, vecTop, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+
+		}else{
+			if(furthestDist > 24){
+				// worthwhile?
+				//vecTop = pev->origin + vecDirUp * (furthestDist - 32);
+				Vector pointDelta = vecTop - pev->origin;
+				Vector theDir = pointDelta.Normalize();
+				vecTop = pev->origin + theDir * (furthestDist - 16);
+				sourceMaxUpHit = 1;
+			}else{
+				// no.  Don't bother with this direction from the target then
+				sourceMaxUpHit = 2;
+			}
+		}
+		if(CheckLocalMove(pev->origin, vecBottom, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+
+		}else{
+			if(furthestDist > 24){
+				// worthwhile?
+				//vecBottom = pev->origin + -vecDirUp * (furthestDist - 32);
+				Vector pointDelta = vecBottom - pev->origin;
+				Vector theDir = pointDelta.Normalize();
+				vecBottom = pev->origin + theDir * (furthestDist - 16);
+				sourceMaxDownHit = 1;
+			}else{
+				// no.  Don't bother with this direction from the target then
+				sourceMaxDownHit = 2;
+			}
+		}
+
+		if(CheckLocalMove(pev->origin, vecLeftTop, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+
+		}else{
+			if(furthestDist > 24){
+				// worthwhile?
+				//vecLeftTop = pev->origin + vecDirLeftUp * (furthestDist - 32);
+				Vector pointDelta = vecLeftTop - pev->origin;
+				Vector theDir = pointDelta.Normalize();
+				vecLeftTop = pev->origin + theDir * (furthestDist - 16);
+				sourceMaxLeftUpHit = 1;
+			}else{
+				// no.  Don't bother with this direction from the target then
+				sourceMaxLeftUpHit = 2;
+			}
+		}
+		if(CheckLocalMove(pev->origin, vecRightTop, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+
+		}else{
+			//pev->size.x * 0.7 + pev->size.z * 0.7
+			if(furthestDist > 24){
+				// worthwhile?
+				//vecRightTop = pev->origin + vecDirRightUp * (furthestDist - 32);
+				Vector pointDelta = vecRightTop - pev->origin;
+				Vector theDir = pointDelta.Normalize();
+				vecRightTop = pev->origin + theDir * (furthestDist - 16);
+				sourceMaxRightUpHit = 1;
+			}else{
+				// no.  Don't bother with this direction from the target then
+				sourceMaxRightUpHit = 2;
+			}
+		}
+	}
+
 
 	///////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////
@@ -6454,24 +6470,23 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 	Vector vecTargetTop = vecFarSide;
 	Vector vecTargetBottom = vecFarSide;
 	Vector vecTest;
-	float furthestDist;
 
 
 	/*
-	vecTest = vecFarSide + vecDirLeft * (targetSizeX + sizeX * 1.2);
+	vecTest = vecFarSide + vecDirRight * (targetSizeX + sizeX * 1.2);
 	// left of the target to the target, is that ok?
 	if(CheckLocalMove(vecTest, vecFarSide, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
 		// ok, use exactly that to start
 		//vecTargetLeft = vecTest;
-		vecTargetLeft = vecFarSide + vecDirLeft * (targetSizeX * 0.5 + sizeX * 0.5);
+		vecTargetLeft = vecFarSide + vecDirRight * (targetSizeX * 0.5 + sizeX * 0.5);
 	}else{
 		// Don't bother with this direction from the target then
 		targetMaxLeftHit = TRUE;
 	}
 
-	vecTest = vecFarSide + -vecDirLeft * (targetSizeX + sizeX * 1.2);
+	vecTest = vecFarSide + -vecDirRight * (targetSizeX + sizeX * 1.2);
 	if(CheckLocalMove(vecTest, vecFarSide, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
-		vecTargetRight = vecFarSide + -vecDirLeft * (targetSizeX * 0.5 + sizeX * 0.5);
+		vecTargetRight = vecFarSide + -vecDirRight * (targetSizeX * 0.5 + sizeX * 0.5);
 	}else{
 		targetMaxRightHit = TRUE;
 	}
@@ -6548,6 +6563,8 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 
 
 
+		// RETAIL FOR REFERENCE
+		/*
 		if ( CheckLocalMove( pev->origin, vecRight, pTargetEnt, FALSE, NULL ) == LOCALMOVE_VALID )
 		{
 			if ( CheckLocalMove ( vecRight, vecTargetRight, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
@@ -6639,16 +6656,200 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 #endif
 		}
 
-		vecLeft = vecLeft - vecLeftShiftApex;
-		vecRight = vecRight + vecLeftShiftApex;
+		vecLeft = vecLeft - vecRightShiftApex;
+		vecRight = vecRight + vecRightShiftApex;
 		if (isMovetypeFlying()){
 			vecTop = vecTop + vecUpShiftApex;
 			vecBottom = vecBottom - vecUpShiftApex;
 
 			//MODDD - new
-			vecLeftTop = vecLeftTop + -vecLeftShiftApex * 0.75 + vecUpShiftApex * 0.75;
-			vecRightTop = vecRightTop + vecLeftShiftApex * 0.75 + vecUpShiftApex * 0.75;
+			vecLeftTop = vecLeftTop + -vecRightShiftApex * 0.75 + vecUpShiftApex * 0.75;
+			vecRightTop = vecRightTop + vecRightShiftApex * 0.75 + vecUpShiftApex * 0.75;
 		}
+		*/
+
+
+		if ( sourceMaxRightHit < 2 && CheckLocalMove ( vecRight, vecTargetRight, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
+		{
+			if ( pApex )
+			{
+				*pApex = vecRight;
+			}
+
+			return TRUE;
+		}else{
+			//MODDD - How about going up from that point a bit?
+			if (isMovetypeFlying()){
+				if ( sourceMaxRightUpHit < 2 && CheckLocalMove ( vecRightTop, vecTargetRight, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
+				{
+					if ( pApex )
+					{
+						*pApex = vecRightTop;
+					}
+					return TRUE;
+				}
+			}
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+
+		}
+
+
+		/*
+		if(sourceMaxLeftHit < 2){
+			UTIL_drawLineFrame(pev->origin.x, pev->origin.y, pev->origin.z, vecLeft.x, vecLeft.y, vecLeft.z, 12, 200, 255, 255, 255);
+			UTIL_drawLineFrame(vecLeft.x, vecLeft.y, vecLeft.z, vecTargetLeft.x, vecTargetLeft.y, vecTargetLeft.z, 12, 200, 255, 255, 255);
+		}else{
+			UTIL_drawLineFrame(pev->origin.x, pev->origin.y, pev->origin.z, vecLeft.x, vecLeft.y, vecLeft.z, 12, 200, 255, 0, 0);
+			UTIL_drawLineFrame(vecLeft.x, vecLeft.y, vecLeft.z, vecTargetLeft.x, vecTargetLeft.y, vecTargetLeft.z, 12, 200, 255, 0, 0);
+		}
+		*/
+		if ( sourceMaxLeftHit < 2 && CheckLocalMove ( vecLeft, vecTargetLeft, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
+		{
+			if ( pApex )
+			{
+				*pApex = vecLeft;
+			}
+
+			return TRUE;
+		}else{
+			//MODDD - How about going up from that point a bit?
+			if (isMovetypeFlying()){
+				if ( sourceMaxLeftUpHit < 2 && CheckLocalMove ( vecLeftTop, vecTargetLeft, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
+				{
+					if ( pApex )
+					{
+						*pApex = vecLeftTop;
+					}
+					return TRUE;
+				}
+			}
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+
+		}
+
+		if (isMovetypeFlying())
+		{
+			//UTIL_drawLineFrame(pev->origin.x, pev->origin.y, pev->origin.z, vecTop.x, vecTop.y, vecTop.z, 12, 900, 255, 255, 255);
+			//UTIL_drawLineFrame(vecTop.x, vecTop.y, vecTop.z, vecTargetTop.x, vecTargetTop.y, vecTargetTop.z, 12, 900, 255, 255, 255);
+			
+			if ( sourceMaxUpHit < 2 && CheckLocalMove ( vecTop, vecTargetTop, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
+			{
+				if ( pApex )
+				{
+					*pApex = vecTop;
+					//ALERT(at_aiconsole, "triangulate over\n");
+				}
+
+				return TRUE;
+			}
+#if 1
+			
+			if ( sourceMaxDownHit < 2 && CheckLocalMove ( vecBottom, vecTargetBottom, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
+			{
+				if ( pApex )
+				{
+					*pApex = vecBottom;
+					//ALERT(at_aiconsole, "triangulate under\n");
+				}
+
+				return TRUE;
+			}
+#endif
+		}
+
+
+		// Any set to 1 that tried above, will be 2 next time (never try again if this failed, never changes
+		// so why bother)
+		if (sourceMaxLeftHit == 1) sourceMaxLeftHit = 2;
+		if (sourceMaxRightHit == 1) sourceMaxRightHit = 2;
+		if (sourceMaxUpHit == 1) sourceMaxUpHit = 2;
+		if (sourceMaxDownHit == 1) sourceMaxDownHit = 2;
+		if (sourceMaxLeftUpHit == 1) sourceMaxLeftUpHit = 2;
+		if (sourceMaxRightUpHit == 1) sourceMaxRightUpHit = 2;
+
+
+		if(!sourceMaxRightHit){
+			vecTest = vecRight + vecRightShiftApex;
+			// Can I go from the current vecRight to the further extent
+			if(CheckLocalMove(vecRight, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+				// ok, use exactly that next time.
+				vecRight = vecTest;
+			}else{
+				// where did I stop?  Look to 'furthestDist', now guaranteed set by CheckLocalMove.
+				// And don't try nudging in this direction in the future.
+				if(furthestDist > 24){
+					vecRight = vecRight + vecDirRight * (furthestDist - 16);
+				}
+				sourceMaxRightHit = TRUE;
+			}
+		}
+		if(!sourceMaxLeftHit){
+			vecTest = vecLeft + -vecRightShiftApex;
+			if(CheckLocalMove(vecLeft, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+				// ok, use exactly that next time.
+				vecLeft = vecTest;
+			}else{
+				// where did I stop?  Look to 'furthestDist', now guaranteed set by CheckLocalMove.
+				// And don't try nudging in this direction in the future.
+				if(furthestDist > 24){
+					vecLeft = vecLeft + -vecDirRight * (furthestDist - 16);
+				}
+				sourceMaxLeftHit = TRUE;
+			}
+		}
+		if (isMovetypeFlying()){
+			if(!sourceMaxUpHit){
+				vecTest = vecTop + vecUpShiftApex;
+				if(CheckLocalMove(vecTop, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+					vecTop = vecTest;
+				}else{
+					if(furthestDist > 24){
+						vecTop = vecTop + vecDirUp * (furthestDist - 16);
+					}
+					sourceMaxUpHit = TRUE;
+				}
+			}
+			if(!sourceMaxDownHit){
+				vecTest = vecBottom + -vecUpShiftApex;
+				if(CheckLocalMove(vecBottom, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+					vecBottom = vecTest;
+				}else{
+					if(furthestDist > 24){
+						vecBottom = vecBottom + -vecDirUp * (furthestDist - 16);
+					}
+					sourceMaxDownHit = TRUE;
+				}
+			}
+
+
+			if(!sourceMaxLeftUpHit){
+				vecTest = vecLeftTop + -vecRightShiftApex * 0.75 + vecUpShiftApex * 0.75;
+				if(CheckLocalMove(vecLeftTop, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+					vecLeftTop = vecTest;
+				}else{
+					if(furthestDist > 24){
+						vecLeftTop = vecLeftTop + vecDirLeftUp * (furthestDist - 16);
+					}
+					sourceMaxLeftUpHit = TRUE;
+				}
+			}
+			if(!sourceMaxRightUpHit){
+				vecTest = vecRightTop + vecRightShiftApex * 0.75 + vecUpShiftApex * 0.75;
+				if(CheckLocalMove(vecRightTop, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+					vecRightTop = vecTest;
+				}else{
+					if(furthestDist > 24){
+						vecRightTop = vecRightTop + vecDirRightUp * (furthestDist - 16);
+					}
+					sourceMaxRightUpHit = TRUE;
+				}
+			}
+
+
+		}//isMovetypeFlying
+
+
+
 
 
 
@@ -6656,7 +6857,7 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 		//MODDD
 		/////////////////////////////////////////////////////////////////////////////////////
 		if(!targetMaxLeftHit){
-			vecTest = vecTargetLeft + vecDirLeft * (targetSizeX * 0.23);
+			vecTest = vecTargetLeft + vecDirRight * (targetSizeX * 0.23);
 			// Try again, from current vecTargetLeft to itself nudged further in that direction
 			if(CheckLocalMove(vecTargetLeft, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
 				// ok, use exactly that next time.
@@ -6665,19 +6866,19 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 				// where did I stop?  Look to 'furthestDist', now guaranteed set by CheckLocalMove.
 				// And don't try nudging in this direction in the future.
 				if(furthestDist > 10){
-					vecTargetLeft = vecTargetLeft + vecDirLeft * (furthestDist - 6);
+					vecTargetLeft = vecTargetLeft + vecDirRight * (furthestDist - 6);
 				}
 				targetMaxLeftHit = TRUE;
 			}
 		}
 
 		if(!targetMaxRightHit){
-			vecTest = vecTargetRight + -vecDirLeft * (targetSizeX * 0.23);
+			vecTest = vecTargetRight + -vecDirRight * (targetSizeX * 0.23);
 			if(CheckLocalMove(vecTargetRight, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
 				vecTargetRight = vecTest;
 			}else{
 				if(furthestDist > 10){
-					vecTargetRight = vecTargetRight + -vecDirLeft * (furthestDist - 6);
+					vecTargetRight = vecTargetRight + -vecDirRight * (furthestDist - 6);
 				}
 				targetMaxRightHit = TRUE;
 			}
@@ -8174,6 +8375,12 @@ void CBaseMonster::MonsterInitThink ( void )
 //=========================================================
 void CBaseMonster::StartMonster ( void )
 {
+
+	//MODDD - SCRIPT MINOR - why on earth do these default to SCRIPT_PLAY (value for 0)?
+#if HACKY_SCRIPT_TEST == 1
+	m_scriptState = SCRIPT_WAIT;
+#endif
+
 	// update capabilities
 	if ( LookupActivityFiltered ( ACT_RANGE_ATTACK1 ) != ACTIVITY_NOT_AVAILABLE )
 	{
@@ -11156,7 +11363,18 @@ BOOL CBaseMonster::GetEnemy (BOOL arg_forceWork )
 
 				//MODDD - POINT OF FRUSTRATION HERE
 				//if ( m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY )
-				if ( m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY || arg_forceWork || getForceAllowNewEnemy(pNewEnemy) )
+
+
+
+				//MODDD
+				// why not set this anyway, interrupt the schedule or not?  No effect on the schedule
+				// if it's not part of its interrupt mask.
+				// Other schedules being picked in the same frame might recognize this, although it does
+				// get cleared with any ChangeSchedule call anyway
+				SetConditions(bits_COND_NEW_ENEMY);
+
+				if ( (m_pSchedule->iInterruptMask & bits_COND_NEW_ENEMY) || arg_forceWork || getForceAllowNewEnemy(pNewEnemy) )
+				//if ( TRUE || arg_forceWork || getForceAllowNewEnemy(pNewEnemy) )
 				{
 					// DEBUG STUFF
 					/*

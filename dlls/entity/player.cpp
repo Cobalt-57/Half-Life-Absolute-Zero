@@ -1975,13 +1975,6 @@ void CBasePlayer::RemoveAllItems( BOOL removeSuit )
 
 
 
-/*
- * GLOBALS ASSUMED SET:  g_ulModelIndexPlayer
- *
- * ENTITY_METHOD(PlayerDie)
- */
-
-
 
 
 
@@ -2002,9 +1995,15 @@ void CBasePlayer::FadeMonster(){
 }
 
 
+
+/*
+* GLOBALS ASSUMED SET:  g_ulModelIndexPlayer
+*
+* ENTITY_METHOD(PlayerDie)
+*/
 //entvars_t *g_pevLastInflictor;  // Set in combat.cpp.  Used to pass the damage inflictor for death messages.
 								// Better solution:  Add as parameter to all Killed() functions.
-//MODDD - the above comment may be a little outdated. "g_pevLastInflictor" is never referred too, but used
+//MODDD - the above comment is a little outdated. "g_pevLastInflictor" is never referred too, but used
 //        to hold the last pevInflictor sent along with TakeDamage, as seen in Combat.cpp.
 //        Now, the pevAttacker is sent to Killed methods only instead. Assuming only knowing the attacker
 //        is necessary, but this could be edited to also receive the pevInflictor that takeDamage does too
@@ -2916,7 +2915,6 @@ void CBasePlayer::PlayerDeathThink(void)
 		// nah, just use "recentlyGibbed", new var.
 		// search "iGib" for more details on gibbing here (and in basemonster.h).
 
-
 		float fallSpeedToleranceMulti = 1;
 		float fallDamageReduction = 1;
 		if (jumpForceMultiMem > 1) {
@@ -3038,7 +3036,19 @@ void CBasePlayer::PlayerDeathThink(void)
 	if(FBitSet(pev->flags, FL_ONGROUND) && pev->velocity.Length() == 0 && !sentCarcassScent){
 		sentCarcassScent = TRUE;
 		CSoundEnt::InsertSound ( bits_SOUND_CARCASS, pev->origin, 384, 30 );
-	}
+
+		/*
+		// pev->model == 0; ?
+		//MODDD - going to use this space to do a check for any nearby barnies/scientists to notice this
+		// WAIT.  Neverind, better to have script for them sift through the linked list of visible entities
+		// to see if any happen to include a dead player and act on that or not, so one running around a corner
+		// from a distance can react.
+		if(pev->modelindex != 0){
+
+		}//pev->modelindex
+		*/
+
+	}//ONGROUND and !sentCarcassScent checks
 
 
 	//Since this think method overrides fade logic in case of german censorship, can do it here.
