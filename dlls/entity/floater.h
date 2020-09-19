@@ -148,6 +148,8 @@ public:
 	void onDeathAnimationEnd(void);
 	int getNodeTypeAllowed(void);
 
+	int getHullIndexForNodes(void);
+	int getHullIndexForGroundNodes(void);
 
 	
 	void SetObjectCollisionBox( void ){

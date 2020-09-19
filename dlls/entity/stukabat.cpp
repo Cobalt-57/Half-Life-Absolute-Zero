@@ -1606,6 +1606,15 @@ IMPLEMENT_CUSTOM_SCHEDULES( CStukaBat, CSquadMonster );
 
 void CStukaBat::getPathToEnemyCustom(){
 
+
+	if(FRouteClear()){
+		FRefreshRouteChaseEnemySmart();
+	}
+
+	return;
+	///////////////////////////////////////////////////////////////////////////////////////////
+
+
 	/*
 	if(queueToggleGround){
 		//nothin
@@ -4010,14 +4019,17 @@ int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 	}
 
 	TraceResult tr;
-	Vector vecStartTrace = vecStart + Vector( 0, 0, 16 );
+	Vector vecStartTrace = vecStart + Vector(0, 0, 16);
+	Vector vecEndTrace = vecEnd + Vector(0, 0, 16);
+	//Vector vecStartTrace = vecStart;
+	//Vector vecEndTrace = vecEnd;
 
 	//MODDD - try smaller?
 	//UTIL_TraceHull( vecStart + Vector( 0, 0, 32 ), vecEnd + Vector( 0, 0, 32 ), dont_ignore_monsters, large_hull, edict(), &tr );
 	
 	
 	//UTIL_TraceHull( vecStartTrace, vecEnd + Vector( 0, 0, 16 ), dont_ignore_monsters, head_hull, edict(), &tr );
-	TRACE_MONSTER_HULL(edict(), vecStartTrace, vecEnd + Vector( 0, 0, 16 ), dont_ignore_monsters, edict(), &tr);
+	TRACE_MONSTER_HULL(edict(), vecStartTrace, vecEndTrace, dont_ignore_monsters, edict(), &tr);
 
 
 	// ALERT( at_console, "%.0f %.0f %.0f : ", vecStart.x, vecStart.y, vecStart.z );
@@ -4030,7 +4042,10 @@ int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 
 	// ALERT( at_console, "check %d %d %f\n", tr.fStartSolid, tr.fAllSolid, tr.flFraction );
 	
+
+	/*
 	//Uh.. is that okay?
+	// hmm.. no
 	if(tr.fStartSolid){
 		//or should we do thsi?
 		Vector vecDir = (vecEnd - vecStart).Normalize();
@@ -4038,6 +4053,13 @@ int CStukaBat::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CB
 		
 		return LOCALMOVE_VALID;
 	}
+	*/
+
+	if(tr.flFraction >= 1.0){
+		// just say yes
+		return LOCALMOVE_VALID;
+	}
+
 	
 	if (tr.fStartSolid || tr.flFraction < 1.0)
 	//if(tr.flFraction < 1.0)
@@ -5609,8 +5631,27 @@ Activity CStukaBat::getIdleActivity(void){
 // Although the way things work now, it just jumps to mid-air if the target is up to far away.
 // So it probably works fine really.
 // (Stukabat sets FL_FLY on and off which affects how picking up the _NODE to use works)
+// Actually going to allow using ground nodes if in flying-mode and the map lacks them.
 int CStukaBat::getNodeTypeAllowed(void){
+	if(onGround){
+		return bits_NODE_LAND;
+	}else{
+		if(map_anyAirNodes){
+			// then I only want to use air nodes.
+			return bits_NODE_AIR;
+		}else{
+			// Why miss out on what's useful.  Air nodes will still be preferred if one is available.
+			return bits_NODE_LAND | bits_NODE_AIR;
+		}
+	}
+	
 	return -1;
 }
 
-
+int CStukaBat::getHullIndexForNodes(void){
+	// standard.
+	return NODE_FLY_HULL;
+}
+int CStukaBat::getHullIndexForGroundNodes(void){
+	return NODE_SMALL_HULL;
+}

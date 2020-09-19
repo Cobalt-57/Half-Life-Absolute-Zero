@@ -732,6 +732,13 @@ BOOL CBaseEntity::isOrganic(void){
 int CBaseEntity::getHullIndexForNodes(void){
 	return NODE_DEFAULT_HULL;
 }
+// Node type to use if testing for pathfinding among ground nodes.
+// Any normal groundmover doesn't need to touch this, uses getHullIndexForNodes if untouched.
+// Fliers might want to change this to force using a hull smaller than 'large' as the FLY
+// hull it uses for air nodes may fail to work with perfectly valid ground nodes (if it tries those)
+int CBaseEntity::getHullIndexForGroundNodes(void){
+	return getHullIndexForNodes();
+}
 
 // What type of nodes can I take?  This default '-1' means the retail logic will pick for you,
 // but it could have some oddities in rare cases, such as an archer (fish-like) trying to take

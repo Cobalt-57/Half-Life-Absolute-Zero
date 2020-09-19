@@ -653,6 +653,8 @@ BOOL CFloater::ShouldAdvanceRoute( float flWaypointDist, float flInterval )
 
 void CFloater::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval )
 {
+
+
 	/*
 	if ( m_IdealActivity != m_movementActivity )
 		m_IdealActivity = m_movementActivity;
@@ -939,7 +941,13 @@ Schedule_t* CFloater::GetSchedule ( void )
 					//return GetScheduleOfType( SCHED_CHASE_ENEMY );
 
 					//Nope, you're a ranged specialist. Still prefer to stare.
-					return GetScheduleOfType( SCHED_COMBAT_LOOK );
+					if(gpGlobals->time >= shootCooldown){
+						// ablve to attack?  chase then, might get past something in the way
+						return GetScheduleOfType(SCHED_CHASE_ENEMY);
+					}else{
+						// stare?
+						return GetScheduleOfType( SCHED_COMBAT_LOOK );
+					}
 				}
 				else if ( !FacingIdeal() )
 				{
@@ -1029,8 +1037,7 @@ void CFloater::StartTask( Task_t *pTask ){
 
 
 	switch( pTask->iTask ){
-
-
+		
 		case TASK_RANGE_ATTACK1:
 			/*
 			// be a little more forgiving than 2.2 to 2.6 seconds!
@@ -1157,6 +1164,19 @@ void CFloater::MonsterThink(){
 		pev->nextthink = gpGlobals->time + 0.1;
 		return;
 	}
+
+
+	//MODDD - TODO: make this a proper schedule, a CombatLook with a section interruptable by passing the cooldown in a task
+	if(m_pSchedule == slCombatLook && gpGlobals->time >= shootCooldown){
+		// I am able to fire a shot but still blocked?  Quit lookin'.  Try routin' at least to get closer, should unjog something.
+		// Could randomly move to a spot nearby soo I suppose, or at least in an upward direction to be most helpful.
+		//TaskFail();
+		ChangeSchedule(GetSchedule());
+	}
+
+
+
+
 
 	//easyForcePrintLine("IM GONNA %d %d", m_Activity, m_IdealActivity);
 	//easyForcePrintLine("MY EYES: %.2f %.2f %.2f", pev->view_ofs.x,pev->view_ofs.y,pev->view_ofs.z);
@@ -2026,10 +2046,20 @@ int CFloater::getNodeTypeAllowed(void){
 		// then I only want to use air nodes.
 		return bits_NODE_AIR;
 	}else{
-		// Not really a choice.  Why miss out on what's useful.
+		// Why miss out on what's useful.  Air nodes will still be preferred if one is available.
 		return bits_NODE_LAND | bits_NODE_AIR;
 	}
-
 }
 
+int CFloater::getHullIndexForNodes(void){
+	// standard.
+	return NODE_FLY_HULL;
+}
+
+// If trying to use a ground node, return this HULL instead.
+// The FLY hull may be larger than necessary in such a case (shares bound size
+// with lage, when human or small may do fine)
+int CFloater::getHullIndexForGroundNodes(void){
+	return NODE_SMALL_HULL;
+}
 

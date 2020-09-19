@@ -129,7 +129,9 @@ public:
 
 	int Classify(void);
 	BOOL isOrganic(void);
+	int getNodeTypeAllowed(void);
 	int getHullIndexForNodes(void);
+	int getHullIndexForGroundNodes(void);
 	int IRelationship ( CBaseEntity *pTarget );
 	float HearingSensitivity(void);
 	int ISoundMask(void);

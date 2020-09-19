@@ -649,18 +649,36 @@ int CTemplateMonster::Classify(){
 BOOL CTemplateMonster::isOrganic(){
 	return TRUE;
 }
+
+
+
+// What types of nodes can I take?  Default logic checks for the whether the movetype is flying
+// (getNodeTypeAllowed()), and if so, picks AIR or WATER depending on whether the montster
+// is underwater at the time.  The check is done at the start of each route generating call.
+// Or, make it constnat here.  bits_NODE_LAND, AIR, or WATER.  Or multiple.
+int CTemplateMonster::getNodeTypeAllowed(void){
+	return -1;
+}
+
 // IF a differnet null size is fitting, pick that instead.
 // Otherwise it's assumed by fitting into one of the stock sizes in node.cpp's HullIndex method.
-// The fallback NODE_HUMAN_HULL may not be very good, so specify a node type here instead.
+// The fallback NODE_HUMAN_HULL may not be very good.
 // Choices are: NODE_POINT_HULL, NODE_SMALL_HULL, NODE_HUMAN_HULL, NODE_LARGE_HULL, NODE_FLY_HULL
 int CTemplateMonster::getHullIndexForNodes(void){
 	return NODE_DEFAULT_HULL;
-}//END OF getHullIndexForNodes
+}
+// Variant for flyers that support both LAND and AIR/SWIM (either) types to use when searching
+// for groundnodes.  The FLY hull uses the same size as large and may miss several perfectly
+// good nodes for smaller flyer hull sizes.  Groundmovers or any other case are fine with a 
+// redirect to getHullIndexForNodes.
+int CTemplateMonster::getHullIndexForGroundNodes(void){
+	return getHullIndexForNodes();
+}
+
 
 int CTemplateMonster::IRelationship( CBaseEntity *pTarget ){
-
 	return CBaseMonster::IRelationship(pTarget);
-}//END OF IRelationship
+}
 
 
 void CTemplateMonster::ReportAIState(){

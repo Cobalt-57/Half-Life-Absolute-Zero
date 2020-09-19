@@ -625,18 +625,15 @@ void CControllerHeadBall::AdministerZap(CBaseEntity* pEntity, TraceResult& tr){
 
 // In case any pathfinding is needed, mostly for the kingpin ball.
 int CControllerHeadBall::getNodeTypeAllowed(void){
-	if(map_anyAirNodes){
-		// try those.
-		// (although, MODDD - TODO:
-		//  if making a path with air nodes from a point isn't possible, it is fine to try
-		//  making a route from land nodes instead then)
-		return bits_NODE_AIR;
-	}else{
-		return bits_NODE_LAND;
-	}
+	// take anything, we are just balls after all
+	return bits_NODE_LAND | bits_NODE_AIR;
 }
 
 int CControllerHeadBall::getHullIndexForNodes(void){
-	return NODE_LARGE_HULL;  //...ya think?
+	return NODE_FLY_HULL;
+}
+
+int CControllerHeadBall::getHullIndexForGroundNodes(void){
+	return NODE_SMALL_HULL;
 }
 

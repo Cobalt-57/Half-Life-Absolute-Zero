@@ -323,6 +323,9 @@ struct WayPoint_t
 {
 	Vector vecLocation;
 	int iType;
+	//MODDD - NEW.  Record the map node I came from, if coming from a node-route.
+	// (-1 otherwise)
+	int iMapNodeIndex;
 };
 
 
@@ -904,7 +907,10 @@ public:
 	BOOL PopEnemy( void );
 	void DrawFieldOfVision(void);
 
-	BOOL FGetNodeRoute ( Vector vecDest );
+	BOOL FGetNodeRoute(Vector vecStart, Vector vecDest );
+	BOOL FGetNodeRoute(Vector vecStart, Vector vecDest, BOOL asIfSnappedToGround);
+	BOOL FGetNodeRoute_Final(Vector vecStart, Vector vecDest, BOOL asIfSnappedToGround, int iSrcNode, int iDestNode, int iNodeTypeInfo);
+	BOOL FVerifyRoute(Vector vecStart, Vector vecDest, int iPath[], int iPathSize);
 	
 	//MODDD - not inline as of now.  I need my breakpoints.
 	//inline
@@ -974,6 +980,7 @@ public:
 
 	void AdvanceRoute ( float distance, float flInterval );
 	virtual BOOL FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex );
+	BOOL FPutFailedGoalAlongSurface(Vector vecFailedGoal, float flLookZOffset, float flAlongSurfaceDist, CBaseEntity* pTargetEnt,  Vector* out_vecNewTarget);
 
 	//MODDD - made virtual.
 	virtual void MakeIdealYaw( Vector vecTarget );

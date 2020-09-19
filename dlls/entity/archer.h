@@ -170,6 +170,8 @@ public:
 	void setEnemyLKP(CBaseEntity* theEnt);
 
 	int getNodeTypeAllowed(void);
+	int getHullIndexForNodes(void);
+	int getHullIndexForGroundNodes(void);
 
 
 	void SetObjectCollisionBox( void ){

@@ -259,11 +259,6 @@ void CKingpinBall::startSmartFollow(void){
 
 
 
-int CKingpinBall::getHullIndexForNodes(void){
-	return NODE_POINT_HULL;
-}
-
-
 //MODDD - clone of controller_head_ball's.  Can modify beyond if needed.
 void CKingpinBall::BounceTouch( CBaseEntity *pOther )
 {

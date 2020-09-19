@@ -25,6 +25,7 @@
 #include "util_model.h"
 #include "doors.h"
 #include "weapons.h"
+#include "util_debugdraw.h"
 
 EASY_CVAR_EXTERN_DEBUGONLY(pathfindPrintout)
 EASY_CVAR_EXTERN_DEBUGONLY(nodeSearchStartVerticalOffset)
@@ -545,17 +546,31 @@ int CGraph::FindNearestLink(const Vector& vecTestPoint, int* piNearestLink, BOOL
 
 #endif
 
-int CGraph::HullIndex(CBaseEntity* pEntity)
-{
 
+
+int CGraph::HullIndex(CBaseEntity* pEntity){
+	return HullIndex(pEntity, 0);
+}
+
+//MODDD - NEW.  Pass along the iNodeTypeInfo (type(s) of node that can be taken: LAND, AIR, WATER)
+// which can inflence the 'getHull' method used for this entity.
+int CGraph::HullIndex(CBaseEntity* pEntity, int iNodeTypeInfo)
+{
 	//MODDD - other behavior.
 	//If we specifically return a type of hull for this entity, rely on that instead.
-	int nodeTypeAttempt = pEntity->getHullIndexForNodes();
+	int nodeTypeAttempt;
+	if( iNodeTypeInfo == bits_NODE_LAND ){
+		// Exclusive bits_NODE_LAND?  only the groundnodes one
+		nodeTypeAttempt = pEntity->getHullIndexForGroundNodes();
+	}else{
+		// normal
+		nodeTypeAttempt = pEntity->getHullIndexForNodes();
+	}
+
 
 	if (nodeTypeAttempt == NODE_DEFAULT_HULL) {
 		//continue with retail's way of determining node type below I guess.
-	}
-	else {
+	}else {
 		//If it isn't DEFAULT we made it a different way for a reason. Use this.
 		return nodeTypeAttempt;
 	}
@@ -1034,7 +1049,29 @@ int CGraph::FindShortestPath(int* piPath, int iStart, int iDest, int iHull, int 
 			iCurrentNode = m_pNodes[iCurrentNode].m_iPreviousNode;
 		}
 
+		//MODDD - IDEA.  If this is after routing is complete, this is being called to skip the static route table.
+		// The supplied 'piPath' for taking the list of nodes in the route is likely not greater than MAX_PATH.
+		// Enforce a cutoff.
+		int skipper = 0;
+
+		if(m_fRoutingComplete){
+			if(iNumPathNodes > MAX_PATH_SIZE){
+				skipper = iNumPathNodes - MAX_PATH_SIZE;
+				iNumPathNodes = MAX_PATH_SIZE;
+			}
+		}
+
 		iCurrentNode = iDest;
+
+		//MODDD - For every node iNumPathNodes is over MAX_PATH_SIZE,
+		// skip a node counting backwards.  This ensures that at least
+		// the earliest 16 or so nodes get written out.
+		while (skipper > 0)
+		{
+			iCurrentNode = m_pNodes[iCurrentNode].m_iPreviousNode;
+			skipper -= 1;
+		}
+
 		for (i = iNumPathNodes - 1; i >= 0; i--)
 		{
 			piPath[i] = iCurrentNode;
@@ -1140,6 +1177,17 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 	if (EASY_CVAR_GET_DEBUGONLY(pathfindIgnoreIsolatedNodes) == 1 && m_pNodes[iNode].m_cNumLinks < 1) {
 		//BAM!  Class dismissed for you.
 		return;
+	}
+
+	if(iNode == 41){
+		if(g_routeTempMonster != NULL){
+		DebugLine_Setup(1, g_routeTempMonster->pev->origin, m_pNodes[iNode].m_vecOriginPeek, 255, 255, 255);
+		}
+	}
+	if(iNode == 36){
+		if(g_routeTempMonster != NULL){
+			DebugLine_Setup(1, g_routeTempMonster->pev->origin, m_pNodes[iNode].m_vecOriginPeek, 255, 255, 255);
+		}
 	}
 
 	if (flDist < m_flShortest)

@@ -468,7 +468,7 @@ CKingpin::CKingpin(void){
 	enemyNullTimeSet = FALSE;
 
 	nextNormalThinkTime = -1;
-	quickThink = FALSE;
+	usingFastThink = FALSE;
 			
 
 }//END OF CKingpin constructor
@@ -1986,19 +1986,19 @@ void CKingpin::RunTask( Task_t *pTask ){
 			}
 		break;}
 		case TASK_KINGPIN_ELECTRIC_BARRAGE_CHARGE_INTERRUPTED:{
-			if(m_fSequenceFinishedSinceLoop){
+			if(m_fSequenceFinishedSinceLoop || pev->frame > 200){
 				setPrimaryAttackCooldown();
 				TaskComplete();
 			}
 		break;}
 		case TASK_KINGPIN_ELECTRIC_LASER_CHARGE_INTERRUPTED:{
-			if(m_fSequenceFinishedSinceLoop){
+			if(m_fSequenceFinishedSinceLoop || pev->frame > 200){
 				setPrimaryAttackCooldown();
 				TaskComplete();
 			}
 		break;}
 		case TASK_KINGPIN_ELECTRIC_BARRAGE_START:{
-			if(m_fSequenceFinishedSinceLoop){
+			if(m_fSequenceFinishedSinceLoop || pev->frame > 200){
 				TaskComplete();
 			}
 		break;}
@@ -2126,10 +2126,8 @@ void CKingpin::RunTask( Task_t *pTask ){
 		break;}
 
 
-
-		
 		case TASK_KINGPIN_ELECTRIC_LASER_START:{
-			if(m_fSequenceFinishedSinceLoop){
+			if(m_fSequenceFinishedSinceLoop || pev->frame > 200){
 				TaskComplete();
 			}
 		break;}
@@ -2158,8 +2156,6 @@ void CKingpin::RunTask( Task_t *pTask ){
 				TaskComplete();
 			}
 		break;}
-
-
 
 
 
@@ -2395,120 +2391,162 @@ void CKingpin::CustomTouch( CBaseEntity *pOther ){
 }
 
 
+void CKingpin::SetFastThink(BOOL newVal){
+
+	if(usingFastThink != newVal){
+		if(newVal){
+			// nextthink will be given to nextNormalThinkTime.
+			// Then replace it with whichever is sooner: where it was already going, or current time + 0.025
+			nextNormalThinkTime = pev->nextthink;
+			pev->nextthink = min(pev->nextthink, gpGlobals->time + 0.025);
+		}else{
+			// restore nextthink.
+			pev->nextthink = nextNormalThinkTime;
+		}
+		usingFastThink = newVal;
+	}
+}
 
 void CKingpin::MonsterThink( void ){
 
 
-	BOOL okayForNormalThink = (!quickThink || gpGlobals->time >= nextNormalThinkTime);
+	//BOOL okayForNormalThink = (!quickThink || gpGlobals->time >= nextNormalThinkTime);
 	
+	BOOL doNormalThink;
+	
+	if(usingFastThink){
+		if(gpGlobals->time >= nextNormalThinkTime){
+			doNormalThink = TRUE;
+			nextNormalThinkTime = gpGlobals->time + 0.1;
+			// !!! Doing it this way only works if nextNormalThinkTime is set
+			// to gpGlobals->time at the time usingFastThink is turned on
+			//nextNormalThinkTime = nextNormalThinkTime + 0.1;
+		}else{
+			doNormalThink = FALSE;
+		}
+	}else{
+		// always.
+		doNormalThink = TRUE;
+	}
 
-	if (okayForNormalThink) {
 
-		if (m_IdealMonsterState != MONSTERSTATE_DEAD) {
-			CBaseEntity* pEntityScan = NULL;
 
-			//if there is some sort of projectile headed towards me, we will try to reflect it.
-			while ((pEntityScan = UTIL_FindEntityInSphere(pEntityScan, pev->origin, 700)) != NULL) {
 
-				if (!(pEntityScan->pev->flags & FL_KILLME)) {
+	// !!! NOT CONFINED BY NORMAL THINK!   Do checks for nearby projectiles much more often
+	
+	if (m_IdealMonsterState != MONSTERSTATE_DEAD) {
+		CBaseEntity* pEntityScan = NULL;
+		Vector searchStart = EyePosition();
+		//if there is some sort of projectile headed towards me, we will try to reflect it.
+		while ((pEntityScan = UTIL_FindEntityInSphere(pEntityScan, searchStart, 500)) != NULL) {
 
-					if (FClassnameIs(pEntityScan->pev, "bolt")) {
-						int x = 666;
+			if (!(pEntityScan->pev->flags & FL_KILLME)) {
+
+				if (FClassnameIs(pEntityScan->pev, "bolt")) {
+					int x = 666;
+				}
+
+				//If this is not scheduled for deletion
+				float rangeFactor;
+				float reflectDelayFactor;
+
+				const Vector incomingVelocity = pEntityScan->GetVelocityLogical();
+				const float incomingSpeed = incomingVelocity.Length();
+
+				const int otherProjType = pEntityScan->GetProjectileType();
+
+				const float distanceToEnt = (searchStart - pEntityScan->pev->origin).Length();
+
+				if (incomingSpeed < 800) {
+					//standard is ok.
+					reflectDelayFactor = 1.0;
+					rangeFactor = 0.65;
+				}
+				else {
+					float filteredIncomingSpeed = min(incomingSpeed, 2000);  //cap me at 2000 for safety.
+					//climbs up to 2000.
+					reflectDelayFactor = (1.0 - (((filteredIncomingSpeed - 800) / 1200) * 0.93));
+					rangeFactor = 0.65 + ((filteredIncomingSpeed - 800) / 1200) * 0.35;
+				}
+
+
+				/*
+				switch(otherProjType){
+				case PROJECTILE_NONE:
+					//can't work with that?
+
+				break;
+				case PROJECTILE_BOLT:
+
+				break;
+				case PROJECTILE_GRENADE:
+
+				break;
+				case PROJECTILE_ROCKET:
+
+				break;
+				case PROJECTILE_ENERGYBALL:
+
+				break;
+				case PROJECTILE_ORGANIC_DUMB:
+
+				break;
+				case PROJECTILE_ORGANIC_HARMLESS:
+
+				break;
+				case PROJECTILE_ORGANIC_HOSTILE:
+
+				break;
+				}//END OF switch
+				*/
+
+				//reflectDelayFactor
+				//rangeFactor
+
+				if (otherProjType > PROJECTILE_NONE && incomingSpeed > 0.1f && distanceToEnt < (rangeFactor * 700)) {
+					//also, is it coming towards me? This should also avoid trying to re-reflect projectiles already reflected
+					//but still in reflection range for a little bit.
+					const char* entityName = pEntityScan->getClassname();
+
+
+					const float zSpeed = incomingVelocity.z;
+					const float distanceZ = fabs((searchStart.z - pEntityScan->pev->origin.z));
+					const float distance2D = (searchStart - pEntityScan->pev->origin).Length2D();
+
+					const Vector2D incomingDirection = incomingVelocity.Make2D().Normalize();
+					const Vector2D directionTowardsMe = (searchStart - pEntityScan->pev->origin).Make2D().Normalize();
+					const float closenessToApproach = DotProduct(incomingDirection, directionTowardsMe);
+
+
+					//Two cases.  Either it's about to land near me regardless of the direction it's going (unlikely but possible),
+					//OR it's headed close enough to towards me.
+
+					if (
+						//If the projectile is close enough to moving towards this kingpin,
+						closenessToApproach > 0.4f ||
+						//or it's bouncing and too close to landing to me...
+						((pev->movetype == MOVETYPE_TOSS || pev->movetype == MOVETYPE_BOUNCE) && (distance2D < (600 * rangeFactor) && zSpeed < -80 && distanceZ < 500 * rangeFactor))
+
+					){
+						attemptReflectProjectileStart(pEntityScan, reflectDelayFactor);
 					}
 
-					//If this is not scheduled for deletion
-					float rangeFactor;
-					float reflectDelayFactor;
-
-					const Vector incomingVelocity = pEntityScan->GetVelocityLogical();
-					const float incomingSpeed = incomingVelocity.Length();
-
-					const int otherProjType = pEntityScan->GetProjectileType();
-
-					const float distanceToEnt = (pev->origin - pEntityScan->pev->origin).Length();
-
-					if (incomingSpeed < 800) {
-						//standard is ok.
-						reflectDelayFactor = 1.0;
-						rangeFactor = 0.65;
-					}
-					else {
-						float filteredIncomingSpeed = min(incomingSpeed, 2000);  //cap me at 2000 for safety.
-						//climbs up to 2000.
-						reflectDelayFactor = (1.0 - (((filteredIncomingSpeed - 800) / 1200) * 0.93));
-						rangeFactor = 0.65 + ((filteredIncomingSpeed - 800) / 1200) * 0.35;
-					}
+				}//END OF "is projectile" check and moving check
 
 
-					/*
-					switch(otherProjType){
-					case PROJECTILE_NONE:
-						//can't work with that?
-
-					break;
-					case PROJECTILE_BOLT:
-
-					break;
-					case PROJECTILE_GRENADE:
-
-					break;
-					case PROJECTILE_ROCKET:
-
-					break;
-					case PROJECTILE_ENERGYBALL:
-
-					break;
-					case PROJECTILE_ORGANIC_DUMB:
-
-					break;
-					case PROJECTILE_ORGANIC_HARMLESS:
-
-					break;
-					case PROJECTILE_ORGANIC_HOSTILE:
-
-					break;
-					}//END OF switch
-					*/
-
-					//reflectDelayFactor
-					//rangeFactor
-
-					if (otherProjType > PROJECTILE_NONE&& incomingSpeed > 0.1f && distanceToEnt < (rangeFactor * 700)) {
-						//also, is it coming towards me? This should also avoid trying to re-reflect projectiles already reflected
-						//but still in reflection range for a little bit.
-						const char* entityName = pEntityScan->getClassname();
+			}//END OF fl_killme check
+		}//END OF while loop through nearby entities
+	}//END OF dead check
 
 
-						const float zSpeed = incomingVelocity.z;
-						const float distanceZ = fabs((pev->origin.z - pEntityScan->pev->origin.z));
-						const float distance2D = (pev->origin - pEntityScan->pev->origin).Length2D();
-
-						const Vector2D incomingDirection = incomingVelocity.Make2D().Normalize();
-						const Vector2D directionTowardsMe = (pev->origin - pEntityScan->pev->origin).Make2D().Normalize();
-						const float closenessToApproach = DotProduct(incomingDirection, directionTowardsMe);
 
 
-						//Two cases.  Either it's about to land near me regardless of the direction it's going (unlikely but possible),
-						//OR it's headed close enough to towards me.
-
-						if (
-							//If the projectile is close enough to moving towards this kingpin,
-							closenessToApproach > 0.4f ||
-							//or it's bouncing and too close to landing to me...
-							((pev->movetype == MOVETYPE_TOSS || pev->movetype == MOVETYPE_BOUNCE) && (distance2D < (600 * rangeFactor) && zSpeed < -80 && distanceZ < 500 * rangeFactor))
-
-							) {
-							attemptReflectProjectileStart(pEntityScan, reflectDelayFactor);
-						}
-
-					}//END OF "is projectile" check and moving check
 
 
-				}//END OF fl_killme check
-			}//END OF while loop through nearby entities
-		}//END OF dead check
 
 
+
+	if (doNormalThink) {
 
 		if (m_MonsterState == MONSTERSTATE_COMBAT) {
 			//Periodically power up monstesr and make them target my enemy.
@@ -2581,13 +2619,19 @@ void CKingpin::MonsterThink( void ){
 		updateChargeEffect();
 		UpdateReflectEffects();
 
-	}//END OF okayForNormalThink
+	}//END OF doNormalThink
 
 
-	if (quickThink) {
-		nextNormalThinkTime = gpGlobals->time + 0.1;
+	
+	if(usingFastThink){
+		pev->nextthink = gpGlobals->time + 0.025;
 	}
-
+	// Why would this happen??  Don't report it when we're being deleted (supposed to happen)
+	if (pev->nextthink <= 0 && !(pev->flags & FL_KILLME) ) {
+		easyForcePrintLine("!!!WARNING!  Kingpin had a pev->nextthink at or below 0. This can kill the AI!");
+		// save it.
+		pev->nextthink = gpGlobals->time + 0.1;
+	}
 }//MonsterThink
 
 

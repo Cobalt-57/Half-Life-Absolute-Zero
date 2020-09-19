@@ -1638,7 +1638,7 @@ emergencyFix ?   Not a whole lot of purpose anymore it seems, may as well delete
 CVar text file to get a fresh start next time.
 
 
-BIZARE... 'behavior'.  Not sure what else to call this.
+BIZARRE... 'behavior'.  Not sure what else to call this.
 On some maps, like a1a2, do 'removeAllMonsters'.  Now the shotgun and shotgun ammo spawned before the barney vs. zombie sequence
 will be able to be shifted by moving close to it, noticeable by crouching on top of it, looking down and moving on it slowly.
 It can be pushed off the ammobox where it will fall and clip through the box a bit (centered on the origin without solid collision bounds).
@@ -1646,4 +1646,25 @@ It even happens on newly spawned shotgun ammo and likely other items.  No idea w
 Even removing monsters one-at-a time is unhelpful, it's seemingly random what one removed causes the behavior to start.
 Many other maps with all monsters removed don't do this.
 
+
+BEWARE:  Two similarly named move utilities:
+  UTIL_SetOrigin
+    force the origin to a point, no collision checks;  good for teleports or other placement, but can clip through stuff
+    Still better to use compared to setting pev->origin.z directly (slight fudging pev->origin directly may be ok, like 
+    pushing the z up to break contact with the ground; retail did that)
+  UTIL_MoveToOrigin   
+    Moves the monster from its currnet position to the new one with collision checks, and against the ground
+    (for the right movetype?  FL_FLY or FL_SWIM flags?  unsure what causes ground-snapping)
+    In any case, gorund-snapped or not, it is unable to clip through objects, unless its bounds change after
+    the move to include things it should have not been allowed to get so close to.
+    In other words it puts the origin towards the given point but stops if something collidable interrupts that.
+    May be similar to WALK_MOVE but not interchangeable.
+
+
+Unused engine methods?
+
+#define MAKE_STATIC		(*g_engfuncs.pfnMakeStatic)
+ this might've been made obsolete by 'pev->flags & FL_ONGROUND' or 'pev->groundentity' checks.
+#define ENT_IS_ON_FLOOR	(*g_engfuncs.pfnEntIsOnFloor)
+#define BUILD_SOUND_MSG (*g_engfuncs.pfnBuildSoundMsg)
 

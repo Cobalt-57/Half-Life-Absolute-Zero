@@ -108,7 +108,7 @@ public:
 	BOOL enemyNullTimeSet;
 
 	float nextNormalThinkTime;
-	BOOL quickThink;
+	BOOL usingFastThink;
 
 
 
@@ -143,6 +143,7 @@ public:
 	
 	void EXPORT CustomTouch ( CBaseEntity *pOther );
 	
+	void SetFastThink(BOOL newVal);
 	void MonsterThink( void );
 
 	int Classify(void);

@@ -106,6 +106,7 @@ BOOL CBaseEntity::isMovetypeFlying(void){return FALSE;}
 BOOL CBaseEntity::isSizeGiant(void){return FALSE;}
 BOOL CBaseEntity::isOrganic(void){return FALSE;}
 int CBaseEntity::getHullIndexForNodes(void){return 0;}
+int CBaseEntity::getHullIndexForGroundNodes(void) {return 0;}
 int CBaseEntity::getNodeTypeAllowed(void) {return 0;}
 
 //MODDD - moved from CBaseAnimating, serverside territority, to CBaseEntity, shared, so
@@ -567,6 +568,8 @@ void CBaseMonster::wanderAway(const Vector& toWalkAwayFrom){}
 
 void CBaseMonster::InsertWaypoint ( Vector vecLocation, int afMoveFlags ) { }
 BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd, float flDist, CBaseEntity *pTargetEnt, Vector *pApex ) { return FALSE; }
+BOOL CBaseMonster::FPutFailedGoalAlongSurface(Vector vecFailedGoal, float flLookZOffset, float flAlongSurfaceDist, CBaseEntity* pTargetEnt, Vector* out_vecNewTarget) {return FALSE;}
+
 BOOL CBaseMonster::usesSegmentedMove(void) {return FALSE;}
 int CBaseMonster::MovePRE(float flInterval, float& flWaypointDist, float& flCheckDist, float& flDist, Vector& vecDir, CBaseEntity*& pTargetEnt) { return FALSE; }
 void CBaseMonster::Move ( float flInterval ) { }
@@ -691,7 +694,11 @@ void CBaseEntity::FireBullets(ULONG cShots, Vector vecSrc, Vector vecDirShooting
 void CBaseEntity::TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType ) { }
 void CBaseEntity::TraceBleed( float flDamage, Vector vecDir, TraceResult *ptr, int bitsDamageType, int bitsDamageTypeMod ) { }
 void CBaseMonster::MakeDamageBloodDecal ( int cCount, float flNoise, TraceResult *ptr, const Vector &vecDir ) { }
-BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest ) { return TRUE; }
+BOOL CBaseMonster::FGetNodeRoute(Vector vecStart, Vector vecDest) {return FALSE;}
+BOOL CBaseMonster::FGetNodeRoute(Vector vecStart, Vector vecDest, BOOL asIfSnappedToGround) {return FALSE;}
+BOOL CBaseMonster::FGetNodeRoute_Final(Vector vecStart, Vector vecDest, BOOL asIfSnappedToGround, int iSrcNode, int iDestNode, int iNodeTypeInfo) {return FALSE;}
+BOOL CBaseMonster::FVerifyRoute(Vector vecStart, Vector vecDest, int iPath[], int iPathSize) {return FALSE;}
+
 int CBaseMonster::FindHintNode ( void ) { return NO_NODE; }
 void CBaseMonster::ReportAIState( void ) { }
 void CBaseMonster::KeyValue( KeyValueData *pkvd ) { }

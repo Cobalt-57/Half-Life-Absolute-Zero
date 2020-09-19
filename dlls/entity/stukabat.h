@@ -385,6 +385,8 @@ public:
 	float HearingSensitivity( );
 
 	int getNodeTypeAllowed(void);
+	int getHullIndexForNodes(void);
+	int getHullIndexForGroundNodes(void);
 
 };
 

@@ -20,8 +20,11 @@
 
 */
 
-// !!!
-// TODO.  CheckLocalMove calls.  Send that enemyLKP + the zOffset!
+// IDEA:  CheckLocalMove could check for a monster having ground-based movement and, if so, do a TRACE_MONSTER_HULL
+// check straight down to get the position on the ground, unsure if that would be expensive.  Maybe whenever the LKP
+// is updated as some Z offset instead ('z from ground').
+// That way, jumping in place doesn't throw off some Z checks.
+
 
 
 // NOTE!!! Bad change I made a long while ago.
@@ -36,6 +39,8 @@
 // from taking different randomly picked goal-nodes each time.
 // It is now safe to send the moveflag anyway, the method will ignore it.  Or maybe use it in some other way sometime.
 // Just don't let nodes placed by BuildNearestRoute take the moveflag.
+
+
 
 
 // Should 'usingCustomSequence' and 'doNotResetSequence' be saved?  I have no idea.
@@ -105,6 +110,8 @@ EASY_CVAR_EXTERN_DEBUGONLY(pathfindIgnoreIsolatedNodes)
 //#define MONSTER_CUT_CORNER_DIST		8 // 8 means the monster's bounding box is contained without the box of the node in WC
 
 
+
+BOOL g_FGetNodeRoute_recursiveCall = FALSE;
 
 
 
@@ -2631,8 +2638,9 @@ BOOL CBaseMonster::FRefreshRouteStrict ( void )
 
 			while ( pPathCorner && i < ROUTE_SIZE )
 			{
-				m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
-				m_Route[ i ].vecLocation = pPathCorner->pev->origin;
+				m_Route[i].iType = bits_MF_TO_PATHCORNER;
+				m_Route[i].vecLocation = pPathCorner->pev->origin;
+				m_Route[i].iMapNodeIndex = -1;
 
 				pPathCorner = pPathCorner->GetNextTarget();
 
@@ -2687,7 +2695,7 @@ BOOL CBaseMonster::FRefreshRouteStrict ( void )
 
 		}break;
 		case MOVEGOAL_NODE:{
-			returnCode = FGetNodeRoute( m_vecMoveGoal );
+			returnCode = FGetNodeRoute(pev->origin, m_vecMoveGoal );
 			//MODDD - NOTE.  Found commented out as-is.  Is simplifying a node-route really that bad, or it's just not done this soon?
 			// Maybe that's already part of FGetNodeRoute.
 //			if ( returnCode )
@@ -2753,8 +2761,9 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 
 			while ( pPathCorner && i < ROUTE_SIZE )
 			{
-				m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
-				m_Route[ i ].vecLocation = pPathCorner->pev->origin;
+				m_Route[i].iType = bits_MF_TO_PATHCORNER;
+				m_Route[i].vecLocation = pPathCorner->pev->origin;
+				m_Route[i].iMapNodeIndex = -1;
 
 				pPathCorner = pPathCorner->GetNextTarget();
 
@@ -2840,7 +2849,7 @@ BOOL CBaseMonster::FRefreshRoute ( void )
 
 		}break;
 		case MOVEGOAL_NODE:{
-			returnCode = FGetNodeRoute( m_vecMoveGoal );
+			returnCode = FGetNodeRoute(pev->origin, m_vecMoveGoal );
 			//MODDD - NOTE.  Found commented out as-is.  Is simplifying a node-route really that bad, or it's just not done this soon?
 			// Maybe that's already part of FGetNodeRoute.
 //			if ( returnCode )
@@ -2895,8 +2904,9 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 
 				while ( pPathCorner && i < ROUTE_SIZE )
 				{
-					m_Route[ i ].iType = bits_MF_TO_PATHCORNER;
-					m_Route[ i ].vecLocation = pPathCorner->pev->origin;
+					m_Route[i].iType = bits_MF_TO_PATHCORNER;
+					m_Route[i].vecLocation = pPathCorner->pev->origin;
+					m_Route[i].iMapNodeIndex = -1;
 
 					pPathCorner = pPathCorner->GetNextTarget();
 
@@ -2973,7 +2983,7 @@ BOOL CBaseMonster::FRefreshRouteCheap ( void )
 
 		}break;
 		case MOVEGOAL_NODE:{
-			returnCode = FGetNodeRoute( m_vecMoveGoal );
+			returnCode = FGetNodeRoute(pev->origin, m_vecMoveGoal );
 //			if ( returnCode )
 //				RouteSimplify( NULL );
 		}break;
@@ -3170,6 +3180,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe(void){
 	for(i = 0; i < m_iRouteLength; i++){
 		OLD_m_Route[i].iType = m_Route[i].iType;
 		OLD_m_Route[i].vecLocation = m_Route[i].vecLocation;
+		OLD_m_Route[i].iMapNodeIndex = m_Route[i].iMapNodeIndex;
 	}
 	int	OLD_m_iRouteIndex = m_iRouteIndex;
 
@@ -3291,6 +3302,7 @@ BOOL CBaseMonster::FRefreshRouteChaseEnemySmartSafe(void){
 		for(i = 0; i < OLD_m_iRouteLength; i++){
 			m_Route[i].iType = OLD_m_Route[i].iType;
 			m_Route[i].vecLocation = OLD_m_Route[i].vecLocation;
+			m_Route[i].iMapNodeIndex = OLD_m_Route[i].iMapNodeIndex;
 		}
 		m_iRouteIndex = OLD_m_iRouteIndex;
 	}
@@ -3572,6 +3584,11 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 	Vector		vecStart;
 	WayPoint_t	outRoute[ ROUTE_SIZE * 2 ];	// Any points except the ends can turn into 2 points in the simplified route
 
+	// SAFETY
+	for(i = 0; i < ROUTE_SIZE * 2; i++){
+		outRoute[i].iMapNodeIndex = -1;
+	}
+
 	count = 0;
 
 	//MODDD - only count up to m_iRouteLength now, no need for the entire node array (ROUTE_SIZE)
@@ -3606,15 +3623,23 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 	outCount = 0;
 	vecStart = pev->origin;
 
+	//BOOL dontResetMapIndex = FALSE;
+
 	//MODDD - shouldn't this avoid ever allowing i to go beyond 'count - 1' ?  At m_iRouteIndex above 0 that can happen
 	//for ( i = 0; i < count-1; i++ )
 	for ( i = 0; i < count-1 - m_iRouteIndex; i++ )
 	{
+		//dontResetMapIndex = FALSE;
 		// Don't eliminate path_corners
 		if ( !ShouldSimplify( m_Route[m_iRouteIndex+i].iType ) )
 		{
 			outRoute[outCount] = m_Route[ m_iRouteIndex + i ];
-			outCount++;
+			//MODDD - pretty sure this outCount++ is a mistake.
+			// In another place that gives up after all other checks fail (copy m_Route to outRoute directly),
+			// it doesn't bump up outCount.
+			// Often, reaching a point with the DONT_SIMPLIFY type leads to a garbage point being added to the
+			// outRoute (or rather, left in as it's never changed).  Which goes to m_Route.
+			//outCount++;
 		}
 		else if ( CheckLocalMove ( vecStart, m_Route[m_iRouteIndex+i+1].vecLocation, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
 		{
@@ -3636,22 +3661,27 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 			{
 				outRoute[outCount].iType = iType;
 				outRoute[outCount].vecLocation = vecTest;
+				outRoute[outCount].iMapNodeIndex = -1;
 			}
 			else if ( CheckLocalMove ( vecSplit, vecTest, pTargetEnt, FALSE, NULL ) == LOCALMOVE_VALID )
 			{
 				outRoute[outCount].iType = iType;
 				outRoute[outCount].vecLocation = vecSplit;
+				outRoute[outCount].iMapNodeIndex = -1;
 				outRoute[outCount+1].iType = iType;
 				outRoute[outCount+1].vecLocation = vecTest;
+				outRoute[outCount+1].iMapNodeIndex = -1;
 				outCount++; // Adding an extra point
 			}
 			else
 			{
 				outRoute[outCount] = m_Route[ m_iRouteIndex + i ];
+				//dontResetMapIndex = TRUE;
 			}
 		}
 		// Get last point
 		vecStart = outRoute[ outCount ].vecLocation;
+		//outRoute[outCount].iMapNodeIndex = -1;
 		outCount++;
 	}
 	ASSERT( i < count );
@@ -3660,6 +3690,7 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 	
 	// Terminate
 	outRoute[outCount].iType = 0;
+	outRoute[outCount].iMapNodeIndex = -1;
 	ASSERT( outCount < (ROUTE_SIZE*2) );
 
 	//MODDD - just make this decision once.
@@ -3678,8 +3709,10 @@ void CBaseMonster::RouteSimplify( CBaseEntity *pTargetEnt )
 	m_iRouteLength = outCountFiltered;
 
 	// Terminate route
-	if ( i < ROUTE_SIZE )
+	if ( i < ROUTE_SIZE ){
 		m_Route[i].iType = 0;
+		m_Route[outCount].iMapNodeIndex = -1;
+	}
 
 // Debug, test movement code
 #if 0
@@ -4795,13 +4828,12 @@ int CBaseMonster::CheckLocalMoveHull(const Vector &vecStart, const Vector &vecEn
 // DON"T USE SETORIGIN! 
 //=========================================================
 #define LOCAL_STEP_SIZE	16
-int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist )
-{
-
-	Vector	vecStartPos;// record monster's position before trying the move
+int CBaseMonster::CheckLocalMove ( const Vector &vecStart, const Vector &vecEnd, CBaseEntity *pTarget, BOOL doZCheck, float *pflDist ){
+	Vector vecStartPos;// record monster's position before trying the move
 	float flYaw;
 	float flDist;
-	float flStep, stepSize;
+	float flStep;
+	float stepSize;
 	int	iReturn;
 #if defined(USE_MOVEMENT_BOUND_FIX_CHKLOC) || defined(USE_MOVEMENT_BOUND_FIX_CHKLOC_ALT)
 	Vector oldMins;
@@ -5644,13 +5676,42 @@ void CBaseMonster::AdvanceRoute ( float distance, float flInterval )
 			{
 				//ALERT(at_aiconsole, "SVD: Two nodes. ");
 
-				int iSrcNode  = WorldGraph.FindNearestNode(m_Route[m_iRouteIndex].vecLocation, this );
-				int iDestNode = WorldGraph.FindNearestNode(m_Route[m_iRouteIndex+1].vecLocation, this );
+				//MODDD - wait.  Really?  Why can't the m_Route have a 'iMapNodeIndex' for this?
+				// Set at the time a m_Route element is set to the location of a node from the path
+				// being copied over.  Huh.
+				// Done.
+				//int iSrcNode  = WorldGraph.FindNearestNode(m_Route[m_iRouteIndex].vecLocation, this );
+				//int iDestNode = WorldGraph.FindNearestNode(m_Route[m_iRouteIndex+1].vecLocation, this );
+				int iSrcNode = m_Route[m_iRouteIndex].iMapNodeIndex;
+				int iDestNode = m_Route[m_iRouteIndex+1].iMapNodeIndex;
 
 				int iLink;
-				WorldGraph.HashSearch(iSrcNode, iDestNode, iLink);
 
-				// UHHHhhhh.  does this even work?
+				if(iSrcNode == -1){
+					// Look it up then.  Save it.
+					iSrcNode  = WorldGraph.FindNearestNode(m_Route[m_iRouteIndex].vecLocation, this );
+					m_Route[m_iRouteIndex].iMapNodeIndex = iSrcNode;
+				}
+				if(iDestNode == -1){
+					iDestNode = WorldGraph.FindNearestNode(m_Route[m_iRouteIndex+1].vecLocation, this );
+					m_Route[m_iRouteIndex + 1].iMapNodeIndex = iDestNode;
+				}
+
+
+
+				if(iSrcNode == -1 || iDestNode == -1){
+					easyPrintLine("!!! PATHFIND ERROR: AdvanceRoute: %s:%d.  Some map-based node could not find a nearestnode, LinkEnt check skipped.  Src:%d Dest:%d", getClassname(), monsterID, iSrcNode, iDestNode);
+					iLink = -1;  //force the below linkent check to be skipped
+				}else{
+					// work normally then
+					WorldGraph.HashSearch(iSrcNode, iDestNode, iLink);
+				}
+
+
+				//MODDD - NOTE.
+				// UHHHhhhh.  does this even work?  Does anything utilize this?
+				// I think it should let entities that pick a node-route with a door go up to the door, open it by being close,
+				// wait for it to finish opening, and then move through.
 				if ( iLink >= 0 && WorldGraph.m_pLinkPool[iLink].m_pLinkEnt != NULL )
 				{
 					//ALERT(at_aiconsole, "A link. ");
@@ -5968,15 +6029,18 @@ BOOL CBaseMonster::attemptRampFix(const Vector &vecGoal, int iMoveFlag, CBaseEnt
 						if( (vecGoalOrigin - vecMyOrigin ).Length2D() > 60 ){
 							m_Route[ currentNodeIndex ].vecLocation = vecRampLowPoint;
 							m_Route[ currentNodeIndex ].iType = (iMoveFlag | bits_MF_RAMPFIX | bits_MF_TO_DETOUR);
+							m_Route[ currentNodeIndex ].iMapNodeIndex = -1;
 							currentNodeIndex++;
 						}
 
 						m_Route[ currentNodeIndex ].vecLocation = rampTopPoint1;
 						m_Route[ currentNodeIndex ].iType = (iMoveFlag | bits_MF_RAMPFIX | bits_MF_TO_DETOUR);
+						m_Route[ currentNodeIndex ].iMapNodeIndex = -1;
 						currentNodeIndex++;
 
 						m_Route[ currentNodeIndex ].vecLocation = vecGoal;
 						m_Route[ currentNodeIndex ].iType = iMoveFlag | bits_MF_RAMPFIX | bits_MF_IS_GOAL;
+						m_Route[ currentNodeIndex ].iMapNodeIndex = -1;
 						currentNodeIndex++;
 
 						m_iRouteLength = currentNodeIndex;
@@ -6027,9 +6091,12 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 
 	m_movementGoal = RouteClassify( iMoveFlag );
 
+
+	
 // so we don't end up with no moveflags
 	m_Route[ 0 ].vecLocation = vecGoal;
 	m_Route[ 0 ].iType = iMoveFlag | bits_MF_IS_GOAL;
+	m_Route[ 0 ].iMapNodeIndex = -1;
 
 	m_iRouteLength = 1;  //so far?
 
@@ -6055,12 +6122,14 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 		// there is a slightly more complicated path that allows the monster to reach vecGoal
 		m_Route[ 0 ].vecLocation = vecApex;
 		m_Route[ 0 ].iType = (iMoveFlag | bits_MF_TO_DETOUR);
+		m_Route[ 0 ].iMapNodeIndex = -1;
 
 		m_Route[ 1 ].vecLocation = vecGoal;
 		m_Route[ 1 ].iType = iMoveFlag | bits_MF_IS_GOAL;
+		m_Route[ 1 ].iMapNodeIndex = -1;
 
-		DebugLine_Setup(1, pev->origin, vecApex, 0, 255, 0);
-		DebugLine_Setup(1, vecApex, vecGoal, 0, 255, 0);
+		//DebugLine_Setup(1, pev->origin, vecApex, 0, 255, 0);
+		//DebugLine_Setup(1, vecApex, vecGoal, 0, 255, 0);
 
 
 		m_iRouteLength = 2;
@@ -6079,9 +6148,10 @@ BOOL CBaseMonster::BuildRoute ( const Vector &vecGoal, int iMoveFlag, CBaseEntit
 		RouteSimplify( pTarget );
 		return TRUE;
 	}
+	
 
 // last ditch, try nodes
-	if ( FGetNodeRoute( vecGoal ) )
+	if ( FGetNodeRoute(pev->origin, vecGoal ) )
 	{
 //		ALERT ( at_console, "Can get there on nodes\n" );
 		EASY_CVAR_PRINTIF_PRE(pathfindPrintout, easyForcePrintLine("%s:ID%d BuildRoute: I GOT SATISIFED 3", getClassnameShort(), monsterID) );
@@ -6184,11 +6254,13 @@ void CBaseMonster::InsertWaypoint ( Vector vecLocation, int afMoveFlags )
 
 	//MODDD - also, why stop at 0?  Why not at m_iRouteIndex, since earlier points won't be seen again?
 	//for ( i = copyStart; i > 0; i-- )
-	for ( i = copyStart; i > m_iRouteIndex; i-- )
+	for ( i = copyStart; i > m_iRouteIndex; i-- ){
 		m_Route[i] = m_Route[i-1];
+	}
 
-	m_Route[ m_iRouteIndex ].vecLocation = vecLocation;
-	m_Route[ m_iRouteIndex ].iType = type;
+	m_Route[m_iRouteIndex].vecLocation = vecLocation;
+	m_Route[m_iRouteIndex].iType = type;
+	m_Route[m_iRouteIndex].iMapNodeIndex = -1;
 
 }//InsertWaypoint
 
@@ -6241,16 +6313,16 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 	// That is, if going 60 unts left is fine, but going 120 hits a wall at some point, where did it? 70? 80? 110? etc.
 	// Try from that point instead then.
 
-	BOOL sourceMaxLeftHit = FALSE;
-	BOOL sourceMaxRightHit = FALSE;
-	BOOL sourceMaxUpHit = FALSE;
-	BOOL sourceMaxDownHit = FALSE;
-	BOOL sourceMaxLeftUpHit = FALSE;
-	BOOL sourceMaxRightUpHit = FALSE;
-
+	int sourceMaxLeftHit = 0;
+	int sourceMaxRightHit = 0;
+	int sourceMaxUpHit = 0;
+	int sourceMaxDownHit = 0;
+	int sourceMaxLeftUpHit = 0;
+	int sourceMaxRightUpHit = 0;
 
 	int i;
-	float sizeX, sizeZ;
+	float sizeX;
+	float sizeZ;
 
 	// If the hull width is less than 24, use 24 because CheckLocalMove uses a min of
 	// 24.
@@ -6326,7 +6398,11 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 		vecRightTop = pev->origin + (vecForward * flDist) + (vecDirRight * ( sizeX * 2.25 )) + (vecDirUp * (sizeZ * 2.25));
 	}
 
-	vecFarSide = m_Route[ m_iRouteIndex ].vecLocation;
+
+	//MODDD - just be the vecEnd supplied dangit.
+	// Was a coincidence that m_Route[m_iRouteIndex].vecLocation matched what the two retail calls sent for vecEnd here.
+	//vecFarSide = m_Route[ m_iRouteIndex ].vecLocation;
+	vecFarSide = vecEnd;
 	
 	vecRightShiftApex = vecDirRight * sizeX * 1.6;
 	if (isMovetypeFlying() ){
@@ -6349,8 +6425,15 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 			vecLeft = pev->origin + theDir * (furthestDist - 16);
 			sourceMaxLeftHit = 1;
 		}else{
-			// no.  Don't bother with this direction from the target then
+			//MODDD - IDEA would a line-trace against the wall hit and going along that
+			// to the finished distance ( (vecLeft - pev->origin).Length() - furtestDist)
+			// as much as possible be ok in some cases with a wall close to my left/right?
+			// Copy to other directions if this ever gets real use
+
 			sourceMaxLeftHit = 2;
+			
+
+			//////////////////////////////////////////////////////////////
 		}
 	}
 
@@ -6669,8 +6752,7 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 		*/
 
 
-		if ( sourceMaxRightHit < 2 && CheckLocalMove ( vecRight, vecTargetRight, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
-		{
+		if ( sourceMaxRightHit < 2 && CheckLocalMove ( vecRight, vecTargetRight, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID ){
 			if ( pApex )
 			{
 				*pApex = vecRight;
@@ -6689,9 +6771,24 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 					return TRUE;
 				}
 			}
-			/////////////////////////////////////////////////////////////////////////////////////////////////
 
-		}
+			if(sourceMaxRightHit == 2){
+				// One other try:
+				Vector outVec;
+				BOOL newTargetSuccess = FPutFailedGoalAlongSurface(vecRight, 20, sizeX * 2.5, pTargetEnt, &outVec);
+				if(newTargetSuccess){
+					// try from outVec, one last shot
+					if (CheckLocalMove ( outVec, vecTargetRight, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID ){
+						if ( pApex ){
+							*pApex = outVec;
+						}
+						return TRUE;
+					}
+				}
+			}
+
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+		}//vecRight to vecTargetRight stuff
 
 
 		/*
@@ -6723,6 +6820,21 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 					return TRUE;
 				}
 			}
+
+			if(sourceMaxLeftHit == 2){
+				// One other try:
+				Vector outVec;
+				BOOL newTargetSuccess = FPutFailedGoalAlongSurface(vecLeft, 20, sizeX * 2.5, pTargetEnt, &outVec);
+				if(newTargetSuccess){
+					// try from outVec, one last shot
+					if (CheckLocalMove ( outVec, vecTargetLeft, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID ){
+						if ( pApex ){
+							*pApex = outVec;
+						}
+						return TRUE;
+					}
+				}
+			}
 			/////////////////////////////////////////////////////////////////////////////////////////////////
 
 		}
@@ -6741,7 +6853,23 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 				}
 
 				return TRUE;
-			}
+			}else{
+				//MODDD - what if I go against the ceiling?
+				if(sourceMaxLeftHit == 2){
+					// One other try:
+					Vector outVec;
+					BOOL newTargetSuccess = FPutFailedGoalAlongSurface(vecTop, -15, sizeZ * 2.5, pTargetEnt, &outVec);
+					if(newTargetSuccess){
+						// try from outVec, one last shot
+						if (CheckLocalMove ( outVec, vecTargetTop, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID ){
+							if ( pApex ){
+								*pApex = outVec;
+							}
+							return TRUE;
+						}
+					}
+				}
+			}//vecTop attempt
 #if 1
 			
 			if ( sourceMaxDownHit < 2 && CheckLocalMove ( vecBottom, vecTargetBottom, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID )
@@ -6753,22 +6881,38 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 				}
 
 				return TRUE;
-			}
+			}else{
+				//MODDD - what if I go against the ceiling?
+				if(sourceMaxLeftHit == 2){
+					// One other try:
+					Vector outVec;
+					BOOL newTargetSuccess = FPutFailedGoalAlongSurface(vecBottom, 15, sizeZ * 2.5, pTargetEnt, &outVec);
+					if(newTargetSuccess){
+						// try from outVec, one last shot
+						if (CheckLocalMove ( outVec, vecTargetBottom, pTargetEnt, TRUE, NULL ) == LOCALMOVE_VALID ){
+							if ( pApex ){
+								*pApex = outVec;
+							}
+							return TRUE;
+						}
+					}
+				}
+			}//vecTargetBottom attempt
 #endif
 		}
 
 
 		// Any set to 1 that tried above, will be 2 next time (never try again if this failed, never changes
 		// so why bother)
-		if (sourceMaxLeftHit == 1) sourceMaxLeftHit = 2;
-		if (sourceMaxRightHit == 1) sourceMaxRightHit = 2;
-		if (sourceMaxUpHit == 1) sourceMaxUpHit = 2;
-		if (sourceMaxDownHit == 1) sourceMaxDownHit = 2;
-		if (sourceMaxLeftUpHit == 1) sourceMaxLeftUpHit = 2;
-		if (sourceMaxRightUpHit == 1) sourceMaxRightUpHit = 2;
+		if (sourceMaxLeftHit >= 1) sourceMaxLeftHit++;
+		if (sourceMaxRightHit >= 1) sourceMaxRightHit++;
+		if (sourceMaxUpHit >= 1) sourceMaxUpHit++;
+		if (sourceMaxDownHit >= 1) sourceMaxDownHit++;
+		if (sourceMaxLeftUpHit >= 1) sourceMaxLeftUpHit++;
+		if (sourceMaxRightUpHit >= 1) sourceMaxRightUpHit++;
 
 
-		if(!sourceMaxRightHit){
+		if(sourceMaxRightHit == 0){
 			vecTest = vecRight + vecRightShiftApex;
 			// Can I go from the current vecRight to the further extent
 			if(CheckLocalMove(vecRight, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
@@ -6780,10 +6924,10 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 				if(furthestDist > 24){
 					vecRight = vecRight + vecDirRight * (furthestDist - 16);
 				}
-				sourceMaxRightHit = TRUE;
+				sourceMaxRightHit = 1;
 			}
 		}
-		if(!sourceMaxLeftHit){
+		if(sourceMaxLeftHit == 0){
 			vecTest = vecLeft + -vecRightShiftApex;
 			if(CheckLocalMove(vecLeft, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
 				// ok, use exactly that next time.
@@ -6794,11 +6938,11 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 				if(furthestDist > 24){
 					vecLeft = vecLeft + -vecDirRight * (furthestDist - 16);
 				}
-				sourceMaxLeftHit = TRUE;
+				sourceMaxLeftHit = 1;
 			}
 		}
 		if (isMovetypeFlying()){
-			if(!sourceMaxUpHit){
+			if(sourceMaxUpHit == 0){
 				vecTest = vecTop + vecUpShiftApex;
 				if(CheckLocalMove(vecTop, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
 					vecTop = vecTest;
@@ -6806,10 +6950,10 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 					if(furthestDist > 24){
 						vecTop = vecTop + vecDirUp * (furthestDist - 16);
 					}
-					sourceMaxUpHit = TRUE;
+					sourceMaxUpHit = 1;
 				}
 			}
-			if(!sourceMaxDownHit){
+			if(sourceMaxDownHit == 0){
 				vecTest = vecBottom + -vecUpShiftApex;
 				if(CheckLocalMove(vecBottom, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
 					vecBottom = vecTest;
@@ -6817,12 +6961,12 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 					if(furthestDist > 24){
 						vecBottom = vecBottom + -vecDirUp * (furthestDist - 16);
 					}
-					sourceMaxDownHit = TRUE;
+					sourceMaxDownHit = 1;
 				}
 			}
 
 
-			if(!sourceMaxLeftUpHit){
+			if(sourceMaxLeftUpHit == 0){
 				vecTest = vecLeftTop + -vecRightShiftApex * 0.75 + vecUpShiftApex * 0.75;
 				if(CheckLocalMove(vecLeftTop, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
 					vecLeftTop = vecTest;
@@ -6830,10 +6974,10 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 					if(furthestDist > 24){
 						vecLeftTop = vecLeftTop + vecDirLeftUp * (furthestDist - 16);
 					}
-					sourceMaxLeftUpHit = TRUE;
+					sourceMaxLeftUpHit = 1;
 				}
 			}
-			if(!sourceMaxRightUpHit){
+			if(sourceMaxRightUpHit == 0){
 				vecTest = vecRightTop + vecRightShiftApex * 0.75 + vecUpShiftApex * 0.75;
 				if(CheckLocalMove(vecRightTop, vecTest, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
 					vecRightTop = vecTest;
@@ -6841,14 +6985,11 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 					if(furthestDist > 24){
 						vecRightTop = vecRightTop + vecDirRightUp * (furthestDist - 16);
 					}
-					sourceMaxRightUpHit = TRUE;
+					sourceMaxRightUpHit = 1;
 				}
 			}
 
-
 		}//isMovetypeFlying
-
-
 
 
 
@@ -6902,6 +7043,133 @@ BOOL CBaseMonster::FTriangulate ( const Vector &vecStart , const Vector &vecEnd,
 
 	return FALSE;
 }//FTriangulate
+
+
+
+//MODDD - FTriangualte assistance.
+// Idea: this goal failed (some distance from the monster origin left, right, up, down failed while at as
+// far of an extent as it could be), but there could be some surface in the way that the monster could have
+// walked along instead.
+// Idea: Take a trace in the direction of the failed goal and see if there is a blocking surface in the way.
+// Get a vector that travels along the surface toward where I wanted to go.  Thank you vector-projection-
+// onto-a-plane.
+// Then go that ways along the rest of the distance I failed or at the earliest point it gets blocked.
+// Maybe after going along that wall, there will be a straight shot to my target node or enemy.
+// Unfortunately, I don't know of any simple way to detect the direction to move against any other otherwise
+// impassable area, such as a cliff.  Blocks movement from too deep a change in elevation, not a concrete
+// blocking surface in the way.  This trace would miss and have no effect then.
+BOOL CBaseMonster::FPutFailedGoalAlongSurface(Vector vecFailedGoal, float flLookZOffset, float flAlongSurfaceDist, CBaseEntity* pTargetEnt, Vector* out_vecNewTarget){
+
+	/*
+	if(furthestDist > 16){
+		TraceResult tr;
+		Vector pointDelta = vecLeft - pev->origin;
+		Vector theDir = pointDelta.Normalize();
+		float theDist = pointDelta.Length();
+		Vector vecStart = pev->origin + Vector(0, 0, 20);
+		UTIL_TraceLine(vecStart, vecLeft, dont_ignore_monsters, ENT(pev), &tr);
+
+		if(tr.flFraction < 1.0){
+			Vector theNormal = tr.vecPlaneNormal;
+			Vector dirAlongWall = theDir - ((DotProduct(theDir, theNormal)) / theNormal.Length()*theNormal.Length())*theNormal;
+			Vector fromWall = tr.vecEndPos + pev->size.x * 0.75 * theNormal;
+			Vector alongWall = fromWall + dirAlongWall * (theDist - furthestDist - 16);
+					
+			// Now, try from pev->origin to alongWall.
+			//UTIL_drawLineFrame(pev->origin.x, pev->origin.y, pev->origin.z, alongWall.x, alongWall.y, alongWall.z, 12, 900, 255, 255, 0);
+			//UTIL_drawLineFrame(alongWall.x, alongWall.y, alongWall.z, vecFarSide.x, vecFarSide.y, vecFarSide.z, 12, 900, 255, 255, 0);
+
+			if(CheckLocalMove(pev->origin, alongWall, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+				// ok, try this next then.
+				vecLeft = alongWall;
+				sourceMaxLeftHit = 1;
+			}else{
+				if(furthestDist > 24){
+					// go up as far as possible
+					Vector pointDelta = alongWall - pev->origin;
+					Vector theDir = pointDelta.Normalize();
+					vecLeft = pev->origin + theDir * (furthestDist - 16);
+				}else{
+					sourceMaxLeftHit = 2;
+				}
+			}
+
+		}
+	}
+	*/
+
+	//HACK: for debug feature only
+	Vector vecFarSide = m_Route[m_iRouteIndex].vecLocation;
+
+	//Vector vecWallHit, Vector vecWallNormal
+	
+	TraceResult tr;
+	Vector pointDelta = vecFailedGoal - pev->origin;
+	Vector theDir = pointDelta.Normalize();
+	float theDist = pointDelta.Length();
+	Vector vecStart = pev->origin;
+	vecStart.z += flLookZOffset;
+
+	// go further than the failed direction in case this is a funny angle and the wall would take aways
+	// to get to (theDist + 128)
+	Vector vecEnd = vecStart + theDir * (theDist + 128);
+	//UTIL_TraceLine(vecStart, vecFailedGoal, dont_ignore_monsters, ENT(pev), &tr);
+	UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, ENT(pev), &tr);
+	//UTIL_drawLineFrame(vecStart.x, vecStart.y, vecStart.z, vecEnd.x, vecEnd.y, vecEnd.z, 12, 300, 0, 255, 0);
+	
+
+	if(tr.flFraction < 1.0){
+		float furthestDist;
+
+		// From here to the failed goal, how far could I get?
+		// No, nevermind.  Provided by caller now (flAlongSurfaceDist)
+		//float furthestDist = (tr.flFraction) * theDist;
+		//float furthestDist = (tr.vecEndPos - vecStart).Length();
+
+		Vector theNormal = tr.vecPlaneNormal;
+		// Vector projection onto a plane formula.  Although 'theNormal has length 1...
+		//Vector dirAlongWall = theDir - ((DotProduct(theDir, theNormal)) / theNormal.Length()*theNormal.Length())*theNormal;
+		Vector dirAlongWall = theDir - ((DotProduct(theDir, theNormal)))*theNormal;
+
+		// get far enough away from the wall so another check doesn't bump into it.
+		Vector fromWall = tr.vecEndPos + pev->size.x * 0.75 * theNormal;
+		// And travel along it aways.
+		// was (theDist - furthestDist).LengtH() in there?
+		Vector alongWall = fromWall + dirAlongWall * (flAlongSurfaceDist);
+					
+		// Now, try from pev->origin to alongWall.
+		//UTIL_drawLineFrame(pev->origin.x, pev->origin.y, pev->origin.z, alongWall.x, alongWall.y, alongWall.z, 12, 900, 255, 255, 0);
+		//UTIL_drawLineFrame(alongWall.x, alongWall.y, alongWall.z, vecFarSide.x, vecFarSide.y, vecFarSide.z, 12, 900, 255, 255, 0);
+
+		if(CheckLocalMove(pev->origin, alongWall, pTargetEnt, FALSE, &furthestDist) == LOCALMOVE_VALID){
+			// ok, try this next then.
+			*out_vecNewTarget = alongWall;
+			return TRUE;
+			//sourceMaxLeftHit = 1;
+		}else{
+			if(furthestDist > 24){
+				// go up as far as possible
+				Vector pointDelta = alongWall - pev->origin;
+				Vector theDir = pointDelta.Normalize();
+				*out_vecNewTarget = pev->origin + theDir * (furthestDist - 16);
+				return TRUE;
+			}else{
+				// sourceMaxLeftHit = 2;
+			}
+		}
+
+	}
+
+	// sign to give up
+	return FALSE;
+}//???
+
+
+
+
+
+
+
 
 
 
@@ -10238,10 +10506,8 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 	Vector vecShootDir;
 	Vector angDir;
 
-
 	if (m_hEnemy != NULL) {
 		// test.  Is the enemy too close?
-
 
 		//float tempDist = Distance(pev->origin, m_hEnemy->Center());
 		Vector pointDelta = (this->Center() - m_hEnemy->Center());
@@ -10257,14 +10523,11 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 		}
 	}
 
-
-
 	UTIL_MakeVectors(pev->angles);
 	// MODDD - is it fine to use the AI variant?
 	// Want something more approximate than our actual 'gun' height to be used for determining what's looking at
 	// something anyway
 	vecShootDir = ShootAtEnemyMod(GetGunPositionAI() );
-
 
 	/*
 	if (m_hEnemy != NULL) {
@@ -10284,10 +10547,7 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 
 
 	SetBlending( 0, angDir.x );
-}//END OF lookAtEnemy_pitch
-
-
-
+}//lookAtEnemy_pitch
 
 
 
@@ -10303,49 +10563,228 @@ void CBaseMonster::lookAtEnemy_pitch(void){
 // succeeds (path is valid) or FALSE if failed (no path 
 // exists )
 //=========================================================
-BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
-{
-	//return FALSE;
-
+//MODDD - New overridable versions.  Now redirects to FGetNodeRoute_Final 
+// (takes the start/end nodes picked here).
+//MODDD - TODO:  Send a vecStart like CheckLocalMove does, send that along as pev->origin?
+// Seems neater than assuming the start is always where this entity happens to be in
+// any call but it's likely hte case anyway.
+BOOL CBaseMonster::FGetNodeRoute ( Vector vecStart, Vector vecDest ){
+	// assume not using that feature
+	return FGetNodeRoute(vecStart, vecDest, FALSE);
+}
+BOOL CBaseMonster::FGetNodeRoute ( Vector vecStart, Vector vecDest, BOOL asIfSnappedToGround ){
+	// mark this.  If it is, being too close to the ground on 'asIfSnappedToGround'
+	// stops the method (already tried close to that point in a previous run)
+	//Vector vecStartPos;
+	Vector vecLookForSourceNodeFrom;
 	TraceResult tr;
-	int iPath[ MAX_PATH_SIZE ];
-	int iSrcNode, iDestNode;
-	int iResult;
-	int i;
-	int iNumToCopy;
+	int iSrcNode;
+	int iDestNode;
+	BOOL returnCode = FALSE;
 
 	// Record the monster checking the nodes for any node logic to be aware of (per some CVars) this call.
 	// Retail was never aware of this in nodes.cpp, besides getting the hull-size of the calling monster
 	// early on.
 
-
-	g_routeTempMonster = this;
-	// Assume the movegoal is set if it will be relevant?
-	g_routeTempMonster_GoalEnt = GetGoalEntity();
-
-
-	iSrcNode = WorldGraph.FindNearestNode ( pev->origin, this );
-	iDestNode = WorldGraph.FindNearestNode ( vecDest, this );
+	// uses default behavior to get type if the monster doesn't override getNodeTypeAllowed
+	int myAllowedNodeTypes = WorldGraph.NodeType(this); //this->getNodeTypeAllowed();
+	int flyerAllowedTypes;
 
 
+	//vecStartPos = pev->origin;
+
+
+	// nope, no 'vecStart' provided here.  yet.
+	//UTIL_SetOrigin( pev, vecStart );
+
+	// NOTE - ground-based monsters don't even need this, it is assumed they're snapped to the ground at most times,
+	// or not significanty off the ground enough to impact 'nearestNode' choice (main thing that matters).
+	// This is for fliers to see if some ground node straight below is a better option if all else fails
+	// (if the flyer can also take ground nodes)
+	if(asIfSnappedToGround){
+		/*
+		// Wait.  Why not just use a TRACE_MONSTER_HULL that goes deep down?
+		// DROP_TO_FLOOR even has a limit to its check.   In the retail game, 'give' commands can fail
+		// if spawned while the player noclipped somewhere far above the ground (deletes itself because
+		// it can't find ground to spawn on, because of this command.)
+		int dropResult = DROP_TO_FLOOR( ENT( pev ) );
+		if(dropResult == 0){
+			// ok, try again with a TRACE_MONSTER_HULL to there
+		}
+		*/
+		TraceResult trDrop;
+		Vector vecDropStart = pev->origin;
+		Vector vecDropEnd = vecDropStart;
+		vecDropEnd.z = -1024;
+		TRACE_MONSTER_HULL(ENT(pev), vecDropStart, vecDropEnd, dont_ignore_monsters, ENT(pev), &trDrop);
+
+		if(trDrop.flFraction == 0){
+			// Didn't reach the ground?  Not happening
+			return FALSE;
+		}
+
+		if(g_FGetNodeRoute_recursiveCall){
+			// Coming from another run of this method already?  Forbid if the drop was close to the ground.
+			float dropDist = fabs(trDrop.vecEndPos.z - (pev->origin.z + pev->mins.z));
+			if(dropDist < 240){
+				// don't bother trying again, too short a distance
+				return FALSE;
+			}
+		}
+		
+		// Assuming drop success at this point.
+		// And that setting to the exact endpoint of TRACE_MONSTER_HULL is ok.
+		// WAIT!  No need, just use this as the pos to look for nodes from instead.
+		// Bump the Z a little out of pranoia.
+		//UTIL_SetOrigin(pev, trDrop.vecEndPos);
+		vecLookForSourceNodeFrom = trDrop.vecEndPos;
+		vecLookForSourceNodeFrom.z += 2;
+
+		// Also - forbid any node types but LAND if snapping to the ground.
+		myAllowedNodeTypes = myAllowedNodeTypes &= ~(bits_NODE_AIR | bits_NODE_WATER);
+		flyerAllowedTypes = 0;
+	}else{
+		vecLookForSourceNodeFrom = pev->origin;
+		if(!map_anyAirNodes){
+			// strip out the bits_NODE_AIR then, none use it.  Wasted search if it's the only flyer
+			// movetype.
+			myAllowedNodeTypes &= ~bits_NODE_AIR;
+		}
+		flyerAllowedTypes = myAllowedNodeTypes & (bits_NODE_AIR | bits_NODE_WATER);
+	}//asIfSnappedToGround check
+
+
+	if(!g_FGetNodeRoute_recursiveCall){
+		g_routeTempMonster = this;
+		// Assume the movegoal is set if it will be relevant?
+		g_routeTempMonster_GoalEnt = GetGoalEntity();
+	}
+
+
+	// Is a flyer/swimmer (included by isMovetypeFlying), and supports at least LAND nodes?
+	// Can try snapping to the ground of neither non-ground nor ground node type works.
+	// Note checking for isMovetypeFlying instead of flyerAllowedTypes.  flyerAllowedTypes may get 0'd
+	// from this map lacking air-nodes, but it should still try to snap to the ground to look for
+	// a nearest node from there if the only ground-node lookup at its current place fails.
+	//if( flyerAllowedTypes != 0 && (myAllowedNodeTypes & bits_NODE_LAND) ){
+	if(isMovetypeFlying() && (myAllowedNodeTypes & bits_NODE_LAND)){
+
+		/*
+		if(map_anyAirNodes){
+			// Try getting the nearest land and air node.
+			// If both are found, always try the air node first for a route.  Then the land if that fails.
+			// If only either is found, try that one of course.
+			iSrcNode = WorldGraph.FindNearestNode ( pev->origin, flyerAllowedTypes );
+			iDestNode = WorldGraph.FindNearestNode ( vecDest, flyerAllowedTypes );
+			returnCode = FGetNodeRoute_Final(iSrcNode, iDestNode, vecDest);
+
+		}else{
+			// Just do a normal node search then, the nearest land-node is all that can be grabbed since
+			// there are no air nodes.
+			// Wait, there is one really odd case that shouldn't happen.  bits_NODE_WATER and bits_NODE_LAND?
+			// The map lacking air nodes has no effect on that.  Try that first if so?
+			if(flyerAllowedTypes & bits_NODE_WATER){
+				iSrcNode = WorldGraph.FindNearestNode ( pev->origin, bits_NODE_WATER );
+				iDestNode = WorldGraph.FindNearestNode ( vecDest, bits_NODE_WATER );
+				returnCode = FGetNodeRoute_Final(iSrcNode, iDestNode, vecDest);
+			}else{
+				// to make the if-then below work
+				returnCode = FALSE;
+			}
+		}
+		*/
+
+		// flyer/water node types get priority, if any are left.
+		// Either this flying/swimming monster never had any (???), or it had the AIR type but it got
+		// stripped from this map lacking air nodes.
+		if(flyerAllowedTypes != 0){
+			iSrcNode = WorldGraph.FindNearestNode ( vecLookForSourceNodeFrom, flyerAllowedTypes );
+			iDestNode = WorldGraph.FindNearestNode ( vecDest, flyerAllowedTypes );
+			returnCode = FGetNodeRoute_Final(vecLookForSourceNodeFrom, vecDest, asIfSnappedToGround, iSrcNode, iDestNode, flyerAllowedTypes);
+		}
+
+		// Above failed?  Try ground nodes.
+		if(!returnCode){
+			iSrcNode = WorldGraph.FindNearestNode ( vecLookForSourceNodeFrom, bits_NODE_LAND );
+			iDestNode = WorldGraph.FindNearestNode ( vecDest, bits_NODE_LAND );
+			returnCode = FGetNodeRoute_Final(vecLookForSourceNodeFrom, vecDest, asIfSnappedToGround, iSrcNode, iDestNode, bits_NODE_LAND);
+		}
+
+		// Regardless of whether the map has any air nodes or not, if any attempts to make a route above
+		// failed while both node-types are accepted, try one more time: snap the flyer to the ground
+		// (hypothetical) and see what the nearest ground-node only is.
+		// Assumption is, the nearest air-node failing should not have made much of a difference.  Any air nodes
+		// from where the flyer already was should have connected to whatever nearest air node is at ground-level,
+		// maybe even the exact same air node.
+		// Ground node, however, could be different, especially on maps with different floors/elevations.  A 
+		// nearest ground node found while snapped to the ground could actually work instead.
+		// If that succeeds, place an apex (detour) node straight to the ground to lead to this node and then
+		// go into the given route.
+
+		// If this attempt wasn't already set as 'snappedToGround' (no need to do any other checks),
+		// can re-try as if were.
+		// (this will set g_routeTempMonster again, but no issue, it is to the exact same monster)
+		// ALTHOUGH.  Beware that it also sets g_routeTempMonster to NULL after it finishes.
+		// Which is fine as it's the last place in this method that calls any WorldGraph (nodes.cpp)
+		// methods anyway.  (even that's changed now, checks for the recursive call in those too)
+		if(!returnCode && !asIfSnappedToGround){
+			g_FGetNodeRoute_recursiveCall = TRUE;
+			returnCode = FGetNodeRoute(vecStart, vecDest, TRUE);
+			g_FGetNodeRoute_recursiveCall = FALSE;
+		}
+
+	}else{
+		// ground mover?  only either LAND,  or  AIR and/or SWIM?  Nothing special.
+		iSrcNode = WorldGraph.FindNearestNode ( vecLookForSourceNodeFrom, myAllowedNodeTypes );
+		iDestNode = WorldGraph.FindNearestNode ( vecDest, myAllowedNodeTypes );
+
+		returnCode = FGetNodeRoute_Final(vecLookForSourceNodeFrom, vecDest, asIfSnappedToGround, iSrcNode, iDestNode, myAllowedNodeTypes);
+	}//myAllowedNodeTypes check
+
+	if(!g_FGetNodeRoute_recursiveCall){
+		 // done with node-based logic
+		g_routeTempMonster = NULL;
+	}
+
+	
+	/*
+	if(asIfSnappedToGround){
+		// since we've moved the monster during the check, undo the move.
+		// (if 'vecStart' becomes a paramter, this happens regardless of 'asIfSnappedToGround'
+		UTIL_SetOrigin( pev, vecStartPos );
+	}
+	*/
+
+	return returnCode;
+}//FGetNodeRoute
+
+
+
+//MODDD - NEW, portion of FGetNodeRoute separated out.
+// Takes the iSrcNode and iDestNode indeces of nodes and uses them to see 
+// if there is a shortest path between the nodes and if that path is feasible
+// for this monster to reach the start/end nodes.
+// Takes the 'vecDest' too for comparing the destination node to (close enough gets
+// a CheckLocalMove from vecDest to the node).
+// If a version that doesn't do the start/end valid checks is ever wanted,
+// that can be made.
+BOOL CBaseMonster::FGetNodeRoute_Final(Vector vecStart, Vector vecDest, BOOL asIfSnappedToGround, int iSrcNode, int iDestNode, int iNodeTypeInfo){
+	int i;
+	int iPathSize;
+	int iNumToCopy;
+	int iPath[ MAX_PATH_SIZE ];
 
 	//easyForcePrintLine("MY GOD   WHAT ARE YOU DOING %d %d", iSrcNode, iDestNode);
 
-	if ( iSrcNode == -1 )
-	{
+	if ( iSrcNode == -1 ){
 		// no node nearest self
 //		ALERT ( at_aiconsole, "FGetNodeRoute: No valid node near self!\n" );
-		g_routeTempMonster = NULL;
 		return FALSE;
-	}
-	else if ( iDestNode == -1 )
-	{
+	}else if ( iDestNode == -1 ){
 		// no node nearest target
 //		ALERT ( at_aiconsole, "FGetNodeRoute: No valid node near target!\n" );
-		g_routeTempMonster = NULL;
 		return FALSE;
 	}
-
 
 
 	//MODDD - NEW SECTION.  Disabling for testing.
@@ -10365,7 +10804,6 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	}
 	*/
 
-
 	// valid src and dest nodes were found, so it's safe to proceed with
 	// find shortest path
 	int iNodeHull;
@@ -10373,7 +10811,7 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	if (EASY_CVAR_GET_DEBUGONLY(pathfindForcePointHull) != 1) {
 		// normal way.  Get the Hull from this monster trying to pathfind.
 		// Can be used to tell if some paths between nodes are invalid from this monster's size.
-		iNodeHull = WorldGraph.HullIndex( this ); // make this a monster virtual function
+		iNodeHull = WorldGraph.HullIndex( this, iNodeTypeInfo ); // make this a monster virtual function
 	}else{
 		// force 0 size.
 		iNodeHull = NODE_POINT_HULL;
@@ -10382,20 +10820,120 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 	//MODDD - CHEAT CHEAT CHEAT!
 	//iNodeHull = NODE_POINT_HULL;
 
-	iResult = WorldGraph.FindShortestPath ( iPath, iSrcNode, iDestNode, iNodeHull, m_afCapability );
-
-	// done with node-based logic
-	g_routeTempMonster = NULL;
+	iPathSize = WorldGraph.FindShortestPath ( iPath, iSrcNode, iDestNode, iNodeHull, m_afCapability );
 
 
+	//MODDD - used to be only a 'path size not 0' check
+	BOOL routeGood = FVerifyRoute(vecStart, vecDest, iPath, iPathSize);
 
+	//if ( !iPathSize ){
+	if(!routeGood){
+#if 1
+		ALERT ( at_aiconsole, "No Path from %d to %d!\n", iSrcNode, iDestNode );
+		return FALSE;
+#else
+		BOOL bRoutingSave = WorldGraph.m_fRoutingComplete;
+		WorldGraph.m_fRoutingComplete = FALSE;
+		iPathSize = WorldGraph.FindShortestPath(iPath, iSrcNode, iDestNode, iNodeHull, m_afCapability);
+		WorldGraph.m_fRoutingComplete = bRoutingSave;
+		if ( !iPathSize )
+		{
+			ALERT ( at_aiconsole, "No Path from %d to %d!\n", iSrcNode, iDestNode );
+			return FALSE;
+		}
+		else
+		{
+			ALERT ( at_aiconsole, "Routing is inconsistent!" );
+		}
+#endif
+	}
+
+
+
+	int iRouteWriteStart = 0;
+
+
+	if(asIfSnappedToGround && g_FGetNodeRoute_recursiveCall){
+		// Straight-down shot?  Then the route needs to begin with a node to say to head straight down
+		m_Route[0].vecLocation = vecStart;
+		// AAAaaaaaaaaaaallllllllllssssssssooooooooo don't fuck around with 
+		// bits_MF_TO_PATHCORNER unless you know what you're doing.
+		// Cuz uh.  I sure don't.
+		m_Route[0].iType = bits_MF_TO_DETOUR; // | bits_MF_DONT_SIMPLIFY;
+		m_Route[0].iMapNodeIndex = -1;
+		iRouteWriteStart = 1;
+	}// snaptoground + recursive check
+
+	// there's a valid path within iPath now, so now we will fill the route array
+	// up with as many of the waypoints as it will hold.
+	
+	// don't copy ROUTE_SIZE entries if the path returned is shorter
+	// than ROUTE_SIZE!!!
+	if ( iRouteWriteStart + iPathSize < ROUTE_SIZE ){
+		// enough room to write everything out
+		iNumToCopy = iPathSize;
+	}else{
+		iNumToCopy = ROUTE_SIZE - iRouteWriteStart;
+	}
+	
+	for ( i = 0 ; i < iNumToCopy; i++ ){
+		int iRouteWriteIndex = i + iRouteWriteStart;
+		int theMapNodeIndex = iPath[i];
+		m_Route[iRouteWriteIndex].vecLocation = WorldGraph.m_pNodes[ theMapNodeIndex ].m_vecOrigin;
+		m_Route[iRouteWriteIndex].iType = bits_MF_TO_NODE;
+		//MODDD - record the map node this waypoint was placed on.
+		m_Route[iRouteWriteIndex].iMapNodeIndex = theMapNodeIndex;
+	}
+	
+	if ( iNumToCopy + iRouteWriteStart < ROUTE_SIZE ){
+		int iRouteWriteIndex = iNumToCopy + iRouteWriteStart;
+		m_Route[ iRouteWriteIndex ].vecLocation = vecDest;
+		// why not both?
+		// WAIT - the final node leading to the goal should look at what type of thing
+		// we're moving towards, right?  Use MoveGoal to determine that (toEnemey, etc.)
+		//m_Route[ iRouteWriteIndex ].iType |= bits_MF_IS_GOAL;
+		//m_Route[ iRouteWriteIndex ].iType |= (bits_MF_TO_NODE | bits_MF_IS_GOAL);
+		int moveBit = MovementGoalToMoveFlag(m_movementGoal);
+		m_Route[ iRouteWriteIndex ].iType |= ( moveBit | bits_MF_IS_GOAL);
+		m_Route[iRouteWriteIndex].iMapNodeIndex = -1;
+
+		// Made an extra end-node lead directly to the goal, so that counts (+1).
+		m_iRouteLength = iNumToCopy + iRouteWriteStart + 1;
+	}else{
+		// No extra node.
+		m_iRouteLength = iNumToCopy + iRouteWriteStart;
+	}
+
+	return TRUE;
+}//FGetNodeRoute_Final
+
+
+
+// Do I like this noderoute, likely from GetShortestPath?
+// See if I can reach the start node from where I am now and/or the destination point from where
+// the dest (last) node in the route would put me.
+BOOL CBaseMonster::FVerifyRoute(Vector vecStart, Vector vecDest, int iPath[], int iPathSize){
+	
+	if(iPathSize <= 0){
+		// no route size?  Can't work with this.
+		// Granted a path size of 1 should be impossible, even on a route from one node to that same node
+		// (copied twice; speical case checked fore below)
+		return FALSE;
+	}
+
+	// Safe assumptions?  Why would a route ever start/end with any nodes but the
+	// ones it was told to find a route between?
+	int iSrcNode = iPath[0];
+	int iDestNode = iPath[iPathSize-1];
+
+	
 	//MODDD - NEW SECTION.
 	// Disabled, see notes above.   Don't know which of these sections is the greater cause yet.
 	// Added back in.  Just don't allow this if the distance to the ent is too great, too expensive to check.
 	// Biggest culprit of slowdowns seems to be CheckLocalMove calls over huge distances.
 	// No wonder other pathfinding in CBaseMonster only checks for up to X units ahead being clear with CheckLocalMove.
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if( iResult==2 && iPath[0] == iPath[1]){
+	if(iPathSize==2 && iPath[0] == iPath[1]){
 		//MODDD TODO - 
 		// That is, if the # of nodes returned is 2 and they are exactly equal, it means we returned our own position.
 		// ---Should we set some flag to do something about this...? Ranged AI can just try another nearby node also close to the enemy
@@ -10403,8 +10941,8 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 
 		CBaseEntity* goalEnt = GetGoalEntity();
 
-		CNode& thatNode = WorldGraph.Node(iDestNode);  // same as iSrcNode here
-		Vector currentNodeLoc = thatNode.m_vecOrigin;
+		CNode& destNode = WorldGraph.Node(iDestNode);  // same as iSrcNode here
+		Vector currentNodeLoc = destNode.m_vecOrigin;
 
 		// !!! But it is worth checking to see that the goal can be reached from this node, however.  If the goal is on
 		// top of some huge cliff, a nearest node 2 feet away won't be very helpful anyway.
@@ -10412,16 +10950,16 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 		// types of movegoals (entity, target, location, node, etc.?).
 		// And should 'vecDest' have  + pev->view_ofs added?  If the movegoaltype is a location, probably.
 		// Check for that later, maybe?
-		float distFromMeToNode = Distance(pev->origin, currentNodeLoc);
+		float distFromMeToSource = Distance(vecStart, currentNodeLoc);
 		float distFromNodeToGoal = Distance(currentNodeLoc, vecDest);
 
 
-		if(distFromMeToNode > 350){
+		if(distFromMeToSource > 350){
 			// If we're too far from the start, go ahead and assume it's ok to reach.  A line-trace was already needed
 			// to figure out that this monster has a straight-line path to the node anyway.
 		}else{
 			// Closer?  Go ahead, CheckLocalMove
-			BOOL testPass = (CheckLocalMove(pev->origin, currentNodeLoc, goalEnt, TRUE, NULL) == LOCALMOVE_VALID);
+			BOOL testPass = (CheckLocalMove(vecStart, currentNodeLoc, goalEnt, TRUE, NULL) == LOCALMOVE_VALID);
 			if (!testPass){
 				return FALSE;
 			}
@@ -10436,35 +10974,41 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 			// Closer?  Go ahead, CheckLocalMove
 			BOOL testPass = (CheckLocalMove(currentNodeLoc, vecDest, goalEnt, TRUE, NULL) == LOCALMOVE_VALID);
 			if(!testPass){
-				//DebugLine_Setup(0, pev->origin + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
+				//DebugLine_Setup(0, vecStart + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
 				return FALSE;
 			}
 		}
 
-	}else if(iResult >= 2){
+	}else if(iPathSize >= 2){
 		// Any other route?  Just check to see that the dest-node can reach vecDest, that is important.
 
-		CNode& thatNode = WorldGraph.Node(iDestNode);
-		Vector destNodeLoc = thatNode.m_vecOrigin;
+		CNode& destNode = WorldGraph.Node(iDestNode);
+		Vector destNodeLoc = destNode.m_vecOrigin;
 		float distFromNodeToGoal = Distance(destNodeLoc, vecDest);
 
 		CBaseEntity* goalEnt = GetGoalEntity();
-
 
 
 		// DEBUG:  Can I reach the start node? Should be safe to assume but convenient to get here too
 		//////////////////////////////////////////////////////////////
 		Vector srcLoc = WorldGraph.Node(iSrcNode).m_vecOrigin;
 		g_CheckLocalMove_ExtraDebug = TRUE;
-		//float distFromMeToSource = Distance(pev->origin, srcLoc);
-		//if(distFromMeToSource < 350){
-			BOOL testPass = (CheckLocalMove(pev->origin, srcLoc, goalEnt, TRUE, NULL) == LOCALMOVE_VALID);
+		float distFromMeToSource = Distance(vecStart, srcLoc);
+		
+		if(distFromMeToSource > 350){
+			// If we're too far from the start, go ahead and assume it's ok to reach.  A line-trace was already needed
+			// to figure out that this monster has a straight-line path to the node anyway.
+		}else{
+			// Closer?  Go ahead, CheckLocalMove
+			BOOL testPass = (CheckLocalMove(vecStart, srcLoc, goalEnt, TRUE, NULL) == LOCALMOVE_VALID);
 			if(!testPass){
-				//DebugLine_Setup(0, pev->origin + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
+				//DebugLine_Setup(0, vecStart + Vector(0,0,5), srcLoc + Vector(0, 0, 5), 0, 0, 255);
 				g_CheckLocalMove_ExtraDebug = FALSE;
 				return FALSE;
 			}
-		//}
+		}
+
+
 		g_CheckLocalMove_ExtraDebug = FALSE;
 		//////////////////////////////////////////////////////////////
 
@@ -10478,80 +11022,20 @@ BOOL CBaseMonster::FGetNodeRoute ( Vector vecDest )
 			//if(!(pev->flags & FL_MONSTERCLIP)){
 				BOOL testPass = (CheckLocalMove(destNodeLoc, vecDest, goalEnt, TRUE, NULL) == LOCALMOVE_VALID);
 				if(!testPass){
-					//DebugLine_Setup(0, pev->origin + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
+					//DebugLine_Setup(0, vecStart + Vector(0,0,5), m_vecMoveGoal + Vector(0, 0, 5), 0, 0, 255);
 					return FALSE;
 				}
 			//}
 		}
 	}// same-src-dest-node check
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-
-
-
-	if ( !iResult )
-	{
-#if 1
-		ALERT ( at_aiconsole, "No Path from %d to %d!\n", iSrcNode, iDestNode );
-		return FALSE;
-#else
-		BOOL bRoutingSave = WorldGraph.m_fRoutingComplete;
-		WorldGraph.m_fRoutingComplete = FALSE;
-		iResult = WorldGraph.FindShortestPath(iPath, iSrcNode, iDestNode, iNodeHull, m_afCapability);
-		WorldGraph.m_fRoutingComplete = bRoutingSave;
-		if ( !iResult )
-		{
-			ALERT ( at_aiconsole, "No Path from %d to %d!\n", iSrcNode, iDestNode );
-			return FALSE;
-		}
-		else
-		{
-			ALERT ( at_aiconsole, "Routing is inconsistent!" );
-		}
-#endif
-	}
-
-	// there's a valid path within iPath now, so now we will fill the route array
-	// up with as many of the waypoints as it will hold.
-	
-	// don't copy ROUTE_SIZE entries if the path returned is shorter
-	// than ROUTE_SIZE!!!
-	if ( iResult < ROUTE_SIZE )
-	{
-		iNumToCopy = iResult;
-	}
-	else
-	{
-		iNumToCopy = ROUTE_SIZE;
-	}
-	
-	for ( i = 0 ; i < iNumToCopy; i++ )
-	{
-		m_Route[ i ].vecLocation = WorldGraph.m_pNodes[ iPath[ i ] ].m_vecOrigin;
-		m_Route[ i ].iType = bits_MF_TO_NODE;
-	}
-	
-	if ( iNumToCopy < ROUTE_SIZE )
-	{
-		m_Route[ iNumToCopy ].vecLocation = vecDest;
-		// why not both?
-		// WAIT - the final node leading to the goal should look at what type of thing
-		// we're moving towards, right?  Use MoveGoal to determine that (toEnemey, etc.)
-		//m_Route[ iNumToCopy ].iType |= bits_MF_IS_GOAL;
-		//m_Route[ iNumToCopy ].iType |= (bits_MF_TO_NODE | bits_MF_IS_GOAL);
-		int moveBit = MovementGoalToMoveFlag(m_movementGoal);
-		m_Route[ iNumToCopy ].iType |= ( moveBit | bits_MF_IS_GOAL);
-
-		// Made an extra end-node lead directly to the goal, so that counts (+1).
-		m_iRouteLength = iNumToCopy + 1;
-	}else{
-		// No extra node.
-		m_iRouteLength = iNumToCopy;
-	}
-
+	// Made it through?  Pass
 	return TRUE;
-}
+}//FVerifyRoute
+
+
+
+
 
 //=========================================================
 // FindHintNode

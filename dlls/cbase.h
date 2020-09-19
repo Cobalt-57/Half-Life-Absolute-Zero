@@ -501,6 +501,7 @@ public:
 	virtual BOOL isSizeGiant(void);
 	virtual BOOL isOrganic(void);
 	virtual int getHullIndexForNodes(void);
+	virtual int getHullIndexForGroundNodes(void);
 	virtual int getNodeTypeAllowed(void);
 
 	int getNumberOfBodyParts(void);

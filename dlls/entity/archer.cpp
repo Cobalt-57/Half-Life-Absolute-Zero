@@ -2595,8 +2595,6 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 			//melee bite?
 			pHurt = CheckTraceHullAttack(offsetVecto, flDist, dmg, DMG_SLASH, DMG_BLEEDING );
 			
-			
-
 		}else{
 			// always hurt the enemy in this case.  
 			pHurt = m_hEnemy;
@@ -3327,6 +3325,15 @@ void CArcher::setEnemyLKP(CBaseEntity* theEnt){
 
 int CArcher::getNodeTypeAllowed(void){
 	return bits_NODE_WATER;
+}
+
+int CArcher::getHullIndexForNodes(void){
+	// standard.
+	return NODE_FLY_HULL;
+}
+int CArcher::getHullIndexForGroundNodes(void){
+	// wait, not that this should ever happen?  oops
+	return NODE_SMALL_HULL;
 }
 
 /*

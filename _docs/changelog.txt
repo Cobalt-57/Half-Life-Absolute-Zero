@@ -724,7 +724,7 @@ hgrunts also better comment on the enemy they've seen on 'alert' noises.
 Some func_tank vars now properly saved as FIELD_POSITION_VECTOR's.  They will transfer more gracefully if caught in a map transition.
 
 Floaters now do half duration poison as well.  More forgiving given how spammy the attack is.
-Also do half damage.  Fire rate slightly increased to compensate.
+Also do half contact damage.  Fire rate slightly increased to compensate.
 
 Spawning weapons with cheats ('impulse 101', 'everything' in console) doesn't change the currently equipped weapon (unless none is, picks the crowbar).
 
@@ -734,6 +734,7 @@ Flyer AI less likely to be unable to follow.
 Reduced floater gravity (when falling from being killed)
 Floaters less likely to be content hitting the floor of an overhand when barely peeking over it.
 Floater spit launch & hit sounds now use unused bullsquid sounds.
+Floaters no longer able to get stuck staring at an enemy above something in the way (was not moving above/closer to let attacks resume)
 
 Monsters in a 'fail' state in certain scenarios will no longer wait on 'PVS' if in a combat state, just like enemy-check updates already did.
 

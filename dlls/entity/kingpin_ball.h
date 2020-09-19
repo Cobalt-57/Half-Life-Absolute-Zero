@@ -32,8 +32,6 @@ public:
 
 	void startSmartFollow(void);
 
-	int getHullIndexForNodes(void);
-	
 	void EXPORT BounceTouch( CBaseEntity *pOther );
 
 	void MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, float flInterval );
