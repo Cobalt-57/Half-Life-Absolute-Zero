@@ -1180,14 +1180,14 @@ void CGraph::CheckNode(Vector vecOrigin, int iNode)
 	}
 
 	if(iNode == 41){
-		if(g_routeTempMonster != NULL){
-		DebugLine_Setup(1, g_routeTempMonster->pev->origin, m_pNodes[iNode].m_vecOriginPeek, 255, 255, 255);
-		}
+		//if(g_routeTempMonster != NULL){
+		//	DebugLine_Setup(1, g_routeTempMonster->pev->origin, m_pNodes[iNode].m_vecOriginPeek, 255, 255, 255);
+		//}
 	}
 	if(iNode == 36){
-		if(g_routeTempMonster != NULL){
-			DebugLine_Setup(1, g_routeTempMonster->pev->origin, m_pNodes[iNode].m_vecOriginPeek, 255, 255, 255);
-		}
+		//if(g_routeTempMonster != NULL){
+		//	DebugLine_Setup(1, g_routeTempMonster->pev->origin, m_pNodes[iNode].m_vecOriginPeek, 255, 255, 255);
+		//}
 	}
 
 	if (flDist < m_flShortest)

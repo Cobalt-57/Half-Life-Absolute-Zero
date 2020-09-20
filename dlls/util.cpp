@@ -6203,9 +6203,10 @@ void method_precacheAll(void){
 			PRECACHE_SOUND("x/x_shoot1.wav");
 			PRECACHE_SOUND("debris/beamstart4.wav");
 			PRECACHE_SOUND("debris/beamstart6.wav");
+			PRECACHE_SOUND("debris/beamstart8.wav");
 			PRECACHE_SOUND("debris/beamstart10.wav");
 			PRECACHE_SOUND("debris/beamstart11.wav");
-			
+			PRECACHE_SOUND("debris/beamstart15.wav");
 			
 			//floater
 

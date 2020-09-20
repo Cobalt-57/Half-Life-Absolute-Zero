@@ -32,6 +32,10 @@ enginefuncs_t g_engfuncs;
 //globalvars_t* gpGlobals;
 
 
+extern "C" __declspec( dllimport )  bool SteamAPI_Init();
+
+
+
 #ifdef _WIN32
 
 // Required DLL entry point
@@ -46,12 +50,15 @@ BOOL WINAPI DllMain(
 	else if (fdwReason == DLL_PROCESS_DETACH)
     {
     }
+
+    // don't do this  here, just a compile test.
+    //SteamAPI_Init();
+
 	return TRUE;
 }
 
 //MODDD - renamed the "DLLEXPORT" to "DLL_CALL_CONV".
-// Oh the confusion using the exact same name for different derivations in
-// macros can cause.
+// The DLLEXPORT seen in several other places has a different meaning.
 void DLL_CALL_CONV GiveFnptrsToDll(	enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
 {
 	memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
@@ -63,7 +70,7 @@ void DLL_CALL_CONV GiveFnptrsToDll(	enginefuncs_t* pengfuncsFromEngine, globalva
 
 extern "C" {
 
-void GiveFnptrsToDll(	enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals )
+void GiveFnptrsToDll(enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals)
 {
 	memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
 	gpGlobals = pGlobals;
@@ -72,3 +79,7 @@ void GiveFnptrsToDll(	enginefuncs_t* pengfuncsFromEngine, globalvars_t *pGlobals
 }
 
 #endif
+
+
+
+

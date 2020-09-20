@@ -12,7 +12,6 @@
 *   use or distribution of this code by or to any unlicensed person is illegal.
 *
 ****/
-// UNDONE: Holster weapon?
 
 #include "extdll.h"
 #include "barney.h"

@@ -300,7 +300,7 @@ typedef void (CBaseEntity::*USEPTR)( CBaseEntity *pActivator, CBaseEntity *pCall
 
 
 
-//MODDD - moved defines for 'EXPORT' to util_shared.h.
+//MODDD - moved defines for 'EXPORT' to const.h.
 
 extern "C" EXPORT int GetEntityAPI( DLL_FUNCTIONS *pFunctionTable, int interfaceVersion );
 extern "C" EXPORT int GetEntityAPI2( DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion );

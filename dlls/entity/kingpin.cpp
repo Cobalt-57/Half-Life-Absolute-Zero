@@ -13,6 +13,22 @@
 #include "util_debugdraw.h"
 
 
+// TELEPORT:  a kingpin can spawn some sprite similar to the mage-charge one that expands rapidly and teleports the
+// kingpin when its mage anim ends and the sprite's reached a fair size.
+// Is there an alternate green sprite used on retail maps?  That can be used for a healing aura the kingpin
+// uses while in cover (interrupted by taking much damage while healing).
+
+
+
+
+/*
+IDEA:  kingpin-fired hornets should see if a straight-line path to the target is obscurred by something in the way and, if so, maybe adjust the route
+to go past the thing in the way crudely?  Like a kingpin firing from a low point (by a ramp toward them), so you only see the top of the kingpin.  The hornets should see the ramp in the way and angle upwards somewhat.
+
+If the kingpin takes damage while the enemy is very close behind, end the attack early and face instantly for melee!
+*/
+
+
 
 // TODO!  How about a big psionic shield?  After being interrupted from taking a lot of damage, puts up a temporary big blue shield
 // that takes up twice it's normal health, and blocks enemies that touch it + a push a direction away and shock damage, but goes away
@@ -96,6 +112,8 @@ extern short g_sBallForceFieldSprite;
 
 #define KINGPIN_VOICE_ATTENUATION (ATTN_NORM - 0.34f)
 
+// was 0.3f?
+#define REFLECT_BASE_DELAY 0.12f
 
 //sequences in the anim, in the order they appear in the anim. Some anims have the same display name and so should just be referenced by order
 //(numbered index), named well after purpose and based on display names for clarity. Safer this way.
@@ -958,7 +976,19 @@ void CKingpin::Precache( void )
 	PRECACHE_SOUND("x/x_shoot1.wav");
 	//PRECACHE_SOUND("debris/beamstart4.wav");
 	
-	// OH YEAH.
+
+
+	PRECACHE_SOUND("debris/beamstart8.wav");
+	PRECACHE_SOUND("debris/beamstart15.wav");
+	
+
+	// NEW SOUNDS ABOVE HERE
+	////////////////////////////////////////////////////////////////
+
+
+
+
+
 	PRECACHE_MODEL ("sprites/hotglow_ff.spr");
 
 
@@ -1066,6 +1096,10 @@ void CKingpin::SetEyePosition(void){
 //based off of GetSchedule for CBaseMonster in schedule.cpp.
 Schedule_t* CKingpin::GetSchedule ( void )
 {
+
+	// WHyyyy is this so freakin' persistent.
+	stopElectricBarrageLoopSound();
+
 	//MODDD - safety.
 	if(pev->deadflag != DEAD_NO){
 		return GetScheduleOfType( SCHED_DIE );
@@ -2413,6 +2447,12 @@ void CKingpin::MonsterThink( void ){
 	//BOOL okayForNormalThink = (!quickThink || gpGlobals->time >= nextNormalThinkTime);
 	
 	BOOL doNormalThink;
+
+	if(!usingFastThink){
+		// for now, always, for projectile-reflect logic to run more often
+		SetFastThink(TRUE);
+	}
+
 	
 	if(usingFastThink){
 		if(gpGlobals->time >= nextNormalThinkTime){
@@ -2438,7 +2478,7 @@ void CKingpin::MonsterThink( void ){
 		CBaseEntity* pEntityScan = NULL;
 		Vector searchStart = EyePosition();
 		//if there is some sort of projectile headed towards me, we will try to reflect it.
-		while ((pEntityScan = UTIL_FindEntityInSphere(pEntityScan, searchStart, 500)) != NULL) {
+		while ((pEntityScan = UTIL_FindEntityInSphere(pEntityScan, searchStart, 450)) != NULL) {
 
 			if (!(pEntityScan->pev->flags & FL_KILLME)) {
 
@@ -2465,7 +2505,7 @@ void CKingpin::MonsterThink( void ){
 				else {
 					float filteredIncomingSpeed = min(incomingSpeed, 2000);  //cap me at 2000 for safety.
 					//climbs up to 2000.
-					reflectDelayFactor = (1.0 - (((filteredIncomingSpeed - 800) / 1200) * 0.93));
+					reflectDelayFactor = (1.0 - (((filteredIncomingSpeed - 800) / 1200) * 0.97));
 					rangeFactor = 0.65 + ((filteredIncomingSpeed - 800) / 1200) * 0.35;
 				}
 
@@ -2503,7 +2543,7 @@ void CKingpin::MonsterThink( void ){
 				//reflectDelayFactor
 				//rangeFactor
 
-				if (otherProjType > PROJECTILE_NONE && incomingSpeed > 0.1f && distanceToEnt < (rangeFactor * 700)) {
+				if (otherProjType > PROJECTILE_NONE && incomingSpeed > 0.1f && distanceToEnt < (rangeFactor * 450)) {
 					//also, is it coming towards me? This should also avoid trying to re-reflect projectiles already reflected
 					//but still in reflection range for a little bit.
 					const char* entityName = pEntityScan->getClassname();
@@ -2523,9 +2563,9 @@ void CKingpin::MonsterThink( void ){
 
 					if (
 						//If the projectile is close enough to moving towards this kingpin,
-						closenessToApproach > 0.4f ||
+						closenessToApproach > 0.45f ||
 						//or it's bouncing and too close to landing to me...
-						((pev->movetype == MOVETYPE_TOSS || pev->movetype == MOVETYPE_BOUNCE) && (distance2D < (600 * rangeFactor) && zSpeed < -80 && distanceZ < 500 * rangeFactor))
+						((pev->movetype == MOVETYPE_TOSS || pev->movetype == MOVETYPE_BOUNCE) && (distance2D < (400 * rangeFactor) && zSpeed < -80 && distanceZ < 500 * rangeFactor))
 
 					){
 						attemptReflectProjectileStart(pEntityScan, reflectDelayFactor);
@@ -2537,10 +2577,6 @@ void CKingpin::MonsterThink( void ){
 			}//END OF fl_killme check
 		}//END OF while loop through nearby entities
 	}//END OF dead check
-
-
-
-
 
 
 
@@ -2622,7 +2658,9 @@ void CKingpin::MonsterThink( void ){
 	}//END OF doNormalThink
 
 
-	
+
+	//easyForcePrintLine("THE TIMES %.2f : %.2f %d", gpGlobals->time, nextNormalThinkTime, doNormalThink);
+
 	if(usingFastThink){
 		pev->nextthink = gpGlobals->time + 0.025;
 	}
@@ -2779,7 +2817,7 @@ GENERATE_KILLED_IMPLEMENTATION(CKingpin){
 	ClearBeams();
 	ClearReflectEffects();
 	removeChargeEffect();
-	//it's just a good idea
+	// it's just a good idea
 	stopElectricBarrageLoopSound();
 	
 }//END OF Killed
@@ -3336,18 +3374,32 @@ void CKingpin::playPsionicLaunchSound(){
 
 void CKingpin::ScheduleChange(void){
 
-	/*
+	// EHhhhh paranoia, have this check anyway
 	Schedule_t* endSchedule = this->m_pSchedule;
 
+	// ?
+	// Could this cause the end-sounds to ever play twice?  Maybe some kind of BOOL for
+	// having played it recently would be good.
 
 	if(endSchedule == slKingpinElectricBarrage){
 		int taskNumba = getTaskNumber();
+		stopElectricBarrageLoopSound();
 		if(taskNumba == TASK_KINGPIN_ELECTRIC_BARRAGE_START || taskNumba == TASK_KINGPIN_ELECTRIC_BARRAGE_LOOP){
 			playElectricBarrageEndSound();
 		}
 		removeChargeEffect();  //if it is up.  does nothing if not.
 	}
-	*/
+
+	if(endSchedule == slKingpinElectricLaser){
+		int taskNumba = getTaskNumber();
+		stopElectricLaserChargeSound();
+		if(taskNumba == TASK_KINGPIN_ELECTRIC_LASER_FIRE || taskNumba == TASK_KINGPIN_ELECTRIC_LASER_CHARGE){
+			playElectricBarrageEndSound();
+		}
+		removeChargeEffect();
+	}
+
+	
 
 	CBaseMonster::ScheduleChange();
 
@@ -3472,7 +3524,8 @@ void CKingpin::stopElectricLaserChargeSound(void){
 
 void CKingpin::playElectricLaserFireSound(void){
 	int pitch = 88;
-	UTIL_PlaySound( edict(), CHAN_WEAPON, "weapons/gauss2.wav", 1.0, ATTN_NORM - 0.7f, 0, pitch, FALSE );
+	//UTIL_PlaySound( edict(), CHAN_WEAPON, "weapons/gauss2.wav", 1.0, ATTN_NORM - 0.7f, 0, pitch, FALSE );
+	UTIL_PlaySound( edict(), CHAN_WEAPON, "weapons/beamstart15.wav", 1.0, ATTN_NORM - 0.7f, 0, pitch, FALSE );
 	
 	//or maybe one of the other beamstart#.wav's from pElectricBarrageFireSounds since that's no longer used for electric barrage firing?
 	
@@ -3495,7 +3548,7 @@ void CKingpin::playElectricLaserHitSound(CBaseEntity* arg_target, const Vector& 
 	}
 
 
-	UTIL_EmitAmbientSound( toSend, arg_location, "garg/gar_stomp1.wav", 1.0, ATTN_NORM - 0.34f, 0, pitch, TRUE );
+	UTIL_EmitAmbientSound( toSend, arg_location, "garg/gar_stomp1.wav", 1.0, ATTN_NORM - 0.18f, 0, pitch, TRUE );
 
 	//precached by the client always, so don't use the soundSentenceSave system for this one.
 	switch(RANDOM_LONG(0, 2)){
@@ -3795,12 +3848,6 @@ BOOL CKingpin::AlreadyReflectingEntity(CBaseEntity* arg_check){
 
 
 
-
-
-
-
-
-
 //This is a smaller one for the rapid-fire laser barrage.
 //Only one laser in one call though.
 void CKingpin::fireElectricBarrageLaser(void){
@@ -3818,13 +3865,6 @@ void CKingpin::fireElectricBarrageLaser(void){
 		//steadily decreases.
 		damageFraction = 0.6f + (1.0f - distToEnemyFraction);
 	}
-
-	//1.0:  1.0
-	//0.9:  0.9
-	//0.8:  0.8
-	//0.7:  0.7
-	//0.6:  0.7
-	//0.5:  0.7
 
 	Vector vecSrc, vecAim;
 	TraceResult tr;
@@ -3905,13 +3945,12 @@ void CKingpin::fireElectricBarrageLaser(void){
 
 
 
-//This is the strong loud single-fire one.
-//IMPORTANT NOTICE - the "arg_hitIntention" is not used yet, but if it ever is, give it a null check!
-//If we deem firint at just an enemyLKP okay, we need to allow arg_hitIntention to be null to say, at nothing in particular. Just the place.
+// This is the strong loud single-fire one.
+// IMPORTANT NOTICE - the "arg_hitIntention" is not used yet, but if it ever is, give it a null check!
+// If we deem firint at just an enemyLKP okay, we need to allow arg_hitIntention to be null to say, at nothing in particular. Just the place.
 void CKingpin::fireElectricDenseLaser(CBaseEntity* arg_hitIntention, const Vector& arg_hitTargetPoint){
 
 	playElectricLaserFireSound();
-
 
 	/*
 	if(arg_hitInteion == NULL){
@@ -3988,8 +4027,7 @@ void CKingpin::fireElectricDenseLaser(CBaseEntity* arg_hitIntention, const Vecto
 }
 
 
-//homing ball of doom! Or is if there are air nodes.
-//TODO - be super homing, not just a controller head ball clone.
+// homing ball of doom!
 void CKingpin::fireSuperBall(void){
 	
 	//create the ball
@@ -4138,8 +4176,6 @@ void CKingpin::createSpeedMissileHornet(const Vector& arg_location, const Vector
 
 
 
-
-
 //This logic comes up so much it may as well be turned into a simple method.
 BOOL CKingpin::turnToFaceEnemyLKP(void){
 	
@@ -4271,7 +4307,6 @@ void CKingpin::updateChargeEffect(void){
 
 
 	}//END OF chargeEffect NULL check
-
 
 }//END OF updateChargeEffect
 
@@ -4746,16 +4781,14 @@ void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float a
 	// Stop hornets and rockets from being persistent.
 	arg_toReflect->OnDeflected(this);
 
-	//Make me the owner to avoid touching me.  Is this ok?
-	//Things that have a separate owner instance/member variable (m_hOwner usually, like Snarks) need to handle
-	//that themselves in their own "OnDeflected" versions.
+	// Make me the owner to avoid touching me.  Is this ok?
+	// Things that have a separate owner instance/member variable (m_hOwner usually, like Snarks) need to handle
+	// that themselves in their own "OnDeflected" versions.
 	arg_toReflect->pev->owner = this->edict();
 
 
 	
-	//TODO - check.  If this is MOVETYPE_TOSS or MOVETYPE_MISSLEBOUNCE, see if we can anticipate the pull from gravity too in 0.3 seconds.
-	// proabably not a huge difference anyways.
-	anticipatedProjectileOrigin = arg_toReflect->pev->origin + arg_toReflect->GetVelocityLogical() * (0.3 * arg_delayFactor);
+	anticipatedProjectileOrigin = arg_toReflect->pev->origin + arg_toReflect->GetVelocityLogical() * (REFLECT_BASE_DELAY * arg_delayFactor);
 
 	if(arg_toReflect->pev->movetype == MOVETYPE_TOSS || arg_toReflect->pev->movetype == MOVETYPE_BOUNCE ){
 		// anticipate the effect of gravity.
@@ -4763,7 +4796,7 @@ void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float a
 		if(arg_toReflect->pev->gravity == 0){
 			gravityFactor = 1; //implied?
 		}
-		anticipatedProjectileOrigin = anticipatedProjectileOrigin + Vector(0, 0, gravityFactor * g_psv_gravity->value * 0.3f * arg_delayFactor);
+		anticipatedProjectileOrigin = anticipatedProjectileOrigin + Vector(0, 0, gravityFactor * g_psv_gravity->value * REFLECT_BASE_DELAY * arg_delayFactor);
 	}
 
 
@@ -4772,7 +4805,7 @@ void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float a
 	
 	//SAFETY. Did I create the effect?
 	if(m_pReflectEffect[emptyReflectHandleID]){
-		m_pReflectEffect[emptyReflectHandleID]->AnimationScaleFadeIn_TimeTarget(1.1, 0.8f, 170, 0.3 * arg_delayFactor);
+		m_pReflectEffect[emptyReflectHandleID]->AnimationScaleFadeIn_TimeTarget(1.1, 0.8f, 170, REFLECT_BASE_DELAY * arg_delayFactor);
 
 		//was arg_delayFactor.
 		m_flReflectEffect_EndDelayFactor[emptyReflectHandleID] = 1.0f;  // always take the same amount of time to end.  We need to see it.
@@ -4780,15 +4813,13 @@ void CKingpin::attemptReflectProjectileStart(CBaseEntity* arg_toReflect, float a
 		//Good, now set this slot up to reflect this entity soon with an effect.
 		m_pEntityToReflect[emptyReflectHandleID] = arg_toReflect;
 
-		m_flReflectEffectApplyTime[emptyReflectHandleID] = gpGlobals->time + 0.3 * arg_delayFactor;
+		m_flReflectEffectApplyTime[emptyReflectHandleID] = gpGlobals->time + REFLECT_BASE_DELAY * arg_delayFactor;
 		//m_flReflectEffectExpireTime[emptyReflectHandleID] = gpGlobals->time + 0.6 * arg_delayFactor;
-		m_flReflectEffectExpireTime[emptyReflectHandleID] = m_flReflectEffectApplyTime[emptyReflectHandleID] + 0.3 * 1.0f; //* arg_delayFactor;
+		m_flReflectEffectExpireTime[emptyReflectHandleID] = m_flReflectEffectApplyTime[emptyReflectHandleID] + REFLECT_BASE_DELAY * 1.0f; //* arg_delayFactor;
 		
 	}//END OF ReflectEffect creation check
 	else{
-		//WTF!!!!????
-		easyForcePrintLine("Sure is Zarbon in here");
-		int x = 66666;
+		
 	}
 
 }//END OF attemptReflectProjectileStart

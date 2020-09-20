@@ -632,6 +632,7 @@ void CArcher::Precache( void )
 	PRECACHE_SOUND_ARRAY(pAttackHitSounds);
 	PRECACHE_SOUND_ARRAY(pAttackMissSounds);
 	*/
+	PRECACHE_SOUND("x/x_shoot1.wav");
 
 	global_useSentenceSave = FALSE;
 
@@ -2566,6 +2567,10 @@ void CArcher::HandleEventQueueEvent(int arg_eventID){
 			WRITE_BYTE( 10 );	// life * 10
 			WRITE_COORD( 32 ); // decay
 		MESSAGE_END();
+
+
+		int pitch = 113 + RANDOM_LONG(0, 8);
+		UTIL_PlaySound( edict(), CHAN_VOICE, "x/x_shoot1.wav", 1.0, ATTN_NORM - 0.6f, 0, pitch );
 
 		CBaseMonster *pBall = (CBaseMonster*)Create( "archer_ball", vecStart, pev->angles, edict() );
 
