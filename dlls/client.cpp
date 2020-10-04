@@ -235,6 +235,53 @@ HiddenCVarInfo_t aryHiddenCVarInfo[] = {
 
 
 
+// TEST:  What of this will compile in VS6?
+// (tested: this section uncommented out by removing the
+//  asterisk section starting below)
+///////////////////////////////////////////////////////////
+/*
+namespace SomeEnumNamespace{
+	enum SomeEnum{
+		ABC,
+		DEF,
+		GHI
+	};
+}
+namespace SomeUnnamedEnumNamespace{
+	enum{
+		JKL,
+		MNO,
+		PQR
+	};
+}
+
+
+void TEST_ENUM_NAME(void){
+	// No other combos are possible.  Any reference to anything in the namespace
+	// must start with the namespace, and using the namespace alone isn't
+	// specific enough to tell "SomeEnum" was wanted for the type.
+	// But for getting an enum choice of SomeEnum,  referring to it without
+	// involving 'SomeEnum' works fine.
+	// The point is to get around the odd restriction of VS6 of disallowing
+	// references to named enums.  Without the namespace above, lines like
+	//     someVal = SomeEnum::ABC;
+	// will lead to compile errors, while lines like
+	//     someVal = ABC;
+	// work fine.  What.  Why.
+
+	// This way doesn't work in VS6.
+	//SomeEnumNamespace::SomeEnum myEnum1 = SomeEnumNamespace::SomeEnum::ABC;
+	
+	// Both of these work!
+	SomeEnumNamespace::SomeEnum myEnum2 = SomeEnumNamespace::ABC;
+	// only way for the unnamed one.
+	int myEnum3 = SomeUnnamedEnumNamespace::JKL;
+}
+*/
+///////////////////////////////////////////////////////////
+
+
+
 
 
 

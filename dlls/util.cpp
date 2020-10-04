@@ -245,6 +245,7 @@ extern float g_hgrunt_allyDeadRecentlyAgainTime;
 extern float g_scientist_PredisasterSuitMentionAllowedTime;
 extern float g_scientist_HeadcrabMentionAllowedTime;
 extern float g_scientist_sayGetItOffCooldown;
+extern int g_TalkMonster_PlayerDead_DialogueMod;
 // barney
 extern float g_sayBulletHitCooldown;
 
@@ -263,6 +264,8 @@ void resetGlobalVars(void) {
 	g_scientist_PredisasterSuitMentionAllowedTime = -1;
 	g_scientist_HeadcrabMentionAllowedTime = -1;
 	g_scientist_sayGetItOffCooldown = -1;
+
+	g_TalkMonster_PlayerDead_DialogueMod = 0;
 
 	g_sayBulletHitCooldown = -1;
 

@@ -479,6 +479,13 @@ public:
 
 	BOOL alreadySentSatchelOutOfAmmoNotice;
 
+	int deadStage;
+	float nextDeadStageTime;
+	
+	int recentDeadPlayerFollowersCount;
+	EHANDLE recentDeadPlayerFollowers[5];
+
+
 	
 	//MODDD - TODO.  Keep in synch with the client.  That's gonna be fun.
 	// How about a message to set each one at startup/spawn, and another
@@ -699,6 +706,9 @@ public:
 
 	void WaterMove( void );
 	void EXPORT PlayerDeathThink( void );
+
+	void HandleDeadStage(void);
+
 	void PlayerUse( void );
 
 	void CheckSuitUpdate();
@@ -808,6 +818,8 @@ public:
 	BOOL usesSoundSentenceSave(void);
 
 	void SetGravity(float newGravityVal);
+
+	void RecordFollowers(void);
 
 	//MODDD - NEW.  Also inline now, very simple method and consistent for client/serverside.
 	// HOWEVER, this is only for easily compiling in both places.

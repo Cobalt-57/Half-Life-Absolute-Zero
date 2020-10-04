@@ -16,6 +16,7 @@
 #define TALKMONSTER_H
 
 #include "basemonster.h"
+#include "player.h"
 
 //=========================================================
 // Talking monster base class
@@ -108,7 +109,7 @@ enum
 	TASK_TLK_IDEALYAW_TIGHT,
 	TASK_TLK_SPEAK_CAUTIOUS,
 	TASK_TLK_SPEAK_PASSIVE,
-	
+	TASK_PLAY_KNEEL_SEQUENCE,
 
 	LAST_TALKMONSTER_TASK,			// MUST be last
 };
@@ -155,6 +156,8 @@ public:
 	float nextMadEffect;
 	BOOL madDir;
 	BOOL canGoRavingMad;
+	float kneelSoundDelay;
+
 
 	//This is a talk monster because the "TalkMonster" class is unaware of its children.  Can still work thanks to virtual methods.
 	CTalkMonster* scientistTryingToHealMe;
@@ -173,6 +176,7 @@ public:
 	float nextUseSentenceAllowed;
 	float nextIdleFidgetAllowedTime;
 
+	EHANDLE deadPlayerFocus;
 
 	//MODDD
 	const char* madSentences[5];
@@ -200,7 +204,10 @@ public:
 	virtual void ReportAIState(void);
 
 	virtual void OnCineCleanup(CCineMonster* pOldCine);
-	
+
+	virtual void ChangeScheduleToApproachDeadPlayer(Vector deadPlayerOrigin);
+	virtual void ChangeScheduleToApproachDeadPlayerKneel(Vector deadPlayerOrigin);
+
 	//MODDD - also new.
 	virtual void playPissed();
 	virtual void playInterPissed();
@@ -338,6 +345,7 @@ public:
 	virtual void SayStopShooting(void);
 	virtual void SaySuspicious(void);
 	virtual void SayLeaderDied(void);
+	virtual void SayKneel(void);
 	virtual void SayNearPassive(void);
 	virtual void OnNearCautious(void);
 	virtual void SayNearCautious(void);
@@ -365,6 +373,10 @@ public:
 
 	
 	CUSTOM_SCHEDULES;
+
+	CBasePlayer* nearestVisibleDeadPlayer(void);
+	virtual void OnPlayerDead(CBasePlayer* arg_player);
+	virtual void OnPlayerFollowingSuddenlyDead(void);
 
 	virtual void initiateAss();
 

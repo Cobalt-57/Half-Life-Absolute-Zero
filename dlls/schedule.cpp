@@ -1051,6 +1051,7 @@ void CBaseMonster::RunTask ( Task_t *pTask )
 	case TASK_FACE_ROUTE:
 	case TASK_FACE_PREV_LKP:
 	case TASK_FACE_BEST_SOUND:
+	case TASK_FACE_GOAL:
 		{
 			if(pTask->iTask == TASK_FACE_TARGET && this->m_hTargetEnt == NULL){
 				// if told to face a target that does not / no longer exists, stop.
@@ -2505,7 +2506,23 @@ void CBaseMonster::StartTask ( Task_t *pTask )
 		MakeIdealYaw ( m_vecLastPosition );
 		SetTurnActivity(); 
 		break;
-
+	case TASK_FACE_GOAL:
+		{
+		WayPoint_t* myGoalNode = GetGoalNode();
+		if(myGoalNode != NULL){
+			MakeIdealYaw(myGoalNode->vecLocation);
+			if (FacingIdeal()){
+				TaskComplete();
+				return;
+			}
+			SetTurnActivity(); 
+		}else{
+			// ??????    what.  no goal node.
+			TaskComplete();
+		}
+		break;
+		}
+	break;
 	case TASK_FACE_TARGET:
 		if ( m_hTargetEnt != NULL )
 		{

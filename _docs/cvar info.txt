@@ -1604,6 +1604,9 @@ sv_turret_postdeath (0) - MODEVAR.  Affects what happens when a mounted turret (
 cl_mp5_evil_skip (0) - BOOL.  If on, resembles old behavior seen in some demo footage: every second time the mp5 fires while firing continuously or near-continuously, it skips re-starting the firing sequence.
 - The rest of the other effects (muzzle flash, ejected shell, etc.) are unaffected.
 
+sv_rpg_projectile_model (1) - MODEVAR.  Picks what model the RPG uses.  Logic unaffected.
+0: retail default (rpgrocket.mdl)
+1: mp5 grenade (grenade.mdl)
 
 egonRadiusDamageMode (0) - MODEVAR.  Whether the egon's wide (secondary) fire deals radius damage.
 0: retail (depends on the game being single/multi player)

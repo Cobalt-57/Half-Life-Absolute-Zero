@@ -212,7 +212,7 @@
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PrecompiledHeaderOutputFile>.\$(configuration)\client.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\$(configuration)\$(TargetName).pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\$(configuration)\</AssemblerListingLocation>
       <ObjectFileName>.\$(configuration)\</ObjectFileName>
       <ProgramDataBaseFileName>.\$(configuration)\</ProgramDataBaseFileName>
@@ -229,29 +229,29 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;winmm.lib;../utils/vgui/lib/win32_vc6/vgui.lib;../lib/steam_api.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\$(configuration)\client.dll</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\$(configuration)\client.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\$(configuration)\$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <ImportLibrary>.\$(configuration)\client.lib</ImportLibrary>
+      <ImportLibrary>.\$(configuration)\$(TargetName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(configuration)\client.bsc</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).bsc</OutputFile>
     </Bscmake>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy ".\$(configuration)\client.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.dll"
+      <Command>copy ".\$(configuration)\$(TargetName).dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.dll"
 
-copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.pdb"</Command>
+copy ".\$(configuration)\$(TargetName).pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.pdb"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -278,7 +278,7 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\$(configuration)\client.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\$(configuration)\$(TargetName).pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\$(configuration)\</AssemblerListingLocation>
       <ObjectFileName>.\$(configuration)\</ObjectFileName>
       <ProgramDataBaseFileName>.\$(configuration)\</ProgramDataBaseFileName>
@@ -294,31 +294,31 @@ copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGH
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;../utils/vgui/lib/win32_vc6/vgui.lib;../lib/steam_api.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\$(configuration)\client.dll</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ProgramDatabaseFile>.\$(configuration)\client.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\$(configuration)\$(TargetName).pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\Release/client.map</MapFileName>
+      <MapFileName>.\$(configuration)\$(TargetName).map</MapFileName>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <ImportLibrary>.\$(configuration)\client.lib</ImportLibrary>
+      <ImportLibrary>.\$(configuration)\$(TargetName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(configuration)\client.bsc</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).bsc</OutputFile>
     </Bscmake>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy ".\$(configuration)\client.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.dll"
+      <Command>copy ".\$(configuration)\$(TargetName).dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.dll"
 
-copy ".\$(configuration)\client.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.pdb"</Command>
+copy ".\$(configuration)\$(TargetName).pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\cl_dlls\client.pdb"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1260,7 +1260,6 @@ BOOL CBaseEntity::FVisible ( CBaseEntity *pEntity )
 // FVisible - returns true if a line can be traced from
 // the caller's eyes to the target vector
 //=========================================================
-//MODDD - NAME YOUR STUFF PEOPLE!  "vecOrigin" for a paramater? Origin of what?!
 BOOL CBaseEntity::FVisible ( const Vector &vecTargetOrigin )
 {
 	TraceResult tr;

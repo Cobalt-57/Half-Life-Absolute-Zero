@@ -206,6 +206,7 @@ public:
 	
 	void HandleEventQueueEvent(int arg_eventID);
 
+	BOOL predictRangeAttackEnd(void);
 
 	float m_flLastShot;
 	float m_flDiviation;
@@ -805,13 +806,8 @@ void CHAssassin::HAssassinTouch( CBaseEntity* pOther ){
 
 void CHAssassin::MonsterThink(){
 
-
-
-
 	//If we touched something a little while ago, check below for the ground for landing.
 	if(groundTouchCheckDuration != -1){
-
-		
 
 		if(gpGlobals->time <= groundTouchCheckDuration){
 			if(pev->movetype == MOVETYPE_TOSS){
@@ -1641,11 +1637,26 @@ void CHAssassin::RunTask ( Task_t *pTask )
 		
 	break;
 	case TASK_RANGE_ATTACK2:
-		if(m_fSequenceFinished == TRUE){
-			//done.
+
+		CBaseMonster::RunTask(pTask);
+
+
+		if(pev->frame >= 200){
+			// go ahead.
+			TaskComplete();
+		}
+
+		
+		//if(m_fSequenceFinished == TRUE){
+		if(TaskIsComplete()){
+			// complete from the 'RunTask' call above?  about to end?
+			// TODO: would make more sense for this step to be its own task after this one
+			// in a custom 'hassassinThrowGrenade' schedule.
+			// done.
 			SetActivity(ACT_COMBAT_IDLE);
 			//m_IdealActivity = ACT_RESET;
-			TaskComplete();
+			// alreay handled above then.
+			//TaskComplete();
 		}
 	break;
 
@@ -2371,5 +2382,7 @@ void CHAssassin::HandleEventQueueEvent(int arg_eventID){
 }//END OF HandleEventQueueEvent
 
 
-
+BOOL CHAssassin::predictRangeAttackEnd(void) {
+	return TRUE;
+}
 

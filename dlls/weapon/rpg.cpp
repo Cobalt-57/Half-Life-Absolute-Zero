@@ -16,9 +16,7 @@
 
 
 
-
-
-//MODDDD TODO - 
+//MODDDD TODO - (some of these may already be fixed)
 /*
   0. Rockets check to see if there is any entity with classname "laser_spot" at all.
      In multiplayer, does that mean rockets will arbitrarily pick one laser spot to follow if both are
@@ -55,7 +53,6 @@
 // FFFFFFFFfffffffffffffffaaaaaaaannnn-tastic.
 
 
-
 #pragma once
 
 #include "extdll.h"
@@ -79,8 +76,9 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_infiniteammo)
 EASY_CVAR_EXTERN(cl_rockettrail)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketSkipIgnite)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney)
-EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_rpg_clipless)
+EASY_CVAR_EXTERN(sv_rpg_projectile_model)
+
 
 //MODDD - don't ask.
 void saySomethingBarneyRocket(CBaseEntity* entRef);
@@ -97,8 +95,7 @@ LINK_ENTITY_TO_CLASS( laser_spot, CLaserSpot );
 
 //=========================================================
 //=========================================================
-CLaserSpot *CLaserSpot::CreateSpot( void )
-{
+CLaserSpot *CLaserSpot::CreateSpot( void ){
 	CLaserSpot *pSpot = GetClassPtr( (CLaserSpot *)NULL );
 	pSpot->Spawn();
 
@@ -213,8 +210,9 @@ CRpgRocket *CRpgRocket::CreateRpgRocket( Vector vecOrigin, Vector vecAngles, Vec
 	//MODDD - fine, but make sure we set vecMoveDirectionMemory to that.
 	pRocket->pev->angles = vecAngles;
 
+
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) == 1){
-		pRocket->pev->angles.x -= 90;
+		pRocket->pev->angles.x -= 270;
 	}
 
 	pRocket->vecMoveDirectionMemory = arg_vecMoveDirection;
@@ -240,7 +238,7 @@ void saySomethingBarneyRocket(CBaseEntity* entRef){
 	float attenuationChoice = ATTN_NORM - 0.5f;
 	int theChoice = (int)RANDOM_LONG(0, 27);
 
-	//CHAN_VOICE? CHAN_WEAPON?
+	//CHAN_VOICE? CHAN_WEAPON?  Not CHAN_STATIC, it can't be interrupted by plaing NULL on CHAN_STATIC.
 	int channelChoice = CHAN_VOICE;
 
 	//easyForcePrintLine("HERE? %d", theChoice);
@@ -346,13 +344,18 @@ void CRpgRocket::Spawn( void )
 	pev->movetype = MOVETYPE_BOUNCE;
 	pev->solid = SOLID_BBOX;
 
-
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) != 1){
-		SET_MODEL(ENT(pev), "models/rpgrocket.mdl");
+		// Not going to change precaches from this, the mp5 grenade and rpg model are both preached always anyway
+		if(EASY_CVAR_GET(sv_rpg_projectile_model) != 1){
+			// default
+			SET_MODEL(ENT(pev), "models/rpgrocket.mdl");
+		}else{
+			// use the mp5 grenade model instead
+			SET_MODEL(ENT(pev), "models/grenade.mdl");
+		}
 	}else{
 		SET_MODEL(ENT(pev), "models/barney.mdl");
 	}
-
 
 	UTIL_SetSize(pev, Vector( 0, 0, 0), Vector(0, 0, 0));
 	UTIL_SetOrigin( pev, pev->origin );
@@ -361,7 +364,6 @@ void CRpgRocket::Spawn( void )
 
 	SetThink( &CRpgRocket::IgniteThink );
 	SetTouch( &CGrenade::ExplodeTouch );
-
 
 	if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(rocketSkipIgnite) != 1){
 
@@ -408,46 +410,38 @@ void CRpgRocket::Spawn( void )
 
 //=========================================================
 //=========================================================
-void CRpgRocket::RocketTouch ( CBaseEntity *pOther )
-{
-	if( m_pLauncher ){
-		// my launcher is still around, tell it I'm dead.
-		m_pLauncher->m_cActiveRockets--;
-		alreadyDeleted = TRUE;
-	}else{
-		easyForcePrintLine("CRpgRocket RED ALERT A: ROCKET LAUNCHER MISSING?! WHAT");
-	}
-
-	UTIL_StopSound( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
+void CRpgRocket::RocketTouch ( CBaseEntity *pOther ){
+	commonPreDelete();
 	ExplodeTouch( pOther );
-
-	
-	//making any noise? stop.
-	EMIT_SOUND( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
-	EMIT_SOUND( edict(), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_IDLE );
-	//UTIL_StopSound(edict(), CHAN_VOICE, "");
-	//UTIL_StopSound(edict(), CHAN_WEAPON, "");
-
 }
 
-void CRpgRocket::onDelete(){
-	//Should this be deleted, at least formally, remove a rocket.
+void CRpgRocket::onDelete(void){
+	commonPreDelete();
+}
 
+void CRpgRocket::commonPreDelete(void){
+	
 	if(!alreadyDeleted){
-		//easyForcePrintLine("CRpgRocket AHA! I GOT YOU");
 		if( m_pLauncher ){
 			// my launcher is still around, tell it I'm dead.
 			m_pLauncher->m_cActiveRockets--;
+			alreadyDeleted = TRUE;
 		}else{
-			easyForcePrintLine("CRpgRocket RED ALERT B: ROCKET LAUNCHER MISSING?! WHAT");
+			easyPrintLine("CRpgRocket RED ALERT B: ROCKET LAUNCHER MISSING?! WHAT");
 		}
 	}
 
-	
-	//making any noise? stop.
+	UTIL_StopSound( edict(), CHAN_VOICE, "weapons/rocket1.wav" );
+
+	// making any noise? stop.
 	EMIT_SOUND( edict(), CHAN_VOICE, "common/null.wav", 1.0, ATTN_IDLE );
 	EMIT_SOUND( edict(), CHAN_WEAPON, "common/null.wav", 1.0, ATTN_IDLE );
-}
+	//EMIT_SOUND( edict(), CHAN_STATIC, "common/null.wav", 1.0, ATTN_IDLE );
+	//UTIL_StopSound(edict(), CHAN_VOICE, "");
+}//commonDelete
+
+
+
 
 float CRpgRocket::massInfluence(void){
 	return 0.23f;
@@ -458,9 +452,7 @@ int CRpgRocket::GetProjectileType(void){
 }
 
 
-
 Vector CRpgRocket::GetVelocityLogical(void){
-
 	//probably fine?
 	return pev->velocity;
 }
@@ -491,12 +483,10 @@ void CRpgRocket::Precache( void )
 		PRECACHE_SOUND("barney/c1a4_ba_octo3.wav");
 		PRECACHE_SOUND("barney/c1a4_ba_octo4.wav");
 	}
-
 }
 
 
-void CRpgRocket::IgniteThink( void  )
-{
+void CRpgRocket::IgniteThink( void  ){
 	// pev->movetype = MOVETYPE_TOSS;
 	pev->movetype = MOVETYPE_FLY;
 	
@@ -509,7 +499,8 @@ void CRpgRocket::IgniteThink( void  )
 		// make rocket sound
 		EMIT_SOUND( ENT(pev), CHAN_VOICE, "weapons/rocket1.wav", 1, 0.5 );
 	}else{
-		EMIT_SOUND( ENT(pev), CHAN_WEAPON, "weapons/rocket1.wav", 0.17, 0.5 );
+		// wanna hear barney
+		EMIT_SOUND( ENT(pev), CHAN_WEAPON, "weapons/rocket1.wav", 0.085, 0.3 );
 	}
 
 
@@ -626,7 +617,7 @@ void CRpgRocket::FollowThink( void  )
 
 			if(EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) == 1){
 				//reduce it instead, we need to make sure we don't miss the glory of barney.
-				maxSpeed = 450;
+				maxSpeed = 370;
 			}
 
 			if (pev->velocity.Length() > maxSpeed)
@@ -963,12 +954,14 @@ BOOL CRpg::Deploy( )
 	forceHideSpotTime = -1;
 #endif
 
-	if ( GetClip() == 0 )
-	{
+	// uhh. what.
+	/*
+	if ( GetClip() == 0 ){
 		return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW_UL, "rpg", 0, 0, (16.0/30.0), -1 );
 	}
-
 	return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW1, "rpg", 0, 0, (16.0/30.0), -1 );
+	*/
+	return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW, "rpg", 0, 0, (16.0/30.0), -1 );
 }
 
 
@@ -1004,11 +997,14 @@ void CRpg::Holster( int skiplocal /* = 0 */ )
 
 	//MODDD - also going to involve whether the RPG is loaded while holstered (HOLSTER1) or not (HOLSTER2).
 	//
+	/*
 	if(GetClip()){
 		holsterAnimToSend = RPG_HOLSTER1;
 	}else{
 		holsterAnimToSend = RPG_HOLSTER2;
 	}
+	*/
+	holsterAnimToSend = RPG_HOLSTER;
 
 #ifndef CLIENT_DLL
 	forceHideSpotTime = -1;
@@ -1150,13 +1146,21 @@ void CRpg::WeaponIdle( void )
 	if ( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
+
+	
+	int iAnim = RPG_IDLE;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 91.0 / 30.0 + randomIdleAnimationDelay();
+	SendWeaponAnim( iAnim );
+
+
+
+	/*
 	//MODDD - requirement for idle anim removed.
 	//if ( PlayerPrimaryAmmoCount() > 0)
 	{
 		int iAnim;
 		float flRand = UTIL_SharedRandomFloat( m_pPlayer->random_seed, 0, 1 );
-		if (flRand <= 0.75 || m_fSpotActive)
-		{
+		if (flRand <= 0.75 || m_fSpotActive){
 			if (GetClip() == 0) {
 				iAnim = RPG_IDLE_UL;
 			}else{
@@ -1164,28 +1168,18 @@ void CRpg::WeaponIdle( void )
 			}
 
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 90.0 / 15.0 + randomIdleAnimationDelay();
-		}
-		else
-		{
-
-			/*
+		}else{
 			//MODDD - a RPG_FIDGET_UL sequence (that number) was never provided in the model, nor for ours as of now. Why was it called anyways?
-			if ( m_iClip == 0 )
-				iAnim = RPG_FIDGET_UL;
-			else
-				iAnim = RPG_FIDGET;
-			*/
-
+			//if ( m_iClip == 0 )
+			//	iAnim = RPG_FIDGET_UL;
+			//else
+			//	iAnim = RPG_FIDGET;
+			
 			if (GetClip() == 0) {
 				iAnim = RPG_FIDGET;
-			}
-			else {
+			}else {
 				iAnim = RPG_FIDGET;    //Or pick RPG_IDLE instead if unloaded?
 			}
-
-
-
-
 			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 90.0 / 15.0 + randomIdleAnimationDelay();// + 3.0;
 		}
 
@@ -1195,7 +1189,9 @@ void CRpg::WeaponIdle( void )
 	//{
 	//	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1;
 	//}
-}
+	*/
+
+}//WeaponIdle
 
 
 

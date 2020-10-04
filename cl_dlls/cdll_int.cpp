@@ -99,6 +99,9 @@ TeamFortressViewport* gViewPort = NULL;
 BOOL hasAutoMus = FALSE;
 float globalPSEUDO_drawHUDMem = -1;
 
+// Var from the mp5, used in the 'ancient SDK'.
+// (renamed from m_flNextAnimTime; no longer in mp5.cpp)
+float g_cl_mp5_NextAnimTime;
 
 
 
@@ -292,6 +295,8 @@ int DLLEXPORT HUD_VidInit( void )
 
 	g_cl_mapStartTime = -1;	
 	g_StudioRenderer.m_nCachedFrameCount = -1;
+
+	g_cl_mp5_NextAnimTime = -1;
 
 
 

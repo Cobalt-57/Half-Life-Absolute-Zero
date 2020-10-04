@@ -145,6 +145,7 @@ public:
 	void SayStopShooting(void);
 	void SaySuspicious(void);
 	void SayLeaderDied(void);
+	void SayKneel(void);
 	void SayNearPassive(void);
 
 	void OnNearCautious(void);
@@ -153,6 +154,9 @@ public:
 
 	BOOL canResetBlend0(void);
 	BOOL onResetBlend0(void);
+
+	void OnPlayerDead(CBasePlayer* arg_player);
+	void OnPlayerFollowingSuddenlyDead(void);
 
 	void womboCombo(void);
 

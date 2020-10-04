@@ -38,6 +38,7 @@
 #include "player_extra.h"
 #include "util_debugdraw.h"
 #include "satchel.h"
+#include "talkmonster.h"
 // only included to see what some default AI schedules are such as "slSmallFlinsh" for another
 // monster.
 #include "defaultai.h"
@@ -117,6 +118,7 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)
 
 
+extern int g_TalkMonster_PlayerDead_DialogueMod;
 
 
 #define TRAIN_NEW		0xc0
@@ -429,10 +431,14 @@ TYPEDESCRIPTION	CBasePlayer::m_playerSaveData[] =
 	DEFINE_FIELD(CBasePlayer, recentRevivedTime, FIELD_TIME),
 
 	DEFINE_FIELD(CBasePlayer, alreadySentSatchelOutOfAmmoNotice, FIELD_BOOLEAN),
-
 	// ?
 	DEFINE_FIELD(CBasePlayer, m_flNextAmmoBurn, FIELD_FLOAT),
+	DEFINE_FIELD(CBasePlayer, deadStage, FIELD_INTEGER ),
+	DEFINE_FIELD(CBasePlayer, nextDeadStageTime, FIELD_TIME),
 	
+
+	DEFINE_ARRAY(CBasePlayer, recentDeadPlayerFollowers, FIELD_EHANDLE, 5),
+	DEFINE_FIELD(CBasePlayer, recentDeadPlayerFollowersCount, FIELD_INTEGER ),
 	
 	//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
 	//DEFINE_FIELD( CBasePlayer, m_fGameHUDInitialized, FIELD_INTEGER ), // only used in multiplayer games
@@ -2010,6 +2016,11 @@ void CBasePlayer::FadeMonster(){
 //        more neatly.
 GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 {
+	// for now, don't let NPC's talk.  Gets set back to 0 on a revive
+	g_TalkMonster_PlayerDead_DialogueMod = 1;
+
+	RecordFollowers();
+
 	//gee, I don't think you're doing this right now.
 	m_bHolstering = FALSE;
 	m_pQueuedActiveItem = NULL;
@@ -2645,9 +2656,10 @@ CBasePlayer::CBasePlayer(void){
 	recentlyPlayedSound[0] = '\0';
 
 	alreadySentSatchelOutOfAmmoNotice = FALSE;
+	deadStage = 0;
+	nextDeadStageTime = -1;
 
 	m_framesSinceRestore = 0;
-
 
 }//END OF CBasePlayer constructor
 
@@ -3025,11 +3037,20 @@ void CBasePlayer::PlayerDeathThink(void)
 
 	//...if execution wasn't stopped by the above check, the player is dead with no chance of revival.
 	
-	//MODDD - NEW.  Enforce taking away the solid-ness and let takedamage by DAMAGE_NO, why not.
-	// This avoids difficulties with stukabats landing that multiplayer doesn't have to deal with
-	// from the 'StartDeathCam' call further down.
-	pev->solid = SOLID_NOT;
-	pev->takedamage = DAMAGE_NO;
+
+
+	// NOTE - happens instantly for deadstage 0 since nextDeadStageTime stays at 0 (time has always surpassed it)
+	if(deadStage < 9 && gpGlobals->time >= nextDeadStageTime){
+		//MODDD - NEW.  Enforce taking away the solid-ness and let takedamage by DAMAGE_NO, why not.
+		// This avoids difficulties with stukabats landing that multiplayer doesn't have to deal with
+		// from the 'StartDeathCam' call further down.
+		pev->solid = SOLID_NOT;
+		pev->takedamage = DAMAGE_NO;
+
+		HandleDeadStage();
+	}//deadStage
+
+
 
 
 	//MODDD - if landed on the ground, send the same scent the AI does at death to alert scavengers (eaters) of this.
@@ -3200,14 +3221,363 @@ void CBasePlayer::StartObserver( Vector vecPosition, Vector vecViewAngle )
 	UTIL_SetOrigin( pev, vecPosition );
 }
 
+
+
+
+// On reaching the delay for setting the next deadStage, this method runs.  Also sets the delay for the next deadstage bump.
+// (also instantly for deadStage 0, or the moment it's decided that a revive won't happen).
+
+// optional idea when player is killed:
+//   hgrunt / hassault AI becomes friendly to talkmonsters, to allow them to come up and kneel.
+//   Talkmonsters will not make normal conversation anymore
+
+// SINGLEPLAYER ONLY.
+// When the player is killed...
+// - All normal conversation from talkmonsters (idlechat or conversations) is no longer allowed.  (switch that back if revived through cheats, cancel all this really)
+// - Of any monster(s) following the player at the time, pick the closest one as a guaranteed kneel-er.  Otherwise, leave that choice open for later.  Don't act on this yet.
+// - Any scientists nearby (500 radius) with a line of sight to the player, facing or not, and not already in a combat state will panic (scream more likely?) and run for cover.  Barnies with LOS may turn toward the player and make a startled/pain noise (if not preoccupied by being in a combat state).
+// - Wait a minimum of 12 seconds.  Within the first 4 seconds, scientists/barnies behave the same as above if looking at the player while in non-combat states.
+//   If any talkmonsters in a 700 radius are not in a combat state, wait for that.  When that happens, set a short delay (6 to 10 seconds).
+// --- The delay gets reset if this changes while it is running.
+// - Any talkmonster within a radius of 600 will come within a radius of 600 + line of sight.
+//   Wait 4-6 seconds.
+// - PICKING THE KNEELER.  If picked earlier from the closest follower, and that follower is still alive, that is one of the kneelers picked.  Pick the other (or both if no kneeler #1) from the closest NPC besides that (or top two closest NPCs if no #1).
+// - Picked kneelers will pathfind for a distance of 90 from the player to do kneel anims.  May have some line (dialogue) coming later, use filler for now.
+// 
+
+// deadStage  (used if player deadflag != DEAD_NO)
+// 0: (initial: should not be seen by monsters for very long, if at all; changed to 1 the first time PlayerDeathThink decides that a revive won't happen)
+// 1: (killed under 1 second ago).  Scientists not panicing or in combat or barnies not in combat can face me starting now.
+// 2: (killed under 4 seconds ago).  
+// 3: Waiting for the full 12 second delay.  No changed behavior during this time.
+// --- if any talkers are in a combat state, goto stage 4.  Otherwise goto stage 6.
+// 4: Every 2 seconds, check to see if any talkers are in a combat state. If not, goto 5 with a longer delay (6.5 sec).
+// 5: If yet still, no talkers in a combat state, goto stage 6.  Otherwise, revert to 4 (attempt to advance failed)
+// 6: All talkmonsters within 700 units given the order to come look.  Wait 3 seconds.
+// 7: Kneelers picked. instructed to come closer to do kneel animations + say line (filler as of now).  Wait 20 seconds.
+// 8: Waiting for post-death delay.
+// 9: Delay over, deadStage does not change anymore.
+//    --- tell talkers with a line of sight with a 60% chance to pick a random nearby node to walk to?
+
+
+
+void CBasePlayer::HandleDeadStage(void){
+	int i;
+	int i2;
+	edict_t* pEdict;
+	CBaseEntity* pTempEntity;
+	switch(deadStage){
+	case 0:{
+
+		pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+		if (!pEdict)return;
+		for (i = 1; i < gpGlobals->maxEntities; i++, pEdict++){
+			if (pEdict->free)	// Not in use
+				continue;
+			if (!(pEdict->v.flags & (FL_MONSTER)))	// Not a monster ?
+				continue;
+			pTempEntity = CBaseEntity::Instance(pEdict);
+			if (!pTempEntity)
+				continue;
+			if (!pTempEntity->isTalkMonster())
+				continue;
+			if(pTempEntity->IsAlive()){
+				// ok, let it know.  Might or might not actually do anything with that at this instant.
+				CTalkMonster* theTalker = static_cast<CTalkMonster*>(pTempEntity);
+				if(theTalker->m_MonsterState == MONSTERSTATE_PRONE){
+					// nope
+					continue;
+				}
+				theTalker->OnPlayerDead(this);
+			}
+
+		}//END OF through all entities.
+
+		deadStage++;
+		nextDeadStageTime = gpGlobals->time + 0.6;
+	}break;
+	case 1:{
+		// Make any talker not in a combat state (and scientist not panicing; stopped should be good enough) with line of sight to me face me.
+		
+
+		pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+		if (!pEdict)return;
+		for (i = 1; i < gpGlobals->maxEntities; i++, pEdict++){
+			if (pEdict->free)	// Not in use
+				continue;
+			if (!(pEdict->v.flags & (FL_MONSTER)))	// Not a monster ?
+				continue;
+			pTempEntity = CBaseEntity::Instance(pEdict);
+			if (!pTempEntity)
+				continue;
+			if (!pTempEntity->isTalkMonster())
+				continue;
+			if(!pTempEntity->IsAlive()){
+				continue;
+			}
+
+			CTalkMonster* theTalker = static_cast<CTalkMonster*>(pTempEntity);
+			if(theTalker->m_MonsterState == MONSTERSTATE_PRONE){
+				// nope
+				continue;
+			}
+
+			// Not moving, not in a combat state (convenient to look at me)? 
+			if(!theTalker->IsMoving() && theTalker->m_MonsterState != MONSTERSTATE_COMBAT && Distance(theTalker->pev->origin, this->pev->origin) < 700){
+				// have a direct line of sight?  Not already facing enough?
+				if(theTalker->FVisible(pev->origin) && UTIL_IsFacing(theTalker->pev, pev->origin, 0.06) ){
+					// Turn and face.
+					theTalker->MakeIdealYaw(this->pev->origin);
+					theTalker->ChangeSchedule(theTalker->GetScheduleOfType(SCHED_ALERT_FACE));
+				}
+			}
+
+		}//END OF through all entities.
+
+		deadStage++;
+		nextDeadStageTime = gpGlobals->time + 1.4;
+	}break;
+	case 2:{
+		// filler time.
+
+		deadStage++;
+		nextDeadStageTime = gpGlobals->time + 3;
+	}break;
+	case 3:{
+
+		BOOL anythingInCombat = FALSE;
+		// any talkmonsters in a combat state within a certain radius?
+
+			pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+			if (!pEdict)return;
+			for (i = 1; i < gpGlobals->maxEntities; i++, pEdict++){
+				if (pEdict->free)	// Not in use
+					continue;
+				if (!(pEdict->v.flags & (FL_MONSTER)))	// Not a monster ?
+					continue;
+				pTempEntity = CBaseEntity::Instance(pEdict);
+				if (!pTempEntity)
+					continue;
+				if (!pTempEntity->isTalkMonster())
+					continue;
+				if(!pTempEntity->IsAlive()){
+					continue;
+				}
+
+				CTalkMonster* theTalker = static_cast<CTalkMonster*>(pTempEntity);
+				if(theTalker->m_MonsterState == MONSTERSTATE_PRONE){
+					// do not count still
+					continue;
+				}
+
+				if(Distance(theTalker->pev->origin, this->pev->origin) < 700){
+					if(theTalker->m_MonsterState == MONSTERSTATE_COMBAT){
+						anythingInCombat = TRUE;
+						break;
+					}
+				}//DISTANCE MY buddy
+			}//END OF through all entities.
+
+
+			if(anythingInCombat){
+				// Do another check for anything in combat later.
+				deadStage = 3;
+				nextDeadStageTime = gpGlobals->time + 5;
+			}else{
+				// Skip this then
+				deadStage = 6;
+				HandleDeadStage();
+			}
+
+	}break;
+	case 5:{
+
+		/*
+		if(any monsters in combat){
+			// oops.  Revert.
+			deadStage = 4;
+			nextDeadStageTime = gpglobals->time + 2;
+		}else{
+			// Still safe?  Proceed
+			deadStage = 6;
+			HandleDeadStage();
+		}
+		*/
+	}break;
+	case 6:{
+		// all talkers come out to look at the dead player origin, if their 'deadPlayerFocus' is set to this
+		
+
+		// any talkmonsters in a combat state within a certain radius?
+
+		pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+		if (!pEdict)return;
+		for (i = 1; i < gpGlobals->maxEntities; i++, pEdict++){
+			if (pEdict->free)	// Not in use
+				continue;
+			if (!(pEdict->v.flags & (FL_MONSTER)))	// Not a monster ?
+				continue;
+			pTempEntity = CBaseEntity::Instance(pEdict);
+			if (!pTempEntity)
+				continue;
+			if (!pTempEntity->isTalkMonster())
+				continue;
+			if(!pTempEntity->IsAlive()){
+				continue;
+			}
+
+			CTalkMonster* theTalker = static_cast<CTalkMonster*>(pTempEntity);
+			if(theTalker->m_MonsterState == MONSTERSTATE_PRONE){
+				// do not count still
+				continue;
+			}
+
+			if(/*theTalker->FVisible(pev->origin) &&*/ Distance(theTalker->pev->origin, this->pev->origin) < 1400){
+				// COME TO ME friend
+
+				theTalker->ChangeScheduleToApproachDeadPlayer(this->pev->origin);
+			}//DISTANCE MY buddy
+		}//END OF through all entities.
+
+
+
+
+		deadStage++;
+		nextDeadStageTime = gpGlobals->time + 3;
+	}break;
+	case 7:{
+		// tell kneelers to come closer
+		// IDEA:  Test the picked kneelers (whether 1 is from the nearest following or top 2 closest)
+		// and see if they can route to the player.  Whatever can't, pick the next nearest instead.
+		// (was there some safe-route test method for that?  See around MOVE_TO_ENEMY_RANGE)
+
+		int ary_kneelers_count = 0;
+		int ary_kneelers_offset = 0;
+		CTalkMonster* ary_kneelers[2];
+
+		// First, look through the list of nearest followers.  Whichever of those is closest now can be a
+		// kneeler.
+		float bestDistoYet = 1200;
+		CTalkMonster* bestMofoYet = NULL;
+
+		for(i = 0; i < recentDeadPlayerFollowersCount; i++){
+			if(recentDeadPlayerFollowers[i] != NULL){
+				float thisDisto = Distance(recentDeadPlayerFollowers[i]->pev->origin, pev->origin);
+				if(thisDisto < bestDistoYet){
+					bestDistoYet = thisDisto;
+					bestMofoYet = static_cast<CTalkMonster*>(recentDeadPlayerFollowers[i].GetEntity());
+				}
+			}
+		}
+
+		if(bestMofoYet != NULL){
+			// pick it as #0
+			ary_kneelers[ary_kneelers_count] = bestMofoYet;
+			ary_kneelers_count++;
+			ary_kneelers_offset = 1;
+		}
+
+		// now. the two closest?
+
+
+		bestDistoYet = 1200;
+		//bestMofoYet = NULL;
+
+		pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+		if (!pEdict)return;
+		for (i = 1; i < gpGlobals->maxEntities; i++, pEdict++){
+			if (pEdict->free)	// Not in use
+				continue;
+			if (!(pEdict->v.flags & (FL_MONSTER)))	// Not a monster ?
+				continue;
+			pTempEntity = CBaseEntity::Instance(pEdict);
+			if (!pTempEntity)
+				continue;
+			if (!pTempEntity->isTalkMonster())
+				continue;
+			if(!pTempEntity->IsAlive()){
+				continue;
+			}
+
+			CTalkMonster* theTalker = static_cast<CTalkMonster*>(pTempEntity);
+			if(theTalker->m_MonsterState == MONSTERSTATE_PRONE){
+				// do not count still
+				continue;
+			}
+
+			BOOL skippo = FALSE;
+			// if already in the list, don't involve
+			for(i2 = 0; i2 < ary_kneelers_count; i2++){
+				if(theTalker->edict() == ary_kneelers[i2]->edict()){
+					skippo = TRUE;
+					break;
+				}
+			}
+			if (skippo)continue;
+
+
+			float thisDisto = Distance(theTalker->pev->origin, pev->origin);
+			if(thisDisto < bestDistoYet){
+				bestDistoYet = thisDisto;
+
+				// Idea:  on finding a best distance, goto the current ary_kneelers_offset place
+				// in ary_kneelers (ary_kneelers_offset is 1 if one was picked from being the nearest
+				// follower, it is 0 if there were no followers to choose from).
+				// Shift all positions above this up by one, and store the current ent into the current
+				// ary_kneelers_offset place.  That means whatever had the previous best distance would
+				// get the slot after this one (if there was more than 1 left from ary_kneelers_offset being 0).
+				// effect:
+				//[3] a       [3] b
+				//[2] b       [2] c
+				//[1] c       [1] d
+				//[0] d  -->  [0] *
+
+				//for(int i2 = ary_kneelers_offset; i2 < 2-1; i2++){
+				for(i2 = 2-1; i2 > ary_kneelers_offset; i2--){
+					ary_kneelers[i2] = ary_kneelers[i2-1];
+				}
+				ary_kneelers[ary_kneelers_offset] = theTalker;
+				// no more than 2 allowed
+				if(ary_kneelers_count < 2){
+					ary_kneelers_count++;
+				}
+			}//bestdist check
+
+		}//END OF through all entities.
+
+
+		// go through ary_kneelers, make em' come up closer to kneel
+		for (i2 = 0; i2 < ary_kneelers_count; i2++) {
+			ary_kneelers[i2]->ChangeScheduleToApproachDeadPlayerKneel(this->pev->origin);
+		}
+
+		//ChangeScheduleToApproachDeadPlayerKneel
+
+		deadStage++;
+		nextDeadStageTime = gpGlobals->time + 24;
+	}break;
+	case 8:{
+		// nothing special really, talkers can know this is the post-death period for any other dialogue about that (if it exists)
+
+		// DEAD TODO:  60% of the time, each walker with a line of sight to the player nearby picks a random node nearby to walk to?
+		// maybe not.
+
+		// allow post death conversation now, if ever implemented.
+		g_TalkMonster_PlayerDead_DialogueMod = 2;
+
+		deadStage++;
+	}break;
+	}//switch on deadStage
+
+}//HandleDeadStage
+
+
+
+
 // 
 // PlayerUse - handles USE keypress
 //
-
-
-
-void CBasePlayer::PlayerUse ( void )
-{
+void CBasePlayer::PlayerUse ( void ){
 	// Was use pressed or released?
 	if ( ! ((pev->button | m_afButtonPressed | m_afButtonReleased) & IN_USE) )
 		return;
@@ -6305,6 +6675,7 @@ void CBasePlayer::_commonReset(void){
 	m_bitsDamageTypeForceShow = 0;
 	m_bitsDamageTypeModForceShow = 0;
 
+	recentDeadPlayerFollowersCount = 0;
 }//END OF _commonReset
 
 
@@ -6569,6 +6940,15 @@ void CBasePlayer::Spawn( BOOL revived ){
 	//easyPrintLine("IS SPAWN CALLED?!");
 
 	//PRECACHE_MODEL("models/player/gman/Gman.mdl");
+
+
+	// DEAD TODO:  any talkmonsters with a 'deadPlayerFocus' of this player will
+	// get 'TaskFail()' called to cancel whatever they're doing.  Drop the talk restriction.
+	// while(each talkmonster talkmonster->TaskFail();
+	g_TalkMonster_PlayerDead_DialogueMod = 0;
+	deadStage = 0;
+	nextDeadStageTime = -1;
+	recentDeadPlayerFollowersCount = 0;
 
 
 	pev->classname = MAKE_STRING("player");
@@ -7090,6 +7470,17 @@ int CBasePlayer::Restore( CRestore &restore )
 	// Need to keep this in synch with the physics key since loading?
 	SetGravity(pev->gravity);
 
+
+	if(!IsMultiplayer() && pev->deadflag != DEAD_NO){ //recoveryIndex == 3){
+		// don't know how that could happen
+		if(deadStage < 8){
+			// not to the post-death yet.
+			g_TalkMonster_PlayerDead_DialogueMod = 1;
+		}else{
+			// 8 technically isn't post-death but eh.  count for coming from a load game here anyway.
+			g_TalkMonster_PlayerDead_DialogueMod = 2;
+		}
+	}
 
 	return status;
 }//Restore
@@ -9867,6 +10258,101 @@ void CBasePlayer::SetGravity(float newGravityVal){
 	}
 	
 }
+
+
+// At the time of death, record any entities following the player
+// (up to 5, don't really see any higher of a count being useful)
+void CBasePlayer::RecordFollowers(void){
+	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	CBaseEntity *pEntity;
+	float closestDistanceYet = 2000;
+	int dickIndex = 0;
+	if ( !pEdict ){
+		return;
+	}
+
+	// reset for safety
+	recentDeadPlayerFollowersCount = 0;
+
+
+	for ( int i = 1; i < gpGlobals->maxEntities; i++, pEdict++ )
+	{
+		if ( pEdict->free )	// Not in use
+			continue;
+		if ( !(pEdict->v.flags & (FL_CLIENT|FL_MONSTER)) )	// Not a client/monster ?
+			continue;
+
+		pEntity = CBaseEntity::Instance(pEdict);
+		if ( !pEntity ){
+			continue;
+		}
+
+		const char* theClassname = pEntity->getClassname();
+
+		CBaseMonster* tempMonster = pEntity->MyMonsterPointer();
+		if(tempMonster == NULL || FClassnameIs(tempMonster->pev, "player")){
+			continue;  //not players or non-monsters.
+		}
+
+		if(!tempMonster->isTalkMonster()){
+			// only TalkMonsters can be followers
+			continue;
+		}
+		if(!tempMonster->IsAlive()){
+			continue;
+		}
+
+		CTalkMonster* daTalkah = static_cast<CTalkMonster*>(tempMonster);
+		// Is this talker following anything, and is it following me?
+		if(daTalkah->m_MonsterState == MONSTERSTATE_PRONE){
+			// nope
+			continue;
+		}
+
+		if(daTalkah->IsFollowing() && daTalkah->m_hTargetEnt->edict() == this->edict()){
+			// ok, record it
+			
+			
+			if(recentDeadPlayerFollowersCount < 5){
+				// record anything, pick the closest of these another time.
+				recentDeadPlayerFollowers[recentDeadPlayerFollowersCount] = daTalkah;
+				recentDeadPlayerFollowersCount++;
+				// (but still record the current closest just in case)
+				float theDista = Distance(daTalkah->pev->origin, this->pev->origin);
+				if(theDista < closestDistanceYet){
+					closestDistanceYet = theDista;
+				}
+
+			}else{
+				float theDista = Distance(daTalkah->pev->origin, this->pev->origin);
+				if(theDista < closestDistanceYet){
+					// If this is better than the closest distance yet, go ahead
+					// and overwrite some point on the array.
+					closestDistanceYet = theDista;
+					recentDeadPlayerFollowers[dickIndex] = daTalkah;
+					dickIndex++;
+					if(dickIndex >= 5){
+						// start over at 0 if this gets too high
+						dickIndex = 0;
+					}
+				}
+			}
+			
+		}//daTalkah following check
+
+
+
+	}//END OF through all entities.
+
+
+}//RecordFollowers
+
+
+
+
+
+
+
 
 
 

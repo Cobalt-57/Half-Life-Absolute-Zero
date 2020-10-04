@@ -40,14 +40,18 @@ extern BOOL globalPSEUDO_iCanHazMemez;
 extern unsigned short g_sFreakyLight;
 
 
+// if a player died recently, this changes.
+// 0: nothing unusual (no dead player)
+// 1: player died recently, still going through the dead phases.  No normal conversation.
+// 2: post-death conversation allowed.  Likely rarer unique dialogue or ominous hopeless things (TODO).
+int g_TalkMonster_PlayerDead_DialogueMod = 0;
+
 
 //=========================================================
 // Talking monster base class
 // Used for scientists and barneys
 //=========================================================
 float CTalkMonster::g_talkWaitTime = 0;		// time delay until it's ok to speak: used so that two NPCs don't talk at once
-
-
 
 
 
@@ -71,9 +75,12 @@ TYPEDESCRIPTION	CTalkMonster::m_SaveData[] =
 	DEFINE_FIELD( CTalkMonster, m_flPlayerDamage, FIELD_FLOAT ),
 	//DEFINE_FIELD( CTalkMonster, forgiveSuspiciousTime, FIELD_TIME ),  no need?  happens so often.
 	DEFINE_FIELD( CTalkMonster, forgiveSomePlayerDamageTime, FIELD_TIME ),
+
+	DEFINE_FIELD( CTalkMonster, scriptedUninterruptableConditionsTime, FIELD_TIME ),
+	// TODO - deadPlayerFocus is unused.  Is it even necessary at all?
+	DEFINE_FIELD( CTalkMonster, deadPlayerFocus, FIELD_EHANDLE ),
+	DEFINE_FIELD( CTalkMonster, kneelSoundDelay, FIELD_TIME ),
 	
-
-
 };
 //IMPLEMENT_SAVERESTORE( CTalkMonster, CBaseMonster );
 
@@ -528,6 +535,79 @@ Schedule_t	slStopFollowing[] =
 
 
 
+
+// Borrowed from the also-new 'slGruntWalkToDeadAlly', hgrunt.cpp
+
+//MODDD - scedule moved up to here from scientist.cpp (in the .h file so that other talk monster implementations may clearly see it
+Task_t	tlTalkMonsterApproachDeadPlayer[] =
+{
+	{ TASK_SET_FAIL_SCHEDULE_HARD,	(float)SCHED_ALERT_FACE_IF_VISIBLE	},
+
+	{ TASK_FACE_IDEAL_IF_VISIBLE,	(float)0				},
+	//{ TASK_WAIT,					(float)2.5				},
+	{ TASK_WAIT_RANDOM,				(float)0.8				},
+
+
+	{ TASK_STOP_MOVING,				(float)0				},
+	//{ TASK_STORE_LASTPOSITION,	(float)0				},
+	{ TASK_GET_PATH_TO_GOALVEC,		(float) 150				},
+	{ TASK_FACE_IDEAL,				(float)0				},
+	{ TASK_WALK_PATH,				(float)0				},
+	//{ TASK_WAIT_FOR_MOVEMENT,		(float)0				},
+	{ TASK_WAIT_FOR_MOVEMENT_RANGE,  (float) 650			},
+	{ TASK_FACE_GOAL,				(float)0				},
+	//{ TASK_PLAY_SEQUENCE,			(float)ACT_IDLE			},
+};
+
+Schedule_t	slTalkMonsterApproachDeadPlayer[] =
+{
+	{
+		tlTalkMonsterApproachDeadPlayer,
+		ARRAYSIZE ( tlTalkMonsterApproachDeadPlayer ),
+		0,
+		0,
+		"TalkMonster_ADP"
+	},
+};
+
+
+
+
+
+
+//MODDD - scedule moved up to here from scientist.cpp (in the .h file so that other talk monster implementations may clearly see it
+Task_t	tlTalkMonsterApproachDeadPlayerKneel[] =
+{
+	{ TASK_SET_FAIL_SCHEDULE_HARD,	(float)SCHED_ALERT_FACE_IF_VISIBLE	},
+
+	{ TASK_FACE_IDEAL_IF_VISIBLE,	(float)0				},
+	//{ TASK_WAIT,					(float)2.5				},
+	{ TASK_WAIT_RANDOM,				(float)0.5				},
+
+	{ TASK_STOP_MOVING,				(float)0				},
+	//{ TASK_STORE_LASTPOSITION,	(float)0				},
+	{ TASK_GET_PATH_TO_GOALVEC,		(float) 90				},
+	{ TASK_FACE_IDEAL,				(float)0				},
+	{ TASK_WALK_PATH,				(float)0				},
+	//{ TASK_WAIT_FOR_MOVEMENT,		(float)0				},
+	{ TASK_WAIT_FOR_MOVEMENT_RANGE, (float) 90				},
+	{ TASK_FACE_GOAL,				(float)0				},
+	//{ TASK_PLAY_SEQUENCE,			(float)ACT_IDLE			},
+	{TASK_PLAY_KNEEL_SEQUENCE,        (float) 90				},
+};
+
+Schedule_t	slTalkMonsterApproachDeadPlayerKneel[] =
+{
+	{
+		tlTalkMonsterApproachDeadPlayerKneel,
+		ARRAYSIZE ( tlTalkMonsterApproachDeadPlayerKneel ),
+		0,
+		0,
+		"TalkMonster_ADP_Kneel"
+	},
+};
+
+
 DEFINE_CUSTOM_SCHEDULES( CTalkMonster )
 {
 	slIdleResponse,
@@ -547,6 +627,8 @@ DEFINE_CUSTOM_SCHEDULES( CTalkMonster )
 	slTlkIdleEyecontact,
 	//NEW!! moved up from scientist.
 	slStopFollowing,
+	slTalkMonsterApproachDeadPlayer,
+	slTalkMonsterApproachDeadPlayerKneel,
 };
 
 IMPLEMENT_CUSTOM_SCHEDULES( CTalkMonster, CBaseMonster );
@@ -810,7 +892,28 @@ void CTalkMonster::RunTask( Task_t *pTask )
 {
 	switch( pTask->iTask )
 	{
+	case TASK_PLAY_KNEEL_SEQUENCE:
 
+		if(kneelSoundDelay != -1 && gpGlobals->time >= kneelSoundDelay){
+			kneelSoundDelay = -1;
+			SayKneel();
+		}
+
+		if(m_fSequenceFinished){
+			TaskComplete();
+		}
+	break;
+	case TASK_MOVE_TO_TARGET_RANGE:{
+
+
+		// NEVERMIND.   Do this check anytime in the follow schedule instead to catch all cases.
+		/*
+		<snip snip snip>
+		*/
+		// Made it down here?  Base behavior.
+		CBaseMonster::RunTask(pTask);
+	}
+	break;
 	case TASK_CANT_FOLLOW:
 		{
 		if(gpGlobals->time >= followAgainTime){
@@ -1019,11 +1122,8 @@ void CTalkMonster::RunTask( Task_t *pTask )
 			IdleHeadTurn( pev->origin );
 	break;
 	//MODDD - new
-	case SCHED_TARGET_CHASE:
-		//A talkmonster must provide its own follow method. This point should not be reached in the TalkMonster class.
-		easyForcePrintLine("ERROR!!! This talkmonster, %s, did not provide its own SCHED_TARGET_CHASE method.", getClassname());
 
-	break;
+	
 	default:
 		if (IsTalking() && m_hTalkTarget != NULL && !entityHidden(m_hTalkTarget) )
 		{
@@ -1673,6 +1773,11 @@ int CTalkMonster::FIdleSpeak ( void )
 {
 	//MODDD.
 
+	if(g_TalkMonster_PlayerDead_DialogueMod == 1){
+		// dead player recently?  DONT
+		return 0;
+	}
+
 	if (monsterID == 11) {
 		int x = 4;
 	}
@@ -1755,6 +1860,9 @@ int CTalkMonster::FIdleSpeak ( void )
 				// "Damn, I can't do this without you." -Barney
 				
 				//MODDD - this is now done elsewhere, I forget how exactly. Damn you, laziness.
+
+
+
 
 			}
 		}
@@ -2222,6 +2330,10 @@ void CTalkMonster::SaySuspicious(void){
 void CTalkMonster::SayLeaderDied(void){
 
 }
+// on doing the kneel animation at a dead player.
+void CTalkMonster::SayKneel(void){
+
+}
 
 //Am I near a non-intimidating monster, like a scientist near a chumtoad?
 void CTalkMonster::SayNearPassive(void){
@@ -2419,23 +2531,25 @@ Schedule_t* CTalkMonster::GetScheduleOfType ( int Type )
 	case SCHED_TARGET_FACE:
 		// speak during 'use'
 
-
-
 		//MODDD
 
-		if(!FOkToSpeak()){
-			// If not OK to speak, why bother calling slIdleSpeakWait?  It will only stare at the player
-			// without saying anything anyway.
-			passCondition = FALSE;
-		}else{
-			// Chance at talking.  Note that following cancels the wait times, which is ok (more responsive to
-			// following the player instead of staying for 2-3 seconds to finish saying something... not a great
-			// idea post-disaster)
-			if(EASY_CVAR_GET_DEBUGONLY(NPCsTalkMore) != 1 ){
-				passCondition = (RANDOM_LONG(0,99) < 2);
+		if(g_TalkMonster_PlayerDead_DialogueMod == 0 || g_TalkMonster_PlayerDead_DialogueMod == 2){
+			if(!FOkToSpeak()){
+				// If not OK to speak, why bother calling slIdleSpeakWait?  It will only stare at the player
+				// without saying anything anyway.
+				passCondition = FALSE;
 			}else{
-				passCondition = TRUE;
+				// Chance at talking.  Note that following cancels the wait times, which is ok (more responsive to
+				// following the player instead of staying for 2-3 seconds to finish saying something... not a great
+				// idea post-disaster)
+				if(EASY_CVAR_GET_DEBUGONLY(NPCsTalkMore) != 1 ){
+					passCondition = (RANDOM_LONG(0,99) < 2);
+				}else{
+					passCondition = TRUE;
+				}
 			}
+		}else{
+			passCondition = FALSE;
 		}
 
 		canGoRavingMad = TRUE;
@@ -2456,6 +2570,11 @@ Schedule_t* CTalkMonster::GetScheduleOfType ( int Type )
 		{
 			canGoRavingMad = TRUE;
 			
+
+			if(g_TalkMonster_PlayerDead_DialogueMod == 1){
+				// no talk checks
+				return slIdleStand;
+			}
 
 			// if never seen player, try to greet him
 			if (!FBitSet(m_bitsSaid, bit_saidHelloPlayer))
@@ -2520,7 +2639,6 @@ Schedule_t* CTalkMonster::GetScheduleOfType ( int Type )
 			}
 
 
-
 			
 			if ( !IsTalking() && HasConditions ( bits_COND_SEE_CLIENT ) && RANDOM_LONG( 0, 6 ) == 0 )
 			{
@@ -2565,9 +2683,11 @@ Schedule_t* CTalkMonster::GetScheduleOfType ( int Type )
 				}else{
 
 
-					if (EASY_CVAR_GET(NPCsTalkMore) == 1) {
-						// fall back to talking then!
-						return slIdleSpeak;
+					if(g_TalkMonster_PlayerDead_DialogueMod == 0 || g_TalkMonster_PlayerDead_DialogueMod == 2){
+						if (EASY_CVAR_GET(NPCsTalkMore) == 1) {
+							// fall back to talking then!
+							return slIdleSpeak;
+						}
 					}
 
 
@@ -2590,7 +2710,11 @@ Schedule_t* CTalkMonster::GetScheduleOfType ( int Type )
 			return CBaseMonster::GetScheduleOfType( Type );
 		}
 		break;
-
+		case SCHED_TARGET_CHASE:
+			// A talkmonster must provide its own follow method. This point should not be reached in the TalkMonster class.
+			easyForcePrintLine("ERROR!!! This talkmonster, %s, did not provide its own SCHED_TARGET_CHASE method.", getClassname());
+			return NULL;
+		break;
 	}
 
 	return CBaseMonster::GetScheduleOfType( Type );
@@ -2652,7 +2776,10 @@ CTalkMonster::CTalkMonster(void){
 
 	nextUseSentenceAllowed = -1;
 	nextIdleFidgetAllowedTime = -1;
+	deadPlayerFocus = NULL;
 	scriptedUninterruptableConditionsTime = -1;
+
+	kneelSoundDelay = -1;
 
 }//CTalkMonster constructor
 
@@ -2662,6 +2789,21 @@ CTalkMonster::CTalkMonster(void){
 
 
 void CTalkMonster::MonsterThink(void){
+	
+	if(m_MonsterState != MONSTERSTATE_COMBAT && !IsTalking() ){
+		// is there a nearby dead player I should be reacting to on my own
+		CBasePlayer* nearestVisibleDeadPlayer_result = nearestVisibleDeadPlayer();
+
+		//TODO:  if moving, set a delay to stop moving in 1 to 2 seconds and face later?
+		if(!IsMoving()){
+			if(nearestVisibleDeadPlayer_result != NULL && nearestVisibleDeadPlayer_result->deadStage == 0){
+				if(deadPlayerFocus != nearestVisibleDeadPlayer_result){
+					deadPlayerFocus = nearestVisibleDeadPlayer_result;
+					// DEAD TODO: set sched to turn and face ?
+				}
+			}
+		}
+	}
 
 
 	if (m_hTalkTarget) {
@@ -2871,11 +3013,44 @@ void CTalkMonster::PrescheduleThink ( void )
 	{
 		SetConditions ( bits_COND_CLIENT_UNSEEN );
 	}
+
+
+
+	if( 
+		// just to be sure this is to a player.
+		IsFollowing()
+	){
+		// Fail if who we're supposed to follow dies.
+		// No 'revive' checks for this shallow of a check, it would seem like a shock and should be 
+		// reacted to appropriately in either case for the one following to drop to the ground out of nowhere.
+		// ALSO.  Only on seeing the player I'm supposed to be following dead.
+		if(FVisible(m_hTargetEnt) && FInViewCone(m_hTargetEnt) && m_hTargetEnt->pev->deadflag != DEAD_NO){
+
+			leaderRecentlyDied = TRUE;
+			// ALSO.  Don't re-try the follow 8 or so times from this, that just looks weird.
+			// Turn to face after this in fact.
+			m_failSchedule = NULL;
+			if(IsMoving()){
+				TaskFail();
+			}
+
+			OnPlayerFollowingSuddenlyDead();
+			m_hTargetEnt = NULL;
+		}
+	}
+
+
 }
 
 // try to smell something
 void CTalkMonster::TrySmellTalk( void )
 {
+
+	if(g_TalkMonster_PlayerDead_DialogueMod == 1){
+		// player died recently?  really then?
+		return;
+	}
+
 	if ( !FOkToSpeak() )
 		return;
 
@@ -3028,17 +3203,20 @@ void CTalkMonster::StartFollowing( CBaseEntity *pLeader )
 	//if(m_pSchedule == slStopFollowing){TaskFail();}  //if we're waiting for this delay to pass, just stop.
 	//...no need, any start / stop by the player pressing Use on talkmonsters already resets the schedule.
 
+	if (entityHidden(pLeader)) {
+		// stop!  I don't want a leader I can't talk to
+		return;
+	}
+
+	// suppose that isn't the case?
+	leaderRecentlyDied = FALSE;
+
 	if ( m_pCine )
 		m_pCine->CancelScript();
 
 	if ( m_hEnemy != NULL )
 		m_IdealMonsterState = MONSTERSTATE_ALERT;
 
-
-	if (entityHidden(pLeader)) {
-		// stop!  I don't want a leader I can't talk to
-		return;
-	}
 
 	m_hTargetEnt = pLeader;
 	
@@ -3191,6 +3369,75 @@ void CTalkMonster::FollowerUse( CBaseEntity *pActivator, CBaseEntity *pCaller, U
 	}
 }
 
+
+
+// What a strange name for a method.
+CBasePlayer* CTalkMonster::nearestVisibleDeadPlayer(void){
+	CBasePlayer	*pReturn;
+	CBaseEntity	*pNextEnt;
+	float		flNearest;
+	float		flDist;
+
+	flNearest = 800;
+	pNextEnt = m_pLink;
+	pReturn = NULL;
+
+	while ( pNextEnt != NULL ){
+		// Really dead only.
+		if(pNextEnt->IsPlayer() && !pNextEnt->IsAlive()){
+			CBasePlayer* daPlayer = static_cast<CBasePlayer*>(pNextEnt);
+			if(!daPlayer->recentlyGibbed && daPlayer->recoveryIndex == 3  ){ //&& !daPlayer->deadRespected_Kneeler 
+				if(FVisible(daPlayer->pev->origin + Vector(0,0,20))){
+					// line of sight, whether I'm facing yet or not?  Accept this
+					Vector pointDelta = daPlayer->pev->origin - this->pev->origin;
+					float theDist = DistanceFromDelta(pointDelta);
+					// close enough or closest than another dead player(?)?  go ahead
+					if(theDist < flNearest){
+						flNearest = theDist;
+						pReturn = daPlayer;
+					}
+				}
+			}
+		}// isplayer and dead checks
+
+		pNextEnt = pNextEnt->m_pLink;
+	}
+
+	return pReturn;
+}//nearestVisibleDeadPlayer
+
+
+// On the instant the player dies.  Override this.
+// Barney/scientist act differently.  Also, need to do the distance check and line-trace checks.
+// Call for a schedule to look in the player's direction + make noise or panic.
+void CTalkMonster::OnPlayerDead(CBasePlayer* arg_player){
+	// DEAD TODO
+
+}
+
+
+// For when the player I'm following drops dead (this is called sooner than OnPlayerDead, which is coordinated
+// with the player 'deadstage' var to make all nearby talkmonsters work in the same phase at a time)
+// Also note that this is on first seeing the player is dead while I was still going to their current location
+// (like on following after the player turns a corner and dies while not visible to the following NPC).
+// In that case, this method would get called after the NPC turns the corner and sees the dead player.
+// This way the startle noise / rection playing when it does makes more sense.
+void CTalkMonster::OnPlayerFollowingSuddenlyDead(void){
+	//pev->ideal_yaw = VEC_TO_YAW();
+	RouteClear();
+	//MODDD - new block. If the one I was following recently died, get scared.
+	//if(leaderRecentlyDied){
+	//	leaderRecentlyDied = FALSE;
+		SayLeaderDied();
+	//	StopFollowing( FALSE, FALSE );  //no generic unuse sentence.
+										//skip like a good boy.
+	//	return CTalkMonster::GetSchedule();
+	//}
+
+}
+
+
+
 void CTalkMonster::KeyValue( KeyValueData *pkvd )
 {
 	if (FStrEq(pkvd->szKeyName, "UseSentence"))
@@ -3210,7 +3457,6 @@ void CTalkMonster::KeyValue( KeyValueData *pkvd )
 
 void CTalkMonster::Precache( void )
 {
-
 	//easyForcePrintLine("HEY THIS IS %s AND WELCOME TO JACKASS %s", this->getClassname(), STRING( m_iszUse ));
 
 	//NOTE: no need for sentence-sound-save stuff here.
@@ -3292,6 +3538,19 @@ void CTalkMonster::OnCineCleanup(CCineMonster* pOldCine){
 
 
 
+void CTalkMonster::ChangeScheduleToApproachDeadPlayer(Vector deadPlayerOrigin){
+	m_vecMoveGoal = deadPlayerOrigin;
+	MakeIdealYaw(deadPlayerOrigin);
+
+	ChangeSchedule(slTalkMonsterApproachDeadPlayer);
+}//ChangeScheduleToApproachDeadPlayer
+
+void CTalkMonster::ChangeScheduleToApproachDeadPlayerKneel(Vector deadPlayerOrigin){
+	m_vecMoveGoal = deadPlayerOrigin;
+	MakeIdealYaw(deadPlayerOrigin);
+
+	ChangeSchedule(slTalkMonsterApproachDeadPlayerKneel);
+}//ChangeScheduleToApproachDeadPlayerKneel
 
 
 

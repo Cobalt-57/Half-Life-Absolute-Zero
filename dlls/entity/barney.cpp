@@ -670,6 +670,10 @@ void CBarney::SayLeaderDied(void) {
 	PainSound(TRUE); //force the pain sound
 }
 
+void CBarney::SayKneel(void) {
+	// TODO - something like 'can't do it without you' or something
+	PainSound(TRUE);
+}
 
 void CBarney::SayNearPassive(void) {
 
@@ -750,6 +754,11 @@ void CBarney::StartTask( Task_t *pTask )
 	//m_iTaskStatus = TASKSTATUS_RUNNING;
 	switch ( pTask->iTask )
 	{
+		case TASK_PLAY_KNEEL_SEQUENCE:
+			// TODO - no kneel animation present, this is kinda close I guess
+			SetSequenceByName("intropush");
+			kneelSoundDelay = gpGlobals->time + RANDOM_FLOAT(0.8, 1.5);
+		break;
 		case TASK_RELOAD:
 			m_IdealActivity = ACT_RELOAD;
 		break;
@@ -1083,14 +1092,19 @@ void CBarney::MonsterThink(void){
 	}
 
 
-	if( (m_pSchedule == slBaFollow || m_pSchedule == slBaFaceTarget) &&
-		(m_hTargetEnt == NULL || (m_hTargetEnt != NULL && !m_hTargetEnt->IsAlive()) )
+
+	/*
+	// STOP!  Do this in the proper schedule.
+	if( 
+		//(m_pSchedule == slBaFollow || m_pSchedule == slBaFaceTarget) &&
+		//(m_hTargetEnt == NULL || (m_hTargetEnt != NULL && !m_hTargetEnt->IsAlive()) )
 		){
 		//Fail if who we're supposed to follow dies.
 		//m_hTargetEnt = NULL;
 		leaderRecentlyDied = TRUE;
 		TaskFail();
 	}
+	*/
 
 	if(reloadSoundTime != -1 && gpGlobals->time >= reloadSoundTime){
 
@@ -1707,6 +1721,29 @@ Schedule_t* CBarney::GetScheduleOfType ( int Type )
 }
 
 
+void CBarney::OnPlayerDead(CBasePlayer* arg_player){
+	CTalkMonster::OnPlayerDead(arg_player);
+	// leave most of this up to dead phase
+	
+	if(!leaderRecentlyDied){
+		// And don't make extra noise if this NPC was following the player when it died.
+		// Already said something then, this would be redundant.
+		//SayFear();
+
+		if(FVisible(arg_player) && FInViewCone(arg_player)){
+			// can see?  Go ahead then.
+			MakeIdealYaw(arg_player->pev->origin);
+			ChangeSchedule(GetScheduleOfType(SCHED_ALERT_FACE));
+		}
+	}
+}
+
+void CBarney::OnPlayerFollowingSuddenlyDead(void){
+	CTalkMonster::OnPlayerFollowingSuddenlyDead();
+
+	MakeIdealYaw(m_hTargetEnt->pev->origin);
+	ChangeSchedule(GetScheduleOfType(SCHED_ALERT_FACE));
+}
 
 
 //=========================================================
@@ -1717,15 +1754,6 @@ Schedule_t* CBarney::GetScheduleOfType ( int Type )
 //=========================================================
 Schedule_t *CBarney::GetSchedule ( void )
 {
-	//MODDD - new block. If the one I was following recently died, get scared.
-	if(leaderRecentlyDied){
-		leaderRecentlyDied = FALSE;
-		SayLeaderDied();
-        StopFollowing( FALSE, FALSE );  //no generic unuse sentence.
-		//skip like a good boy.
-		return CTalkMonster::GetSchedule();
-	}
-
 
 	//easyForcePrintLine("MY timer %d    %d %d %d :::%.2f %.2f", m_fGunDrawn, HasConditions( bits_COND_HEAR_SOUND ), HasConditions(bits_COND_SEE_ENEMY), HasConditions(bits_COND_NEW_ENEMY), gpGlobals->time, unholsterTimer);
 

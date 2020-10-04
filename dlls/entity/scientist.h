@@ -163,6 +163,7 @@ public:
 	void SayStopShooting(void);
 	void SaySuspicious(void);
 	void SayLeaderDied(void);
+	void SayKneel(void);
 	void SayNearPassive(void);
 	void SayNearCautious(void);
 
@@ -173,8 +174,13 @@ public:
 	int violentDeathPriority(void);
 	BOOL canPredictActRepeat(void);
 
+	void OnPlayerDead(CBasePlayer* arg_player);
+	void OnPlayerFollowingSuddenlyDead(void);
+
 	void initiateAss(void);
 	void myAssHungers(void);
+
+
 };
 
 

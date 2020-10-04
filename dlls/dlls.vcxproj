@@ -322,7 +322,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\$(configuration)\az.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\$(configuration)\$(TargetName).pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\$(configuration)\</AssemblerListingLocation>
       <ObjectFileName>.\$(configuration)\</ObjectFileName>
       <ProgramDataBaseFileName>.\$(configuration)\</ProgramDataBaseFileName>
@@ -338,31 +338,31 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <OutputFile>.\$(configuration)\az.dll</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>.\dlls.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\$(configuration)\az.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\$(configuration)\$(TargetName).pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\Release/az.map</MapFileName>
+      <MapFileName>.\$(configuration)\$(TargetName).map</MapFileName>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <ImportLibrary>.\$(configuration)\az.lib</ImportLibrary>
+      <ImportLibrary>.\$(configuration)\$(TargetName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(configuration)\az.bsc</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).bsc</OutputFile>
     </Bscmake>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy ".\$(configuration)\az.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.dll"
-copy ".\$(configuration)\az.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.pdb"</Command>
+      <Command>copy ".\$(configuration)\$(TargetName).dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.dll"
+copy ".\$(configuration)\$(TargetName).pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.pdb"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
@@ -388,7 +388,7 @@ copy ".\$(configuration)\az.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeaderOutputFile>.\$(configuration)\az.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\$(configuration)\$(TargetName).pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\$(configuration)\</AssemblerListingLocation>
       <ObjectFileName>.\$(configuration)\</ObjectFileName>
       <ProgramDataBaseFileName>.\$(configuration)\</ProgramDataBaseFileName>
@@ -404,7 +404,7 @@ copy ".\$(configuration)\az.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <OutputFile>.\$(configuration)\az.dll</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>.\dlls.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -412,21 +412,21 @@ copy ".\$(configuration)\az.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <ImportLibrary>.\$(configuration)\az.lib</ImportLibrary>
+      <ImportLibrary>.\$(configuration)\$(TargetName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <ProgramDatabaseFile>.\$(configuration)\az.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\$(configuration)\$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(configuration)\az.bsc</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).bsc</OutputFile>
     </Bscmake>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy ".\$(configuration)\az.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.dll"
-copy ".\$(configuration)\az.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.pdb"</Command>
+      <Command>copy ".\$(configuration)\$(TargetName).dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.dll"
+copy ".\$(configuration)\$(TargetName).pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.pdb"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -450,7 +450,7 @@ copy ".\$(configuration)\az.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;QUIVER;VOXEL;QUAKE2;VALVE_DLL;CLIENT_WEAPONS;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <PrecompiledHeaderOutputFile>.\$(configuration)\az.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>.\$(configuration)\$(TargetName).pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\$(configuration)\</AssemblerListingLocation>
       <ObjectFileName>.\$(configuration)\</ObjectFileName>
       <ProgramDataBaseFileName>.\$(configuration)\</ProgramDataBaseFileName>
@@ -467,30 +467,30 @@ copy ".\$(configuration)\az.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\
       <AdditionalIncludeDirectories>..\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <OutputFile>.\$(configuration)\az.dll</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>.\dlls.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\$(configuration)\az.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>.\$(configuration)\$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <ImportLibrary>.\$(configuration)\az.lib</ImportLibrary>
+      <ImportLibrary>.\$(configuration)\$(TargetName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalDependencies>../lib/steam_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(configuration)\az.bsc</OutputFile>
+      <OutputFile>.\$(configuration)\$(TargetName).bsc</OutputFile>
     </Bscmake>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy ".\$(configuration)\az.dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.dll"
-copy ".\$(configuration)\az.pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.pdb"</Command>
+      <Command>copy ".\$(configuration)\$(TargetName).dll" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.dll"
+copy ".\$(configuration)\$(TargetName).pdb" "C:\Program Files (x86)\Valve\Half-Life NGHLv3\AbsoluteZero\dlls\az.pdb"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

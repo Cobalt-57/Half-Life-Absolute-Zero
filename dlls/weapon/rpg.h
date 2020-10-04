@@ -11,6 +11,16 @@ class CLaserSpot;
 
 enum rpg_e {
 	RPG_IDLE = 0,
+	RPG_RELOAD,
+	RPG_FIRE,
+	RPG_HOLSTER,
+	RPG_DRAW,
+
+};
+
+/*
+enum rpg_e {
+	RPG_IDLE = 0,
 	RPG_FIDGET,     // NEW COMMENT: loaded fidget.
 	RPG_RELOAD,		// to reload
 	RPG_FIRE2,		// to empty
@@ -24,7 +34,7 @@ enum rpg_e {
 	//               Should we make a special one.?
 	//RPG_FIDGET_UL,	// unloaded fidget
 };
-
+*/
 
 
 class CRpg : public CBasePlayerWeapon
@@ -143,6 +153,7 @@ public:
 	void EXPORT RocketTouch(CBaseEntity* pOther);
 
 	void onDelete(void);
+	void commonPreDelete(void);
 
 	float massInfluence(void);
 	int GetProjectileType(void);

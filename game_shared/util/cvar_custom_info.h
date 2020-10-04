@@ -724,6 +724,7 @@
 #define DEFAULT_cl_viewpunch_mod 1
 #define DEFAULT_cl_gauss_viewpunch_mod 1
 #define DEFAULT_pathfindMonsterclipFreshLogic 2
+#define DEFAULT_sv_rpg_projectile_model 1
 
 
 

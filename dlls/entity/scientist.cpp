@@ -553,6 +553,33 @@ Schedule_t	slSciPanic[] =
 };
 
 
+
+// only swaps out TASK_FACE_ENEMY for TASK_FACE_IDEAL.
+Task_t	tlSciPanicInPlace[] =
+{
+	{ TASK_STOP_MOVING,			(float)0		},
+	{ TASK_FACE_IDEAL,			(float)0		},
+	//MODDD - intervention.
+
+	//{ TASK_SCREAM,				(float)0		},
+	{ TASK_SAY_FEAR, (float)0 },
+
+	{ TASK_SCIENTIST_FIGHT_OR_FLIGHT,  (float)1  },    //NOTICE - this "1" means he is more likely to attack the monster, since Panic is picked when we're cornered (no cover, no choice)
+	{ TASK_PLAY_SEQUENCE_FACE_ENEMY,		(float)ACT_EXCITED	},	// This is really fear-stricken excitement
+	{ TASK_SET_ACTIVITY,		(float)ACT_IDLE	},
+};
+
+Schedule_t	slSciPanicInPlace[] =
+{
+	{
+		tlSciPanicInPlace,
+		ARRAYSIZE ( tlSciPanicInPlace ),
+		0,
+		0,
+		"SciPanicInPlace"
+	},
+};
+
 Task_t	tlIdleSciStand[] =
 {
 	{ TASK_STOP_MOVING,			0				},
@@ -694,6 +721,33 @@ Schedule_t	slSciFear[] =
 };
 
 
+
+//clone of slTakeCoverFromOrigin that uses the scientist scary run thing
+Task_t	tlScientistTakeCoverFromOrigin[] =
+{
+	{ TASK_STOP_MOVING,					(float)0					},
+	{ TASK_FIND_COVER_FROM_ORIGIN,		(float)0					},
+	{ TASK_RUN_PATH_SCARED,					(float)0					},
+	{ TASK_WAIT_FOR_MOVEMENT,			(float)0					},
+	{ TASK_REMEMBER,					(float)bits_MEMORY_INCOVER	},
+	{ TASK_TURN_LEFT,					(float)179					},
+};
+
+Schedule_t	slScientistTakeCoverFromOrigin[] =
+{
+	{ 
+		tlScientistTakeCoverFromOrigin,
+		ARRAYSIZE ( tlScientistTakeCoverFromOrigin ), 
+		bits_COND_NEW_ENEMY |
+		//MODDD CRITICAL - now interruptable by heavy damage.  May or may not be a good thing.
+		bits_COND_HEAVY_DAMAGE,
+		0,
+		"SciTakeCoverFromOrigin"
+	},
+};
+
+
+
 DEFINE_CUSTOM_SCHEDULES( CScientist )
 {
 	slSciFollow,
@@ -707,11 +761,13 @@ DEFINE_CUSTOM_SCHEDULES( CScientist )
 	slScientistPutAwaySyringe,
 	//slStopFollowing,    Belongs to all of TalkMonster now!
 	slSciPanic,
+	slSciPanicInPlace,
 	slFollowScared,
 	slFaceTargetScared,
 	slAngryScientistChaseEnemyFailed,
 	slAngryScientistChaseEnemy,
 	slScientistPunch,
+	slScientistTakeCoverFromOrigin,
 };
 
 
@@ -1049,19 +1105,29 @@ void CScientist::SaySuspicious(void){
 	}
 }
 void CScientist::SayLeaderDied(void){
-	switch(RANDOM_LONG(4, 7)){
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-		case 4:PlaySentence( "SC_SCREAM", 4, VOL_NORM, ATTN_NORM );break;
-		case 5:PlaySentenceSingular( "SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM ); break; //scientist/noplease
-		case 6:PlaySentenceSingular( "SC_PLFEAR4", 4, VOL_NORM, ATTN_NORM ); break; //getoutofhere
-		case 7:PlaySentenceSingular( "SC_FEAR0", 4, VOL_NORM, ATTN_NORM ); break; //nooo
-
+	switch(RANDOM_LONG(0, 3)){
+		case 0:PlaySentence( "SC_SCREAM", 4, VOL_NORM, ATTN_NORM );break;
+		case 1:PlaySentenceSingular( "SC_PLFEAR3", 4, VOL_NORM, ATTN_NORM ); break; //scientist/noplease
+		case 2:PlaySentenceSingular( "SC_PLFEAR4", 4, VOL_NORM, ATTN_NORM ); break; //getoutofhere
+		case 3:PlaySentenceSingular( "SC_FEAR0", 4, VOL_NORM, ATTN_NORM ); break; //nooo
 	}//END OF switch
 }//END OF SayLeaderDied
 
+void CScientist::SayKneel(void){
+	// TODO - do better sometime?
+	switch(RANDOM_LONG(0, 3)){
+		case 0:PlaySentenceSingular("SC_FEAR7", 4, VOL_NORM, ATTN_NORM - 0.2); break;
+		case 1:PlaySentenceSingular("SC_FEAR8", 4, VOL_NORM, ATTN_NORM - 0.2); break;
+		case 2:PlaySentenceSingular("SC_FEAR10", 4, VOL_NORM, ATTN_NORM - 0.2); break;
+		case 3:PlaySentenceSingular("SC_FEAR11", 4, VOL_NORM, ATTN_NORM - 0.2); break;
+	}//END OF switch
+	/*
+	startle5
+	startle6
+	startle8
+	startle9
+	*/
+}
 
 //Say a sentence to express interest in something, like stopping to stare at a chumtoad.
 void CScientist::SayNearPassive(void){
@@ -1192,6 +1258,10 @@ void CScientist::StartTask( Task_t *pTask )
 
 	switch( pTask->iTask )
 	{
+	case TASK_PLAY_KNEEL_SEQUENCE:
+		SetSequenceByName("kneel");
+		kneelSoundDelay = gpGlobals->time + RANDOM_FLOAT(2.1, 2.7);
+	break;
 	case TASK_PLAY_SEQUENCE_FACE_ENEMY:
 	case TASK_PLAY_SEQUENCE_FACE_TARGET:
 	case TASK_PLAY_SEQUENCE:
@@ -1527,7 +1597,7 @@ void CScientist::RunTask( Task_t *pTask )
 			TaskComplete();
 		if ( RANDOM_LONG(0,31) < 8 )
 			Scream();
-		break;
+	break;
 
 
 
@@ -1554,7 +1624,7 @@ void CScientist::RunTask( Task_t *pTask )
 				}
 			}
 			else {
-				easyForcePrintLine("W H A T");
+				//easyForcePrintLine("W H A T");
 			}
 		}
 
@@ -2609,12 +2679,41 @@ void CScientist::ScheduleChange(void){
 }
 
 
+
+void CScientist::OnPlayerDead(CBasePlayer* arg_player){
+	CTalkMonster::OnPlayerDead(arg_player);
+	// leave most of this up to dead phase
+	
+	if(!leaderRecentlyDied){
+		// And don't make extra noise if this NPC was following the player when it died.
+		// Already said something then, this would be redundant.
+		//SayFear();
+		// eh, do some animation in place, why not.  Unless the player was pretty close.
+		if(Distance(pev->origin, arg_player->pev->origin) > 340){
+			MakeIdealYaw(arg_player->pev->origin);
+			ChangeSchedule(slSciPanicInPlace);
+		}else{
+			ChangeSchedule(slScientistTakeCoverFromOrigin);
+		}
+	}
+}
+
+void CScientist::OnPlayerFollowingSuddenlyDead(void){
+	CTalkMonster::OnPlayerFollowingSuddenlyDead();
+
+	//ChangeSchedule(GetScheduleOfType(SCHED_PANIC));
+	ChangeSchedule(slScientistTakeCoverFromOrigin);
+	
+}
+
+
 Schedule_t *CScientist::GetSchedule ( void )
 {
 	//MODDD - is this okay?   This says that, on schedule failure, forget healing.
 	forgetHealNPC();
 
-
+	// do in a different place now
+	/*
 	//MODDD - new block. If the one I was following recently died, get scared.
 	if(leaderRecentlyDied){
 		leaderRecentlyDied = FALSE;
@@ -2624,6 +2723,7 @@ Schedule_t *CScientist::GetSchedule ( void )
 		// enter a panic state.
 		return GetScheduleOfType(SCHED_PANIC);
 	}
+	*/
 
 
 	//return CBaseMonster::GetSchedule();
@@ -3268,8 +3368,8 @@ void CScientist::MonsterThink(void){
 	int tempTaskNumber = this->getTaskNumber();
 	if( 
 		(
-			m_pSchedule == slSciFollow ||
-			m_pSchedule == slFaceTarget ||
+			//m_pSchedule == slSciFollow ||
+			//m_pSchedule == slFaceTarget ||
 			(m_pSchedule == slHeal && tempTaskNumber != TASK_HEAL && tempTaskNumber !=  TASK_PLAY_SEQUENCE_FACE_TARGET)
 		) &&
 		(m_hTargetEnt == NULL || (m_hTargetEnt != NULL && !m_hTargetEnt->IsAlive()) )

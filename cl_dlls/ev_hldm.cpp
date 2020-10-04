@@ -121,8 +121,6 @@ EASY_CVAR_EXTERN_CLIENTONLY(cl_gauss_viewpunch_mod)
 
 
 
-
-
 //MODDD - from in_camera.cpp 
 extern "C"
 {
@@ -196,6 +194,14 @@ void updateCVarRefsClient(){
 #define FILLIN_TRACEFLAGS_STUDIO_BOX PM_NORMAL
 #define FILLIN_TRACEFLAGS_NORMAL PM_NORMAL
 ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+extern float g_cl_mp5_NextAnimTime;
+
+
+
 
 
 
@@ -1122,10 +1128,6 @@ void EV_FireShotGunSingle(event_args_t* args)
 //	   SHOTGUN END
 //======================
 
-
-// Var from the mp5, used in the 'ancient SDK'.
-float m_flNextAnimTime;
-
 //======================
 //	    MP5 START
 //======================
@@ -1159,7 +1161,6 @@ void EV_FireMP5(event_args_t* args)
 		// Add muzzle flash to current weapon model
 		EV_MuzzleFlash();
 
-
 		
 		if(EASY_CVAR_GET(cl_mp5_evil_skip) != 1){
 			// NORMAL WAY
@@ -1170,7 +1171,7 @@ void EV_FireMP5(event_args_t* args)
 
 		}else{
 			// EVIL SKIP.
-			if (m_flNextAnimTime < gpGlobals->time)
+			if (g_cl_mp5_NextAnimTime < gpGlobals->time)
 			{
 				// old evil way of playing the animation updated to use the events system to meld with this codebase better.
 				//SendWeaponAnim( MP5_FIRE1 + random thing in 0,2);
@@ -1178,7 +1179,7 @@ void EV_FireMP5(event_args_t* args)
 
 				// ALSO.  Delay changed a little for a better chance of skipping one in two firing frames, instead of two in three.
 				//m_flNextAnimTime = gpGlobals->time + 0.2;
-				m_flNextAnimTime = gpGlobals->time + 0.17;
+				g_cl_mp5_NextAnimTime = gpGlobals->time + 0.17;
 			}
 		}
 
@@ -1274,16 +1275,22 @@ void EV_FireMP52(event_args_t* args)
 	}
 
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
-		switch (gEngfuncs.pfnRandomLong(0, 1))
-		{
+		float fVol;
+		float fAttn;
+		// whoops, nevermind.  Have a little less attn (carry further) anyway
+		fVol = 1.0f;
+		fAttn = ATTN_NORM - 0.03;
+		
+		switch (gEngfuncs.pfnRandomLong(0, 1)){
 		case 0:
-			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/glauncher.wav", 1, ATTN_NORM, 0, 94 + gEngfuncs.pfnRandomLong(0, 0xf));
-			break;
+			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/glauncher.wav", fVol, fAttn, 0, 94 + gEngfuncs.pfnRandomLong(0, 0xf));
+		break;
 		case 1:
-			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/glauncher2.wav", 1, ATTN_NORM, 0, 94 + gEngfuncs.pfnRandomLong(0, 0xf));
-			break;
+			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/glauncher2.wav", fVol, fAttn, 0, 94 + gEngfuncs.pfnRandomLong(0, 0xf));
+		break;
 		}
-	}
+	}//mutePlayerWeaponFire check
+	
 }
 //======================
 //		 MP5 END
@@ -2433,23 +2440,24 @@ void EV_FireRpg(event_args_t* args)
 
 
 	if (EASY_CVAR_GET_CLIENTONLY_DEBUGONLY(mutePlayerWeaponFire) != 1) {
+		
 		if (EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST_DEBUGONLY(myRocketsAreBarney) != 1) {
 			//ordinary
 			//MODDD - little less attenuation for RPG's, it is a danged rocket going off after all
 			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.9, ATTN_NORM - 0.14, 0, PITCH_NORM);
-			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_ITEM, "weapons/glauncher.wav", 0.7, ATTN_NORM, 0, PITCH_NORM);
-		}
-		else {
+			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_ITEM, "weapons/glauncher.wav", 0.7, ATTN_NORM - 0.04, 0, PITCH_NORM);
+		}else {
 			//we wanna hear barney!
-			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.17, ATTN_NORM, 0, PITCH_NORM);
-			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_ITEM, "weapons/glauncher.wav", 0.14, ATTN_NORM, 0, PITCH_NORM);
+			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/rocketfire1.wav", 0.10, ATTN_NORM, 0, PITCH_NORM);
+			gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_ITEM, "weapons/glauncher.wav", 0.08, ATTN_NORM, 0, PITCH_NORM);
 		}
 	}
 
 	//Only play the weapon anims if I shot it. 
 	if (EV_IsLocal(idx))
 	{
-		gEngfuncs.pEventAPI->EV_WeaponAnimation(RPG_FIRE2, 1);
+		//gEngfuncs.pEventAPI->EV_WeaponAnimation(RPG_FIRE2, 1);
+		gEngfuncs.pEventAPI->EV_WeaponAnimation(RPG_FIRE, 1);
 
 		if(EASY_CVAR_GET_CLIENTONLY(cl_viewpunch_mod) == 1){
 			V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-15, -12));

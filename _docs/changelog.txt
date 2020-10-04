@@ -751,15 +751,16 @@ Unstuck jumps much smarter.  Will target the enemy(player) if visible and within
 Kingpin reaction times for reflecting projectiles improved.
 Charge-effects getting interrupted should be more likely to end properly (and turn looping sounds off).
 
+cl_mp5_evil_skip no longer fails to play firing animation on changing maps (happened in some cases from differeng 'gpGlobals->time' bases)
 
-
-
-
+New CVar: sv_rpg_projectile_model (defaults to 1).  Uses the mp5 grenade model for the rocket instead.
 
 
 
 LATER:
 Panthereye will also be more willing to jump while routing randomly around a player it can't reach to melee.  (maybe?)
 Floater melee, anim now present in model.
+Kingpin teleport on taking damage, + get a green healing aurora while in cover?  (unsure)
+Barney/scientist 'kneel at dead player and/or panic' behavior?
 
 
