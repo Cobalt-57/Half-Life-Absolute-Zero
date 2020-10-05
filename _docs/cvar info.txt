@@ -1632,7 +1632,17 @@ sv_gargantua_throwattack (1) - MODEVAR.  If above 0, the throw attack may be use
 1: There is a 20% chance any gargantua melee attempts to pick up the entity in front and toss it.
 2: The throw-attempt replaces all melee.  (still goes back to normal melee if nearby empty-space checks fail)
 
+hmilitaryDeadInvestigate (1) - BOOL.  When on, hgrunts/hassaults that see a member die while in non-combat states will turn to face them and approach if close enough and/or within eyesight.  HGrunts will also say the 'casualties' line sometime after noticing.
 
+playerDeadTruce (0) - MODEVAR.  Works in singleplayer only.  If on, any human factions (hgrunts/hassaults/turrets and barnies/scientists) will cease fire on each other when the player is dead.
+0: nothing happens.
+1: Truce only happens when the player is declared reviveless dead (no adrenaline, other circumstances)
+2: Truce happens instantly at player death if the player was within eyesight of any human faction (hgrunt/hassault/turret/barney/scientist) when dead, even if a revive is possible soon.  Still happens at the reviveless point otherwise.
+3: Truce happens instantly at player death, no eyesight checks.
 
-
+playerDeadTalkerBehavior (1) - MODEVAR (1 choice so far)
+0: nothing special happens.  Noise can still be made on being around the same frame as the player dead.
+   ~ Some instant-effects like scientists panicing or running around on a player dying nearby will still happen.
+1: when the player dies, a process begins.  All talkers turn to face the player if it is convenient to, wait for any combat to die down (if any are left when that happens), and two talkers (which can come from the closest one following the player and the nearest one otherwise, or two nearest if none were following) will come closer to play kneel animations and say a line.  Ones further away will still come out of cover to at least face the player from up to some distance.
+   TODO: post-death lines, none of the as-is seem too fitting, resumes normal conversation after ~20-25 seconds of starting the walk-up to kneel
 

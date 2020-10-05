@@ -116,7 +116,8 @@ EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelay)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_minimumfiredelaycustom)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(cheat_nogaussrecoil)
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST_DEBUGONLY(gaussRecoilSendsUpInSP)
-
+EASY_CVAR_EXTERN(playerDeadTruce)
+EASY_CVAR_EXTERN(playerDeadTalkerBehavior)
 
 extern int g_TalkMonster_PlayerDead_DialogueMod;
 
@@ -186,6 +187,7 @@ extern CGraph WorldGraph;
 extern DLL_GLOBAL ULONG g_ulFrameCount;
 extern BOOL g_firstPlayerEntered;
 extern float g_flWeaponCheat;
+extern BOOL g_f_playerDeadTruce;
 
 
 
@@ -882,6 +884,14 @@ void CBasePlayer::declareRevivelessDead(void) {
 	}
 	if (EASY_CVAR_GET_DEBUGONLY(batteryDrainsAtDeath) == 1) {
 		SetAndUpdateBattery(0);
+	}
+	
+	if(!IsMultiplayer()){
+		if(EASY_CVAR_GET(playerDeadTruce) >= 1){
+			// IDEA: if this CVar is on (maybe only once there' a line of sight between anything and the player),
+			// do the truce between hmilitary and playerally.
+			UTIL_SetDeadPlayerTruce(TRUE);
+		}
 	}
 }
 
@@ -2000,8 +2010,6 @@ void CBasePlayer::FadeMonster(){
 	pev->effects |= EF_NOINTERP;
 }
 
-
-
 /*
 * GLOBALS ASSUMED SET:  g_ulModelIndexPlayer
 *
@@ -2018,8 +2026,64 @@ GENERATE_KILLED_IMPLEMENTATION(CBasePlayer)
 {
 	// for now, don't let NPC's talk.  Gets set back to 0 on a revive
 	g_TalkMonster_PlayerDead_DialogueMod = 1;
-
+	// Any talkers following me at this moment?  Record some of them (if over 5 somehow, but otherwise all) for sifting through later.
 	RecordFollowers();
+
+	if(!IsMultiplayer()){
+		BOOL canStartTruce = FALSE;
+
+		if(EASY_CVAR_GET(playerDeadTruce) == 2){
+			// start the truce only if any human faction sees the player at the time of death
+			int i;
+			edict_t* pEdict;
+			CBaseEntity* pTempEntity;
+			pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+			if (!pEdict)return;
+			for (i = 1; i < gpGlobals->maxEntities; i++, pEdict++){
+				if (pEdict->free)	// Not in use
+					continue;
+				if (!(pEdict->v.flags & (FL_MONSTER)))	// Not a monster ?
+					continue;
+				pTempEntity = CBaseEntity::Instance(pEdict);
+				if (!pTempEntity)
+					continue;
+				if(!pTempEntity->IsAlive()){
+					continue;
+				}
+				CBaseMonster* monsterTest = pTempEntity->GetMonsterPointer();
+				if(monsterTest==NULL){
+					continue;
+				}
+				int daClass = monsterTest->Classify();
+				if(daClass == CLASS_HUMAN_MILITARY || daClass == CLASS_MACHINE || daClass == CLASS_PLAYER_ALLY || daClass == CLASS_HUMAN_PASSIVE){
+					// go ahead
+				}else{
+					// nope!
+					continue;
+				}
+
+				if(monsterTest->FVisible(this->pev->origin) && monsterTest->FInViewCone(this)){
+					// can see me?  Start the truce.
+					canStartTruce = TRUE;
+					break;
+				}
+
+			}//END OF through all entities.
+
+		}else if(EASY_CVAR_GET(playerDeadTruce) == 3){
+			// Always start the truce now
+			canStartTruce = TRUE;
+		}
+
+		if(canStartTruce){
+			// IDEA: if this CVar is on (maybe only once there' a line of sight between anything and the player),
+			// do the truce between hmilitary and playerally.
+			// This is guaranteed on a reviveless death (figured out later), but for now, allow it only if within eyesight
+			// of any hgrunts
+			UTIL_SetDeadPlayerTruce(TRUE);
+		}
+	}// IsMultiplayer check
+
 
 	//gee, I don't think you're doing this right now.
 	m_bHolstering = FALSE;
@@ -2963,12 +3027,10 @@ void CBasePlayer::PlayerDeathThink(void)
 				// the player revives).
 				// Even if on the ground, a minimum time (recoveryDelayMin) must have passed to start, including midair time, usually small.
 
-				if (pev->flags & FL_ONGROUND) {
-
+				if (pev->flags & FL_ONGROUND){
 					if (gpGlobals->time >= recoveryDelayMin && gpGlobals->time > lastBlockDamageAttemptReceived + 1.5) {
 						startRevive();
 					}
-
 				}
 
 				if (recoveryIndex == 0) {
@@ -3040,15 +3102,17 @@ void CBasePlayer::PlayerDeathThink(void)
 
 
 	// NOTE - happens instantly for deadstage 0 since nextDeadStageTime stays at 0 (time has always surpassed it)
-	if(deadStage < 9 && gpGlobals->time >= nextDeadStageTime){
-		//MODDD - NEW.  Enforce taking away the solid-ness and let takedamage by DAMAGE_NO, why not.
-		// This avoids difficulties with stukabats landing that multiplayer doesn't have to deal with
-		// from the 'StartDeathCam' call further down.
-		pev->solid = SOLID_NOT;
-		pev->takedamage = DAMAGE_NO;
+	if(EASY_CVAR_GET(playerDeadTalkerBehavior) != 0){
+		if(deadStage < 9 && gpGlobals->time >= nextDeadStageTime){
+			//MODDD - NEW.  Enforce taking away the solid-ness and let takedamage by DAMAGE_NO, why not.
+			// This avoids difficulties with stukabats landing that multiplayer doesn't have to deal with
+			// from the 'StartDeathCam' call further down.
+			pev->solid = SOLID_NOT;
+			pev->takedamage = DAMAGE_NO;
 
-		HandleDeadStage();
-	}//deadStage
+			HandleDeadStage();
+		}//deadStage
+	}
 
 
 
@@ -3281,7 +3345,7 @@ void CBasePlayer::HandleDeadStage(void){
 				continue;
 			if (!pTempEntity->isTalkMonster())
 				continue;
-			if(pTempEntity->IsAlive()){
+			if(pTempEntity->IsAlive() && Distance(pTempEntity->pev->origin, pev->origin) < 1200){
 				// ok, let it know.  Might or might not actually do anything with that at this instant.
 				CTalkMonster* theTalker = static_cast<CTalkMonster*>(pTempEntity);
 				if(theTalker->m_MonsterState == MONSTERSTATE_PRONE){
@@ -3325,7 +3389,7 @@ void CBasePlayer::HandleDeadStage(void){
 			// Not moving, not in a combat state (convenient to look at me)? 
 			if(!theTalker->IsMoving() && theTalker->m_MonsterState != MONSTERSTATE_COMBAT && Distance(theTalker->pev->origin, this->pev->origin) < 700){
 				// have a direct line of sight?  Not already facing enough?
-				if(theTalker->FVisible(pev->origin) && UTIL_IsFacing(theTalker->pev, pev->origin, 0.06) ){
+				if(theTalker->FVisible(pev->origin) && !UTIL_IsFacing(theTalker->pev, pev->origin, 0.05) ){
 					// Turn and face.
 					theTalker->MakeIdealYaw(this->pev->origin);
 					theTalker->ChangeSchedule(theTalker->GetScheduleOfType(SCHED_ALERT_FACE));
@@ -3517,7 +3581,8 @@ void CBasePlayer::HandleDeadStage(void){
 
 
 			float thisDisto = Distance(theTalker->pev->origin, pev->origin);
-			if(thisDisto < bestDistoYet){
+			// can also accept anything if the ary_kneelers_count is less than 2.  Must still be within 1200 in distance though
+			if(thisDisto < bestDistoYet || (thisDisto < 1200 && ary_kneelers_count < 2) ){
 				bestDistoYet = thisDisto;
 
 				// Idea:  on finding a best distance, goto the current ary_kneelers_offset place
@@ -6949,6 +7014,8 @@ void CBasePlayer::Spawn( BOOL revived ){
 	deadStage = 0;
 	nextDeadStageTime = -1;
 	recentDeadPlayerFollowersCount = 0;
+
+	UTIL_SetDeadPlayerTruce(FALSE);
 
 
 	pev->classname = MAKE_STRING("player");

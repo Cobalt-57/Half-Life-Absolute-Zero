@@ -981,6 +981,7 @@ extern void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pev
 extern void RadiusDamage( Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius, int iClassIgnore, int bitsDamageType, int bitsDamageTypeMod );
 
 
+extern void UTIL_SetDeadPlayerTruce(BOOL arg_playerDeadTruce);
 
 
 

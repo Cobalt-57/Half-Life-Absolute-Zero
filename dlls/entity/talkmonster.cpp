@@ -3412,6 +3412,11 @@ CBasePlayer* CTalkMonster::nearestVisibleDeadPlayer(void){
 // Call for a schedule to look in the player's direction + make noise or panic.
 void CTalkMonster::OnPlayerDead(CBasePlayer* arg_player){
 	// DEAD TODO
+	// no, this is set elsewhere.  Although by sight only, careful.
+	// NOTE.  For too much special behavior here, consider checking CVar 'playerDeadTalkerBehavior'.
+	// Things like turning to face and making a noise on noticing the one I'm following drop dead or
+	// on the player being nearby are fine though.
+	//deadPlayerFocus = arg_player;
 
 }
 

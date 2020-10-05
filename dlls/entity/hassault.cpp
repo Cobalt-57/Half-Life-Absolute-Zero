@@ -74,10 +74,10 @@ EASY_CVAR_EXTERN_DEBUGONLY(hassaultFireAnimSpeedMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(hassaultMeleeAnimSpeedMulti)
 EASY_CVAR_EXTERN_DEBUGONLY(hassaultMeleeAttackEnabled)
 EASY_CVAR_EXTERN_DEBUGONLY(hassaultAllowGrenades)
+EASY_CVAR_EXTERN(hmilitaryDeadInvestigate)
 
 EASY_CVAR_EXTERN_CLIENTSENDOFF_BROADCAST(sv_germancensorship)
 extern BOOL globalPSEUDO_germanModel_hassaultFound;
-
 
 // Compare to grunt volume (0.48).
 #define HASSAULT_SENTENCE_VOLUME (float)0.58
@@ -3768,14 +3768,9 @@ void CHAssault::onDelete(void){
 
 
 GENERATE_KILLED_IMPLEMENTATION(CHAssault){
-	//spinuptimeremain = -1;
-	//spinuptime = -1;
-
+	
 	if(ShouldGibMonster( iGib )){
-		//going to gib? stop all!
-
-		//force it to stop just in case...
-		//stopIdleSpinSoundForever = TRUE;
+		// going to gib? stop all!
 		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
 		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spindown.wav");
 		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spinup.wav");
@@ -3786,9 +3781,6 @@ GENERATE_KILLED_IMPLEMENTATION(CHAssault){
 		spinuptime = -1;
 
 	}else{
-
-		//force it to stop just in case...
-		//stopIdleSpinSoundForever = TRUE;
 		UTIL_StopSound(ENT(pev), getIdleSpinChannel(), "hassault/hw_spin.wav");
 
 		if(EASY_CVAR_GET_DEBUGONLY(hassaultFireSound) >= 2){
@@ -3796,8 +3788,9 @@ GENERATE_KILLED_IMPLEMENTATION(CHAssault){
 		}
 	}
 
-	HGRUNTRELATED_letAlliesKnowOfKilled(this);
-
+	if(EASY_CVAR_GET(hmilitaryDeadInvestigate) == 1){
+		HGRUNTRELATED_letAlliesKnowOfKilled(this);
+	}
 
 	GENERATE_KILLED_PARENT_CALL(CSquadMonster);
 }

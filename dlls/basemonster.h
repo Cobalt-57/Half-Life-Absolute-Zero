@@ -348,6 +348,7 @@ public:
 
 	//MODDD - moved outside iRelationship.
 	static int iEnemy[14][14];
+	static int iEnemyTruce[14][14];
 
 	//MODDD - new, for all monsters. Because the zombie ones are reused so much.
 	static const char *pStandardAttackHitSounds[];

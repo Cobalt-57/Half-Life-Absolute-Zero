@@ -2097,7 +2097,12 @@
 	EASY_CVAR_DECLARATION_SERVER_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_DECLARATION_SERVER_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_DECLARATION_SERVER(sv_rpg_projectile_model)\
+	EASY_CVAR_DECLARATION_SERVER(hmilitaryDeadInvestigate)\
+	EASY_CVAR_DECLARATION_SERVER(playerDeadTruce)\
+	EASY_CVAR_DECLARATION_SERVER(playerDeadTalkerBehavior)\
 	DUMMY
+
+
 
 
 
@@ -2622,6 +2627,9 @@
 	EASY_CVAR_DECLARATION_CLIENT_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_DECLARATION_CLIENT_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_DECLARATION_CLIENT(sv_rpg_projectile_model)\
+	EASY_CVAR_DECLARATION_CLIENT(hmilitaryDeadInvestigate)\
+	EASY_CVAR_DECLARATION_CLIENT(playerDeadTruce)\
+	EASY_CVAR_DECLARATION_CLIENT(playerDeadTalkerBehavior)\
 	DUMMY
 
 
@@ -3146,6 +3154,9 @@
 	EASY_CVAR_UPDATE_SERVER_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_UPDATE_SERVER_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_UPDATE_SERVER(sv_rpg_projectile_model)\
+	EASY_CVAR_UPDATE_SERVER(hmilitaryDeadInvestigate)\
+	EASY_CVAR_UPDATE_SERVER(playerDeadTruce)\
+	EASY_CVAR_UPDATE_SERVER(playerDeadTalkerBehavior)\
 	DUMMY
 
 
@@ -3673,6 +3684,9 @@
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_UPDATE_SERVER_DEDICATED(sv_rpg_projectile_model)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED(hmilitaryDeadInvestigate)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED(playerDeadTruce)\
+	EASY_CVAR_UPDATE_SERVER_DEDICATED(playerDeadTalkerBehavior)\
 	DUMMY
 
 
@@ -4199,6 +4213,9 @@
 	EASY_CVAR_UPDATE_CLIENT_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_UPDATE_CLIENT_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_UPDATE_CLIENT(sv_rpg_projectile_model)\
+	EASY_CVAR_UPDATE_CLIENT(hmilitaryDeadInvestigate)\
+	EASY_CVAR_UPDATE_CLIENT(playerDeadTruce)\
+	EASY_CVAR_UPDATE_CLIENT(playerDeadTalkerBehavior)\
 	DUMMY
 
 
@@ -4724,6 +4741,9 @@
 	EASY_CVAR_CREATE_SERVER_SETUP_A_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(sv_rpg_projectile_model)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(hmilitaryDeadInvestigate)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(playerDeadTruce)\
+	EASY_CVAR_CREATE_SERVER_SETUP_A_SERVERONLY(playerDeadTalkerBehavior)\
 	DUMMY
 
 
@@ -5248,6 +5268,9 @@
 	EASY_CVAR_CREATE_SERVER_A_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(sv_rpg_projectile_model)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(hmilitaryDeadInvestigate)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(playerDeadTruce)\
+	EASY_CVAR_CREATE_SERVER_A_SERVERONLY(playerDeadTalkerBehavior)\
 	DUMMY
 
 
@@ -5772,6 +5795,9 @@
 	EASY_CVAR_CREATE_CLIENT_A_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(sv_rpg_projectile_model)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(hmilitaryDeadInvestigate)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(playerDeadTruce)\
+	EASY_CVAR_CREATE_CLIENT_A_SERVERONLY(playerDeadTalkerBehavior)\
 	DUMMY
 
 
@@ -6295,6 +6321,9 @@
 	EASY_CVAR_RESET_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_RESET_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_RESET(sv_rpg_projectile_model)\
+	EASY_CVAR_RESET(hmilitaryDeadInvestigate)\
+	EASY_CVAR_RESET(playerDeadTruce)\
+	EASY_CVAR_RESET(playerDeadTalkerBehavior)\
 	DUMMY
 
 
@@ -6819,6 +6848,9 @@
 	EASY_CVAR_EXTERN_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_EXTERN_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_EXTERN(sv_rpg_projectile_model)\
+	EASY_CVAR_EXTERN(hmilitaryDeadInvestigate)\
+	EASY_CVAR_EXTERN(playerDeadTruce)\
+	EASY_CVAR_EXTERN(playerDeadTalkerBehavior)\
 	DUMMY
 
 
@@ -7345,11 +7377,9 @@
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_CLIENTONLY(cl_gauss_viewpunch_mod)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER_DEBUGONLY(pathfindMonsterclipFreshLogic)\
 	EASY_CVAR_SYNCH_NOSAVE_SERVER(sv_rpg_projectile_model)\
+	EASY_CVAR_SYNCH_NOSAVE_SERVER(hmilitaryDeadInvestigate)\
+	EASY_CVAR_SYNCH_NOSAVE_SERVER(playerDeadTruce)\
+	EASY_CVAR_SYNCH_NOSAVE_SERVER(playerDeadTalkerBehavior)\
 	DUMMY
-
-
-
-
-
 
 

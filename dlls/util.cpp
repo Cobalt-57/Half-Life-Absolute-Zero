@@ -132,6 +132,8 @@ extern BOOL g_queueCVarHiddenSave;
 
 EASY_CVAR_DECLARATION_SERVER_MASS
 
+// handled on save/restore in world.cpp
+BOOL g_f_playerDeadTruce = FALSE;
 
 //MODDD - event ID's.
 unsigned short g_sTrailEngineChoice;
@@ -266,7 +268,7 @@ void resetGlobalVars(void) {
 	g_scientist_sayGetItOffCooldown = -1;
 
 	g_TalkMonster_PlayerDead_DialogueMod = 0;
-
+	
 	g_sayBulletHitCooldown = -1;
 
 
@@ -7579,5 +7581,52 @@ void ExplodeModel( const Vector &vecOrigin, float speed, int model, int count )
 
 //bleh.
 
+
+
+void UTIL_SetDeadPlayerTruce(BOOL arg_playerDeadTruce){
+
+	if(g_f_playerDeadTruce != arg_playerDeadTruce){
+		g_f_playerDeadTruce = arg_playerDeadTruce;
+
+		if(arg_playerDeadTruce == TRUE){
+			// If this is starting the truce, go through every single entity.
+			// Any with an enemy that the monster should currently no longer be hostile toward
+			// (hgrunt vs. barney, vice versa) will forget the enemy and do whatever else.
+
+			int i;
+			int i2;
+			edict_t* pEdict;
+			CBaseEntity* pTempEntity;
+		
+			pEdict = g_engfuncs.pfnPEntityOfEntIndex(1);
+			if (!pEdict)return;
+			for (i = 1; i < gpGlobals->maxEntities; i++, pEdict++){
+				if (pEdict->free)	// Not in use
+					continue;
+				if (!(pEdict->v.flags & (FL_MONSTER)))	// Not a monster ?
+					continue;
+				pTempEntity = CBaseEntity::Instance(pEdict);
+				if (!pTempEntity)
+					continue;
+				if(!pTempEntity->IsAlive()){
+					continue;
+				}
+				CBaseMonster* monsterTest = pTempEntity->GetMonsterPointer();
+				if(monsterTest==NULL){
+					continue;
+				}
+
+				if(monsterTest->m_hEnemy != NULL){
+					int daRel = monsterTest->IRelationship(monsterTest->m_hEnemy);
+					if(daRel == R_NO || daRel == R_AL){
+						// relationship is now NO or AL with my 'enemy'?  Cancel that then
+						monsterTest->ForgetEnemy();
+					}
+				}
+			}//END OF through all entities.
+
+		}//arg_playerDeadTruce == TRUE check
+	}//arg/g match check
+}//UTIL_SetDeadPlayerTruce
 
 

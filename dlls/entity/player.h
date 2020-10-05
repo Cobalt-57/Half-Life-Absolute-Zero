@@ -485,7 +485,6 @@ public:
 	int recentDeadPlayerFollowersCount;
 	EHANDLE recentDeadPlayerFollowers[5];
 
-
 	
 	//MODDD - TODO.  Keep in synch with the client.  That's gonna be fun.
 	// How about a message to set each one at startup/spawn, and another

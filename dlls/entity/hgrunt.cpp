@@ -60,7 +60,6 @@
 
 
 
-
 EASY_CVAR_EXTERN_DEBUGONLY(hgruntBrassEjectForwardOffset)
 EASY_CVAR_EXTERN_DEBUGONLY(gruntsCanHaveMP5Grenade)
 EASY_CVAR_EXTERN_DEBUGONLY(animationFramerateMulti)
@@ -86,6 +85,7 @@ EASY_CVAR_EXTERN_DEBUGONLY(hgruntAllowGrenades)
 EASY_CVAR_EXTERN_DEBUGONLY(altSquadRulesRuntime)
 EASY_CVAR_EXTERN_DEBUGONLY(leaderlessSquadAllowed)
 EASY_CVAR_EXTERN_DEBUGONLY(monsterSpawnPrintout)
+EASY_CVAR_EXTERN(hmilitaryDeadInvestigate)
 
 
 
@@ -2239,7 +2239,9 @@ GENERATE_KILLED_IMPLEMENTATION(CHGrunt){
 	//if ( InSquad() )
 	// no, no squad checks.  Anything within a short radius can comment on this.
 
-	HGRUNTRELATED_letAlliesKnowOfKilled(this);
+	if(EASY_CVAR_GET(hmilitaryDeadInvestigate) == 1){
+		HGRUNTRELATED_letAlliesKnowOfKilled(this);
+	}
 
 	GENERATE_KILLED_PARENT_CALL(CSquadMonster);
 }
@@ -3886,7 +3888,6 @@ void CHGrunt::StartMonster( void )
 		//}
 		
 		
-		
 		//////////////////////////////////////////////////////////////////////////////////////////////
 		//START OF HGRUNTS CUSTOM SCRIPT
 		//////////////////////////////////////////////////////////////////////////////////////////////
@@ -3895,37 +3896,37 @@ void CHGrunt::StartMonster( void )
 		if(EASY_CVAR_GET_DEBUGONLY(monsterSpawnPrintout) == 1){
 			EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("STARTMONSTER for SQUADMONSTER CALLED: info? %s %d %d", STRING(pev->classname), this->SquadCount(), testLeader != NULL));
 		}
+
 		
-		if (testLeader != NULL )
-		{
+		if (testLeader != NULL ){
 			BOOL forbidLeaderChange = FALSE;
 			CSquadMonster* eligibleChange = NULL;
 			CSquadMonster* selectedLeader = NULL;
-			//First, a check.  Is any squad member already a "hassault"?  If so, make that one the leader.
+			// First, a check.  Is any squad member already a "hassault"?  If so, make that one the leader.
 			for (int i = 0; i < MAX_SQUAD_MEMBERS-1; i++){
 				if (testLeader->m_hSquadMember[i] != NULL){
 					CSquadMonster *pMember = testLeader->MySquadMember(i);
 					if (pMember){
 						EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("CHECKING %d; %s", i, STRING(pMember->pev->classname)) );
 						if(pMember->disableLeaderChange == TRUE){
-							//For now, if any member has this variable set, do NOT allow any chance of the change.
+							// For now, if any member has this variable set, do NOT allow any chance of the change.
 							//EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("Leader checking blocked!"));
 							//forbidLeaderChange = TRUE;
-							//...nah, just mean "THIS" hgrunt can't be the leader.
+							// ...nah, just mean "THIS" hgrunt can't be the leader.
 							continue;
 						}
 						if(eligibleChange == NULL && pMember->disableLeaderChange == FALSE){
-							//This can become an "hassault" in case the current choice can't (and needs to be changed).
+							// This can become an "hassault" in case the current choice can't (and needs to be changed).
 							eligibleChange = pMember;
 						}
 						if(selectedLeader == NULL && FClassnameIs(pMember->pev, "monster_human_assault") ){
-							//Make this the leader!
+							// Make this the leader!
 							selectedLeader = pMember;
 							//break;
 						};
 					}
 				}
-			}//END OF for(...)
+			}//END OF for
 
 			if(!forbidLeaderChange){
 				EASY_CVAR_PRINTIF_PRE(squadmonsterPrintout, easyForcePrintLine("SELECTED LEADER: %d", selectedLeader == NULL));

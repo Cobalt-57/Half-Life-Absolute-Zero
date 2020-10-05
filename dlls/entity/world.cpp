@@ -56,6 +56,7 @@ extern DLL_DECALLIST gDecals[];
 
 extern BOOL g_queueCVarHiddenSave;
 extern float forceWorldLightOffMem;
+extern BOOL g_f_playerDeadTruce;
 
 
 //MODDD -
@@ -526,6 +527,8 @@ CWorld::CWorld(void){
 
 	skyboxEverSet = FALSE;
 
+	m_f_playerDeadTruce = FALSE;
+
 }//END OF CWorld constructor
 
 
@@ -923,6 +926,7 @@ TYPEDESCRIPTION	CWorld::m_SaveData[] =
 	DEFINE_FIELD( CWorld, m_fl_node_hulltest_height, FIELD_FLOAT ),
 	DEFINE_FIELD( CWorld, m_f_node_hulltest_heightswap, FIELD_BOOLEAN ),
 	DEFINE_FIELD( CWorld, m_f_map_anyAirNodes, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CWorld, m_f_playerDeadTruce, FIELD_BOOLEAN ),
 	
 };
 
@@ -932,6 +936,11 @@ int CWorld::Save( CSave &save )
 {
 	if ( !CBaseEntity::Save(save) )
 		return 0;
+
+	// keep me in synch
+	// (complement to 'applyLoadedCustomMapSettingsToGlobal' for saving pending if
+	//  anything else like this is needed)
+	m_f_playerDeadTruce = g_f_playerDeadTruce;
 
 	int saveFieldResult = save.WriteFields( "CWorld", this, m_SaveData, ARRAYSIZE(CWorld::m_SaveData) );
 
@@ -975,10 +984,12 @@ void CWorld::WorldThink(void){
 //so that the values at the time of that map's creation per the user's save file are used.
 void CWorld::applyLoadedCustomMapSettingsToGlobal(void){
 	
-	//Clearly these need to take effect.
+	// Clearly these need to take effect.
 	node_linktest_height = m_fl_node_linktest_height;
 	node_hulltest_height = m_fl_node_hulltest_height;
 	node_hulltest_heightswap = m_f_node_hulltest_heightswap;
+
+	g_f_playerDeadTruce = m_f_playerDeadTruce;
 
 }//END Of applyLoadedCustomMapSettingsToGlobal
 

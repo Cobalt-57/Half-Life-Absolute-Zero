@@ -748,6 +748,7 @@ void CBarney::SayNearCautious(void) {
 
 void CBarney::StartTask( Task_t *pTask )
 {
+	
 	//MODDD
 	///////////////////////////////////////////////////////////////////////
 	///???

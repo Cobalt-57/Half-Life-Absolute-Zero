@@ -1115,6 +1115,7 @@ public:
 	float m_fl_node_hulltest_height;
 	BOOL m_f_node_hulltest_heightswap;
 	BOOL m_f_map_anyAirNodes;
+	BOOL m_f_playerDeadTruce;
 
 	BOOL skyboxEverSet;
 

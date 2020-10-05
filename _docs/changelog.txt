@@ -755,6 +755,10 @@ cl_mp5_evil_skip no longer fails to play firing animation on changing maps (happ
 
 New CVar: sv_rpg_projectile_model (defaults to 1).  Uses the mp5 grenade model for the rocket instead.
 
+New CVars: hmilitaryDeadInvestigate, playerDeadTruce, playerDeadTalkerBehavior.  See 'cvar info.txt' for more info.
+hmilitaryDeadInvestigate - When an hgrunt/hassault notices a member killed in eyesight or nearby (hears it), turns to face and approaches to 'investigate'.
+playerDeadTruce - when the player is killed in singleplayer, all human factions (military & faculty) will cease fire.
+playerDeadTalkerBehavior - when on, 
 
 
 LATER:
