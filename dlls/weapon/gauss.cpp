@@ -60,15 +60,12 @@ extern BOOL g_irunninggausspred;
 #endif
 
 
-
 LINK_ENTITY_TO_CLASS(weapon_gauss, CGauss);
 
 
 
 
-
 CGauss::CGauss(void) {
-
 	// NOTICE - all mentions of 'm_pPlayer->m_flStartCharge' changed to no longer involve the player
 	// (var of this class instead).
 	// ALSO, m_flStartCharge replaced with pev->fuser1, something that counts down to 0 (0-based timer).
@@ -160,7 +157,6 @@ void getRadiusStats(float flDamage, float& radDmg, float& radRange){
 
 
 
-
 //MODDD - beware, damage-dealt is determined by ammo used, not time passed since starting a charge.
 // This can still be used to tell when to do the auto-discharge maybe, so don't ignore it completely.
 // And the pitch, this is used for how to scale the pitch snce starting a charge.
@@ -181,7 +177,6 @@ float CGauss::GetFullChargeTime(void){
 		return 0.7*(12-1.5); // - 1.3;
 	}
 }//GetFullChargeTime
-
 
 
 

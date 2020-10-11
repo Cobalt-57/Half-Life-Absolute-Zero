@@ -2019,8 +2019,6 @@ Change weapon model animation
 */
 void HUD_SendWeaponAnim( int iAnim, int body, int force )
 {
-
-
 	if (iAnim == -1) {
 		// not a sequence, ignore
 		return;

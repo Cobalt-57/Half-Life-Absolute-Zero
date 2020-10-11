@@ -683,7 +683,7 @@
 #define DEFAULT_ignoreMultiplayerSkillOverride 1
 
 #define DEFAULT_m_rawinput 0
-#define DEFAULT_cl_earlyaccess 1
+#define DEFAULT_cl_earlyaccess 0
 #define DEFAULT_cl_viewroll 1
 #define DEFAULT_drawDebugCrowbar 0
 

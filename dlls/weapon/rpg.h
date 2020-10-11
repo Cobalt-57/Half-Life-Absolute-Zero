@@ -15,6 +15,9 @@ enum rpg_e {
 	RPG_FIRE,
 	RPG_HOLSTER,
 	RPG_DRAW,
+	RPG_IDLE_EMPTY,
+	RPG_HOLSTER_EMPTY,
+	RPG_DRAW_EMPTY,
 
 };
 
@@ -86,6 +89,8 @@ public:
 
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
+
+	void onFreshFrame(void);
 	void ItemPostFrameThink(void);
 	void WeaponIdle(void);
 

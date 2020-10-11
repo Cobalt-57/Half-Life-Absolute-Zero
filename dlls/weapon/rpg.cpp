@@ -954,14 +954,13 @@ BOOL CRpg::Deploy( )
 	forceHideSpotTime = -1;
 #endif
 
-	// uhh. what.
-	/*
-	if ( GetClip() == 0 ){
-		return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW_UL, "rpg", 0, 0, (16.0/30.0), -1 );
+	
+	if(GetClip() > 0){
+		return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW, "rpg", 0, 0, (16.0/30.0), -1 );
+	}else{
+		return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW_EMPTY, "rpg", 0, 0, (16.0/30.0), -1 );
 	}
-	return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW1, "rpg", 0, 0, (16.0/30.0), -1 );
-	*/
-	return DefaultDeploy( "models/v_rpg.mdl", "models/p_rpg.mdl", RPG_DRAW, "rpg", 0, 0, (16.0/30.0), -1 );
+	
 }
 
 
@@ -995,17 +994,13 @@ void CRpg::Holster( int skiplocal /* = 0 */ )
 	}
 #endif
 
-	//MODDD - also going to involve whether the RPG is loaded while holstered (HOLSTER1) or not (HOLSTER2).
-	//
-	/*
-	if(GetClip()){
-		holsterAnimToSend = RPG_HOLSTER1;
+	
+	if(GetClip() > 0){
+		holsterAnimToSend = RPG_HOLSTER;
 	}else{
-		holsterAnimToSend = RPG_HOLSTER2;
+		holsterAnimToSend = RPG_HOLSTER_EMPTY;
 	}
-	*/
-	holsterAnimToSend = RPG_HOLSTER;
-
+	
 #ifndef CLIENT_DLL
 	forceHideSpotTime = -1;
 #endif
@@ -1095,6 +1090,32 @@ void CRpg::SecondaryAttack()
 
 
 
+void CRpg::onFreshFrame(void){
+
+	BOOL holdingSecondary = ((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= 0.0);
+	BOOL holdingPrimary = ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= 0.0);
+
+	float framesSinceRestore = getFramesSinceRestore();
+
+	if(framesSinceRestore == 0){
+		// If coming from a transition with a clipless RPG (likely holding it while out of ammo),
+		// sequence #0 plays automatically the instant the transition is done loading.
+		// This will play the IDLE_EMPTY sequence to override that.
+		int iAnim;
+
+		if (GetClip() > 0) {
+			iAnim = RPG_IDLE;
+		}else{
+			iAnim = RPG_IDLE_EMPTY;
+		}
+
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 91.0 / 30.0 + randomIdleAnimationDelay();
+		forceBlockLooping();
+		SendWeaponAnim( iAnim );
+	}//framesSinceRestore check
+
+}//onFreshFrame
+
 
 
 //MODDD
@@ -1102,6 +1123,11 @@ void CRpg::ItemPostFrameThink() {
 
 	//const BOOL holdingPrimary = m_pPlayer->pev->button & IN_ATTACK;
 	//const BOOL holdingSecondary = m_pPlayer->pev->button & IN_ATTACK2;
+	
+	if(getFramesSinceRestore() < 3){
+		onFreshFrame();
+	}
+
 
 	//MODDD - SecondaryAttack script moved here.
 	// This lets the lasersight be toggled on/off, even when it is forced
@@ -1147,11 +1173,17 @@ void CRpg::WeaponIdle( void )
 		return;
 
 
+	int iAnim;
 	
-	int iAnim = RPG_IDLE;
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 91.0 / 30.0 + randomIdleAnimationDelay();
-	SendWeaponAnim( iAnim );
+	if (GetClip() > 0) {
+		iAnim = RPG_IDLE;
+	}else{
+		iAnim = RPG_IDLE_EMPTY;
+	}
 
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 91.0 / 30.0 + randomIdleAnimationDelay();
+	forceBlockLooping();
+	SendWeaponAnim( iAnim );
 
 
 	/*

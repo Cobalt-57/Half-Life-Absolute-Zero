@@ -2029,6 +2029,9 @@ void CEgon::EndAttack( void )
 {
 	BOOL bMakeNoise = FALSE;
 
+	// in case turned on from going through a transition
+	blockContinualFireSound = FALSE;
+
 	//easyForcePrintLine("GONNA GIVE IT TO YA");
 		
 	if ( m_fireState != FIRE_OFF ) //Checking the button just in case!.

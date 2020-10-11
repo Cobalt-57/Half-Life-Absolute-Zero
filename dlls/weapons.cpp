@@ -1063,8 +1063,6 @@ int CBasePlayerWeapon::UpdateClientData( CBasePlayer *pPlayer )
 
 
 
-
-
 void CBasePlayerWeapon::SendWeaponAnim( int iAnim, int skiplocal, int body )
 {
 	//MODDD - that does it.  Screw this.

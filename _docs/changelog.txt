@@ -760,11 +760,14 @@ hmilitaryDeadInvestigate - When an hgrunt/hassault notices a member killed in ey
 playerDeadTruce - when the player is killed in singleplayer, all human factions (military & faculty) will cease fire.
 playerDeadTalkerBehavior - when on, 
 
+egon: glitch in sometimes failing to play the looping continual fire sound since a transition fixed.
+
+rpg: new model + anims to work as expected
+
 
 LATER:
 Panthereye will also be more willing to jump while routing randomly around a player it can't reach to melee.  (maybe?)
 Floater melee, anim now present in model.
 Kingpin teleport on taking damage, + get a green healing aurora while in cover?  (unsure)
-Barney/scientist 'kneel at dead player and/or panic' behavior?
 
 
