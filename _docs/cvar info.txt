@@ -1456,7 +1456,7 @@ cl_gauss_viewpunch_mod (1) - BOOL.  When on, gauss kickback is much more varried
 m_rawinput (0) - BOOL.  Related to interpreting mouse input.
 
 
-cl_earlyaccess (1) - If 1, displays info about the current build at the top-left corner of the screen.
+cl_earlyaccess (0) - If 1, displays info about the current build at the top-left corner of the screen.
 ~This can be seen with 'mod_version_client' and 'mod_version_server' in console. as well.
 
 
