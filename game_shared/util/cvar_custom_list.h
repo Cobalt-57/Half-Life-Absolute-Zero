@@ -639,8 +639,6 @@
 	EASY_CVAR_HIDDEN_ACCESS_DEBUGONLY(pathfindMonsterclipFreshLogic, pathfindmonsterclipfreshlogic)\
 	DUMMY
 
-// IMPORTANT!  Keep HIDDEN_CVAR_INFO_LENGTH (dlls/client.cpp) in check with any changes to the number of entries above
-
 
 
 #define EASY_CVAR_HIDDEN_SAVE_MASS\

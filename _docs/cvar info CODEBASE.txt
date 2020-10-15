@@ -1,0 +1,192 @@
+
+This file describes how this project handles CVars so that new ones may be added.
+For descriptions of all CVars available ingame, see 'cvar info.txt' also here in _docs instead.
+
+----Basics----
+Better summaries of the files are given further down.  See some important topics about the CVars first.
+In short, each CVar has several entries across nearly all the methods in game_shared/util/cvar_custom_list.h, and some
+basic values in game_shared/util/cvar_custom_info.h.
+Example: EASY_CVAR_DECLARATION_SERVER(sv_longjump_chargemode), etc. Search for other mentions of 'sv_longjump_chargemode' to see all the places the entries for this CVar.
+More info on how these larger methods in cvar_custom_list.h work further down.
+
+----Shared CVars----
+The source engine has CVar-flag called 'REPLICATED', but goldsource lacks this.
+This flag is used for server CVars that need to be read serverside and clientside (clientside can see the value but can not change it, as it must be consistent for all players to be serverside).
+In this codebase, see entries in cvar_custom_list.h with CLIENTSENDOFF_BROADCAST.  These, marked 'DEBUGONLY' or not, also send the value to all clients on any detected change.  Clients retrieve the value on connecting to be in-synch as well.
+Examples:
+  wpn_glocksilencer, not DEBUGONLY.  Both serverside and clientside check for this since weapon script is shared.
+  playerCrossbowMode, DEBUGONLY.  Same shared behavior, only hidden from autocomplete on release builds.
+
+----Hidden CVars----
+Some CVars are hidden in release builds, this can be seen in 'DEBUGONLY' entries in cvar_custom_list.txt (more info on that below).
+In debug mode, DEBUGONLY entries are no different from their ordinary counterparts.  In release mode, DEBUGONLY entries use different behavior to skip registering the CVar so that it does not show up in autocomplete.
+Hidden CVars can still be accessed ingame by typing their names into console alone to get the value or with a number afterward to set the value (myvar 7).  Hidden CVars are saved to the 'absZeroMem.txt' and 'absZeroMemClient.txt' files on any changes for server/client vars.  These files are loaded at startup in release mode too.
+
+Hidden CVars work differently if running the game as a dedicated server since custom console input is not involved in the server, the most direct way of interacting with server/shared CVars.
+They are registered normally like in Debug mode, even in a release build.  The CVars will not show up in autocomplete in any ingame console since the game is not linked to any client's game.
+
+Note that hidden CVars are only meant to hold floats, although DEBUGONLY or not, debug/release build, all other 'EASY_CVAR_...' methods assume CVars hold floats.  Anything that needs whole numbers or boolean values (0 or 1) can work with this.
+
+
+--------------------------------------------------------------------------------
+----Files----
+
+Most CVars are handled across these files in game_shared/util: cvar_custom.h, cvar_custom_info.h, and cvar_custom_list.h.
+
+--cvar_custom.h--
+Defines helper macro methods for the rest of the codebase to use; should not need to be touched.
+The differences in CVars seen between Debug and Release builds (namely some being hidden in Release builds) are covered here through '#ifdef _DEBUG' checks.
+Also covers logic for letting the right console input access a hidden CVar (to avoid showing up in autocomplete), called for in dlls/client.cpp.
+
+--cvar_custom_info.h--
+Simple value-only macros for the CVars, split into two sections: name_ID and DEFAULT_name (plug in the name of the CVar)
+Not every CVar needs a name_ID entry, but every CVar needs a DEFAULT_name.
+See further below for more info on setting up a CVar.
+
+--cvar_custom_list.h--
+Largest file, defines macro methods for handling various stages of the CVars, such as declaration, frame-logic, and extra logic needed for hidden CVars in release (custom loading/saveing).
+Most methods expect an entry for every CVar.  Some only expect entries for CVars of certain types.
+Most take the same types of entries but a few work differently.
+Most entries take one parameter, the name of the CVar in its intended case, but some take two.  The second is the CVar in all lowercase characters.
+Summary of greater methods:
+
+ ---Standard suffixes allowed for entries (what is meant by 'entries allowed: Standard'; anything else tells what to use instead)
+ <no suffix> -  serverside, not debugonly.
+ _DEBUGONLY - serverside, debugonly.
+ _CLIENTONLY
+ _CLIENTONLY_DEBUGONLY
+ _CLIENTSENDOFF_BROADCAST - shared.
+ _CLIENTSENDOFF_BROADCAST_DEBUGONLY - shared, debugonly.
+
+ Any CVar will need to use some suffix here (or lack thereof) consistently throughout its entries in most cvar_custom_list.h methods,
+ and for other methods related to accessing the CVar throughout the rest of the codebase (more info in the 'Other EASY_CVAR methods' section)
+
+
+ EASY_CVAR_HASH_MASS - shared and clientonly debugonly vars (what a combo) only.  Nothing else needs a unique ID.  More info on the 'hash' system further down.
+   entries allowed: EASY_CVAR_HASH and EASY_CVAR_HASH_CLIENTONLY
+
+ EASY_CVAR_HIDDEN_LIST - list of all CVars hidden in release builds that should still be accessible by typing its name into console.
+   entries allowed: EASY_CVAR_HIDDEN_ACCESS, suffixes _DEBUGONLY, _CLIENTONLY_DEBUGONLY, and _CLIENTSENDOFF_BROADCAST_DEBUGONLY
+   Also, these entries take two parameters (lowercased version must be included).
+
+ EASY_CVAR_HIDDEN_SAVE_MASS
+   Only DEBUGONLY CVars use this to save CVars to text files in release mode.
+   entries allowed: EASY_CVAR_HIDDEN, suffixes _LOAD_SERVERONLY, _LOAD_CLIENTONLY  (shared/broadcasted CVars use 'serveronly'; saving clientside too is pointless)
+   
+ EASY_CVAR_HIDDEN_LOAD_MASS
+   Same as SAVE, but takes the lowercased form as a 2nd parameter.
+   entries allowed: see above.
+
+
+!!!  Starting here, all CVars are expected to have an entry in lists.  Even in counter-intuitive cases (like one with suffix _CLIENTONLY:  EASY_CVAR_DECLARATION_SERVER_CLIENTONLY) !!!
+
+ EASY_CVAR_DECLARATION_SERVER_MASS
+   Declares variables for cacheing CVars if necessary serverside (global float variable declared), most often hidden ones.  Dummied for normally registered CVars (no point in having these).
+   NOTE: for neatness, give everything an entry here anyway.  For instance, even _CLIENTONLY_DEBUGONLY entries will be dummied calls.
+   entries allowed: Standard.
+
+ EASY_CVAR_DECLARATION_CLIENT_MASS
+   Declares variables for cacheing CVars if necessary clientside.
+   entries allowed: Standard.
+
+ EASY_CVAR_UPDATE_SERVER_MASS
+   Gives continual logic for this CVar serverside.  Only for shared CVars that need to do continual checks for any change for seeing whether a broadcast (send a new value to all clients) is needed.
+   Also, checks are done every second instead of every single frame.
+   entries allowed: Standard.
+
+ EASY_CVAR_UPDATE_SERVER_DEDICATED_MASS
+   Gives continual logic for this CVar while running on a dedicated server.
+   Not dummied in Release builds (but only effective in place of UPDATE_SERVER_MASS when running a dedicated server) as these checks per interval become necessary.
+   entries allowed: Standard.
+
+ EASY_CVAR_UPDATE_CLIENT_MASS
+   Gives continual logic for this CVar clientside.
+   entries allowed: Standard.
+
+(these methods also always expect an entry, even though they don't use standard suffixes.  Shared CVars are serverside unless they are per-player shared like cl_ladder, see further below)
+-----
+ EASY_CVAR_CREATE_SERVER_SETUP_MASS
+   Special step for serverside only (no client equivalent).  Creates a struct storing CVar info soon to be registered.
+   entries allowed: suffixes A_CLIENTONLY, A_SERVERONLY, A_CLIENTONLY_DEBUGONLY, A_SERVERONLY_DEBUGONLY
+   - again, SERVERONLY for shared CVars.  The "A_" in front means 'archive', for saving the CVar (can omit)
+
+ EASY_CVAR_CREATE_SERVER_MASS
+   Controls registration for this CVar serverside (to show up in autocomplete and be retrieved from other places as expected).
+   entries allowed: see above.
+
+ EASY_CVAR_CREATE_CLIENT_MASS
+   Controls registration for this CVar clientside.
+   Note that calls for EASY_CVAR_CREATE_CLIENT_SERVERONLY (and _DEBUGONLY in a debug build) will still register the CVar, but uses the FCVAR_SERVER to speifty that it should be kept in synch with serverside.
+   This is unrelated to shared (BROADCAST) behavior.  This only allows the CVar to be set before starting a map; only effective for single-player or running a non-dedicated server.
+   This mimicks the behavior of several serverside built-in CVars such as sv_cheats.  Although visible during multiplayer, only the server's copy is effective for all players (setting as a connected client has no effect on game logic).
+   entries allowed: see above.
+-----
+
+
+ EASY_CVAR_RESET_MASS
+   Resets the CVar to its 'name_DEFAULT' value when the 'fixcvar' command or any other alias is used.
+   entries allowed: Standard
+
+ EASY_CVAR_EXTERN_MASS
+   Makes the CVar's cached form available (if not dummied, otherwise this is dummied also) in places that need all CVars available.
+   CVars still need 'EASY_CVAR_EXTERN_...(name)' calls.
+   entries allowed: Standard
+ 
+ EASY_CVAR_SYNCH_SERVER_MASS
+   Called on connecting to a server / starting a map.  Sends shared variable values from serverside to clientside to keep server/client in synch.
+   entries allowed:
+    _NOSAVE_SERVER
+    _NOSAVE_SERVER_DEBUGONLY
+    _NOSAVE_SERVER_CLIENTONLY
+    _NOSAVE_SERVER_CLIENTONLY_DEBUGONLY
+    _NOSAVE_SERVER_CLIENTSENDOFF_BROADCAST
+    _NOSAVE_SERVER_CLIENTSENDOFF_BROADCAST_DEBUGONLY
+
+
+
+--------------------------------------------------------------------------------
+
+----Other EASY_CVAR methods----
+Some methods from cvar_custom.h are for use in the rest of the codebase for working with CVars instead.
+ EASY_CVAR_EXTERN(name)
+ EASY_CVAR_GET(name)
+ EASY_CVAR_SET(name)
+
+Also, reminder to involve a CVar's standard suffix (like _CLIENTSENDOFF_BROADCAST) at the end of any such calls.
+
+Example: CVar wpn_glocksilencer has the suffix '_CLIENTSENDOFF_BROADCAST' in entries in all methods in cvar_custom_list.h that call for the standard suffix.
+ In turn, any EASY_CVAR_EXTERN, EASY_CVAR_GET, and EASY_CVAR_SET calls must also have _CLIENTSENDOFF_BROADCAST:
+ EASY_CVAR_GET_CLIENTSENDOFF_BROADCAST(wpn_glocksilencer), etc.
+ !!! Beware!  It is very easy to forget to do this and may not cause compile errors.
+
+It is best to have 'EASY_CVAR_EXTERN_...' calls in any files that involve the CVar through EASY_CVAR_GET/SET calls, even if it compiles without them.  Enjoy the compile errors from building in release mode instead, perhaps.
+EASY_CVAR_SET calls should be very rarely needed since the user is supposed to handle the CVars themselves.  cl_bullsquidspit, for example, sets other CVars when it is changed.  'forceWorldLightOff' is kept in-synch with the world lights being turned on/off by something other than console.
+
+
+----Hidden CVar Interpretation----
+Another point of interest is the hidden CVar interpretation system in client.cpp.
+Search for aryHiddenCVarInfo, in particualr references to it after
+    for(int i = 0; i < HIDDEN_CVAR_INFO_LENGTH; i++){
+This checks against the info given by EASY_CVAR_HIDDEN_LIST to see how to get/update a hidden CVar, if what the user typed in matches the name of any.
+
+
+----Per-Player Clientside Shared Variable----
+Lastly, there is another type of CVar that has a series of steps not covered by the
+above methods in cvar_custom_list.h (although they still have entries in them):
+The per-player clientside shared variable.  Some settings are preferred customizable per player,
+but still have logic tied to them that runs serverside.  cl_ladder and cl_fvox are good examples of this.
+Setting the variable still affects behavior that other players see, yet is primarily for the player setting the var (players near other players with cl_fvox on can also hear the lines if nearby, regardless of their own cl_fvox setting).
+Same applies to cl_ladder.  The change between different ladder-climbing modes affects the player movement and so needs to be connected to serverside as well.
+Think of 'per-player clientside shared' as a reverse-broadcasted variable.  Instead of being a serverside CVar that is broadcasted to all players (same value on any client), the player sets a clientside variable that is kept in-synch with a serverside cached var for this player only.
+
+Look up cl_ladder in the following files to see what changes were made for it to be per-player yet serverside:
+  cl_dlls/cl_util.cpp
+    Creates global2PSEUDO_name and sends a message to keep serverside in synch for this player ("_name" #) on starting/connecting to a game or the clientside CVar is changed.
+  dlls/client.cpp
+    Interprets the "_name" message and sets the value of this player's cached serverside var for it ('name_choice' works).  May use a CBasePlayer member method (set_cl_ladder_choice in this case) to do accomplish this.
+  dlls/player.h
+    Has the serverside cached variable declared (cl_ladder_choice).
+  dlls/player.cpp
+    Has the member method for interpreting a received CVar value (if using that).  Otherwise, no necessary involvement.
+
+
