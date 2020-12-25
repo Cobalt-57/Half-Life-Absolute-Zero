@@ -4298,6 +4298,9 @@ void CHGrunt::Precache()
 	PRECACHE_SOUND("zombie/zo_attack1.wav");
 	PRECACHE_SOUND("zombie/zo_attack2.wav");
 
+	PRECACHE_SOUND("hgrunt/gr_squadform.wav");
+	PRECACHE_SOUND("hgrunt/gr_cover2.wav");
+	
 	//MODDD - probably don't need to (not needed for sentences, which these already were in, stand-alone)?  Verify this though.
 	//Yes, these sounds are never called directly. The HG_IDLE sentencegroup (0-2) already uses them.
 	//PRECACHE_SOUND("hgrunt/gr_idle1.wav");
